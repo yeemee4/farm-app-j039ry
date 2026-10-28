@@ -55,3 +55,9 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .sowpick.sp4 button b{font-size:14px}.sowpick.sp4 button small{font-size:10.5px}
 .sowpick.sp4 button.tg{border-color:var(--amber)}
 @media (min-width:700px){.sowpick.sp4{grid-template-columns:repeat(6,minmax(0,1fr))}}
+/* 모돈 입력: 아래 고정 패널 (탭 바 바로 위) */
+.dock{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:15;margin:10px -14px -14px;padding:10px 14px 12px;background:var(--surface);border-top:2px solid var(--accent);border-radius:16px 16px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.18);display:grid;gap:8px}
+.dock-hd{font-size:14.5px}.dock-hd b{font-family:var(--mono);color:var(--accent)}
+.dock-bd{max-height:34vh;overflow-y:auto;display:grid;gap:10px;overscroll-behavior:contain}
+.dock .save{margin:0}
+@media (min-width:1024px){.dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}}
