@@ -27,8 +27,8 @@ function vInput(){
   if(F.sow&&!I.editId){
     const c=candidates(),leftN=Math.max(c.targetN-c.doneN,0);
     if(F.sow.target)left+=`<div class="target"><span class="big">${I.date===TODAY?t("오늘"):kDate(I.date)} ${t("대상")} ${c.targetN}${t("두")} · ${t("입력")} ${c.doneN} · ${t("남은")} <b class="${leftN?"":"ok"}">${leftN}</b></span></div><div class="prog-bar"><i style="width:${c.targetN?Math.min(100,c.doneN/c.targetN*100):0}%"></i></div>`;
-    left+=`<div class="row2"><input type="search" id="in-q" placeholder="${t("번호로 찾기 (대상 외 모돈 포함)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
-    left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?`<div class="sowpick">${c.list.map(x=>`<button type="button" class="${I.sel.includes(x.s.id)?"on":""} ${x.done?"done":""}" data-a="pick" data-v="${x.s.id}"><b>${x.s.id}</b><small>${x.i.sub}</small><small>${t(x.s.loc)}${x.i.heat?" · ♦":""}</small></button>`).join("")}</div>`:`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
+    left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
+    left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
   }else if(F.sow&&I.editId){const s=state.sows.find(x=>x.id===I.sel[0]);left+=`<div class="f"><span class="lb">${t("모돈")}</span>${s?sowCard(s,{noLoc:true,noLink:true}):""}</div>`}
   left+=F.f.map(f=>fieldHtml(f,I.fv,sowForCalc)).join("");
   if(I.err)left+=`<div class="errbox">${esc(I.err)}</div>`;
@@ -95,3 +95,11 @@ function stockOf(it){
 }
 const stockSt=(it,s)=>s.qty===null?"none":s.qty<it.par?"bad":s.qty<it.par*1.3?"warn":"ok";
 
+/* v0.5 모돈 고르기: 돈사별 묶음(접기) · 작은 칸 4열 */
+function sowPickGroups(c){const I=ui.in,q=I.q.trim(),fold=I.fold=I.fold||{},all=activeSows().length,sub=c.targetN&&c.targetN<all;
+  const G={};c.list.forEach(x=>{(G[x.s.loc]=G[x.s.loc]||[]).push(x)});
+  const keys=[...SOW_LOCS.filter(l=>G[l]),...Object.keys(G).filter(l=>!SOW_LOCS.includes(l))];
+  return keys.map(l=>{const L=G[l],tg=L.filter(x=>x.target&&!x.done).length,hasSel=L.some(x=>I.sel.includes(x.s.id));
+    const open=fold[l]!==undefined?!fold[l]:(!!q||c.list.length<=24||hasSel||(sub&&tg>0));
+    return `<div class="spg"><button type="button" class="spg-h ${open?"open":""}" data-a="pickFold" data-v="${esc(l)}" data-open="${open?1:0}"><span>${open?"▾":"▸"} ${esc(t(l))}</span><small>${sub&&tg?`${t("대상")} ${tg} · `:""}${L.length}${t("두")}</small></button>${open?`<div class="sowpick sp4">${L.map(x=>`<button type="button" class="${I.sel.includes(x.s.id)?"on":""} ${x.done?"done":""} ${x.target&&sub?"tg":""}" data-a="pick" data-v="${x.s.id}"><b>${x.s.id}</b><small>${x.i.sub}${x.i.heat?" ♦":""}</small></button>`).join("")}</div>`:""}</div>`}).join("")}
+Object.assign(A,{pickFold:(v,el)=>{const f=ui.in.fold=ui.in.fold||{};f[v]=el.dataset.open==="1";render()}});

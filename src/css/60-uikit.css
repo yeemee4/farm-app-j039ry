@@ -46,3 +46,12 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .wxcard{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px}
 .wxcard .wxt{font-size:18px}
 .wxal{flex-basis:100%;background:rgba(214,140,0,.15);color:var(--amber);font-weight:700;border-radius:8px;padding:5px 9px;font-size:13.5px}
+/* 모돈 고르기: 돈사별 묶음 · 4열 작은 칸 */
+.spg{margin-top:6px}
+.spg-h{width:100%;display:flex;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-weight:800;font-size:14.5px;color:var(--ink)}
+.spg-h small{color:var(--muted);font-weight:600;font-size:12.5px}
+.sowpick.sp4{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px}
+.sowpick.sp4 button{padding:6px 3px;border-radius:9px}
+.sowpick.sp4 button b{font-size:14px}.sowpick.sp4 button small{font-size:10.5px}
+.sowpick.sp4 button.tg{border-color:var(--amber)}
+@media (min-width:700px){.sowpick.sp4{grid-template-columns:repeat(6,minmax(0,1fr))}}

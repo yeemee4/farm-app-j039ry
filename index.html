@@ -528,6 +528,15 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .wxcard{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px}
 .wxcard .wxt{font-size:18px}
 .wxal{flex-basis:100%;background:rgba(214,140,0,.15);color:var(--amber);font-weight:700;border-radius:8px;padding:5px 9px;font-size:13.5px}
+/* 모돈 고르기: 돈사별 묶음 · 4열 작은 칸 */
+.spg{margin-top:6px}
+.spg-h{width:100%;display:flex;justify-content:space-between;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-weight:800;font-size:14.5px;color:var(--ink)}
+.spg-h small{color:var(--muted);font-weight:600;font-size:12.5px}
+.sowpick.sp4{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px}
+.sowpick.sp4 button{padding:6px 3px;border-radius:9px}
+.sowpick.sp4 button b{font-size:14px}.sowpick.sp4 button small{font-size:10.5px}
+.sowpick.sp4 button.tg{border-color:var(--amber)}
+@media (min-width:700px){.sowpick.sp4{grid-template-columns:repeat(6,minmax(0,1fr))}}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1045,10 +1054,12 @@ function candidates(){
     EXCL=null;const i=statusOf(s);
     const inTarget=doneIds.has(s.id)?true:F.sow.filter(i,I.date);
     const q=I.q.trim().toLowerCase();
-    const show=q?s.id.toLowerCase().includes(q):(I.all||inTarget||I.sel.includes(s.id));
-    if(show)list.push({s,i,done:doneIds.has(s.id),target:inTarget});
+    const num=(s.id.match(/(\d+)$/)||[0,""])[1],exact=/^\d+$/.test(q)&&+num===+q;
+    const show=q?(exact||s.id.toLowerCase().includes(q)):(I.all||inTarget||I.sel.includes(s.id));
+    if(show)list.push({s,i,done:doneIds.has(s.id),target:inTarget,exact});
   });
-  const pr=x=>x.done?2:x.target?0:1;
+  if(list.some(x=>x.exact))for(let i=list.length-1;i>=0;i--)if(!list[i].exact)list.splice(i,1);   // 숫자가 정확히 맞는 번호가 있으면 그것만
+  const pr=x=>x.exact?-1:x.done?2:x.target?0:1;
   list.sort((a,b)=>pr(a)-pr(b)||b.i.d-a.i.d||a.s.id.localeCompare(b.s.id));
   const targetN=state.sows.filter(s=>!culledRec(s.id)&&(doneIds.has(s.id)||F.sow.filter(statusOf(s),I.date))).length;
   return {list,targetN,doneN:doneIds.size};
@@ -2381,8 +2392,8 @@ function vInput(){
   if(F.sow&&!I.editId){
     const c=candidates(),leftN=Math.max(c.targetN-c.doneN,0);
     if(F.sow.target)left+=`<div class="target"><span class="big">${I.date===TODAY?t("오늘"):kDate(I.date)} ${t("대상")} ${c.targetN}${t("두")} · ${t("입력")} ${c.doneN} · ${t("남은")} <b class="${leftN?"":"ok"}">${leftN}</b></span></div><div class="prog-bar"><i style="width:${c.targetN?Math.min(100,c.doneN/c.targetN*100):0}%"></i></div>`;
-    left+=`<div class="row2"><input type="search" id="in-q" placeholder="${t("번호로 찾기 (대상 외 모돈 포함)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
-    left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?`<div class="sowpick">${c.list.map(x=>`<button type="button" class="${I.sel.includes(x.s.id)?"on":""} ${x.done?"done":""}" data-a="pick" data-v="${x.s.id}"><b>${x.s.id}</b><small>${x.i.sub}</small><small>${t(x.s.loc)}${x.i.heat?" · ♦":""}</small></button>`).join("")}</div>`:`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
+    left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
+    left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
   }else if(F.sow&&I.editId){const s=state.sows.find(x=>x.id===I.sel[0]);left+=`<div class="f"><span class="lb">${t("모돈")}</span>${s?sowCard(s,{noLoc:true,noLink:true}):""}</div>`}
   left+=F.f.map(f=>fieldHtml(f,I.fv,sowForCalc)).join("");
   if(I.err)left+=`<div class="errbox">${esc(I.err)}</div>`;
@@ -2449,6 +2460,14 @@ function stockOf(it){
 }
 const stockSt=(it,s)=>s.qty===null?"none":s.qty<it.par?"bad":s.qty<it.par*1.3?"warn":"ok";
 
+/* v0.5 모돈 고르기: 돈사별 묶음(접기) · 작은 칸 4열 */
+function sowPickGroups(c){const I=ui.in,q=I.q.trim(),fold=I.fold=I.fold||{},all=activeSows().length,sub=c.targetN&&c.targetN<all;
+  const G={};c.list.forEach(x=>{(G[x.s.loc]=G[x.s.loc]||[]).push(x)});
+  const keys=[...SOW_LOCS.filter(l=>G[l]),...Object.keys(G).filter(l=>!SOW_LOCS.includes(l))];
+  return keys.map(l=>{const L=G[l],tg=L.filter(x=>x.target&&!x.done).length,hasSel=L.some(x=>I.sel.includes(x.s.id));
+    const open=fold[l]!==undefined?!fold[l]:(!!q||c.list.length<=24||hasSel||(sub&&tg>0));
+    return `<div class="spg"><button type="button" class="spg-h ${open?"open":""}" data-a="pickFold" data-v="${esc(l)}" data-open="${open?1:0}"><span>${open?"▾":"▸"} ${esc(t(l))}</span><small>${sub&&tg?`${t("대상")} ${tg} · `:""}${L.length}${t("두")}</small></button>${open?`<div class="sowpick sp4">${L.map(x=>`<button type="button" class="${I.sel.includes(x.s.id)?"on":""} ${x.done?"done":""} ${x.target&&sub?"tg":""}" data-a="pick" data-v="${x.s.id}"><b>${x.s.id}</b><small>${x.i.sub}${x.i.heat?" ♦":""}</small></button>`).join("")}</div>`:""}</div>`}).join("")}
+Object.assign(A,{pickFold:(v,el)=>{const f=ui.in.fold=ui.in.fold||{};f[v]=el.dataset.open==="1";render()}});
 /* ================= v0.3 · 로그인 ================= */
 function vLogin(){
   const L2=ui.loginLang||"ko",sel=ui.loginId?state.accounts.find(a=>a.id===ui.loginId):null,pin=ui.pin||"";

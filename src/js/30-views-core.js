@@ -71,10 +71,12 @@ function candidates(){
     EXCL=null;const i=statusOf(s);
     const inTarget=doneIds.has(s.id)?true:F.sow.filter(i,I.date);
     const q=I.q.trim().toLowerCase();
-    const show=q?s.id.toLowerCase().includes(q):(I.all||inTarget||I.sel.includes(s.id));
-    if(show)list.push({s,i,done:doneIds.has(s.id),target:inTarget});
+    const num=(s.id.match(/(\d+)$/)||[0,""])[1],exact=/^\d+$/.test(q)&&+num===+q;
+    const show=q?(exact||s.id.toLowerCase().includes(q)):(I.all||inTarget||I.sel.includes(s.id));
+    if(show)list.push({s,i,done:doneIds.has(s.id),target:inTarget,exact});
   });
-  const pr=x=>x.done?2:x.target?0:1;
+  if(list.some(x=>x.exact))for(let i=list.length-1;i>=0;i--)if(!list[i].exact)list.splice(i,1);   // 숫자가 정확히 맞는 번호가 있으면 그것만
+  const pr=x=>x.exact?-1:x.done?2:x.target?0:1;
   list.sort((a,b)=>pr(a)-pr(b)||b.i.d-a.i.d||a.s.id.localeCompare(b.s.id));
   const targetN=state.sows.filter(s=>!culledRec(s.id)&&(doneIds.has(s.id)||F.sow.filter(statusOf(s),I.date))).length;
   return {list,targetN,doneN:doneIds.size};
