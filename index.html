@@ -862,7 +862,7 @@ const FORMS={
     f:[{k:"live",l:"실산",t:"step",def:12,min:0},{k:"still",l:"사산",t:"step",def:0,min:0},{k:"mum",l:"미라",t:"step",def:0,min:0},{k:"_t",t:"calc",l:"총산 (자동)",calc:d=>(+d.live||0)+(+d.still||0)+(+d.mum||0)}],
     warn:(d,wd,s)=>{const i=sowState(s);if(i.mate){const g=diff(i.mate,wd);if(g<108||g>120)return `${s}번은 교배 후 ${g}일째입니다. 보통 ${CFG.gest}일 전후에 분만합니다.`}
       if(d.live+d.still+d.mum>22)return "총산이 22두를 넘습니다. 숫자를 확인해 주세요.";return null}},
-  이유:{sow:{multi:false,target:true,filter:i=>i.stage==="포유"},
+  이유:{sow:{multi:false,target:true,filter:(i,wd)=>i.stage==="포유"&&diff(i.farrow,wd||TODAY)>=CFG.weanDay-3},
     f:[{k:"n",l:"이유두수",t:"step",def:11,min:0},{k:"_d",t:"calc",l:"포유일수 (자동)",calc:(d,wd,s)=>{const i=s?sowState(s):null;return i&&i.farrow?diff(i.farrow,wd)+"일":"-"}}],
     warn:(d,wd,s)=>{const i=sowState(s);if(i.live&&d.n>i.live+2)return `${s}번은 실산 ${i.live}두인데 이유두수가 ${d.n}두입니다. 양자를 받았다면 그대로 저장하세요.`;return null},
     pre:(d,wd,s)=>{const i=sowState(s);d.days=i.farrow?diff(i.farrow,wd):0}},
