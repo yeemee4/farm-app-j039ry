@@ -29,7 +29,7 @@ function seedFarm(){
     farrow(id,F,wd);let Mp=addDays(F,-G);
     if(rnd()<.12){mate(id,addDays(Mp,-21),false);add("임신확인",Mp,{sow:id,result:"재발"});Mp=addDays(Mp,-21)}else if(rnd()<.05){mate(id,addDays(Mp,-40),false);add("임신확인",addDays(Mp,-12),{sow:id,result:"공태"});Mp=addDays(Mp,-40)}
     mate(id,Mp,true);m=Mp;if(Mp<H0)break}};
-  let no=1;const mk=loc=>{const bp=ri(0,5),id=(bp>=3?pick(["3-","4-","5-"]):FARM.sowPrefix)+String(no++).padStart(3,"0");sows.push({id,baseParity:bp,loc,breed:FARM.breed});return id};
+  let no=1;const mk=loc=>{const bp=ri(0,5),id=FARM.sowPrefix+String(no++).padStart(3,"0");sows.push({id,baseParity:bp,loc,breed:FARM.breed});return id};
   // 분만사 30 = 분만 대기 8 + 포유 16 + 이유 직후 2 + 분만사에서 교배 4
   for(let k=0;k<8;k++){const id=mk("분만사"),M=addDays(TODAY,-(100+Math.round(k*13/7)+ri(0,1)));mate(id,M);cycleBack(id,M)}
   for(let w=0;w<4;w++)for(let k=0;k<4;k++){const back=diff(wk0,TODAY);const F=addDays(wk0,-7*w+(w===0?ri(0,back):ri(0,6)));if(F>TODAY)continue;
@@ -72,7 +72,7 @@ function seedFarm(){
   const B=baseState();
   const prevYear={};for(let y=+H0.slice(0,4)-1;y<=+H0.slice(0,4);y++)for(let m=1;m<=12;m++){if(`${y}-${pad(m)}`>=H0.slice(0,7))break;const far=ri(16,18);
     prevYear[`${y}-${pad(m)}`]={far,mates:ri(18,20),frate:ri(84,89),tot:+(13.2+rnd()*.8).toFixed(1),live:+(12+rnd()*.8).toFixed(1),wean:+(10.9+rnd()*.7).toFixed(1),surv:ri(89,92),psy:+(24+rnd()*2).toFixed(1),msy:+(21+rnd()*2).toFixed(1),dead:ri(60,90),ship:ri(160,190),shipKg:ri(115,118)}}
-  return {v:6,user:"대표",sows,records:recs,zero:{},todoLog:{},tasks:[],cfgSt:{...CFG.st},items:ITEM_DEF(),prevYear,memo:{},assign:{},lists:FARM_LISTS(),startDate:H0,batchCut:cut,takeover:TAKE,...B,mbatches:[4,5,6,7,8,9,10,11].map(w=>({k:addDays(wk0,-7*w),age:w,n:50,litters:4,note:"인수 시 실사"}))};
+  return {v:7,user:"대표",sows,records:recs,zero:{},todoLog:{},tasks:[],cfgSt:{...CFG.st},items:ITEM_DEF(),prevYear,memo:{},assign:{},lists:FARM_LISTS(),startDate:H0,batchCut:cut,takeover:TAKE,...B,mbatches:[4,5,6,7,8,9,10,11].map(w=>({k:addDays(wk0,-7*w),age:w,n:50,litters:4,note:"인수 시 실사"}))};
 }
 function seedFarmPost(){
   const USERS=["대표","조성훈 팀장","Nguyen","Ram"];let u=0;
@@ -105,11 +105,11 @@ function seedFarmPost(){
   if(oldest){const fin=addDays(oldest.k,state.cfg.stage.slice(0,-1).reduce((a,x)=>a+x[1],0)*7);
     state.tasks.push({id:newId(),src:null,title:"육성비육사 청소·소독·급이·급수 점검 (첫 입식 준비)",acts:["소독","환기 점검"],due:addDays(fin,-3),who:"조성훈 팀장",memo:`첫 입식 ${kDate(fin)} 주 · 육성비육사 비어 있음`,createdAt:now,user:"대표"})}
 }
-function upgradeDemo(st){const B=baseState();Object.assign(st,{v:6,lists:{barns:mkList(["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"]),causes:FARM_LISTS().causes,actions:FARM_LISTS().actions,semens:FARM_LISTS().semens,dests:FARM_LISTS().dests,cull:FARM_LISTS().cull},startDate:addDays(TODAY,-60),accounts:B.accounts,labels:B.labels,dayDec:{},mbatches:[]});st.cfg.deadOne=3;st.cfg.deadDay=3;return st}
+function upgradeDemo(st){const B=baseState();Object.assign(st,{v:7,lists:{barns:mkList(["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"]),causes:FARM_LISTS().causes,actions:FARM_LISTS().actions,semens:FARM_LISTS().semens,dests:FARM_LISTS().dests,cull:FARM_LISTS().cull},startDate:addDays(TODAY,-60),accounts:B.accounts,labels:B.labels,dayDec:{},mbatches:[]});st.cfg.deadOne=3;st.cfg.deadDay=3;return st}
 function makeState(kind,keep){
   if(kind==="farm"){state=seedFarm();syncLists();seedFarmPost()}
   else if(kind==="demo"){const L0=BARNS.slice();BARNS.length=0;["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"].forEach(x=>BARNS.push(x));state=upgradeDemo(seed());seedPost()}
-  else{const k=keep;state={v:6,user:k.user,sows:[],records:[],zero:{},todoLog:{},tasks:[],cfgSt:k.cfgSt,items:k.items,prevYear:{},memo:{},assign:{},lists:k.lists,startDate:TODAY,accounts:k.accounts,labels:k.labels,dayDec:{},mbatches:[],cfg:k.cfg}}
+  else{const k=keep;state={v:7,user:k.user,sows:[],records:[],zero:{},todoLog:{},tasks:[],cfgSt:k.cfgSt,items:k.items,prevYear:{},memo:{},assign:{},lists:k.lists,startDate:TODAY,accounts:k.accounts,labels:k.labels,dayDec:{},mbatches:[],cfg:k.cfg}}
   syncLists();save();
 }
 

@@ -59,7 +59,7 @@ Object.assign(A,{
   bkCopy:()=>{const txt=JSON.stringify(state),msg=$("#bkMsg");navigator.clipboard.writeText(txt).then(()=>{msg.textContent="복사했습니다. 안전한 곳에 붙여 두세요."}).catch(()=>{const o=$("#bkOut");o.focus();o.select();msg.textContent="내용을 선택해 두었습니다. 직접 복사하세요."})},
   restoreAsk:()=>{ui.restoreTxt=$("#bkIn").value;ui.restoreAsk=true;render();const i=$("#bkIn");if(i)i.value=ui.restoreTxt},
   restoreNo:()=>{ui.restoreAsk=false;render()},
-  restoreOk:()=>{try{const s=JSON.parse(ui.restoreTxt||"");if(!s||!s.sows||!s.records)throw 0;state=s;if(state.v!==6)upgradeDemo(state);syncLists();save();ui.restoreAsk=false;toast("복원했습니다");render()}catch(e){ui.restoreAsk=false;render();toast("복원할 수 없는 내용입니다. 백업한 글자 전체를 붙여 넣어 주세요.")}},
+  restoreOk:()=>{try{const s=JSON.parse(ui.restoreTxt||"");if(!s||!s.sows||!s.records)throw 0;state=s;if(state.v!==7)upgradeDemo(state);syncLists();save();ui.restoreAsk=false;toast("복원했습니다");render()}catch(e){ui.restoreAsk=false;render();toast("복원할 수 없는 내용입니다. 백업한 글자 전체를 붙여 넣어 주세요.")}},
   resetPick:v=>{ui.resetPick=v||null;render()},
   resetDo:v=>{const keep=state;makeState(v,keep);if(!me()){ME=null;try{localStorage.removeItem(SKEY)}catch(e){}}ui.resetPick=null;ui.setPage="main";tab=me()?"home":tab;render();toast("초기화했습니다")},
   judge:v=>{openInput("폐사",{date:String(v).replace(/^d:/,"")})},

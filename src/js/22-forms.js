@@ -1,6 +1,6 @@
 /* ================= 입력 양식 ================= */
-// 다음 모돈 번호: 모든 번호 중 가장 큰 숫자 + 1 (예: Y-093)
-function nextSowId(){const n=Math.max(0,...state.sows.map(s=>+(String(s.id).match(/(\d+)$/)||[0,0])[1]));return FARM.sowPrefix+String(n+1).padStart(3,"0")}
+// 다음 모돈 번호: 올해 끝자리-(올해 번호 중 가장 큰 수 + 1). 2026년 → 6-093, 2027년 → 7-001
+function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
 const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
 const FORMS={
   폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"}],
@@ -32,7 +32,7 @@ const FORMS={
     warn:d=>{const b=batches().find(x=>x.k===d.batch),p=state.cfg.prog.find(x=>x.name===d.vax);if(b&&p){const v=bVax(b,p),left=Math.max(v.need-v.done,0);if(d.n>left+10)return `추정 남은 두수(${left}두)보다 많습니다. 숫자를 확인해 주세요.`;if(d.n<=0)return "접종 두수가 0입니다."}return null}},
   재고:{f:[{k:"item",l:"품목",t:"chips",o:()=>state.items.filter(i=>!i.hidden).map(i=>[i.id,i.name])},{k:"mode",l:"구분",t:"chips",o:["입고","사용","실사"],def:"입고"},{k:"qty",l:"수량 (실사는 실제로 센 수량)",t:"step",def:10,min:0},{k:"memo",l:"메모 (선택)",t:"text",opt:true}]},
   특이사항:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"text",l:"내용",t:"textarea",ph:"예: 2번 환풍기 소음, 급수기 누수"}]},
-  도입:{f:[{k:"sowid",l:"후보돈 번호 (다음 번호 자동)",t:"text",ph:"예: Y-093",def:()=>nextSowId()},{k:"breed",l:"품종",t:"chips",o:["LY","LYD","YL","기타"],def:FARM.breed},{k:"age",l:"도입 일령",t:"step",def:180,min:30,big:10}],
+  도입:{f:[{k:"sowid",l:"후보돈 번호 (다음 번호 자동)",t:"text",ph:"예: 6-093",def:()=>nextSowId()},{k:"breed",l:"품종",t:"chips",o:["LY","LYD","YL","기타"],def:FARM.breed},{k:"age",l:"도입 일령",t:"step",def:180,min:30,big:10}],
     err:d=>state.sows.some(s=>s.id===String(d.sowid).trim())?`${d.sowid}번은 이미 있는 번호입니다.`:null}
 };
 

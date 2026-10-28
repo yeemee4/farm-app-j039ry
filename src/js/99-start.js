@@ -1,6 +1,6 @@
 /* ================= 시작 ================= */
 state=load();
-if(!state||state.v!==6){makeState("farm")}
+if(!state||state.v!==7){makeState("farm")}
 try{ME=localStorage.getItem(SKEY)}catch(e){}
 {const ad=(state.accounts||[]).find(a=>a.id==="a1");if(ad&&ad.pin==="0000"){ad.pin="9368";save()}}
 syncLists();
