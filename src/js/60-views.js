@@ -10,7 +10,7 @@ function render(){
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");
   LANG=m.lang||"ko";document.documentElement.lang=LANG;state.user=m.name;syncLists();
-  $("#hdDate").textContent=kDate(TODAY)+" · W"+isoWeek(TODAY).w;$("#hdVer").textContent=APP_VER;
+  $("#hdDate").textContent=kDate(TODAY)+" · W"+isoWeek(TODAY).w+wxShort();$("#hdVer").textContent=APP_VER;
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
