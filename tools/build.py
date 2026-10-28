@@ -10,12 +10,13 @@ TAGS = '--no-tags' not in sys.argv          # 테스트 라벨(포스트잇) 기
 
 icons = {os.path.basename(p)[:-4]: read(p).strip() for p in sorted(glob.glob(src('icons', '*.svg')))}
 # 그림 아이콘(.png)이 있으면 .svg 보다 우선
+polys = {os.path.basename(p)[:-4]: read(p).strip() for p in sorted(glob.glob(src('icons', 'poly', '*.svg')))}
 cuts = {os.path.basename(p)[:-4]: 'data:image/png;base64,' + base64.b64encode(open(p, 'rb').read()).decode() for p in sorted(glob.glob(src('icons', 'cut', '*.png')))}
 imgs = {os.path.basename(p)[:-4]: 'data:image/png;base64,' + base64.b64encode(open(p, 'rb').read()).decode() for p in sorted(glob.glob(src('icons', '*.png')))}
 css = ''.join(read(p) for p in sorted(glob.glob(src('css', '*.css'))))
 js = ''.join(read(p) for p in sorted(glob.glob(src('js', '*.js'))))
 js = js.replace('%GATE%', GATE)
-pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst BUILD_TAGS=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), 'true' if TAGS else 'false')
+pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false')
 
 out = (read(src('head.html')) + read(src('meta.html')) + '<style>\n' + css + '</style>\n</head>\n<body>\n'
        + read(src('body.html')) + '<script>\n' + pre + js + '</script>\n</body>\n</html>\n')

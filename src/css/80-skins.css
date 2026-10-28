@@ -63,3 +63,4 @@ html[data-skin="soft"] .act.pri,html[data-skin="soft"] .save{background:#E07A8F;
 .ic.iglyph{border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,color-mix(in srgb,var(--g) 78%,#fff),var(--g));box-shadow:0 3px 8px color-mix(in srgb,var(--g) 30%,transparent)}.ic.iglyph svg{width:58%;height:58%;color:#fff}
 .qbtn.qx .cnt{top:-8px;right:-8px;min-width:28px;height:28px;padding:0 7px;border-radius:14px;display:grid;place-items:center;background:var(--red);color:#fff;font:800 20px/1 var(--mono);box-shadow:0 2px 5px rgba(0,0,0,.25);border:2px solid var(--surface);z-index:2}
 .qbtn.qx .cnt:empty{display:none}.qbtn.qx.zero .cnt{background:var(--blue)}.qbtn.qx.miss .cnt{color:#fff}
+.ic.ipoly{background:transparent;padding:0}.ic.ipoly svg{width:100%;height:100%;display:block}.qgrid .qbtn.qx .ic.ipoly{width:64px;height:64px}

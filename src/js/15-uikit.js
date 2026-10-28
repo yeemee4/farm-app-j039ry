@@ -1,9 +1,10 @@
 /* ================= 아이콘 · 테스트 라벨 ================= */
 // 아이콘: src/icons/<종류>.svg 파일 하나 = 아이콘 하나. 파일이 없으면 TYPES 의 글자(s)로 표시.
 // 아이콘 스타일 (설정 › 화면 디자인): pic 그림 타일 · circle 동그라미 그림 · cut 오려낸 그림 · line 초록 선 · duo 투톤 · glyph 앱 아이콘형
-const ICON_STYLES=[["pic","그림 타일"],["circle","동그라미 그림"],["cut","오려낸 그림"],["line","초록 선"],["duo","투톤"],["glyph","앱 아이콘형"]];
+const ICON_STYLES=[["poly","폴리곤"],["pic","그림 타일"],["circle","동그라미 그림"],["cut","오려낸 그림"],["line","초록 선"],["duo","투톤"],["glyph","앱 아이콘형"]];
 function iconStyle(){try{return localStorage.getItem("farm-icon")||FARM.iconStyle}catch(e){return FARM.iconStyle}}
 function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SVG[type],st=iconStyle(),cl=`ic${sm?" sm":""}`;
+  if(st==="poly"&&ICON_POLY[type])return `<span class="${cl} ipoly">${ICON_POLY[type]}</span>`;
   if(st==="circle"&&ICON_IMG[type])return `<span class="${cl} icirc"><img src="${ICON_IMG[type]}" alt=""></span>`;
   if(st==="cut"&&ICON_CUT[type])return `<span class="${cl} icut"><img src="${ICON_CUT[type]}" alt=""></span>`;
   if(st==="line"&&svg)return `<span class="${cl} iline">${svg}</span>`;

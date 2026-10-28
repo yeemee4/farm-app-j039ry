@@ -12,7 +12,7 @@
   - 40~48 돈군·재고·모돈판·성적·TV현황판·약품 · 43 대리모·이유 보류 · 45 백신 엔진 · 47 사료·날씨 · **49 현황판 대시보드(칸 = DASH_LIST 한 줄 + DASH_P 함수 하나, 켜기/순서/주간 목표는 설정 › 현황판 항목)**
   - 50 i18n(TR 사전) · **51 i18n-v04: 새 문구 번역은 여기에 추가** · 52 accounts(권한)
   - 60 views(render·홈) · 62 input · 64 login/settings · 66 guide · 68 아침 점검 · 70 seed(예시 데이터) · 80 actions(v0.3) · 98 gate · 99 start
-- `src/icons/<종류>.png` (그림, 우선) 또는 `.svg` — 입력 종류별 아이콘. **파일 하나 = 아이콘 하나**. 지금은 이미지 생성 AI 그림(128px PNG)을 씀. 파일 이름이 TYPES 키(폐사, 교배…)와 같아야 함. 없으면 글자 아이콘.
+- `src/icons/poly/<종류>.svg` 폴리곤 아이콘(생성기 `tools/polyicons.py` — 돼지 얼굴·색을 고치면 15개 함께 바뀜) · `src/icons/<종류>.png` (그림) 또는 `.svg` — 입력 종류별 아이콘. **파일 하나 = 아이콘 하나**. 지금은 이미지 생성 AI 그림(128px PNG)을 씀. 파일 이름이 TYPES 키(폐사, 교배…)와 같아야 함. 없으면 글자 아이콘.
 - `index.html` — **빌드 결과물(직접 고치지 말 것)**. GitHub Pages가 이 파일을 배포.
 - `tools/build.py` — src → index.html. `--no-tags` 로 테스트 라벨 제거.
 - `tools/smoke.js` — `FARM_PIN=<대표PIN> node tools/smoke.js <폴더>` 전 탭·입력 화면 열어서 오류 점검 + 스크린샷.
