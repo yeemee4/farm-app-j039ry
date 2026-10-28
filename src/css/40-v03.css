@@ -1,0 +1,21 @@
+/* ===== v0.3 ===== */
+body.login header.hd,body.login nav.tabs{display:none}
+body.login .app{margin-left:0!important}
+.login-box{max-width:440px;margin:20px auto 40px;display:grid;gap:14px;width:100%}
+.login-brand{font-family:var(--display);font-weight:900;font-size:30px;text-align:center}
+.acclist{display:grid;gap:8px}
+.accbtn{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;display:grid;gap:2px}
+.accbtn b{font-size:16px}.accbtn small{color:var(--muted);font-size:12.5px}
+.pindots{display:flex;gap:12px;justify-content:center;margin:6px 0}
+.pindots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--accent)}
+.pindots i.on{background:var(--accent)}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:0 auto;width:100%}
+.pinpad button{height:60px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-family:var(--display);font-size:24px;font-weight:800}
+.pinpad button:active{background:var(--accent-soft)}
+.gmock{background:var(--bg);border-radius:10px;padding:10px;display:grid;gap:6px}
+.gsteps{margin:0;padding-left:20px;display:grid;gap:5px;font-size:14px}
+.dtbl table.hus{min-width:0}
+table.hus td{white-space:normal!important;text-align:left!important;vertical-align:top}
+table.hus td:first-child{font-weight:700;width:32%}
+.setrow input[type=text]{flex:1;min-width:0}
+

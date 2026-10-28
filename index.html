@@ -2,20 +2,20 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<title>비담농장</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#2E6A4E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gothic+A1:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Thai:wght@400;600;700&family=Noto+Sans+Khmer:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
 <meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="농장일지">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>농장일지 시제품</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="theme-color" content="#2E6A4E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Gothic+A1:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Thai:wght@400;600;700&family=Noto+Sans+Khmer:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+<meta name="apple-mobile-web-app-title" content="비담농장">
 <style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}
 /* Layout: 휴대폰 한 화면 앱. 상단 헤더 · 가운데 스크롤 본문 · 하단 고정 탭 5개 · 입력은 아래에서 올라오는 시트 */
 :root{
   --bg:#F3F5F2; --surface:#FFFFFF; --ink:#18211C; --muted:#5C6B62; --line:#D9E0DA;
@@ -480,13 +480,21 @@ body.tv .bd-tbl th{font-size:1.4vh}
 body.tv .bd-tbl td{font-size:1.9vh;padding:.4vh .5vw}
 body.tv .bd-memo{font-size:2vh;overflow:hidden}
 body.tv .board textarea{min-height:0;height:12vh}
+/* ===== 아이콘(SVG) · 테스트 라벨 ===== */
+.ic.svg svg{width:66%;height:66%;display:block}
+.ic.sm{width:26px;height:26px;font-size:12px}
+body.tagson [data-tag]{position:relative;outline:1px dashed rgba(214,160,0,.55);outline-offset:1px}
+body.tagson [data-tag]::before{content:attr(data-tag);position:absolute;z-index:50;top:0;left:0;padding:1px 5px 2px;background:#FFE45C;color:#4a3b00;font:700 10px/1.2 system-ui,sans-serif;border-radius:2px 2px 2px 7px;box-shadow:0 1px 3px rgba(0,0,0,.25);transform:translate(-35%,-62%) rotate(-4deg);pointer-events:none;white-space:nowrap}
+body.tagson .hd[data-tag]::before{transform:translate(4px,4px) rotate(-4deg)}
+.tagbtn{position:fixed;right:10px;bottom:84px;z-index:60;border:0;border-radius:18px;padding:7px 11px;background:#FFE45C;color:#4a3b00;font:700 12px system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+body:not(.tagson) .tagbtn{opacity:.55}
+.login-logo{display:block;width:150px;height:auto;margin:0 auto 4px;border-radius:28px}
 </style>
-
 </head>
 <body>
 <div class="app">
   <header class="hd">
-    <div><h1>농장일지 <small class="ver">v0.3</small></h1><div class="date" id="hdDate"></div></div>
+    <div><h1>비담농장 <small class="ver">v0.3</small></h1><div class="date" id="hdDate"></div></div>
     <button class="who" id="whoBtn" type="button" data-a="goSettings"><i></i><span id="whoName"></span></button>
   </header>
   <main id="view"></main>
@@ -495,7 +503,10 @@ body.tv .board textarea{min-height:0;height:12vh}
 <div id="sheetRoot"></div>
 <div id="toastRoot"></div>
 
+<button class="tagbtn" id="tagBtn" type="button" onclick="tagsToggle()" hidden>라벨</button>
 <script>
+const ICON_SVG={"BCS": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 17a8.5 8.5 0 0 1 17 0\"/><path d=\"m12 17 4-5\"/><path d=\"M6.5 17h0M17.5 17h0M8 11.5h0M12 9h0\"/></svg>", "교배": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"10\" r=\"4.5\"/><circle cx=\"15\" cy=\"14\" r=\"4.5\"/><path d=\"M9 14.5V21M6.5 18.5h5M18.2 10.8 21 8M17.5 8H21v3.5\"/></svg>", "도입": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.5 8.5 5 4.5l4 2.2M17.5 8.5 19 4.5l-4 2.2\"/><circle cx=\"12\" cy=\"13\" r=\"7\"/><ellipse cx=\"12\" cy=\"15\" rx=\"3\" ry=\"2.1\"/><path d=\"M11 15h0M13 15h0\"/><path d=\"M9 10.5h0M15 10.5h0\"/><path d=\"M20 1.5v4M18 3.5h4\"/></svg>", "도태": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 7h16M9 7V4.5h6V7M6 7l1 13.5h10L18 7\"/><path d=\"M10 11v6M14 11v6\"/></svg>", "돈군백신": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m14 3 3.5 3.5M15.8 4.8 13 7.5M11.5 6l2.5 2.5M12.8 7.2 6 14l-2 .5.5-2L11.2 5.6z\"/><path d=\"M4.5 15.5 2.5 17.5\"/><circle cx=\"14\" cy=\"18\" r=\"2\"/><circle cx=\"19.5\" cy=\"18\" r=\"2\"/><circle cx=\"16.8\" cy=\"13\" r=\"2\"/></svg>", "백신": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m17 3 4 4M19 5l-3 3M15 6.5l2.5 2.5M16 8 7.5 16.5 5 17l.5-2.5L14 6z\"/><path d=\"M5.5 18.5 3 21M9 11.5l1.5 1.5M11 9.5l1.5 1.5\"/></svg>", "분만": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.5 8.5 5 4.5l4 2.2M17.5 8.5 19 4.5l-4 2.2\"/><circle cx=\"12\" cy=\"13\" r=\"7\"/><ellipse cx=\"12\" cy=\"15\" rx=\"3\" ry=\"2.1\"/><path d=\"M11 15h0M13 15h0\"/><path d=\"M9 10.5h0M15 10.5h0\"/><path d=\"M20 2.5v3M18.5 4h3\"/></svg>", "사료": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21V9\"/><path d=\"M12 9c-2.5 0-4-1.8-4-4.5 2.5 0 4 1.8 4 4.5zM12 9c2.5 0 4-1.8 4-4.5-2.5 0-4 1.8-4 4.5zM12 14c-2.5 0-4-1.8-4-4.5 2.5 0 4 1.8 4 4.5zM12 14c2.5 0 4-1.8 4-4.5-2.5 0-4 1.8-4 4.5zM12 19c-2.5 0-4-1.8-4-4.5 2.5 0 4 1.8 4 4.5zM12 19c2.5 0 4-1.8 4-4.5-2.5 0-4 1.8-4 4.5z\"/></svg>", "약품": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2.8\" y=\"8.2\" width=\"18.4\" height=\"7.6\" rx=\"3.8\" transform=\"rotate(-45 12 12)\"/><path d=\"m8.8 8.8 6.4 6.4\"/></svg>", "이동": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4\"/></svg>", "이유": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 2.5h4M10.5 2.5v3h3v-3M8.5 8.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V20a1.5 1.5 0 0 1-1.5 1.5h-4A1.5 1.5 0 0 1 8.5 20z\"/><path d=\"M8.5 12h3M8.5 15.5h3\"/><path d=\"M4 4l16 16\"/></svg>", "임신확인": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6\"/><path d=\"m15 15 5.5 5.5\"/><path d=\"m7.8 10.6 2 2 3.6-4\"/></svg>", "재고": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12.5h8v8H3zM13 12.5h8v8h-8zM8 4.5h8v8H8z\"/><path d=\"M6 12.5v2.5M17 12.5v2.5M12 4.5V7\"/></svg>", "조치": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"m8 12.2 2.8 2.8 5.2-5.6\"/></svg>", "출하": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.5 6.5h11v9h-11zM13.5 9.5h4l3.5 3.5v2.5h-7.5\"/><circle cx=\"6.5\" cy=\"17.5\" r=\"2\"/><circle cx=\"17\" cy=\"17.5\" r=\"2\"/></svg>", "특이사항": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 3.5h10l4 4V20.5H5z\"/><path d=\"M15 3.5v4h4\"/><path d=\"M12 9.5v5M12 17.5h0\"/></svg>", "폐사": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/><path d=\"M8 11.5h2.2l1.2-2 1.6 4 1.2-2H16\"/></svg>"};
+const BUILD_TAGS=true;
 /* ================= 기본 설정 ================= */
 const CFG={gest:114, weanMateLimit:4, returnCheck:[18,24], pregCheck:25, farrowIn:7, weanDay:21,
   st:{weanNoMate:14, farrowNoWean:42, mateNoCheck:35, gestOver:117, giltNoMate:60}};
@@ -615,6 +626,24 @@ function seed(){
     cfg:{stage:[["분만사",4],["자돈사",6],["육성사",6],["비육사",10]],prog:[{name:"써코·마이코",prod:"써코·마이코",age:3},{name:"돼지열병 1차",prod:"돼지열병",age:6},{name:"구제역 1차",prod:"구제역",age:8},{name:"돼지열병 2차",prod:"돼지열병",age:10},{name:"구제역 2차",prod:"구제역",age:12}],semenPerSow:2}};
 }
 
+/* ================= 아이콘 · 테스트 라벨 ================= */
+// 아이콘: src/icons/<종류>.svg 파일 하나 = 아이콘 하나. 파일이 없으면 TYPES 의 글자(s)로 표시.
+function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SVG[type];
+  return `<span class="ic${sm?" sm":""}${svg?" svg":""}" style="background:${T.c}">${svg||T.s}</span>`}
+
+// 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
+// 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
+const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
+const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU"};
+let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
+function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
+  const pre=document.body.classList.contains("login")?"L":(TAG_PRE[typeof tab!=="undefined"?tab:""]||String(tab||"X").slice(0,2).toUpperCase());
+  const run=(root,p)=>{let n=0;if(root)root.querySelectorAll(TAG_SEL).forEach(el=>{const v=p+(++n);if(el.dataset.tag!==v)el.dataset.tag=v})};
+  run($("#view"),pre);run($("#sheetRoot"),"P");
+  let n=0;document.querySelectorAll(".tabs .in>*").forEach(el=>{const v="탭"+(++n);if(el.dataset.tag!==v)el.dataset.tag=v});
+  const h=$(".hd");if(h&&h.dataset.tag!=="상단")h.dataset.tag="상단"}
+function tagsToggle(){tagOn=!tagOn;try{localStorage.setItem("farm-tags",tagOn?"1":"0")}catch(e){}tagsApply()}
+new MutationObserver(()=>{if(!tagRaf)tagRaf=requestAnimationFrame(tagsApply)}).observe(document.body,{childList:true,subtree:true});
 /* ================= 모돈 상태 ================= */
 let EXCL=null,SIDX=null;
 function sowState(id){
@@ -883,7 +912,7 @@ function vTimeline(){
     const day=localDateOf(r.createdAt);
     if(day!==last){h+=`<div class="tl-day">${day===TODAY?"오늘 · ":""}${kDate(day)}</div>`;last=day}
     const late=r.workDate<day;
-    h+=`<div class="ev"><span class="ic" style="background:${TYPES[r.type].c}">${TYPES[r.type].s}</span><div style="min-width:0"><div class="meta"><span>${esc(r.user)} · ${kTime(r.createdAt)}</span>${late?`<span class="tag late">지연 입력 · 작업일 ${kDate(r.workDate)}</span>`:""}${r.edited?`<span class="tag zero">수정됨</span>`:""}${r.data&&r.data.sow?`<button type="button" class="mini-link" data-a="sowd" data-v="${r.data.sow}">${r.data.sow}번 보기</button>`:""}</div><div class="txt">${esc(summary(r))}</div></div>
+    h+=`<div class="ev">${icon(r.type)}<div style="min-width:0"><div class="meta"><span>${esc(r.user)} · ${kTime(r.createdAt)}</span>${late?`<span class="tag late">지연 입력 · 작업일 ${kDate(r.workDate)}</span>`:""}${r.edited?`<span class="tag zero">수정됨</span>`:""}${r.data&&r.data.sow?`<button type="button" class="mini-link" data-a="sowd" data-v="${r.data.sow}">${r.data.sow}번 보기</button>`:""}</div><div class="txt">${esc(summary(r))}</div></div>
       <div class="del">${ui.delId===r.id?`<button class="act bad" type="button" data-a="delOk" data-v="${r.id}">삭제 확정</button><button class="act" type="button" data-a="delNo">취소</button>`:can("delete")?`<button class="act" type="button" data-a="del" data-v="${r.id}" style="font-size:12px;padding:4px 10px">삭제</button>`:""}</div></div>`;
   });
   if(!list.length)h+=`<div class="empty">기록이 없습니다.</div>`;
@@ -1775,7 +1804,7 @@ function vHome(){
     let cls="",cnt="";
     if(DAILY.includes(q)){const s=dayStatus(TODAY,q);cls=s.s==="miss"?"miss":s.s==="zero"?"zero":"";cnt=s.s==="ok"?s.n:s.s==="zero"?"0":""}
     else{const n=state.records.filter(r=>r.type===q&&r.workDate===TODAY).length;cnt=n||""}
-    return `<button class="qbtn ${cls}" type="button" data-a="input" data-v="${q}"><span class="ic" style="background:${TYPES[q].c}">${TYPES[q].s}</span>${esc(L(q))}<span class="cnt">${cnt}</span></button>`}).join("")}</div>`;
+    return `<button class="qbtn ${cls}" type="button" data-a="input" data-v="${q}">${icon(q)}${esc(L(q))}<span class="cnt">${cnt}</span></button>`}).join("")}</div>`;
   h+=`<div class="note">${t("빨간 테두리: 오늘 아직 입력하지 않은 매일 기록 · 파란 0: ‘오늘 없음’으로 확인함")}</div>`;
   h+=`</div><div>`;
   const todos=buildTodos(),st=stalls();
@@ -1883,7 +1912,7 @@ function needMsg(){
 function saveLabel(){const I=ui.in,n=needMsg();if(n)return n;if(I.editId)return t("수정 저장");return FORMS[I.type].sow&&I.sel.length>1?`${I.sel.length}${t("두")} ${t("저장")}`:t("저장")}
 function vInput(){
   const I=ui.in,F=FORMS[I.type],late=I.date<TODAY;
-  let left=`<div class="pagehd"><button class="back" type="button" data-a="back">‹ ${t("뒤로")}</button><h2><span class="ic" style="background:${TYPES[I.type].c}">${TYPES[I.type].s}</span>${esc(L(I.type))}</h2></div>`;
+  let left=`<div class="pagehd"><button class="back" type="button" data-a="back">‹ ${t("뒤로")}</button><h2>${icon(I.type)}${esc(L(I.type))}</h2></div>`;
   if(I.editId)left+=`<div class="editbar"><span>${t("기록 수정 중")}</span><button class="sbtn" type="button" data-a="editCancel">${t("수정 취소")}</button></div>`;
   left+=`<div class="panel"><div class="f"><label for="in-date">${t("작업일")} ${late?`<span class="late-note">${t("지연 입력 · 해당 날짜 성적에 반영")}</span>`:""}</label><input type="date" id="in-date" value="${I.date}" max="${TODAY}"></div>`;
   const sowForCalc=I.sel[0]||null;
@@ -1939,7 +1968,7 @@ function decisionHtml(r){
   return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${done?`<span class="dstate ds-done">${t("조치 완료")} ✓</span>`:`<span class="dstate ds-task">${t("조치 예정")} · ${tk.due===TODAY?t("오늘"):kDate(tk.due)} · ${esc(tk.who)}</span>`}<span class="sow-meta">${tk.acts.map(t).join(", ")}</span></div>`;
 }
 function recRow(r){
-  return `<div class="srow"><div class="top"><span class="ic" style="background:${TYPES[r.type].c};width:26px;height:26px;font-size:12px">${TYPES[r.type].s}</span><div class="txt">${esc(summary(r))}<div class="who2">${kDate(r.workDate)} · ${esc(r.user)}${r.edited?" · "+t("수정됨"):""}</div></div>
+  return `<div class="srow"><div class="top">${icon(r.type,1)}<div class="txt">${esc(summary(r))}<div class="who2">${kDate(r.workDate)} · ${esc(r.user)}${r.edited?" · "+t("수정됨"):""}</div></div>
   <div class="rbtns">${ui.delId===r.id?`<button class="sbtn bad" type="button" data-a="delOk" data-v="${r.id}">${t("삭제 확정")}</button><button class="sbtn" type="button" data-a="delNo">${t("취소")}</button>`:`${EDITABLE(r.type)&&can("edit",r)?`<button class="sbtn" type="button" data-a="editRec" data-v="${r.id}">${t("수정")}</button>`:""}${can("delete")?`<button class="sbtn" type="button" data-a="del" data-v="${r.id}">${t("삭제")}</button>`:""}`}</div></div></div>`;
 }
 
@@ -1961,7 +1990,7 @@ const stockSt=(it,s)=>s.qty===null?"none":s.qty<it.par?"bad":s.qty<it.par*1.3?"w
 /* ================= v0.3 · 로그인 ================= */
 function vLogin(){
   const L2=ui.loginLang||"ko",sel=ui.loginId?state.accounts.find(a=>a.id===ui.loginId):null,pin=ui.pin||"";
-  let h=`<div class="login-box"><div class="login-brand">농장일지 <small class="ver">v0.3</small></div>
+  let h=`<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"><small class="ver">v0.3</small></div>
     <div class="chips" style="justify-content:center;flex-wrap:wrap">${LANGS.map(([c,n])=>`<button type="button" class="chip ${L2===c?"on":""}" data-a="loginLang" data-v="${c}">${n}</button>`).join("")}</div>`;
   if(!sel){
     h+=`<h2 style="text-align:center;margin:8px 0 0">${t("이름을 고르세요")}</h2><div class="acclist">${state.accounts.filter(a=>a.active).map(a=>`<button type="button" class="accbtn" data-a="loginPick" data-v="${a.id}"><b>${esc(a.name)}</b><small>${t(ROLE[a.role])} · ${(LANGS.find(l=>l[0]===a.lang)||["","한국어"])[1]}</small></button>`).join("")}</div>`;
@@ -2091,7 +2120,7 @@ function vReset(){
 
 /* ================= v0.3 · 가이드 ================= */
 const GUIDE=[
- {mock:`<div class="qgrid" style="grid-template-columns:repeat(3,1fr);pointer-events:none"><div class="qbtn miss"><span class="ic" style="background:var(--red)">폐</span>폐사</div><div class="qbtn"><span class="ic" style="background:var(--blue)">교</span>교배<span class="cnt">3</span></div><div class="qbtn zero"><span class="ic" style="background:var(--accent)">분</span>분만<span class="cnt">0</span></div></div>`,
+ {mock:`<div class="qgrid" style="grid-template-columns:repeat(3,1fr);pointer-events:none"><div class="qbtn miss">${icon("폐사")}폐사</div><div class="qbtn">${icon("교배")}교배<span class="cnt">3</span></div><div class="qbtn zero">${icon("분만")}분만<span class="cnt">0</span></div></div>`,
   ko:["홈 화면 보는 법","아침에 앱을 열면 홈에서 오늘 할 일과 입력할 것을 한 번에 봅니다.",["빨간 테두리 버튼은 오늘 아직 입력하지 않은 매일 기록입니다.","숫자는 오늘 입력한 건수, 파란 0은 ‘오늘 없음’으로 확인한 것입니다.","오른쪽(아래) ‘오늘 할 일’을 눌러 대상 모돈과 돈군을 확인합니다."]],
   vi:["Cách xem trang chủ","Mở app buổi sáng để xem việc cần làm và cần nhập.",["Nút viền đỏ: việc hằng ngày chưa nhập.","Số là số mục đã nhập, số 0 xanh là ‘Hôm nay không có’.","Bấm ‘Việc hôm nay’ để xem nái và đàn cần làm."]],
   ne:["गृह पृष्ठ हेर्ने तरिका","बिहान एप खोलेर आजको काम र भर्नुपर्ने कुरा हेर्नुहोस्।",["रातो किनारा: आज नभरेको दैनिक काम।","अंक भरेको संख्या हो, निलो 0 ‘आज छैन’ हो।","‘आजको काम’ थिचेर लक्ष्य माउ र समूह हेर्नुहोस्।"]],
@@ -2352,9 +2381,8 @@ async function gateOK(raw){
   return false;
 }
 function renderGate(err){document.body.classList.add("login");
-  $("#view").innerHTML=`<div class="login-box"><div class="login-brand">농장일지</div><div class="panel"><b>농장에서 받은 링크로만 열 수 있습니다.</b><div class="sow-meta">대표님께 받은 링크를 다시 눌러 주세요. 또는 대표님께 받은 입장 키를 아래에 입력하세요.</div><input type="text" id="gateIn" placeholder="입장 키 또는 받은 링크" inputmode="numeric" aria-label="받은 링크 또는 입장 키">${err?`<div class="errbox">입장 키가 맞지 않습니다.</div>`:""}<button class="save" type="button" id="gateBtn">열기</button></div></div>`;
+  $("#view").innerHTML=`<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"></div><div class="panel"><b>농장에서 받은 링크로만 열 수 있습니다.</b><div class="sow-meta">대표님께 받은 링크를 다시 눌러 주세요. 또는 대표님께 받은 입장 키를 아래에 입력하세요.</div><input type="text" id="gateIn" placeholder="입장 키 또는 받은 링크" inputmode="numeric" aria-label="받은 링크 또는 입장 키">${err?`<div class="errbox">입장 키가 맞지 않습니다.</div>`:""}<button class="save" type="button" id="gateBtn">열기</button></div></div>`;
   $("#gateBtn").onclick=async()=>{if(await gateOK($("#gateIn").value)){render()}else renderGate(true)}}
-
 
 /* ================= 시작 ================= */
 state=load();
@@ -2366,6 +2394,5 @@ state.cfgSt=state.cfgSt||{...CFG.st};state.tasks=state.tasks||[];state.todoLog=s
 gateOK().then(ok=>ok?render():renderGate());
 window.addEventListener("hashchange",()=>{if(/key=/.test(location.hash))gateOK().then(ok=>ok?render():renderGate(true))});
 </script>
-
 </body>
 </html>

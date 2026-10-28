@@ -1,0 +1,9 @@
+/* ===== 아이콘(SVG) · 테스트 라벨 ===== */
+.ic.svg svg{width:66%;height:66%;display:block}
+.ic.sm{width:26px;height:26px;font-size:12px}
+body.tagson [data-tag]{position:relative;outline:1px dashed rgba(214,160,0,.55);outline-offset:1px}
+body.tagson [data-tag]::before{content:attr(data-tag);position:absolute;z-index:50;top:0;left:0;padding:1px 5px 2px;background:#FFE45C;color:#4a3b00;font:700 10px/1.2 system-ui,sans-serif;border-radius:2px 2px 2px 7px;box-shadow:0 1px 3px rgba(0,0,0,.25);transform:translate(-35%,-62%) rotate(-4deg);pointer-events:none;white-space:nowrap}
+body.tagson .hd[data-tag]::before{transform:translate(4px,4px) rotate(-4deg)}
+.tagbtn{position:fixed;right:10px;bottom:84px;z-index:60;border:0;border-radius:18px;padding:7px 11px;background:#FFE45C;color:#4a3b00;font:700 12px system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+body:not(.tagson) .tagbtn{opacity:.55}
+.login-logo{display:block;width:150px;height:auto;margin:0 auto 4px;border-radius:28px}
