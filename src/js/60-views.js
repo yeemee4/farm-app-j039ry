@@ -23,6 +23,7 @@ function vHome(){
   const yMiss=missCount(addDays(TODAY,-1));let h="";
   if(!storageOK)h+=`<div class="banner info"><b>!</b><span>이 브라우저에서는 기록이 저장되지 않습니다.</span></div>`;
   if(yMiss)h+=`<button class="banner" type="button" data-a="goClose" data-v="${addDays(TODAY,-1)}"><b>${t("어제 미입력")} ${yMiss}</b><span>${t("눌러서 입력하거나 ‘없음’으로 마감하세요")} ›</span></button>`;
+  h+=wxHome();
   const c=statusCounts();
   h+=`<div class="homegrid"><div>`;
   h+=`<div class="sec-t">${t("모돈 상태")} <button type="button" data-a="tab" data-v="sows">${t("모돈 보기")} ›</button></div><div class="statusrow">`+

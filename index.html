@@ -524,6 +524,10 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .qbtn.pic .qlb{position:absolute;left:0;right:0;bottom:0;padding:5px 4px 6px;border-radius:0 0 10.5px 10.5px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);color:#3b2a1a;font-weight:800;text-align:center}
 /* 띠 더 투명·얇게 */
 .qbtn.pic .qlb{padding:2px 2px 3px;background:rgba(255,255,255,.35);-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);font-size:14px;line-height:1.25;text-shadow:0 0 3px #fff,0 0 2px #fff,0 0 1px #fff}
+/* 홈 날씨 */
+.wxcard{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.wxcard .wxt{font-size:18px}
+.wxal{flex-basis:100%;background:rgba(214,140,0,.15);color:var(--amber);font-weight:700;border-radius:8px;padding:5px 9px;font-size:13.5px}
 </style>
 </head>
 <body>
@@ -767,7 +771,7 @@ function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SV
 
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
-const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
+const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.wxcard,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
 const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM"};
 let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
 function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
@@ -1569,11 +1573,15 @@ let WX=null,wxAt=0;
 try{const c=JSON.parse(localStorage.getItem("farm-wx")||"null");if(c){WX=c.d;wxAt=c.at}}catch(e){}
 function wxLoad(){if(Date.now()-wxAt<30*60e3)return;wxAt=Date.now();
   fetch(`https://api.open-meteo.com/v1/forecast?latitude=${FARM.lat}&longitude=${FARM.lon}&current=temperature_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,weather_code&timezone=Asia%2FSeoul&forecast_days=2`)
-    .then(r=>r.json()).then(d=>{WX=d;try{localStorage.setItem("farm-wx",JSON.stringify({d,at:wxAt}))}catch(e){}if(tab==="board")render()}).catch(()=>{})}
+    .then(r=>r.json()).then(d=>{WX=d;try{localStorage.setItem("farm-wx",JSON.stringify({d,at:wxAt}))}catch(e){}if(tab==="board"||tab==="home")render()}).catch(()=>{})}
 const WXC=c=>c===0?"맑음":c<=3?"구름":c<=48?"안개":c<=67?"비":c<=77?"눈":c<=82?"소나기":c<=86?"눈":"뇌우";
 function wxDay(i){const d=WX&&WX.daily;return d?{max:Math.round(d.temperature_2m_max[i]),min:Math.round(d.temperature_2m_min[i]),wind:Math.round(d.wind_speed_10m_max[i]),code:d.weather_code[i]}:null}
 function wxLine(){wxLoad();if(!WX||!WX.current)return `<div class="bd-wx">${FARM.place} · ${t("날씨 불러오는 중")}</div>`;
   const c=WX.current,d=wxDay(0);return `<div class="bd-wx">${FARM.place} ${t(WXC(c.weather_code))} <b>${Math.round(c.temperature_2m)}℃</b> · ${d.min}~${d.max}℃ · ${t("바람")} ${Math.round(c.wind_speed_10m/3.6)}m/s</div>`}
+// 홈 맨 위 날씨 한 줄 (+ 경고)
+function wxHome(){wxLoad();if(!WX||!WX.current)return `<div class="wxcard"><span>${FARM.place} · ${t("날씨 불러오는 중")}</span></div>`;
+  const c=WX.current,d=wxDay(0),al=wxAlerts(0).replace(/bd-al wx/g,"wxal");
+  return `<div class="wxcard"><span><b>${FARM.place}</b> ${t(WXC(c.weather_code))} <b class="wxt">${Math.round(c.temperature_2m)}℃</b></span><span class="sow-meta">${d.min}~${d.max}℃ · ${t("바람")} ${Math.round(c.wind_speed_10m/3.6)}m/s</span>${al}</div>`}
 function wxAlerts(day){const d=wxDay(day||0),W=FARM.wx;if(!d)return "";const a=[];
   if(d.max>=W.hot)a.push(`${t("폭염")} ${d.max}℃ · ${t("환기·급수·쿨링 점검")}`);
   if(d.min<=W.cold)a.push(`${t("한파")} ${d.min}℃ · ${t("보온·급수관 동파 점검")}`);
@@ -2082,6 +2090,7 @@ function vHome(){
   const yMiss=missCount(addDays(TODAY,-1));let h="";
   if(!storageOK)h+=`<div class="banner info"><b>!</b><span>이 브라우저에서는 기록이 저장되지 않습니다.</span></div>`;
   if(yMiss)h+=`<button class="banner" type="button" data-a="goClose" data-v="${addDays(TODAY,-1)}"><b>${t("어제 미입력")} ${yMiss}</b><span>${t("눌러서 입력하거나 ‘없음’으로 마감하세요")} ›</span></button>`;
+  h+=wxHome();
   const c=statusCounts();
   h+=`<div class="homegrid"><div>`;
   h+=`<div class="sec-t">${t("모돈 상태")} <button type="button" data-a="tab" data-v="sows">${t("모돈 보기")} ›</button></div><div class="statusrow">`+
