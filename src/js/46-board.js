@@ -9,7 +9,7 @@ function vBoard(){
   const vlate=groups.find(x=>x.k==="bvax");const vl=vlate?vlate.items.filter(i=>i.sev==="bad").length:0;
   const T=k=>state.records.filter(r=>r.type===k&&r.workDate===TODAY);
   const memo=(state.memo||{})[D]||"";
-  const ids=x=>{const a=x.items.map(it=>it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 분만군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 분만군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
+  const ids=x=>{const a=x.items.map(it=>it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 돈군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
   // 모돈 상태
   const c=statusCounts();
   const sc=[["heat","발정 관찰"],["분만임박","분만 임박"],["포유","포유"],["확인전","확인 전"],["임신","임신"],["재발공태","재발·공태"]].map(([k,l])=>`<span class="bd-chip ${k==="heat"&&c.heat?"hot":""}"><small>${t(l)}</small><b>${c[k]||0}</b></span>`).join("");

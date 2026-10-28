@@ -2,7 +2,7 @@
 const LOSS=FARM.stageLoss;
 function isoWeek(s){const t=new Date(toUTC(s));const d=(t.getUTCDay()+6)%7;const th=new Date(t.getTime()+(3-d)*864e5);const y=th.getUTCFullYear();const j=Date.UTC(y,0,1);return {y,w:1+Math.floor((th.getTime()-j)/(7*864e5))}}
 function weekStart(s){const t=new Date(toUTC(s));const wd=(t.getUTCDay()+6)%7;return addDays(s,-wd)}
-function bName(k){const i=isoWeek(k),c=isoWeek(TODAY);return `${i.y!==c.y?String(i.y).slice(2)+"-":""}W${i.w} 분만군`}
+function bName(k){const i=isoWeek(k),c=isoWeek(TODAY);return `${i.y!==c.y?String(i.y).slice(2)+"-":""}W${i.w} 돈군`}
 function bAgo(k){const n=Math.round(diff(k,weekStart(TODAY))/7);return n<=0?t("이번 주"):n+(LANG==="ko"?"":" ")+t("주 전")}
 const shipAge=()=>state.cfg.stage.reduce((s,x)=>s+x[1],0);
 const bAge=b=>Math.floor(diff(b.k,REF)/7);

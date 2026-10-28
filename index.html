@@ -1163,7 +1163,7 @@ document.addEventListener("change",e=>{
 const LOSS=FARM.stageLoss;
 function isoWeek(s){const t=new Date(toUTC(s));const d=(t.getUTCDay()+6)%7;const th=new Date(t.getTime()+(3-d)*864e5);const y=th.getUTCFullYear();const j=Date.UTC(y,0,1);return {y,w:1+Math.floor((th.getTime()-j)/(7*864e5))}}
 function weekStart(s){const t=new Date(toUTC(s));const wd=(t.getUTCDay()+6)%7;return addDays(s,-wd)}
-function bName(k){const i=isoWeek(k),c=isoWeek(TODAY);return `${i.y!==c.y?String(i.y).slice(2)+"-":""}W${i.w} 분만군`}
+function bName(k){const i=isoWeek(k),c=isoWeek(TODAY);return `${i.y!==c.y?String(i.y).slice(2)+"-":""}W${i.w} 돈군`}
 function bAgo(k){const n=Math.round(diff(k,weekStart(TODAY))/7);return n<=0?t("이번 주"):n+(LANG==="ko"?"":" ")+t("주 전")}
 const shipAge=()=>state.cfg.stage.reduce((s,x)=>s+x[1],0);
 const bAge=b=>Math.floor(diff(b.k,REF)/7);
@@ -1492,7 +1492,7 @@ function vBoard(){
   const vlate=groups.find(x=>x.k==="bvax");const vl=vlate?vlate.items.filter(i=>i.sev==="bad").length:0;
   const T=k=>state.records.filter(r=>r.type===k&&r.workDate===TODAY);
   const memo=(state.memo||{})[D]||"";
-  const ids=x=>{const a=x.items.map(it=>it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 분만군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 분만군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
+  const ids=x=>{const a=x.items.map(it=>it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 돈군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
   // 모돈 상태
   const c=statusCounts();
   const sc=[["heat","발정 관찰"],["분만임박","분만 임박"],["포유","포유"],["확인전","확인 전"],["임신","임신"],["재발공태","재발·공태"]].map(([k,l])=>`<span class="bd-chip ${k==="heat"&&c.heat?"hot":""}"><small>${t(l)}</small><b>${c[k]||0}</b></span>`).join("");
@@ -2104,7 +2104,7 @@ function vHome(){
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 분만군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 분만군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){return it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
