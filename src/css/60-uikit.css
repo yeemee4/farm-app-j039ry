@@ -40,3 +40,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .qbtn.pic{padding:0;gap:0}
 .qgrid .qbtn.pic .ic.tile{border-radius:10.5px}
 .qbtn.pic .qlb{position:absolute;left:0;right:0;bottom:0;padding:5px 4px 6px;border-radius:0 0 10.5px 10.5px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);color:#3b2a1a;font-weight:800;text-align:center}
+/* 띠 더 투명·얇게, 버튼은 한 줄 4개 */
+.qbtn.pic .qlb{padding:2px 2px 3px;background:rgba(255,255,255,.35);-webkit-backdrop-filter:blur(1.5px);backdrop-filter:blur(1.5px);font-size:12.5px;line-height:1.25;text-shadow:0 0 3px #fff,0 0 2px #fff,0 0 1px #fff}
+.qgrid:has(.qbtn.pic){grid-template-columns:repeat(4,1fr);gap:7px}
+.qbtn.pic .cnt{top:-7px;right:-6px;min-width:26px;height:26px;border-radius:13px;font-size:20px;padding:0 6px}
