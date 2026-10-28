@@ -7,3 +7,14 @@ body.tagson .hd[data-tag]::before{transform:translate(4px,4px) rotate(-4deg)}
 .tagbtn{position:fixed;right:10px;bottom:84px;z-index:60;border:0;border-radius:18px;padding:7px 11px;background:#FFE45C;color:#4a3b00;font:700 12px system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 body:not(.tagson) .tagbtn{opacity:.55}
 .login-logo{display:block;width:150px;height:auto;margin:0 auto 4px;border-radius:28px}
+.batch .bt .ago{font-weight:500;color:var(--muted);font-size:12px}
+.amcard.done{opacity:.92;border-left:4px solid var(--accent)}.chip.on.bad{background:var(--red);border-color:var(--red);color:#fff}
+.bd-wx{color:var(--tvmu);font-size:14px;white-space:nowrap}.bd-wx b{color:var(--tvfg)}
+body.tv .bd-wx{font-size:2vh}
+.bd-kpi{grid-template-columns:repeat(4,1fr)}
+.bd-al.wx{background:rgba(214,140,0,.18)}
+body.tv .bd-tbl td{padding:.25vh .5vw}
+body.tv .bd-kpi{gap:.5vh}body.tv .bd-kpi div{padding:.3vh}body.tv .bd-kpi b{font-size:2.8vh;line-height:1.1}
+body.tv .bd-side{grid-template-rows:auto auto minmax(0,1fr) auto}body.tv .b-memo{max-height:11vh}body.tv .bd-al{padding:.35vh .7vw}
+body.tv .bd-kpi{grid-template-columns:repeat(7,1fr)}body.tv .bd-kpi small{font-size:1.25vh;white-space:nowrap}body.tv .b-alert{gap:.5vh}
+body.tv .b-memo{max-height:8vh}body.tv .bd-tbl td{padding:.12vh .5vw}body.tv .b-alert{gap:.35vh}

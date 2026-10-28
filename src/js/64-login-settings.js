@@ -1,7 +1,7 @@
 /* ================= v0.3 · 로그인 ================= */
 function vLogin(){
   const L2=ui.loginLang||"ko",sel=ui.loginId?state.accounts.find(a=>a.id===ui.loginId):null,pin=ui.pin||"";
-  let h=`<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"><small class="ver">v0.3</small></div>
+  let h=`<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"><small class="ver">${APP_VER}</small></div>
     <div class="chips" style="justify-content:center;flex-wrap:wrap">${LANGS.map(([c,n])=>`<button type="button" class="chip ${L2===c?"on":""}" data-a="loginLang" data-v="${c}">${n}</button>`).join("")}</div>`;
   if(!sel){
     h+=`<h2 style="text-align:center;margin:8px 0 0">${t("이름을 고르세요")}</h2><div class="acclist">${state.accounts.filter(a=>a.active).map(a=>`<button type="button" class="accbtn" data-a="loginPick" data-v="${a.id}"><b>${esc(a.name)}</b><small>${t(ROLE[a.role])} · ${(LANGS.find(l=>l[0]===a.lang)||["","한국어"])[1]}</small></button>`).join("")}</div>`;
@@ -36,6 +36,7 @@ function vSettings(){
     ${ui.myPin?`<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>`:`<div class="acts"><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
   const menu=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`;
   h+=`<div class="more">${menu("guide",t("앱 가이드"),"상황별 사용 방법")}${menu("hus",t("사양관리 가이드"),"임신기간, 포유, 온도, 급수 등 기본 기준")}</div>`;
+  if(can("admin")&&FARM.confirm.length)h+=`<div class="sec-t">확인 필요 <span>${FARM.confirm.length}</span></div><div class="panel"><div class="note">아래 값은 임시로 넣어 두었습니다. 알려 주시면 바로 고칩니다.</div>${FARM.confirm.map(x=>`<div class="setrow"><span>${esc(x)}</span></div>`).join("")}</div>`;
   if(can("admin")){
     h+=`<div class="sec-t">관리자 설정 <span>대표 계정에서만 보입니다</span></div><div class="more">
       ${menu("accounts","계정 관리","직원 추가 · 권한 · 언어 · PIN · 정지")}
@@ -86,13 +87,13 @@ function vCriteria(){
     <div class="note">기준 미만 폐사는 알림 없이 ‘조치 추가’ 버튼만 보입니다.</div>`;
   h+=`<div class="sec-t">장기 무변동 기준 (일)</div>`+Object.keys(ST_LABEL).map(k=>`<div class="setrow"><span>${ST_LABEL[k]}</span>${stp("stStep",k,T[k],ST_LABEL[k])}</div>`).join("");
   h+=`<div class="sec-t">돈사별 머무는 주 수</div>`+C.stage.map(([n,w],i)=>`<div class="setrow"><span>${n}</span>${stp("cfgStage",i,w,n)}</div>`).join("")+`<div class="note">출하 ${shipAge()}주령</div>`;
-  h+=`<div class="sec-t">자돈 백신 프로그램 (접종 주령 · 예시)</div>`+C.prog.map((p,i)=>`<div class="setrow"><span>${p.name}</span>${stp("cfgProg",i,p.age,p.name)}</div>`).join("");
+  h+=`<div class="sec-t">돈군 백신 프로그램 (분만 주 월요일부터 일수)</div>`+C.prog.map((p,i)=>`<div class="setrow"><span>${p.name}</span>${stp("cfgProg",i,p.day,p.name)}</div>`).join("");
   h+=`<div class="sec-t">정액</div><div class="setrow"><span>모돈 1두당 교배 횟수</span>${stp("cfgSemen",0,C.semenPerSow,"교배 횟수")}</div>`;
   return h;
 }
 const BULK_ST=[["임신","임신 중","마지막 교배일"],["확인전","교배 후 확인 전","교배일"],["포유","포유 중","분만일"],["이유","이유 후 발정 대기","이유일"],["재발","재발·공태","확인한 날"],["후보","후보돈","도입일"]];
 function vBulk(){
-  const B=ui.bulk||(ui.bulk={st:"임신",date:addDays(TODAY,-40),bp:2,loc:"임신사",live:12,res:null});
+  const B=ui.bulk||(ui.bulk={st:"임신",date:addDays(TODAY,-40),bp:2,loc:"임신사 1동",live:12,res:null});
   const st=BULK_ST.find(x=>x[0]===B.st);
   let h=`<h2>모돈 일괄 등록</h2><div class="note">모돈 번호를 줄마다 하나씩 붙여 넣고, 같은 상태·같은 날짜인 모돈끼리 한 번에 등록합니다. 상태가 다르면 나눠서 여러 번 등록하세요. 등록한 모돈은 바로 할 일과 일정 계산에 들어갑니다.</div>
     <div class="f"><label for="bkIds">모돈 번호 (줄마다 하나)</label><textarea id="bkIds" placeholder="2301&#10;2302&#10;2303">${esc(B.ids||"")}</textarea></div>

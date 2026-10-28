@@ -7,13 +7,20 @@
 - `src/head.html`, `src/meta.html`, `src/body.html` — 문서 머리·뼈대
 - `src/css/NN-*.css` — 스타일 (번호 순서대로 합쳐짐, 뒤가 앞을 덮어씀)
 - `src/js/NN-*.js` — 스크립트 (번호 순서대로 합쳐짐, **뒤 파일이 같은 이름 함수를 다시 정의하면 그게 이김**: v0.2·v0.3 덮어쓰기 구조)
+  - **05 farm — 농장마다 다른 값 전부(돈사·단계 주수·백신 프로그램·사료·정액·아침 점검·확인 필요 목록). 값 피드백은 여기만 고친다.**
   - 10 config(CFG·TYPES·QUICK) · 15 uikit(아이콘·라벨) · 20 sow(모돈 상태) · 22 forms · 30 views-core · 32 actions
-  - 40~48 돈군·재고·모돈판·성적·TV현황판·약품 · 50 i18n(TR 사전) · 52 accounts(권한)
-  - 60 views(render·홈) · 62 input · 64 login/settings · 66 guide · 70 seed(예시 데이터) · 80 actions(v0.3) · 98 gate · 99 start
+  - 40~48 돈군·재고·모돈판·성적·TV현황판·약품 · 43 대리모·이유 보류 · 45 백신 엔진 · 47 사료·날씨
+  - 50 i18n(TR 사전) · **51 i18n-v04: 새 문구 번역은 여기에 추가** · 52 accounts(권한)
+  - 60 views(render·홈) · 62 input · 64 login/settings · 66 guide · 68 아침 점검 · 70 seed(예시 데이터) · 80 actions(v0.3) · 98 gate · 99 start
 - `src/icons/<종류>.svg` — 입력 종류별 아이콘. **파일 하나 = 아이콘 하나**. 파일 이름이 TYPES 키(폐사, 교배…)와 같아야 함. 없으면 글자 아이콘.
 - `index.html` — **빌드 결과물(직접 고치지 말 것)**. GitHub Pages가 이 파일을 배포.
 - `tools/build.py` — src → index.html. `--no-tags` 로 테스트 라벨 제거.
-- `tools/smoke.js` — `node tools/smoke.js <폴더>` 전 탭·입력 화면 열어서 오류 점검 + 스크린샷.
+- `tools/smoke.js` — `FARM_PIN=<대표PIN> node tools/smoke.js <폴더>` 전 탭·입력 화면 열어서 오류 점검 + 스크린샷.
+- `tools/probe.js` — `node tools/probe.js '<JS 식>'` 예시 데이터 상태에서 값 확인(화면 캡처 없이).
+- `tools/missing-tr.js` — 번역 빠진 문구 목록. 새 화면을 만든 뒤 돌려서 51 파일에 추가.
+
+## 할 일 묶음 추가하는 법
+`extraTodos()`(40)의 반환 배열에 `{k,t,items,act}` 를 더한다. 항목 종류별로 `itemTarget`·`tdName`(20), `itemShort`·`openTodo` 그리기(60), 현황판 `ids`(46)에 한 줄씩. 날짜와 상관없이 한 번만 체크하는 묶음은 `tdKey`(20)의 목록에 k 추가.
 
 ## 작업 순서
 1. `src/` 수정 → `python3 tools/build.py` → `node tools/smoke.js $SCRATCH` (오류 0 확인)
@@ -45,7 +52,7 @@
 - 모돈 번호 Y-NNN(구 모돈 3-/4-/5-), 도입 시 다음 번호 자동, 품종 기본 LY.
 
 ## 단계 계획
-- A v0.4 비담 실제 설정(위 항목 + 아침 점검표, 현황판 날씨 Open-Meteo, 예시 데이터 재생성)
+- A v0.4 비담 실제 설정 — 완료(돈사·단계·백신 4종·사료 빈/포대·정액 마감·대리모·이유 보류·아침 점검·날씨·모돈 번호). 남은 확인값은 FARM.confirm
 - B v0.5 구글 시트 + Apps Script 서버(로그인·동기화·오프라인), 다농장 구조, 디스코드 알림
 - C v0.6 경영 탭(비담·대표 전용): 문자(단축어)·정산서 PDF·부채(농협 9억, 부국사료 6억)·손익·50만원 이상 시설 확인·휴무(한국인)·인건비
 - D v0.7+ 출하일 예측·FCR·계절 보정, 농장 지도, 대표 통합 대시보드

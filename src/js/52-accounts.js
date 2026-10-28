@@ -30,7 +30,8 @@ function statusOf(s){
   else if(st.stage==="임신"){d=diff(st.mate,REF);const left=CFG.gest-d;
     if(left<=CFG.farrowIn){key="분만임박";label=t("분만 임박");sub=left>0?`${t("분만")} D−${left}`:left===0?t("오늘 분만 예정"):`${t("분만")} +${-left}${t("일 지남")}`;cls="c-due"}
     else{key="임신";label=t("임신");sub=`${t("임신")} ${d}${t("일")}`;cls="c-preg"}}
-  else if(st.stage==="포유"){d=diff(st.farrow,REF);key="포유";label=t("포유");sub=`${t("포유")} ${d}${t("일")} · ${t("실산")} ${st.live}`;cls="c-lac"}
+  else if(st.stage==="포유"){d=diff(st.farrow,REF);key="포유";label=t(s.nurse?"대리모":"포유");sub=s.nurse?`${t("대리모")} ${diff(s.nurse.since,REF)}${t("일")}`:`${t("포유")} ${d}${t("일")} · ${t("실산")} ${st.live}`;cls="c-lac";
+    if(s.weanHold&&s.weanHold.until>=REF)sub+=` · ${t("이유 보류")} ~${kDate(s.weanHold.until)}`}
   else {d=diff(st.since,REF);key="재발공태";label=t(st.lastResult||"재발");sub=`${t(st.lastResult)} D+${d} · ${t("재교배 대기")}`;heat=true;cls="c-ret"}
   return {...st,parity,gilt,key,label,sub,cls,heat,d,plan:s.cullPlan};
 }

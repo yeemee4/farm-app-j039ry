@@ -95,6 +95,7 @@ function vSow(){
   else if(C&&C.step==="confirm")cb=`<div class="cullbox on"><h4>정말 도태하시겠습니까?</h4><div class="sow-meta">${id}번 · 사유: ${esc(C.reason)}. 도태 후에도 모든 기록은 보관되고 ‘도태됨’ 목록에서 언제든 볼 수 있습니다.</div><div class="chipwrap">${CULL_REASONS.map(r=>`<button type="button" class="chip wrap ${C.reason===r?"on":""}" data-a="cullReason" data-v="${r}">${r}</button>`).join("")}</div><div class="acts"><button class="act bad" type="button" data-a="cullDo" data-v="${id}">도태 확정</button><button class="act" type="button" data-a="cullCancel">취소</button></div></div>`;
   else if(s.cullPlan)cb=`<div class="cullbox"><h4>도태 예정 · ${kDate(s.cullPlan.date)}</h4><div class="sow-meta">사유: ${esc(s.cullPlan.reason)}</div><div class="acts"><button class="act bad" type="button" data-a="cullConfirm" data-v="${id}">도태 실행</button><button class="act" type="button" data-a="cullPlanDel" data-v="${id}">계획 취소</button></div></div>`;
   else cb=`<div class="acts"><button class="act" type="button" data-a="cullPlan" data-v="${id}">도태 계획 세우기</button><button class="act bad" type="button" data-a="cullConfirm" data-v="${id}">바로 도태</button></div>`;
+  R+=vLacBox(s,i);
   if(can("cull"))R+=`<div class="sec-t">도태</div>`+cb;
   const back=ui.sowBack&&ui.sowBack!=="sow"?ui.sowBack:"sows";
   return `<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="${back}">‹ ${back==="sows"?"모돈 목록":"뒤로"}</button><h2><span class="sow-no" style="font-size:20px">${id}</span>${i.gilt?"후보돈":"모돈"} 현황판</h2></div>

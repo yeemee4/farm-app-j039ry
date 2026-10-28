@@ -7,7 +7,7 @@ function vBatch(){
   if(!L.length)return h+`<div class="empty">사육 중인 돈군이 없습니다.</div>`;
   h+=`<div class="sowgrid">`+L.map(b=>{
     const age=bAge(b),vs=state.cfg.prog.map(p=>bVax(b,p)),lastDone=[...vs].reverse().find(v=>v.st==="done"),next=vs.find(v=>v.st!=="done"),bad=vs.some(v=>v.st==="late"||v.st==="part");
-    return `<div class="batch ${bad?"bad":""}"><div class="bt"><b>${bName(b.k)}</b><span class="stage ${age<state.cfg.stage[0][1]?"c-lac":"c-preg"}">${stagePlan(age)}</span></div>
+    return `<div class="batch ${bad?"bad":""}"><div class="bt"><b>${bName(b.k)} <small class="ago">· ${bAgo(b.k)}</small></b><span class="stage ${age<state.cfg.stage[0][1]?"c-lac":"c-preg"}">${stagePlan(age)}</span></div>
       <div class="sow-meta">${kDate(b.k)} 주 분만 · ${b.manual?`초기 등록 ${b.litters||"-"}복`:`${b.f.length}복`} · ${age}주령 · 약 ${bHeads(b,age).toLocaleString()}두</div>
       <div class="vsteps">${vs.map(v=>`<span class="sd ${VST[v.st][0]}" title="${v.p.name} ${v.done}/${v.need}두">${v.p.name}${v.st==="partnow"||v.st==="part"?` ${Math.round(v.done/v.need*100)}%`:v.st==="late"?" !":""}</span>`).join("")}</div>
       <div class="sow-meta">마지막 완료: <b>${lastDone?lastDone.p.name:"없음"}</b> · 다음: <b>${next?`${next.p.name} (${kDate(next.due)} 주)`:"모두 완료"}</b></div>
@@ -21,8 +21,9 @@ function vDrug(){
   const list=state.items.filter(i=>!i.hidden&&(cf==="전체"||i.cat===cf)).map(it=>({it,s:stockOf(it)}));
   const so=semenOrder();
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>약품·재고</h2><button class="act pri" type="button" data-a="input" data-v="재고">+ 입고·사용·실사</button></div>`;
-  h+=`<div class="chips">${["전체",...CATS].map(c=>`<button type="button" class="chip ${cf===c?"on":""}" data-a="drugCat" data-v="${c}">${c} ${c==="전체"?state.items.filter(i=>!i.hidden).length:state.items.filter(i=>!i.hidden&&i.cat===c).length}</button>`).join("")}</div>`;
-  if(so.order&&(cf==="전체"||cf==="정액"))h+=`<div class="banner"><b>정액 주문</b><span>내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}회 = ${so.doses}개 · 재고 ${so.stock}개 → <b>${so.order}개</b> 오늘 주문</span></div>`;
+  h+=`<div class="chips">${["전체","사료",...CATS].map(c=>`<button type="button" class="chip ${cf===c?"on":""}" data-a="drugCat" data-v="${c}">${c} ${c==="전체"?state.items.filter(i=>!i.hidden).length:c==="사료"?feedKinds().length:state.items.filter(i=>!i.hidden&&i.cat===c).length}</button>`).join("")}</div>`;
+  if(so.order&&(cf==="전체"||cf==="정액"))h+=`<div class="banner"><b>정액 주문</b><span>내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → <b>${so.order}${FARM.semen.unit}</b> 오늘 ${FARM.semen.deadline}까지 주문</span></div>`;
+  if(cf==="사료")return h+vFeedPanel();
   h+=`<div class="note">처음에는 ‘실사’로 현재 수량을 넣어 시작하세요. 재고는 입고·사용·실사 기록과 접종·투약·교배 기록으로 자동 계산합니다. <b>적정 재고</b>는 관리자가 정하는 값이며, 그보다 적으면 할 일과 현황판에 알립니다.</div>`;
   h+=`<div class="sowgrid">${list.map(({it,s})=>{const st=stockSt(it,s),pct=Math.min(100,it.par?(s.qty||0)/(it.par*2)*100:100),E=ui.itemEdit===it.id;
     return `<div class="batch"><div class="bt"><b>${esc(it.name)}</b><span class="dstate ${st==="none"?"ds-none":st==="bad"?"ds-wait":st==="warn"?"ds-task":"ds-done"}">${st==="none"?"미입력":st==="bad"?"부족":st==="warn"?"주의":"충분"}</span></div>
@@ -35,6 +36,7 @@ function vDrug(){
     <div class="f"><span class="lb">구분</span><div class="chipwrap">${CATS.map(c=>`<button type="button" class="chip wrap ${ui.newItem.cat===c?"on":""}" data-a="niCat" data-v="${c}">${c}</button>`).join("")}</div></div>
     <div class="row2"><div class="f" style="flex:1"><label for="niUnit">단위</label><input type="text" id="niUnit" value="${ui.newItem.unit}" placeholder="병, kg, L"></div><div class="f" style="flex:1"><label for="niPar">적정 재고</label><input type="number" id="niPar" value="10" inputmode="numeric"></div></div>
     <div class="acts"><button class="act pri" type="button" data-a="niSave">추가</button><button class="act" type="button" data-a="niCancel">취소</button></div></div>`:can("admin")?`<button class="act" type="button" data-a="niOpen" style="justify-self:start">+ 품목 추가</button>`:"";
+  if(cf==="전체")h+=vFeedPanel();
   return h;
 }
 
@@ -42,7 +44,7 @@ function bvDefault(){const I=ui.in,b=batches().find(x=>x.k===I.fv.batch),p=state
 function seedPost(){
   const W=["김OO","Nguyen","이OO"];let k=0;const L=liveBatches();
   const miss=L.find(b=>bAge(b)>=8&&bAge(b)<10),part=L.find(b=>bAge(b)>=11&&bAge(b)<13);
-  L.forEach(b=>state.cfg.prog.forEach((p,pi)=>{const due=addDays(b.k,p.age*7);if(due>addDays(TODAY,-7))return;
+  L.forEach(b=>state.cfg.prog.forEach((p,pi)=>{const due=addDays(b.k,p.day);if(due>addDays(TODAY,-7))return;
     if(b===miss&&pi===1)return;let n=bVax(b,p).need;if(b===part&&pi===2)n=Math.round(n*.7);
     const wd=addDays(due,2);state.records.push({id:newId(),type:"돈군백신",workDate:wd,createdAt:new Date(toUTC(wd)+9*36e5).toISOString(),user:W[k++%3],data:{batch:b.k,vax:p.name,prod:p.prod,n}})}));
   const qty={i1:14,i2:3,i3:80,i4:55,i5:7,i6:900,i7:1400,i8:420,i9:70,i10:75,i11:3};const d2=addDays(TODAY,-2);
@@ -90,7 +92,7 @@ Object.assign(A,{
   niSave:()=>{const name=$("#niName").value.trim();if(!name){toast("품목 이름을 입력하세요");return}if(state.items.some(i=>i.name===name&&!i.hidden)){toast("이미 있는 품목입니다");return}
     state.items.push({id:"i"+newId(),name,cat:ui.newItem.cat,unit:$("#niUnit").value.trim()||"개",par:Number($("#niPar").value)||0,withdraw:0});ui.newItem=null;save();render();toast(`${name}을(를) 추가했습니다`)},
   cfgStage:(v,el)=>{const x=state.cfg.stage[+el.dataset.k];x[1]=Math.max(1,x[1]+Number(v));save();render()},
-  cfgProg:(v,el)=>{const p=state.cfg.prog[+el.dataset.k];p.age=Math.max(1,p.age+Number(v));save();render()},
+  cfgProg:(v,el)=>{const p=state.cfg.prog[+el.dataset.k];p.day=Math.max(1,p.day+Number(v));save();render()},
   cfgSemen:v=>{state.cfg.semenPerSow=Math.max(1,state.cfg.semenPerSow+Number(v));save();render()}
 });
 

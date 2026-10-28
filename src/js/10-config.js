@@ -1,9 +1,9 @@
 /* ================= 기본 설정 ================= */
-const CFG={gest:114, weanMateLimit:4, returnCheck:[18,24], pregCheck:25, farrowIn:7, weanDay:21,
+const CFG={gest:FARM.gest, weanMateLimit:4, returnCheck:FARM.checkDays, pregCheck:FARM.pregDays[0], farrowIn:FARM.farrowIn, weanDay:FARM.weanDay,
   st:{weanNoMate:14, farrowNoWean:42, mateNoCheck:35, gestOver:117, giltNoMate:60}};
 const ST_LABEL={weanNoMate:"이유 후 교배 기록 없음",farrowNoWean:"분만 후 이유 기록 없음",mateNoCheck:"교배 후 임신 확인 없음",gestOver:"교배 후 분만 기록 없음",giltNoMate:"후보돈 도입 후 교배 없음"};
-const BARNS=["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"];
-const SOW_LOCS=["후보돈사","교배사","임신사","분만사"];
+const BARNS=FARM.barns.slice();
+const SOW_LOCS=FARM.sowLocs.slice();
 const PIG_STAGES=["포유자돈","이유자돈","육성돈","비육돈","모돈","웅돈"];
 const CAUSES=["압사","설사·소화기","호흡기","허약","외상","원인불명","기타"];
 const WORKERS=["김OO","이OO","박OO","Nguyen"];

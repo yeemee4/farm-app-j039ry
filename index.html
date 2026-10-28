@@ -489,12 +489,23 @@ body.tagson .hd[data-tag]::before{transform:translate(4px,4px) rotate(-4deg)}
 .tagbtn{position:fixed;right:10px;bottom:84px;z-index:60;border:0;border-radius:18px;padding:7px 11px;background:#FFE45C;color:#4a3b00;font:700 12px system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 body:not(.tagson) .tagbtn{opacity:.55}
 .login-logo{display:block;width:150px;height:auto;margin:0 auto 4px;border-radius:28px}
+.batch .bt .ago{font-weight:500;color:var(--muted);font-size:12px}
+.amcard.done{opacity:.92;border-left:4px solid var(--accent)}.chip.on.bad{background:var(--red);border-color:var(--red);color:#fff}
+.bd-wx{color:var(--tvmu);font-size:14px;white-space:nowrap}.bd-wx b{color:var(--tvfg)}
+body.tv .bd-wx{font-size:2vh}
+.bd-kpi{grid-template-columns:repeat(4,1fr)}
+.bd-al.wx{background:rgba(214,140,0,.18)}
+body.tv .bd-tbl td{padding:.25vh .5vw}
+body.tv .bd-kpi{gap:.5vh}body.tv .bd-kpi div{padding:.3vh}body.tv .bd-kpi b{font-size:2.8vh;line-height:1.1}
+body.tv .bd-side{grid-template-rows:auto auto minmax(0,1fr) auto}body.tv .b-memo{max-height:11vh}body.tv .bd-al{padding:.35vh .7vw}
+body.tv .bd-kpi{grid-template-columns:repeat(7,1fr)}body.tv .bd-kpi small{font-size:1.25vh;white-space:nowrap}body.tv .b-alert{gap:.5vh}
+body.tv .b-memo{max-height:8vh}body.tv .bd-tbl td{padding:.12vh .5vw}body.tv .b-alert{gap:.35vh}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hd">
-    <div><h1>비담농장 <small class="ver">v0.3</small></h1><div class="date" id="hdDate"></div></div>
+    <div><h1>비담농장 <small class="ver" id="hdVer"></small></h1><div class="date" id="hdDate"></div></div>
     <button class="who" id="whoBtn" type="button" data-a="goSettings"><i></i><span id="whoName"></span></button>
   </header>
   <main id="view"></main>
@@ -507,12 +518,108 @@ body:not(.tagson) .tagbtn{opacity:.55}
 <script>
 const ICON_SVG={"BCS": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 17a8.5 8.5 0 0 1 17 0\"/><path d=\"m12 17 4-5\"/><path d=\"M6.5 17h0M17.5 17h0M8 11.5h0M12 9h0\"/></svg>", "교배": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"9\" cy=\"10\" r=\"4.5\"/><circle cx=\"15\" cy=\"14\" r=\"4.5\"/><path d=\"M9 14.5V21M6.5 18.5h5M18.2 10.8 21 8M17.5 8H21v3.5\"/></svg>", "도입": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.5 8.5 5 4.5l4 2.2M17.5 8.5 19 4.5l-4 2.2\"/><circle cx=\"12\" cy=\"13\" r=\"7\"/><ellipse cx=\"12\" cy=\"15\" rx=\"3\" ry=\"2.1\"/><path d=\"M11 15h0M13 15h0\"/><path d=\"M9 10.5h0M15 10.5h0\"/><path d=\"M20 1.5v4M18 3.5h4\"/></svg>", "도태": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 7h16M9 7V4.5h6V7M6 7l1 13.5h10L18 7\"/><path d=\"M10 11v6M14 11v6\"/></svg>", "돈군백신": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m14 3 3.5 3.5M15.8 4.8 13 7.5M11.5 6l2.5 2.5M12.8 7.2 6 14l-2 .5.5-2L11.2 5.6z\"/><path d=\"M4.5 15.5 2.5 17.5\"/><circle cx=\"14\" cy=\"18\" r=\"2\"/><circle cx=\"19.5\" cy=\"18\" r=\"2\"/><circle cx=\"16.8\" cy=\"13\" r=\"2\"/></svg>", "백신": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m17 3 4 4M19 5l-3 3M15 6.5l2.5 2.5M16 8 7.5 16.5 5 17l.5-2.5L14 6z\"/><path d=\"M5.5 18.5 3 21M9 11.5l1.5 1.5M11 9.5l1.5 1.5\"/></svg>", "분만": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M6.5 8.5 5 4.5l4 2.2M17.5 8.5 19 4.5l-4 2.2\"/><circle cx=\"12\" cy=\"13\" r=\"7\"/><ellipse cx=\"12\" cy=\"15\" rx=\"3\" ry=\"2.1\"/><path d=\"M11 15h0M13 15h0\"/><path d=\"M9 10.5h0M15 10.5h0\"/><path d=\"M20 2.5v3M18.5 4h3\"/></svg>", "사료": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 21V9\"/><path d=\"M12 9c-2.5 0-4-1.8-4-4.5 2.5 0 4 1.8 4 4.5zM12 9c2.5 0 4-1.8 4-4.5-2.5 0-4 1.8-4 4.5zM12 14c-2.5 0-4-1.8-4-4.5 2.5 0 4 1.8 4 4.5zM12 14c2.5 0 4-1.8 4-4.5-2.5 0-4 1.8-4 4.5zM12 19c-2.5 0-4-1.8-4-4.5 2.5 0 4 1.8 4 4.5zM12 19c2.5 0 4-1.8 4-4.5-2.5 0-4 1.8-4 4.5z\"/></svg>", "약품": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2.8\" y=\"8.2\" width=\"18.4\" height=\"7.6\" rx=\"3.8\" transform=\"rotate(-45 12 12)\"/><path d=\"m8.8 8.8 6.4 6.4\"/></svg>", "이동": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4\"/></svg>", "이유": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 2.5h4M10.5 2.5v3h3v-3M8.5 8.5a3 3 0 0 1 3-3h1a3 3 0 0 1 3 3V20a1.5 1.5 0 0 1-1.5 1.5h-4A1.5 1.5 0 0 1 8.5 20z\"/><path d=\"M8.5 12h3M8.5 15.5h3\"/><path d=\"M4 4l16 16\"/></svg>", "임신확인": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6\"/><path d=\"m15 15 5.5 5.5\"/><path d=\"m7.8 10.6 2 2 3.6-4\"/></svg>", "재고": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12.5h8v8H3zM13 12.5h8v8h-8zM8 4.5h8v8H8z\"/><path d=\"M6 12.5v2.5M17 12.5v2.5M12 4.5V7\"/></svg>", "조치": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"m8 12.2 2.8 2.8 5.2-5.6\"/></svg>", "출하": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2.5 6.5h11v9h-11zM13.5 9.5h4l3.5 3.5v2.5h-7.5\"/><circle cx=\"6.5\" cy=\"17.5\" r=\"2\"/><circle cx=\"17\" cy=\"17.5\" r=\"2\"/></svg>", "특이사항": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 3.5h10l4 4V20.5H5z\"/><path d=\"M15 3.5v4h4\"/><path d=\"M12 9.5v5M12 17.5h0\"/></svg>", "폐사": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z\"/><path d=\"M8 11.5h2.2l1.2-2 1.6 4 1.2-2H16\"/></svg>"};
 const BUILD_TAGS=true;
+/* ================= 농장 설정 (비담농장) =================
+   농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
+const APP_VER="v0.4";
+const FARM={
+  name:"비담농장", place:"천안", lat:36.81, lon:127.11,
+  // 돈사 (입력 화면 선택지 순서)
+  barns:["교배사","임신사 1동","임신사 2동","분만사","인큐베이터","자돈사","군사방","육성비육사"],
+  // 모돈이 있을 수 있는 곳
+  sowLocs:["후보·격리칸","교배사","임신사 1동","임신사 2동","분만사"],
+  // 돈군 단계: [돈사, 주수] — 분만 주차부터 차례로
+  stage:[["분만사",4],["인큐베이터",2],["자돈사",4],["군사방",6],["육성비육사",10]],
+  stageLoss:[.08,.03,.02,.015,.015],      // 단계별 예상 폐사율(두수 추정용)
+  stageOf:{분만사:"포유자돈",인큐베이터:"이유자돈",자돈사:"이유자돈",군사방:"육성돈",육성비육사:"비육돈"},
+  gest:114, weanDay:28, farrowIn:7,
+  checkDays:[18,24], pregDays:[21,23],   // 재발 확인 18~24일 중 21~23일이 임신진단 적기
+  sowPrefix:"Y-", breed:"LY"
+};
+
+// 백신 프로그램 (대표님 표 기준). prod = 재고에서 빠지는 품목 이름(여러 개면 배열)
+FARM.vax={
+  // 웅돈·모돈·후보돈 연간 일괄: [월, 그 달 몇째 주, 차수]
+  annual:[
+    {name:"HE(콜레라·돈단독)",prod:"HE(콜레라·돈단독)",when:[[1,2,"1차"],[7,2,"2차"]]},
+    {name:"PRRS",prod:"PRRS",when:[[1,1,"1차"],[4,1,"2차"],[7,1,"3차"],[10,1,"4차"]]},
+    {name:"PED",prod:"PED",when:[[11,1,"사독 1차"],[11,3,"생독 2차"],[12,2,"사독 3차"],[12,4,"생독 4차"],[2,2,"생독 5차"]]}
+  ],
+  // 후보돈 입식 후 일수
+  gilt:[
+    {name:"파보 1차",prod:"파보",day:2},{name:"AR 대장균 1차",prod:"AR 대장균",day:7},{name:"TR 1차",prod:"TR",day:14},
+    {name:"파보 2차",prod:"파보",day:21},{name:"FMD 1차",prod:"FMD(구제역)",day:21},{name:"AR 대장균 2차",prod:"AR 대장균",day:28},{name:"TR 2차",prod:"TR",day:35}
+  ],
+  // 임신 말기: 분만 예정일 몇 주 전
+  late:[
+    {name:"AR (분만 6주 전)",prod:"AR",wk:6},{name:"대장균+TR 1차 (분만 4주 전)",prod:"대장균+TR",wk:4},
+    {name:"AR+FMD (분만 3주 전)",prod:["AR","FMD(구제역)"],wk:3,note:"좌우 이근부 각각"},{name:"대장균+TR 2차 (분만 2주 전)",prod:"대장균+TR",wk:2}
+  ],
+  // 복(한 배)마다 체크하는 처치: 분만 후 일수
+  litter:[{name:"1일 처치 · 가나비강·바이트릴·견치·단미",day:1},{name:"3일 처치 · 콕시듐·철분",day:3}],
+  // 돈군(분만 주차) 접종: 분만 주 월요일부터 일수
+  piglet:[
+    {name:"마이코·글레서 1차",prod:"마이코·글레서",day:7},{name:"마이코·글레서 2차",prod:"마이코·글레서",day:14},
+    {name:"써코 PCV",prod:"써코 PCV",day:21},{name:"HE(단콜)",prod:"HE(콜레라·돈단독)",day:45},
+    {name:"AR+P 흉막 1차",prod:"AR+P 흉막",day:52},{name:"FMD 1차",prod:"FMD(구제역)",day:59},
+    {name:"AR+P 흉막 2차",prod:"AR+P 흉막",day:65},{name:"FMD 2차",prod:"FMD(구제역)",day:73}
+  ]
+};
+// 재고 품목: [이름, 구분, 단위, 적정 재고, 휴약일]
+FARM.items=[
+  ["호흡기 항생제","항생제","병",10,28],["설사 항생제","항생제","병",8,21],["생균제","사료첨가제","kg",50,0],
+  ["축사 소독제","소독제","L",40,0],["주사기","비품","박스",5,0],
+  ["HE(콜레라·돈단독)","백신","두분",150,0],["PRRS","백신","두분",100,0],["PED","백신","두분",100,0],
+  ["파보","백신","두분",10,0],["AR 대장균","백신","두분",10,0],["TR","백신","두분",10,0],["FMD(구제역)","백신","두분",250,0],
+  ["AR","백신","두분",20,0],["대장균+TR","백신","두분",30,0],["마이코·글레서","백신","두분",250,0],["써코 PCV","백신","두분",120,0],
+  ["AR+P 흉막","백신","두분",250,0],["듀록 정액","정액","팩",10,0]
+];
+
+// 사료. ★ 확인 필요: 빈별 사료·용량, 포대 무게, 1호 쓰는 시기, 하루 급여량
+FARM.feed={
+  bins:[{name:"1번 빈",feed:"임신모돈",cap:8000},{name:"2번 빈",feed:"포유모돈",cap:6000},{name:"3번 빈",feed:"젖먹이",cap:8000},{name:"4번 빈",feed:"육성",cap:10000}],
+  bags:[{feed:"특호",kg:20},{feed:"1호",kg:20},{feed:"2호",kg:20},{feed:"3호",kg:20}],
+  // 1두 하루 급여량(kg) 추정
+  use:{임신모돈:2.6,포유모돈:6,특호:.04,"1호":.15,"2호":.35,"3호":.55,젖먹이:.9,육성:2.1},
+  // 돈군 일령별 급여 (분만 주 월요일부터 일수)
+  piglet:[{from:5,to:21,feed:"특호",note:"밀크 (입질사료)"},{from:15,to:35,feed:"2호",note:"15~21일 밀크+2호 · 인큐 전기"},{from:35,to:45,feed:"3호",note:"인큐 후기"},{from:45,to:76,feed:"젖먹이",note:"자돈사"},{from:76,to:999,feed:"육성",note:"군사방·육성비육사"}],
+  orderDays:5      // 남은 일수가 이 이하이면 주문 알림
+};
+
+// 정액: 모돈당 팩 수, 주문 마감, 알림 시각
+FARM.semen={perSow:2,unit:"팩",deadline:"16:00",alerts:["13:00","15:30"]};
+
+// 아침 점검: 도는 순서대로. ★ 확인 필요: 목표 온도, 돈사별 추가 항목
+FARM.morning={
+  due:"09:00",
+  items:["물","사료","공기(환기)","폐사","이상 개체"],
+  route:[
+    {barn:"교배사",temp:[18,22]},{barn:"임신사 1동",temp:[18,22]},{barn:"임신사 2동",temp:[18,22]},
+    {barn:"분만사",temp:[20,24],extra:["보온등"]},{barn:"인큐베이터",temp:[28,32],extra:["보온 매트"]},
+    {barn:"자돈사",temp:[24,28]},{barn:"군사방",temp:[20,24]},{barn:"육성비육사",temp:[16,22]}
+  ]
+};
+
+// 현황판 날씨 경고 기준
+FARM.wx={hot:30, cold:0, wind:40};   // 최고 ℃ 이상 · 최저 ℃ 이하 · 최대 풍속 km/h 이상
+
+// 대표님께 확인받을 항목 (설정 > 확인 필요 에 보임). 확인되면 값 고치고 여기서 지운다.
+FARM.confirm=[
+  "포세리스 — 어떤 약인지, 언제 쓰는지",
+  "출하처 — 실제 도축장·공판장 이름",
+  "대출 금리 — 농협 9억, 부국사료 6억",
+  "사료 빈 4개 — 빈마다 들어가는 사료와 용량(톤)",
+  "사료 포대 — 1포 무게, 1호를 쓰는 시기",
+  "하루 급여량 — 모돈·자돈 단계별 kg",
+  "아침 점검 — 돈사별 목표 온도, 추가 점검 항목",
+  "돈사별 칸(스톨·펜) 수와 수용 두수",
+  "날씨 경고 기준 — 폭염 30℃ · 한파 0℃ · 강풍 11m/s"
+];
 /* ================= 기본 설정 ================= */
-const CFG={gest:114, weanMateLimit:4, returnCheck:[18,24], pregCheck:25, farrowIn:7, weanDay:21,
+const CFG={gest:FARM.gest, weanMateLimit:4, returnCheck:FARM.checkDays, pregCheck:FARM.pregDays[0], farrowIn:FARM.farrowIn, weanDay:FARM.weanDay,
   st:{weanNoMate:14, farrowNoWean:42, mateNoCheck:35, gestOver:117, giltNoMate:60}};
 const ST_LABEL={weanNoMate:"이유 후 교배 기록 없음",farrowNoWean:"분만 후 이유 기록 없음",mateNoCheck:"교배 후 임신 확인 없음",gestOver:"교배 후 분만 기록 없음",giltNoMate:"후보돈 도입 후 교배 없음"};
-const BARNS=["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"];
-const SOW_LOCS=["후보돈사","교배사","임신사","분만사"];
+const BARNS=FARM.barns.slice();
+const SOW_LOCS=FARM.sowLocs.slice();
 const PIG_STAGES=["포유자돈","이유자돈","육성돈","비육돈","모돈","웅돈"];
 const CAUSES=["압사","설사·소화기","호흡기","허약","외상","원인불명","기타"];
 const WORKERS=["김OO","이OO","박OO","Nguyen"];
@@ -634,7 +741,7 @@ function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SV
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
 const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
-const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU"};
+const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM"};
 let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
 function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
   const pre=document.body.classList.contains("login")?"L":(TAG_PRE[typeof tab!=="undefined"?tab:""]||String(tab||"X").slice(0,2).toUpperCase());
@@ -676,7 +783,7 @@ function stalls(){
     const i=statusOf(s),d=i.d;const push=(why,sev="warn")=>out.push({kind:"stall",s,i,why,sev});
     if(i.stage==="이유"&&d>=T.weanNoMate)push(`이유 후 ${d}일째 교배 기록 없음`,"bad");
     if(i.stage==="이유"&&d>=7&&s.loc==="분만사")push(`이유 후 ${d}일째 위치가 분만사 (이동 기록 없음)`);
-    if(i.stage==="포유"&&d>=T.farrowNoWean)push(`분만 후 ${d}일째 이유 기록 없음`,"bad");
+    if(i.stage==="포유"&&!weanSkip(s)&&d>=T.farrowNoWean)push(`분만 후 ${d}일째 이유 기록 없음`,"bad");
     if(i.stage==="포유"&&s.loc!=="분만사")push(`포유 중인데 위치가 ${s.loc}`);
     if(i.stage==="교배"&&d>=T.mateNoCheck)push(`교배 후 ${d}일째 임신 확인 없음`,"bad");
     if(i.stage==="임신"&&d>=T.gestOver)push(`교배 후 ${d}일째 분만 기록 없음`,"bad");
@@ -687,10 +794,10 @@ function stalls(){
 }
 
 /* ================= 할 일 ================= */
-const tdKey=(k,target)=>k==="task"?`task|${target}`:`${TODAY}|${k}|${target}`;
+const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
 const tdLog=key=>(state.todoLog||{})[key];
-function itemTarget(it){return it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
-function tdName(it){return it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
+function itemTarget(it){return it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
+function tdName(it){return it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
 function buildTodos(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{
@@ -698,12 +805,12 @@ function buildTodos(){
     if(i.stage==="이유"&&i.d>=CFG.weanMateLimit-1&&i.d<state.cfgSt.weanNoMate)g.mate.push({s,i,label:`이유 D+${i.d}`,sev:i.d>CFG.weanMateLimit?"bad":"warn"});
     if(i.key==="후보"&&i.d>=7&&i.d<state.cfgSt.giltNoMate)g.mate.push({s,i,label:`후보돈 · 도입 ${i.d}일째`,sev:"ok"});
     if(i.stage==="재교배")g.remate.push({s,i,label:`${i.lastResult} ${kDate(i.since)}`,sev:"warn"});
-    if(i.stage==="교배"){if(i.d>=CFG.returnCheck[0]&&i.d<=CFG.returnCheck[1])g.ret.push({s,i,label:`교배 D+${i.d}`,sev:i.d>=21?"warn":"ok"});
-      else if(i.d>=CFG.pregCheck&&i.d<state.cfgSt.mateNoCheck)g.preg.push({s,i,label:`교배 D+${i.d}`,sev:"warn"})}
+    if(i.stage==="교배"&&i.d>=CFG.returnCheck[0]&&i.d<state.cfgSt.mateNoCheck){const pd=FARM.pregDays,inP=i.d>=pd[0]&&i.d<=pd[1];
+      g.ret.push({s,i,label:`교배 D+${i.d}${inP?" · 진단 적기":i.d>pd[1]?" · 진단 늦음":""}`,sev:i.d>pd[1]?"bad":inP?"warn":"ok"})}
     if(i.stage==="임신"){const due=addDays(i.mate,CFG.gest);
       if(i.d>=CFG.gest-CFG.farrowIn&&s.loc!=="분만사")g.movein.push({s,i,label:`분만 예정 ${kDate(due)}`,sev:i.d>=CFG.gest-3?"bad":"warn"});
       if(i.d>=CFG.gest-2&&i.d<state.cfgSt.gestOver)g.farrow.push({s,i,label:i.d>CFG.gest?`예정일 ${i.d-CFG.gest}일 지남`:i.d===CFG.gest?"오늘 예정":`${CFG.gest-i.d}일 후 예정`,sev:i.d>CFG.gest+1?"bad":"warn"})}
-    if(i.stage==="포유"&&i.d>=CFG.weanDay&&i.d<state.cfgSt.farrowNoWean)g.wean.push({s,i,label:`포유 ${i.d}일`,sev:i.d>28?"bad":"ok"});
+    if(i.stage==="포유"&&!weanSkip(s)&&i.d>=CFG.weanDay&&i.d<state.cfgSt.farrowNoWean)g.wean.push({s,i,label:`포유 ${i.d}일`,sev:i.d>CFG.weanDay+3?"bad":"ok"});
     if(s.cullPlan&&s.cullPlan.date<=addDays(REF,7))g.cull.push({s,i,label:`도태 예정 ${kDate(s.cullPlan.date)} · ${s.cullPlan.reason}`,sev:s.cullPlan.date<=REF?"bad":"warn"});
   });
   state.records.filter(r=>r.type==="약품"&&r.data.withdraw).forEach(r=>{const d=diff(REF,r.data.withdraw);if(d>=0&&d<=7)g.withdraw.push({r,label:`${r.data.barn} · 휴약 종료 ${kDate(r.data.withdraw)}`,d,sev:"ok"})});
@@ -716,11 +823,10 @@ function buildTodos(){
     {k:"task",t:"폐사 후 조치",items:tasks,act:null},
     {k:"mate",t:"교배 대상 (이유 후 4일 · 후보돈)",items:g.mate,act:"교배"},
     {k:"remate",t:"재교배 대기 (재발·공태)",items:g.remate,act:"교배"},
-    {k:"ret",t:"재발 확인 (교배 18~24일)",items:g.ret,act:"check"},
-    {k:"preg",t:"임신진단기 확인 (교배 25일~)",items:g.preg,act:"check"},
+    {k:"ret",t:"재발·임신 확인 (교배 18일~ · 진단 21~23일)",items:g.ret,act:"check"},
     {k:"movein",t:"분만사 입식 (분만 7일 전)",items:g.movein,act:"movein"},
     {k:"farrow",t:"분만 예정",items:g.farrow,act:"분만"},
-    {k:"wean",t:"이유 예정 (포유 21일~)",items:g.wean,act:"이유"},
+    {k:"wean",t:"이유 예정 (포유 28일~)",items:g.wean,act:"이유"},
     {k:"cull",t:"도태 예정",items:g.cull,act:"cull"},
     {k:"withdraw",t:"휴약 종료 예정",items:g.withdraw,act:null},...extraTodos()
   ].filter(x=>x.items.length).map(x=>({...x,sev:sevOf(x.items)}));
@@ -737,9 +843,11 @@ function dayStatus(day,type){
 
 /* ================= 요약 문장 ================= */
 /* ================= 입력 양식 ================= */
+// 다음 모돈 번호: 모든 번호 중 가장 큰 숫자 + 1 (예: Y-093)
+function nextSowId(){const n=Math.max(0,...state.sows.map(s=>+(String(s.id).match(/(\d+)$/)||[0,0])[1]));return FARM.sowPrefix+String(n+1).padStart(3,"0")}
 const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
 const FORMS={
-  폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사 1동"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"}],
+  폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"}],
     warn:(d,wd)=>{const dup=state.records.find(r=>r.id!==EXCL&&r.type==="폐사"&&r.workDate===wd&&r.data.barn===d.barn&&r.data.cause===d.cause&&r.data.stage===d.stage&&(Date.now()-new Date(r.createdAt))<10*60e3);return dup?`10분 안에 같은 돈사·단계·원인으로 입력한 기록이 있습니다 (${kTime(dup.createdAt)}, ${dup.data.n}두). 중복 입력이 아닌지 확인해 주세요.`:null}},
   교배:{sow:{multi:true,target:true,filter:(i,wd)=>i.key==="후보"||i.key==="발정대기"||i.key==="재발공태"||(i.gilt&&i.key==="후보")||(i.stage==="교배"&&diff(i.mate,wd)<=2)},
     f:[{k:"round",l:"회차",t:"chips",o:["1차","2차","3차"],def:"1차"},{k:"semen",l:"웅돈 / 정액",t:"chips",o:()=>SEMENS,def:"듀록 정액"}],
@@ -755,20 +863,20 @@ const FORMS={
     warn:(d,wd,s)=>{const i=sowState(s);if(i.live&&d.n>i.live+2)return `${s}번은 실산 ${i.live}두인데 이유두수가 ${d.n}두입니다. 양자를 받았다면 그대로 저장하세요.`;return null},
     pre:(d,wd,s)=>{const i=sowState(s);d.days=i.farrow?diff(i.farrow,wd):0}},
   백신:{sow:{multi:true,target:false,filter:()=>true},
-    f:[{k:"kind",l:"구분",t:"chips",o:["백신","투약","구충"],def:"백신"},{k:"name",l:"백신·약품",t:"chips",o:["PED","대장균","돼지열병","일본뇌염","파보·단독","써코","구제역","기타"],def:"PED"},{k:"memo",l:"메모 (선택)",t:"text",opt:true,ph:"예: 2차 접종"}]},
-  이동:{f:[{k:"from",l:"출발 돈사",t:"chips",o:BARNS,def:"분만사 1동"},{k:"to",l:"도착 돈사",t:"chips",o:BARNS,def:"자돈사 1동"},{k:"n",l:"두수",t:"step",def:100,min:1,big:10}],
+    f:[{k:"kind",l:"구분",t:"chips",o:["백신","투약","구충"],def:"백신"},{k:"name",l:"백신·약품",t:"chips",o:()=>[...FARM.vax.late.map(v=>v.name),...FARM.vax.gilt.map(v=>v.name),...FARM.vax.annual.map(v=>v.name),"기타"],def:FARM.vax.late[0].name},{k:"memo",l:"메모 (선택)",t:"text",opt:true,ph:"예: 2차 접종"}]},
+  이동:{f:[{k:"from",l:"출발 돈사",t:"chips",o:BARNS,def:"분만사"},{k:"to",l:"도착 돈사",t:"chips",o:BARNS,def:"인큐베이터"},{k:"n",l:"두수",t:"step",def:100,min:1,big:10}],
     warn:d=>d.from===d.to?"출발과 도착 돈사가 같습니다.":null},
-  출하:{f:[{k:"barn",l:"출하 돈사",t:"chips",o:()=>{const f=BARNS.filter(b=>b.includes("비육"));return f.length?f:BARNS},def:"비육사 1동"},{k:"n",l:"출하두수",t:"step",def:20,min:1},{k:"kg",l:"출하 평균체중 (kg)",t:"step",def:115,min:60},{k:"dest",l:"출하처",t:"chips",o:()=>DESTS,def:"○○도축장"}],
+  출하:{f:[{k:"barn",l:"출하 돈사",t:"chips",o:()=>{const f=BARNS.filter(b=>b.includes("비육"));return f.length?f:BARNS},def:"육성비육사"},{k:"n",l:"출하두수",t:"step",def:20,min:1},{k:"kg",l:"출하 평균체중 (kg)",t:"step",def:115,min:60},{k:"dest",l:"출하처",t:"chips",o:()=>DESTS,def:"○○도축장"}],
     warn:(d,wd)=>{const w=state.records.find(r=>r.type==="약품"&&r.data.barn===d.barn&&r.data.withdraw&&r.data.withdraw>wd);return w?`${d.barn}은 휴약 중입니다 (종료 ${kDate(w.data.withdraw)}). 출하해도 되는지 확인해 주세요.`:null}},
-  사료:{f:[{k:"kind",l:"사료 이름 (직접 입력)",t:"text",ph:"예: 비육 전기",list:"feedList"},{k:"mode",l:"구분",t:"chips",o:["입고","빈 잔량"],def:"입고"},{k:"kg",l:"수량 (kg)",t:"step",def:5000,min:0,big:500}]},
-  약품:{f:[{k:"kind",l:"구분",t:"chips",o:()=>CATS.filter(c=>c!=="백신"&&c!=="정액"),def:"항생제"},{k:"name",l:"품목 (약품·재고 탭에서 추가)",t:"chips",o:()=>itemNames(ui.in?ui.in.fv.kind:"항생제")},{k:"barn",l:"대상 돈사",t:"chips",o:BARNS,def:"비육사 1동"},{k:"qty",l:"사용량",t:"step",def:1,min:0},{k:"withdraw",l:"휴약 종료일 (항생제 · 자동 제안)",t:"date",opt:true}]},
+  사료:{f:[{k:"kind",l:"사료",t:"chips",o:()=>feedKinds(),def:FARM.feed.bins[0].feed},{k:"mode",l:"구분",t:"chips",o:["입고","빈 잔량"],def:"입고"},{k:"kg",l:"수량 (kg)",t:"step",def:5000,min:0,big:500}]},
+  약품:{f:[{k:"kind",l:"구분",t:"chips",o:()=>CATS.filter(c=>c!=="백신"&&c!=="정액"),def:"항생제"},{k:"name",l:"품목 (약품·재고 탭에서 추가)",t:"chips",o:()=>itemNames(ui.in?ui.in.fv.kind:"항생제")},{k:"barn",l:"대상 돈사",t:"chips",o:BARNS,def:"육성비육사"},{k:"qty",l:"사용량",t:"step",def:1,min:0},{k:"withdraw",l:"휴약 종료일 (항생제 · 자동 제안)",t:"date",opt:true}]},
   BCS:{sow:{multi:false,target:false,filter:()=>true},f:[{k:"score",l:"BCS 점수",t:"chips",o:["1","1.5","2","2.5","3","3.5","4","4.5","5"],def:"3"},{k:"when",l:"측정 시점",t:"chips",o:["교배 시","임신 중","분만 시","이유 시","기타"],def:"임신 중"},{k:"memo",l:"메모 (선택)",t:"text",opt:true}]},
   돈군백신:{f:[{k:"batch",l:"돈군",t:"chips",o:()=>liveBatches().map(b=>[b.k,`${bName(b.k)} · ${bAge(b)}주령`])},{k:"vax",l:"백신",t:"chips",o:()=>state.cfg.prog.map(p=>p.name)},{k:"_v",t:"calc",l:"추정 두수 / 이미 접종",calc:d=>{const b=batches().find(x=>x.k===d.batch),p=state.cfg.prog.find(x=>x.name===d.vax);if(!b||!p)return "-";const v=bVax(b,p);return `${v.need} / ${v.done}두`}},{k:"n",l:"이번에 접종한 두수",t:"step",def:0,min:0,big:10},{k:"lot",l:"제조번호 (선택)",t:"text",opt:true}],
     pre:d=>{d.prod=(state.cfg.prog.find(p=>p.name===d.vax)||{}).prod},
     warn:d=>{const b=batches().find(x=>x.k===d.batch),p=state.cfg.prog.find(x=>x.name===d.vax);if(b&&p){const v=bVax(b,p),left=Math.max(v.need-v.done,0);if(d.n>left+10)return `추정 남은 두수(${left}두)보다 많습니다. 숫자를 확인해 주세요.`;if(d.n<=0)return "접종 두수가 0입니다."}return null}},
   재고:{f:[{k:"item",l:"품목",t:"chips",o:()=>state.items.filter(i=>!i.hidden).map(i=>[i.id,i.name])},{k:"mode",l:"구분",t:"chips",o:["입고","사용","실사"],def:"입고"},{k:"qty",l:"수량 (실사는 실제로 센 수량)",t:"step",def:10,min:0},{k:"memo",l:"메모 (선택)",t:"text",opt:true}]},
-  특이사항:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사 1동"},{k:"text",l:"내용",t:"textarea",ph:"예: 2번 환풍기 소음, 급수기 누수"}]},
-  도입:{f:[{k:"sowid",l:"후보돈 번호",t:"text",ph:"예: G305"},{k:"breed",l:"품종",t:"chips",o:["LYD","YL","LY","기타"],def:"LYD"},{k:"age",l:"도입 일령",t:"step",def:180,min:30,big:10}],
+  특이사항:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"text",l:"내용",t:"textarea",ph:"예: 2번 환풍기 소음, 급수기 누수"}]},
+  도입:{f:[{k:"sowid",l:"후보돈 번호 (다음 번호 자동)",t:"text",ph:"예: Y-093",def:()=>nextSowId()},{k:"breed",l:"품종",t:"chips",o:["LY","LYD","YL","기타"],def:FARM.breed},{k:"age",l:"도입 일령",t:"step",def:180,min:30,big:10}],
     err:d=>state.sows.some(s=>s.id===String(d.sowid).trim())?`${d.sowid}번은 이미 있는 번호입니다.`:null}
 };
 
@@ -826,12 +934,12 @@ function addRecord(type,workDate,data){
 }
 
 /* ================= 입력 페이지 ================= */
-function defaults(type){const d={};FORMS[type].f.forEach(f=>{if(f.def!==undefined)d[f.k]=f.def});return d}
+function defaults(type){const d={};FORMS[type].f.forEach(f=>{if(f.def!==undefined)d[f.k]=typeof f.def==="function"?f.def():f.def});return d}
 function openInput(type,opt={}){
   ui.prev=tab==="input"?ui.prev:tab;closeSheet();
   ui.in={type,date:opt.date||TODAY,sel:opt.sow?[opt.sow]:[],fv:defaults(type),editId:null,warn:null,err:null,q:"",all:false,flash:[]};
   ui.dec=opt.dec?{id:opt.dec,acts:null,when:"오늘 중",who:state.user,memo:""}:null;
-  const I0=ui.in;if(opt.batch)I0.fv.batch=opt.batch;if(opt.vax)I0.fv.vax=opt.vax;if(opt.item)I0.fv.item=opt.item;
+  const I0=ui.in;if(opt.batch)I0.fv.batch=opt.batch;if(opt.vax)I0.fv.vax=opt.vax;if(opt.item)I0.fv.item=opt.item;if(opt.vname)I0.fv.name=opt.vname;
   if(type==="돈군백신")bvDefault();if(type==="약품"&&!I0.fv.name){I0.fv.name=itemNames(I0.fv.kind)[0]||"";const it=state.items.find(x=>x.name===I0.fv.name);if(it&&it.withdraw)I0.fv.withdraw=addDays(I0.date,it.withdraw)}
   tab="input";render();window.scrollTo(0,0);
   if(opt.dec){const el=document.getElementById("r-"+opt.dec);if(el)el.scrollIntoView({block:"center"})}
@@ -872,7 +980,7 @@ function doSave(force){
     else{
       if(I.type==="임신확인"&&data.result==="임신"){const sw=state.sows.find(x=>x.id===s);if(sw&&sw.gilt&&!sowState(s).pregEver)msg+=` · ${s} 모돈 편입`}
       const rec=addRecord(I.type,I.date,data);ids.push(rec.id);
-      if(I.type==="도입")state.sows.push({id:data.sow,baseParity:0,loc:"후보돈사",gilt:true,breed:data.breed,intro:I.date});
+      if(I.type==="도입")state.sows.push({id:data.sow,baseParity:0,loc:SOW_LOCS[0],gilt:true,breed:data.breed,intro:I.date});
     }
   });
   EXCL=null;save();
@@ -927,7 +1035,7 @@ const A={
   goSettings:()=>go("settings"),
   goClose:(v)=>{tab="close";ui.closeDay=v;render();window.scrollTo(0,0)},
   sowFilter:(v)=>{ui.sf=v;go("sows")},
-  input:(v,el)=>openInput(v,{sow:el.dataset.sow,date:el.dataset.date,batch:el.dataset.batch,vax:el.dataset.vax,item:el.dataset.item}),
+  input:(v,el)=>openInput(v,{sow:el.dataset.sow,date:el.dataset.date,batch:el.dataset.batch,vax:el.dataset.vax,item:el.dataset.item,vname:el.dataset.vname}),
   back:()=>{const p=ui.prev||"home";ui.in=null;ui.dec=null;go(p)},
   todo:(v)=>openTodo(v),
   scrim:(v,el,e)=>{if(e.target===el)closeSheet()},
@@ -1025,15 +1133,16 @@ document.addEventListener("change",e=>{
 });
 
 /* ================= v0.2 · 돈군 ================= */
-const LOSS=[.08,.03,.015,.015];
+const LOSS=FARM.stageLoss;
 function isoWeek(s){const t=new Date(toUTC(s));const d=(t.getUTCDay()+6)%7;const th=new Date(t.getTime()+(3-d)*864e5);const y=th.getUTCFullYear();const j=Date.UTC(y,0,1);return {y,w:1+Math.floor((th.getTime()-j)/(7*864e5))}}
 function weekStart(s){const t=new Date(toUTC(s));const wd=(t.getUTCDay()+6)%7;return addDays(s,-wd)}
 function bName(k){const i=isoWeek(k),c=isoWeek(TODAY);return `${i.y!==c.y?String(i.y).slice(2)+"-":""}W${i.w} 분만군`}
+function bAgo(k){const n=Math.round(diff(k,weekStart(TODAY))/7);return n<=0?t("이번 주"):n+(LANG==="ko"?"":" ")+t("주 전")}
 const shipAge=()=>state.cfg.stage.reduce((s,x)=>s+x[1],0);
 const bAge=b=>Math.floor(diff(b.k,REF)/7);
 function stagePlan(ageW){let a=0;for(const [n,w] of state.cfg.stage){a+=w;if(ageW<a)return n}return "출하"}
 function bHeads(b,ageW){let n=b.live,a=ageW;state.cfg.stage.forEach(([nm,len],i)=>{if(a<=0)return;n*=1-LOSS[i]*Math.min(a,len)/len;a-=len});return Math.round(n)}
-function bVax(b,p){const due=addDays(b.k,p.age*7),need=bHeads(b,p.age),recs=state.records.filter(r=>r.type==="돈군백신"&&r.data.batch===b.k&&r.data.vax===p.name),done=recs.reduce((s,r)=>s+r.data.n,0);
+function bVax(b,p){const due=addDays(b.k,p.day),need=bHeads(b,Math.floor(p.day/7)),recs=state.records.filter(r=>r.type==="돈군백신"&&r.data.batch===b.k&&r.data.vax===p.name),done=recs.reduce((s,r)=>s+r.data.n,0);
   const over=REF>addDays(due,6);
   const st=done>=need*.98?"done":done>0?(over?"part":"partnow"):over?"late":REF>=due?"due":diff(REF,due)<=7?"soon":"plan";
   return {p,due,need,done,recs,st}}
@@ -1044,7 +1153,8 @@ const VST={done:["done","완료"],part:["late","일부 · 기한 지남"],partno
 const CATS=["항생제","사료첨가제","소독제","비품","백신","정액","기타"];
 const itemNames=cat=>state.items.filter(i=>!i.hidden&&i.cat===cat).map(i=>i.name);
 const itemById=id=>state.items.find(i=>i.id===id);
-function stockRecs(it){return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&r.data.prod===it.name)||(r.type==="백신"&&r.data.name===it.name)||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
+const itemId=name=>(state.items.find(i=>i.name===name)||{}).id;
+function stockRecs(it){return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
 function delta(r){if(r.type==="재고")return r.data.mode==="입고"?r.data.qty:r.data.mode==="사용"?-r.data.qty:0;if(r.type==="돈군백신")return -r.data.n;if(r.type==="약품")return -(r.data.qty||1);return -1}
 function semenOrder(){
   const tmr=addDays(TODAY,1);let n=0;
@@ -1052,14 +1162,17 @@ function semenOrder(){
   const doses=n*state.cfg.semenPerSow,stock=state.items.filter(x=>x.cat==="정액"&&!x.hidden).reduce((s,x)=>s+(stockOf(x).qty||0),0);
   return {n,doses,stock,order:Math.max(0,doses-stock)};
 }
+// 정액 주문 마감 시계: 13:00 주의, 15:30 긴급, 16:00 마감
+function semenClock(){const n=new Date(),hm=pad(n.getHours())+":"+pad(n.getMinutes()),S=FARM.semen;
+  return hm>=S.deadline?{sev:"bad",txt:`${S.deadline} 마감 지남`}:hm>=S.alerts[1]?{sev:"bad",txt:`${S.deadline} 마감 임박`}:hm>=S.alerts[0]?{sev:"warn",txt:`${S.deadline}까지 주문`}:{sev:"ok",txt:`${S.deadline}까지 주문`}}
 function extraTodos(){
   const bv=[];liveBatches().forEach(b=>state.cfg.prog.forEach(p=>{const v=bVax(b,p);if(["due","partnow","late","part"].includes(v.st))bv.push({b,v,label:`${bAge(b)}주령 · ${p.name} · ${v.done}/${v.need}두`,sev:v.st==="late"||v.st==="part"?"bad":"warn"})}));
   const low=state.items.filter(it=>!it.hidden).map(it=>({it,s:stockOf(it)})).filter(x=>x.s.qty!==null&&x.s.qty<x.it.par).map(x=>({item:x.it,label:`재고 ${x.s.qty}${x.it.unit} / 적정 ${x.it.par}${x.it.unit}`,sev:"bad"}));
   const so=semenOrder();
   return [
     {k:"bvax",t:"돈군 백신 (이번 주 · 누락)",items:bv,act:"bvax"},
-    {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}회 = ${so.doses}개 · 재고 ${so.stock}개 → ${so.order}개 주문`,sev:"warn"}]:[],act:null},
-    {k:"stock",t:"재고 부족",items:low,act:"stock"}
+    {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`${semenClock().txt} · 내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → ${so.order}${FARM.semen.unit} 주문`,sev:semenClock().sev}]:[],act:null},
+    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos()
   ];
 }
 
@@ -1160,12 +1273,37 @@ function vSow(){
   else if(C&&C.step==="confirm")cb=`<div class="cullbox on"><h4>정말 도태하시겠습니까?</h4><div class="sow-meta">${id}번 · 사유: ${esc(C.reason)}. 도태 후에도 모든 기록은 보관되고 ‘도태됨’ 목록에서 언제든 볼 수 있습니다.</div><div class="chipwrap">${CULL_REASONS.map(r=>`<button type="button" class="chip wrap ${C.reason===r?"on":""}" data-a="cullReason" data-v="${r}">${r}</button>`).join("")}</div><div class="acts"><button class="act bad" type="button" data-a="cullDo" data-v="${id}">도태 확정</button><button class="act" type="button" data-a="cullCancel">취소</button></div></div>`;
   else if(s.cullPlan)cb=`<div class="cullbox"><h4>도태 예정 · ${kDate(s.cullPlan.date)}</h4><div class="sow-meta">사유: ${esc(s.cullPlan.reason)}</div><div class="acts"><button class="act bad" type="button" data-a="cullConfirm" data-v="${id}">도태 실행</button><button class="act" type="button" data-a="cullPlanDel" data-v="${id}">계획 취소</button></div></div>`;
   else cb=`<div class="acts"><button class="act" type="button" data-a="cullPlan" data-v="${id}">도태 계획 세우기</button><button class="act bad" type="button" data-a="cullConfirm" data-v="${id}">바로 도태</button></div>`;
+  R+=vLacBox(s,i);
   if(can("cull"))R+=`<div class="sec-t">도태</div>`+cb;
   const back=ui.sowBack&&ui.sowBack!=="sow"?ui.sowBack:"sows";
   return `<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="${back}">‹ ${back==="sows"?"모돈 목록":"뒤로"}</button><h2><span class="sow-no" style="font-size:20px">${id}</span>${i.gilt?"후보돈":"모돈"} 현황판</h2></div>
     <div class="inputgrid"><div>${L}</div><div>${R}</div></div>`;
 }
 
+/* ================= v0.4 · 대리모 · 이유 보류 (팀장·대표) ================= */
+// 대리모이거나 이유 보류 중이면 이유 알림·장기 무변동에서 뺀다
+const weanSkip=s=>!!s.nurse||!!(s.weanHold&&s.weanHold.until>=REF);
+const HOLD_REASONS=["자돈 체중 미달","자돈 허약·질병","모돈 치료 중","분만사 자리 여유","기타"];
+function vLacBox(s,i){
+  if(i.stage!=="포유"||!can("cull"))return "";
+  const H=ui.hold&&ui.hold.id===s.id?ui.hold:null,wh=s.weanHold&&s.weanHold.until>=REF?s.weanHold:null;
+  let h=`<div class="sec-t">${t("포유 관리")}</div><div class="panel">`;
+  h+=`<div class="setrow"><span><b>${t("대리모")}</b><br><small class="sow-meta">${t("다른 복 자돈을 맡아 키우는 중 · 이유 알림에서 빠짐")}</small></span><button class="act ${s.nurse?"warn":""}" type="button" data-a="nurseTog" data-v="${s.id}">${s.nurse?t("대리모 해제"):t("대리모로 지정")}</button></div>`;
+  if(H)h+=`<div class="f"><span class="lb">${t("보류 사유")}</span><div class="chipwrap">${HOLD_REASONS.map(r=>`<button type="button" class="chip wrap ${H.reason===r?"on":""}" data-a="holdReason" data-v="${r}">${t(r)}</button>`).join("")}</div></div>
+    <div class="f"><span class="lb">${t("언제까지")}</span><div class="chipwrap">${[3,7,10,14].map(n=>`<button type="button" class="chip wrap ${H.days===n?"on":""}" data-a="holdDays" data-v="${n}">${n}${t("일")} (${kDate(addDays(REF,n))})</button>`).join("")}</div></div>
+    <div class="acts"><button class="act pri" type="button" data-a="holdSave">${t("저장")}</button><button class="act" type="button" data-a="holdCancel">${t("취소")}</button></div>`;
+  else if(wh)h+=`<div class="setrow"><span><b>${t("이유 보류")} ~${kDate(wh.until)}</b><br><small class="sow-meta">${esc(t(wh.reason))} · ${esc(wh.user)}</small></span><button class="act" type="button" data-a="holdOff" data-v="${s.id}">${t("보류 해제")}</button></div>`;
+  else h+=`<div class="setrow"><span><b>${t("이유 보류")}</b><br><small class="sow-meta">${t("정해진 날 이유하지 않을 때 · 사유와 날짜를 남김")}</small></span><button class="act" type="button" data-a="holdOpen" data-v="${s.id}">${t("이유 보류")}</button></div>`;
+  return h+`</div>`}
+Object.assign(A,{
+  nurseTog:v=>{const s=state.sows.find(x=>x.id===v);s.nurse=s.nurse?null:{since:REF,user:state.user};save();render()},
+  holdOpen:v=>{ui.hold={id:v,reason:HOLD_REASONS[0],days:7};render()},
+  holdReason:v=>{ui.hold.reason=v;render()},
+  holdDays:v=>{ui.hold.days=+v;render()},
+  holdCancel:()=>{ui.hold=null;render()},
+  holdSave:()=>{const H=ui.hold,s=state.sows.find(x=>x.id===H.id);s.weanHold={reason:H.reason,until:addDays(REF,H.days),user:state.user,at:new Date().toISOString()};ui.hold=null;save();toast(t("이유 보류를 저장했습니다"));render()},
+  holdOff:v=>{const s=state.sows.find(x=>x.id===v);s.weanHold=null;save();render()}
+});
 /* ================= v0.2 · 성적 ================= */
 const MET=[["far","분만복수","복",0,1],["mates","교배복수","복",0,1],["frate","분만율","%",1,1,1],["tot","복당 총산","두",1,1],["live","복당 실산","두",1,1],["wean","복당 이유","두",1,1],["surv","포유 육성률","%",1,1],["psy","PSY 환산","두",1,1,1],["msy","MSY 환산","두",1,1,1],["dead","폐사두수","두",0,-1],["ship","출하두수","두",0,1],["shipKg","평균 출하체중","kg",1,0]];
 function monthRange(y,m){const last=new Date(Date.UTC(y,m,0)).getUTCDate();return [`${y}-${pad(m)}-01`,`${y}-${pad(m)}-${pad(last)}`]}
@@ -1285,6 +1423,37 @@ function prevYearForm(){
     <div class="acts"><button class="act pri" type="button" data-a="pySave">저장</button><button class="act" type="button" data-a="pyClose">닫기</button></div></div>`;
 }
 
+/* ================= v0.4 · 백신 엔진 (모돈·후보돈·연간·복별 처치) ================= */
+// 기록 이름 → 재고 품목 이름들
+function vaxProds(name){const all=[...FARM.vax.annual,...FARM.vax.gilt,...FARM.vax.late,...FARM.vax.piglet],v=all.find(x=>x.name===name);return v?[].concat(v.prod):[name]}
+const sowVaxDone=(id,name,from)=>state.records.some(r=>r.type==="백신"&&r.data.sow===id&&r.data.name===name&&r.workDate>=from);
+// 연간 일괄: 그 달 n째 주 월요일
+function annualDate(y,m,w){return addDays(weekStart(`${y}-${pad(m)}-01`),(w-1)*7+(weekStart(`${y}-${pad(m)}-01`)<`${y}-${pad(m)}-01`?7:0))}
+function vaxTodos(){
+  const lit=[],svax=[],ann=[];
+  activeSows().forEach(s=>{const i=statusOf(s);
+    // 복별 처치 (포유 중)
+    if(i.stage==="포유")FARM.vax.litter.forEach(v=>{const d=diff(i.farrow,REF);if(d<v.day)return;
+      const key=`${s.id}|${i.farrow}|${v.day}`,lg=tdLog(tdKey("lit",key));if(lg&&localDateOf(lg.at)!==TODAY)return;
+      lit.push({s,i,lit:key,name:v.name,label:`${v.name} · 분만 ${kDate(i.farrow)} (${d}일령)`,sev:d>v.day+1?"bad":"warn"})});
+    // 임신 말기 (분만 예정일 기준)
+    if(i.stage==="임신"||(i.stage==="교배"&&i.d>=FARM.pregDays[0])){const due=addDays(i.mate,CFG.gest);
+      FARM.vax.late.forEach(v=>{const on=addDays(due,-v.wk*7);if(REF<addDays(on,-2)||sowVaxDone(s.id,v.name,i.mate))return;
+        svax.push({s,i,vx:v,label:`${v.name} · ${kDate(on)}${v.note?" · "+v.note:""}`,sev:REF>addDays(on,3)?"bad":"warn"})})}
+    // 후보돈 입식 백신
+    if(s.gilt&&s.intro&&i.key==="후보")FARM.vax.gilt.forEach(v=>{const on=addDays(s.intro,v.day);if(REF<addDays(on,-1)||sowVaxDone(s.id,v.name,s.intro))return;
+      svax.push({s,i,vx:v,label:`후보 ${v.name} · 입식 ${v.day}일 (${kDate(on)})`,sev:REF>addDays(on,3)?"bad":"warn"})});
+  });
+  // 연간 일괄 (웅돈·모돈·후보돈 전체)
+  const y=+REF.slice(0,4);[y-1,y].forEach(yy=>FARM.vax.annual.forEach(v=>v.when.forEach(([m,w,r])=>{const on=annualDate(yy,m,w);
+    if(REF<on||diff(on,REF)>21)return;const key=`${v.name}|${on}`,lg=tdLog(tdKey("annual",key));if(lg&&localDateOf(lg.at)!==TODAY)return;
+    ann.push({ann:{key,name:`${v.name} ${r}`,on},label:`${kDate(on)} 주 · 웅돈·모돈·후보돈 ${activeSows().length}두`,sev:diff(on,REF)>6?"bad":"warn"})})));
+  return [
+    {k:"lit",t:"복별 처치 (1일·3일)",items:lit,act:null},
+    {k:"svax",t:"모돈·후보돈 백신",items:svax,act:"백신"},
+    {k:"annual",t:"연간 일괄 백신",items:ann,act:null}
+  ];
+}
 /* ================= v0.2 · 현황판 (TV) ================= */
 function vBoard(){
   const tmr=addDays(TODAY,1),D=boardDate(),tv=document.body.classList.contains("tv");
@@ -1296,7 +1465,7 @@ function vBoard(){
   const vlate=groups.find(x=>x.k==="bvax");const vl=vlate?vlate.items.filter(i=>i.sev==="bad").length:0;
   const T=k=>state.records.filter(r=>r.type===k&&r.workDate===TODAY);
   const memo=(state.memo||{})[D]||"";
-  const ids=x=>{const a=x.items.map(it=>it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 분만군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
+  const ids=x=>{const a=x.items.map(it=>it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 분만군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 분만군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
   // 모돈 상태
   const c=statusCounts();
   const sc=[["heat","발정 관찰"],["분만임박","분만 임박"],["포유","포유"],["확인전","확인 전"],["임신","임신"],["재발공태","재발·공태"]].map(([k,l])=>`<span class="bd-chip ${k==="heat"&&c.heat?"hot":""}"><small>${t(l)}</small><b>${c[k]||0}</b></span>`).join("");
@@ -1308,10 +1477,11 @@ function vBoard(){
   if(pend)al.push(["bad",`${t("판단 대기 폐사")} ${pend}`]);
   if(carry)al.push(["warn",`이월된 조치 ${carry}`]);
   if(st.length)al.push(["warn",`${t("장기 무변동 개체")} ${st.length}`]);
-  const AMAX=tv?6:20,alH=al.length?al.slice(0,AMAX).map(([k,s])=>`<div class="bd-al ${k}">${esc(s)}</div>`).join("")+(al.length>AMAX?`<div class="bd-al">+${al.length-AMAX}</div>`:""):`<div class="bd-al">특이 사항 없음</div>`;
+  const AMAX=tv?Math.max(2,5-(wxAlerts(D===TODAY?0:1).match(/bd-al/g)||[]).length):20,alH=al.length?al.slice(0,AMAX).map(([k,s])=>`<div class="bd-al ${k}">${esc(s)}</div>`).join("")+(al.length>AMAX?`<div class="bd-al">+${al.length-AMAX}</div>`:""):`<div class="bd-al">특이 사항 없음</div>`;
   // 돈사 현황
   const L2=liveBatches(),sowLoc={};activeSows().forEach(s=>sowLoc[s.loc]=(sowLoc[s.loc]||0)+1);
-  const barnRows=[["교배사",sowLoc["교배사"]||0,null],["임신사",sowLoc["임신사"]||0,null],...state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return [n,i===0?(sowLoc["분만사"]||0):null,[inS.length,inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0)]]})];
+  const locG={};SOW_LOCS.filter(x=>x!=="분만사").forEach(x=>{const g=x.replace(/ \d+동$/,"");locG[g]=(locG[g]||0)+(sowLoc[x]||0)});
+  const barnRows=[...Object.entries(locG).filter(([g,n])=>n||g==="교배사").map(([g,n])=>[g,n,null]),...state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return [n,i===0?(sowLoc["분만사"]||0):null,[inS.length,inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0)]]})];
   const barnH=`<table class="bd-tbl"><thead><tr><th></th><th>${t("모돈")}</th><th>${t("돈군")}</th><th>${t("두수")}</th></tr></thead><tbody>${barnRows.map(([n,s,b])=>`<tr><td>${t(n)}</td><td>${s===null?"–":s}</td><td>${b?b[0]:"–"}</td><td>${b?b[1].toLocaleString():"–"}</td></tr>`).join("")}</tbody></table>`;
   // 할 일 카드
   const CMAX=tv?12:99,shown=work.length>CMAX?work.slice(0,CMAX-1):work,rest=work.length-shown.length;
@@ -1323,15 +1493,15 @@ function vBoard(){
     <div class="bd-top">
       <div class="bd-head"><div class="bd-day">${t(D===TODAY?"오늘 할 일":"내일 할 일")}</div><div class="bd-date">${kDate(D)}</div></div>
       <div class="bd-chips">${sc}</div>
-      <div class="bd-right"><div class="bd-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="bd-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?"TV 끄기":"TV 전체 화면"}</button></div></div>
+      <div class="bd-right"><div class="bd-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div>${wxLine()}<div class="bd-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?"TV 끄기":"TV 전체 화면"}</button></div></div>
     </div>
     <div class="bd-grid">
       <section class="bd-main" style="--rows:${rows}" aria-label="${t("할 일")}">${cards||`<div class="bd-row"><div class="bd-t"><span class="bd-tt">예정된 일이 없습니다</span></div></div>`}</section>
       <section class="bd-side">
-        <div class="bd-box b-alert"><h4>${t("주의")}</h4>${alH}</div>
+        <div class="bd-box b-alert"><h4>${t("주의")}</h4>${wxAlerts(D===TODAY?0:1)}${alH}</div>
         <div class="bd-box b-kpi"><h4>${t("오늘 실적")}</h4><div class="bd-kpi">
           <div><small>${t("교배")}</small><b>${T("교배").filter(r=>r.data.round==="1차").length}</b></div><div><small>${t("분만")}</small><b>${T("분만").length}</b></div><div><small>${t("이유")}</small><b>${T("이유").length}</b></div>
-          <div><small>${t("폐사")}</small><b>${T("폐사").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>${t("출하")}</small><b>${T("출하").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>${t("미입력")}</small><b class="${missCount(TODAY)?"warnc":""}">${missCount(TODAY)}</b></div></div></div>
+          <div><small>${t("폐사")}</small><b>${T("폐사").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>${t("출하")}</small><b>${T("출하").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>${t("아침 점검")}</small><b class="${amProg().done<amProg().all&&nowHM()>=FARM.morning.due?"warnc":""}">${amProg().done}/${amProg().all}</b></div><div><small>${t("미입력")}</small><b class="${missCount(TODAY)?"warnc":""}">${missCount(TODAY)}</b></div></div></div>
         <div class="bd-box b-barn"><h4>돈사 현황</h4>${barnH}</div>
         <div class="bd-box b-memo"><h4>${t("회의 메모")} <button type="button" class="bd-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button></h4>${ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="bd-who" data-a="memoSave">${t("저장")}</button>`:`<div class="bd-memo">${memo?esc(memo).replace(/\n/g,"<br>"):"메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요."}</div>`}</div>
       </section>
@@ -1341,6 +1511,47 @@ function vBoard(){
 }
 setInterval(()=>{if(tab==="board"&&!ui.memoEdit)render()},60000);
 
+/* ================= v0.4 · 사료 (빈·포대 재고, 급여 단계) ================= */
+const feedKinds=()=>[...FARM.feed.bins.map(b=>b.feed),...FARM.feed.bags.map(b=>b.feed)];
+const feedBag=f=>FARM.feed.bags.find(b=>b.feed===f);
+const feedBin=f=>FARM.feed.bins.find(b=>b.feed===f);
+function pigFeeds(day){return FARM.feed.piglet.filter(p=>day>=p.from&&day<p.to)}
+// 지금 하루 사용량(kg) 추정
+function feedUse(){const u={},U=FARM.feed.use,add=(f,n)=>u[f]=(u[f]||0)+n;
+  activeSows().forEach(s=>{const i=statusOf(s);add(i.stage==="포유"?"포유모돈":"임신모돈",i.stage==="포유"?U.포유모돈:U.임신모돈)});
+  liveBatches().forEach(b=>{const d=diff(b.k,REF),n=bHeads(b,Math.floor(d/7));pigFeeds(d).forEach(p=>add(p.feed,n*(U[p.feed]||0)))});
+  return u}
+// 재고 = 마지막 잔량 + 이후 입고 − 추정 사용
+function feedStock(f,use){const rs=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
+  const base=[...rs].reverse().find(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량");if(!base)return {kg:null,use,days:null};
+  const inn=rs.filter(r=>r.data.mode==="입고"&&r.workDate>base.workDate&&r.workDate<=REF).reduce((s,r)=>s+r.data.kg,0);
+  const kg=Math.max(0,Math.round(base.data.kg+inn-use*diff(base.workDate,REF)));
+  return {kg,use,days:use>0?Math.floor(kg/use):null,since:base.workDate}}
+function feedTable(){const u=feedUse();return feedKinds().map(f=>({f,bin:feedBin(f),bag:feedBag(f),...feedStock(f,u[f]||0)}))}
+function feedTodos(){
+  const ord=feedTable().filter(x=>x.days!==null&&x.use>0&&x.days<=FARM.feed.orderDays).map(x=>({feed:x,label:`${x.bin?x.bin.name:t("포대")} · ${x.kg.toLocaleString()}kg${x.bag?` (${Math.floor(x.kg/x.bag.kg)}${t("포")})`:""} · ${t("하루")} ${Math.round(x.use)}kg · ${x.days}${t("일분")}`,sev:x.days<=2?"bad":"warn"}));
+  const chg=[];liveBatches().forEach(b=>{const d=diff(b.k,REF);FARM.feed.piglet.forEach(p=>{if(d<p.from||d>p.from+2)return;
+    const key=`${b.k}|${p.feed}`,lg=tdLog(tdKey("feedchg",key));if(lg&&localDateOf(lg.at)!==TODAY)return;
+    chg.push({fc:{key,b,p},label:`${d}일령 · ${p.feed}${p.note?" · "+p.note:""}`,sev:d>p.from+1?"bad":"warn"})})});
+  return [{k:"feedord",t:"사료 주문",items:ord,act:null},{k:"feedchg",t:"사료 변경 (돈군 일령)",items:chg,act:null}]}
+function vFeedPanel(){
+  const rows=feedTable();
+  return `<div class="sec-t">${t("사료 재고")} <span>${t("추정")}</span></div><div class="panel"><div class="dtbl"><table><thead><tr><th>${t("사료")}</th><th>${t("위치")}</th><th>${t("남은 양")}</th><th>${t("하루")}</th><th>${t("남은 일수")}</th></tr></thead><tbody>${rows.map(x=>`<tr><td><b>${esc(x.f)}</b></td><td>${x.bin?esc(x.bin.name):t("포대")}</td><td>${x.kg===null?"—":x.kg.toLocaleString()+"kg"+(x.bag?` · ${Math.floor(x.kg/x.bag.kg)}${t("포")}`:"")}</td><td>${Math.round(x.use)}kg</td><td style="color:${x.days===null?"var(--muted)":x.days<=2?"var(--red)":x.days<=FARM.feed.orderDays?"var(--amber)":"var(--ink)"};font-weight:700">${x.days===null?(x.use?t("잔량 기록 필요"):"—"):x.days+t("일")}</td></tr>`).join("")}</tbody></table></div><div class="note">${t("남은 양 = 마지막 잔량 + 이후 입고 − 두수×하루 급여량. 빈 잔량(포대 수)을 가끔 입력하면 정확해집니다.")}</div></div>`}
+/* ================= v0.4 · 날씨 (Open-Meteo · 키 없이 무료) ================= */
+let WX=null,wxAt=0;
+try{const c=JSON.parse(localStorage.getItem("farm-wx")||"null");if(c){WX=c.d;wxAt=c.at}}catch(e){}
+function wxLoad(){if(Date.now()-wxAt<30*60e3)return;wxAt=Date.now();
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${FARM.lat}&longitude=${FARM.lon}&current=temperature_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,weather_code&timezone=Asia%2FSeoul&forecast_days=2`)
+    .then(r=>r.json()).then(d=>{WX=d;try{localStorage.setItem("farm-wx",JSON.stringify({d,at:wxAt}))}catch(e){}if(tab==="board")render()}).catch(()=>{})}
+const WXC=c=>c===0?"맑음":c<=3?"구름":c<=48?"안개":c<=67?"비":c<=77?"눈":c<=82?"소나기":c<=86?"눈":"뇌우";
+function wxDay(i){const d=WX&&WX.daily;return d?{max:Math.round(d.temperature_2m_max[i]),min:Math.round(d.temperature_2m_min[i]),wind:Math.round(d.wind_speed_10m_max[i]),code:d.weather_code[i]}:null}
+function wxLine(){wxLoad();if(!WX||!WX.current)return `<div class="bd-wx">${FARM.place} · ${t("날씨 불러오는 중")}</div>`;
+  const c=WX.current,d=wxDay(0);return `<div class="bd-wx">${FARM.place} ${t(WXC(c.weather_code))} <b>${Math.round(c.temperature_2m)}℃</b> · ${d.min}~${d.max}℃ · ${t("바람")} ${Math.round(c.wind_speed_10m/3.6)}m/s</div>`}
+function wxAlerts(day){const d=wxDay(day||0),W=FARM.wx;if(!d)return "";const a=[];
+  if(d.max>=W.hot)a.push(`${t("폭염")} ${d.max}℃ · ${t("환기·급수·쿨링 점검")}`);
+  if(d.min<=W.cold)a.push(`${t("한파")} ${d.min}℃ · ${t("보온·급수관 동파 점검")}`);
+  if(d.wind>=W.wind)a.push(`${t("강풍")} ${Math.round(d.wind/3.6)}m/s · ${t("커튼·문·지붕 점검")}`);
+  return a.map(x=>`<div class="bd-al wx">${x}</div>`).join("")}
 /* ================= v0.2 · 돈군 탭 ================= */
 function vBatch(){
   const L=liveBatches();
@@ -1350,7 +1561,7 @@ function vBatch(){
   if(!L.length)return h+`<div class="empty">사육 중인 돈군이 없습니다.</div>`;
   h+=`<div class="sowgrid">`+L.map(b=>{
     const age=bAge(b),vs=state.cfg.prog.map(p=>bVax(b,p)),lastDone=[...vs].reverse().find(v=>v.st==="done"),next=vs.find(v=>v.st!=="done"),bad=vs.some(v=>v.st==="late"||v.st==="part");
-    return `<div class="batch ${bad?"bad":""}"><div class="bt"><b>${bName(b.k)}</b><span class="stage ${age<state.cfg.stage[0][1]?"c-lac":"c-preg"}">${stagePlan(age)}</span></div>
+    return `<div class="batch ${bad?"bad":""}"><div class="bt"><b>${bName(b.k)} <small class="ago">· ${bAgo(b.k)}</small></b><span class="stage ${age<state.cfg.stage[0][1]?"c-lac":"c-preg"}">${stagePlan(age)}</span></div>
       <div class="sow-meta">${kDate(b.k)} 주 분만 · ${b.manual?`초기 등록 ${b.litters||"-"}복`:`${b.f.length}복`} · ${age}주령 · 약 ${bHeads(b,age).toLocaleString()}두</div>
       <div class="vsteps">${vs.map(v=>`<span class="sd ${VST[v.st][0]}" title="${v.p.name} ${v.done}/${v.need}두">${v.p.name}${v.st==="partnow"||v.st==="part"?` ${Math.round(v.done/v.need*100)}%`:v.st==="late"?" !":""}</span>`).join("")}</div>
       <div class="sow-meta">마지막 완료: <b>${lastDone?lastDone.p.name:"없음"}</b> · 다음: <b>${next?`${next.p.name} (${kDate(next.due)} 주)`:"모두 완료"}</b></div>
@@ -1364,8 +1575,9 @@ function vDrug(){
   const list=state.items.filter(i=>!i.hidden&&(cf==="전체"||i.cat===cf)).map(it=>({it,s:stockOf(it)}));
   const so=semenOrder();
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>약품·재고</h2><button class="act pri" type="button" data-a="input" data-v="재고">+ 입고·사용·실사</button></div>`;
-  h+=`<div class="chips">${["전체",...CATS].map(c=>`<button type="button" class="chip ${cf===c?"on":""}" data-a="drugCat" data-v="${c}">${c} ${c==="전체"?state.items.filter(i=>!i.hidden).length:state.items.filter(i=>!i.hidden&&i.cat===c).length}</button>`).join("")}</div>`;
-  if(so.order&&(cf==="전체"||cf==="정액"))h+=`<div class="banner"><b>정액 주문</b><span>내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}회 = ${so.doses}개 · 재고 ${so.stock}개 → <b>${so.order}개</b> 오늘 주문</span></div>`;
+  h+=`<div class="chips">${["전체","사료",...CATS].map(c=>`<button type="button" class="chip ${cf===c?"on":""}" data-a="drugCat" data-v="${c}">${c} ${c==="전체"?state.items.filter(i=>!i.hidden).length:c==="사료"?feedKinds().length:state.items.filter(i=>!i.hidden&&i.cat===c).length}</button>`).join("")}</div>`;
+  if(so.order&&(cf==="전체"||cf==="정액"))h+=`<div class="banner"><b>정액 주문</b><span>내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → <b>${so.order}${FARM.semen.unit}</b> 오늘 ${FARM.semen.deadline}까지 주문</span></div>`;
+  if(cf==="사료")return h+vFeedPanel();
   h+=`<div class="note">처음에는 ‘실사’로 현재 수량을 넣어 시작하세요. 재고는 입고·사용·실사 기록과 접종·투약·교배 기록으로 자동 계산합니다. <b>적정 재고</b>는 관리자가 정하는 값이며, 그보다 적으면 할 일과 현황판에 알립니다.</div>`;
   h+=`<div class="sowgrid">${list.map(({it,s})=>{const st=stockSt(it,s),pct=Math.min(100,it.par?(s.qty||0)/(it.par*2)*100:100),E=ui.itemEdit===it.id;
     return `<div class="batch"><div class="bt"><b>${esc(it.name)}</b><span class="dstate ${st==="none"?"ds-none":st==="bad"?"ds-wait":st==="warn"?"ds-task":"ds-done"}">${st==="none"?"미입력":st==="bad"?"부족":st==="warn"?"주의":"충분"}</span></div>
@@ -1378,6 +1590,7 @@ function vDrug(){
     <div class="f"><span class="lb">구분</span><div class="chipwrap">${CATS.map(c=>`<button type="button" class="chip wrap ${ui.newItem.cat===c?"on":""}" data-a="niCat" data-v="${c}">${c}</button>`).join("")}</div></div>
     <div class="row2"><div class="f" style="flex:1"><label for="niUnit">단위</label><input type="text" id="niUnit" value="${ui.newItem.unit}" placeholder="병, kg, L"></div><div class="f" style="flex:1"><label for="niPar">적정 재고</label><input type="number" id="niPar" value="10" inputmode="numeric"></div></div>
     <div class="acts"><button class="act pri" type="button" data-a="niSave">추가</button><button class="act" type="button" data-a="niCancel">취소</button></div></div>`:can("admin")?`<button class="act" type="button" data-a="niOpen" style="justify-self:start">+ 품목 추가</button>`:"";
+  if(cf==="전체")h+=vFeedPanel();
   return h;
 }
 
@@ -1385,7 +1598,7 @@ function bvDefault(){const I=ui.in,b=batches().find(x=>x.k===I.fv.batch),p=state
 function seedPost(){
   const W=["김OO","Nguyen","이OO"];let k=0;const L=liveBatches();
   const miss=L.find(b=>bAge(b)>=8&&bAge(b)<10),part=L.find(b=>bAge(b)>=11&&bAge(b)<13);
-  L.forEach(b=>state.cfg.prog.forEach((p,pi)=>{const due=addDays(b.k,p.age*7);if(due>addDays(TODAY,-7))return;
+  L.forEach(b=>state.cfg.prog.forEach((p,pi)=>{const due=addDays(b.k,p.day);if(due>addDays(TODAY,-7))return;
     if(b===miss&&pi===1)return;let n=bVax(b,p).need;if(b===part&&pi===2)n=Math.round(n*.7);
     const wd=addDays(due,2);state.records.push({id:newId(),type:"돈군백신",workDate:wd,createdAt:new Date(toUTC(wd)+9*36e5).toISOString(),user:W[k++%3],data:{batch:b.k,vax:p.name,prod:p.prod,n}})}));
   const qty={i1:14,i2:3,i3:80,i4:55,i5:7,i6:900,i7:1400,i8:420,i9:70,i10:75,i11:3};const d2=addDays(TODAY,-2);
@@ -1433,7 +1646,7 @@ Object.assign(A,{
   niSave:()=>{const name=$("#niName").value.trim();if(!name){toast("품목 이름을 입력하세요");return}if(state.items.some(i=>i.name===name&&!i.hidden)){toast("이미 있는 품목입니다");return}
     state.items.push({id:"i"+newId(),name,cat:ui.newItem.cat,unit:$("#niUnit").value.trim()||"개",par:Number($("#niPar").value)||0,withdraw:0});ui.newItem=null;save();render();toast(`${name}을(를) 추가했습니다`)},
   cfgStage:(v,el)=>{const x=state.cfg.stage[+el.dataset.k];x[1]=Math.max(1,x[1]+Number(v));save();render()},
-  cfgProg:(v,el)=>{const p=state.cfg.prog[+el.dataset.k];p.age=Math.max(1,p.age+Number(v));save();render()},
+  cfgProg:(v,el)=>{const p=state.cfg.prog[+el.dataset.k];p.day=Math.max(1,p.day+Number(v));save();render()},
   cfgSemen:v=>{state.cfg.semenPerSow=Math.max(1,state.cfg.semenPerSow+Number(v));save();render()}
 });
 
@@ -1697,6 +1910,52 @@ const TR={
 };
 let LANG="ko";
 function t(s){if(LANG==="ko"||s==null)return s;const e=TR[s];return (e&&e[LI[LANG]])||s}
+/* ================= v0.4 · 추가 번역 (초안 · 현장 확인 전) ================= */
+// 새 문구는 여기에만 추가: "한국어":[베트남어, 네팔어, 캄보디아어, 태국어]
+Object.assign(TR,{
+"재발·임신 확인 (교배 18일~ · 진단 21~23일)":["Kiểm tra lên giống lại · chẩn đoán thai (từ 18 ngày · chẩn đoán 21~23 ngày)","फेरि गर्मी · गर्भ जाँच (१८ दिन~ · जाँच २१~२३ दिन)","ពិនិត្យកំដៅវិញ · ពពោះ (១៨ ថ្ងៃ~ · ពិនិត្យ ២១~២៣ ថ្ងៃ)","ตรวจกลับสัด · ตรวจท้อง (18 วันขึ้นไป · ตรวจ 21~23 วัน)"],
+"이유 예정 (포유 28일~)":["Sắp cai sữa (từ 28 ngày)","दूध छुटाउने (२८ दिन~)","គ្រោងផ្ដាច់ដោះ (២៨ ថ្ងៃ~)","กำหนดหย่านม (28 วันขึ้นไป)"],
+"이번 주":["Tuần này","यो हप्ता","សប្តាហ៍នេះ","สัปดาห์นี้"],
+"후보·격리칸":["Ô hậu bị · cách ly","नयाँ · अलग कोठा","ក្រោលជ្រូកថ្មី · ដាច់ដោយឡែក","คอกสาวทดแทน · กักโรค"],
+"인큐베이터":["Lồng úm","इन्क्युबेटर","ទូកក់ក្ដៅ","ตู้อนุบาล"],
+"군사방":["Chuồng nhóm","समूह कोठा","ក្រោលក្រុម","คอกรวม"],
+"육성비육사":["Chuồng thịt","बढ्दो · मोटो सुँगुर घर","ក្រោលជ្រូកសាច់","โรงขุน"],
+});
+Object.assign(TR,{
+"주 전":["tuần trước","हप्ता अघि","សប្តាហ៍មុន","สัปดาห์ก่อน"],
+"복별 처치 (1일·3일)":["Xử lý từng ổ (ngày 1 · 3)","प्रति ब्याँत उपचार (१ · ३ दिन)","ព្យាបាលតាមសំបុក (ថ្ងៃ ១ · ៣)","จัดการรายครอก (วันที่ 1 · 3)"],
+"모돈·후보돈 백신":["Vắc-xin nái · hậu bị","माउ · नयाँ सुँगुर खोप","វ៉ាក់សាំងមេ · ជ្រូកថ្មី","วัคซีนแม่ · สาวทดแทน"],
+"연간 일괄 백신":["Vắc-xin định kỳ năm","वार्षिक सामूहिक खोप","វ៉ាក់សាំងប្រចាំឆ្នាំ","วัคซีนประจำปี"],
+"연간 일괄":["Định kỳ năm","वार्षिक","ប្រចាំឆ្នាំ","ประจำปี"]
+});
+Object.assign(TR,{
+"하루":["Mỗi ngày","दिनको","ក្នុងមួយថ្ងៃ","ต่อวัน"],"일분":[" ngày"," दिनलाई"," ថ្ងៃ"," วัน"],"포대":["Bao","बोरा","បាវ","กระสอบ"],"포":[" bao"," बोरा"," បាវ"," กระสอบ"],
+"까지":[" trước"," सम्म"," មុន"," ก่อน"],"보온등":["Đèn sưởi","तातो बत्ती","ភ្លើងកំដៅ","ไฟกก"],"이상":["Bất thường","समस्या","មិនប្រក្រតី","ผิดปกติ"],"낮음":["thấp","कम","ទាប","ต่ำ"],"높음":["cao","धेरै","ខ្ពស់","สูง"],
+"아침 점검":["Kiểm tra buổi sáng","बिहानको जाँच","ពិនិត្យពេលព្រឹក","ตรวจตอนเช้า"],"사료 주문":["Đặt thức ăn","दाना अर्डर","កុម្ម៉ង់ចំណី","สั่งอาหาร"],
+"사료 변경 (돈군 일령)":["Đổi thức ăn (theo ngày tuổi)","दाना परिवर्तन (उमेर अनुसार)","ប្ដូរចំណី (តាមអាយុ)","เปลี่ยนอาหาร (ตามอายุ)"],
+"자돈사":["Chuồng lợn con","पाठा घर","ក្រោលកូនជ្រូក","โรงอนุบาล"],"임신사 1동":["Chuồng bầu 1","गर्भ घर १","ក្រោលពពោះ ១","โรงอุ้มท้อง 1"],"임신사 2동":["Chuồng bầu 2","गर्भ घर २","ក្រោលពពោះ ២","โรงอุ้มท้อง 2"],
+"사료 재고":["Tồn kho thức ăn","दाना मौज्दात","ស្តុកចំណី","สต็อกอาหาร"],"추정":["ước tính","अनुमान","ប៉ាន់ស្មាន","ประมาณ"],"위치":["Vị trí","स्थान","ទីតាំង","ตำแหน่ง"],"남은 양":["Còn lại","बाँकी","នៅសល់","คงเหลือ"],"남은 일수":["Số ngày còn","बाँकी दिन","ថ្ងៃនៅសល់","วันคงเหลือ"],
+"남은 양 = 마지막 잔량 + 이후 입고 − 두수×하루 급여량. 빈 잔량(포대 수)을 가끔 입력하면 정확해집니다.":["Còn lại = lần kiểm cuối + nhập − số con × lượng ăn/ngày. Thỉnh thoảng nhập lượng còn trong silo (số bao) để chính xác hơn.","बाँकी = अन्तिम गन्ती + आगमन − सुँगुर × दैनिक दाना। कहिलेकाहीँ बाँकी मात्रा लेख्नुहोस्।","នៅសល់ = ចុងក្រោយ + ចូល − ចំនួន × ចំណីប្រចាំថ្ងៃ។ សូមបញ្ចូលចំនួនសល់ម្ដងម្កាល។","คงเหลือ = ยอดล่าสุด + รับเข้า − จำนวนหมู × ปริมาณ/วัน กรอกยอดคงเหลือเป็นระยะเพื่อความแม่นยำ"],
+"날씨 불러오는 중":["Đang tải thời tiết","मौसम लोड हुँदै","កំពុងផ្ទុកអាកាសធាតុ","กำลังโหลดสภาพอากาศ"],"조치":["Xử lý","कारबाही","វិធានការ","ดำเนินการ"],"도태":["Loại thải","हटाउने","បោះបង់","คัดทิ้ง"],
+"도는 순서대로 적어 주세요. 문제가 있는 항목만 눌러 빨간색으로 바꾸면 됩니다.":["Ghi theo thứ tự đi kiểm tra. Chỉ bấm mục có vấn đề để chuyển sang màu đỏ.","घुम्ने क्रममा लेख्नुहोस्। समस्या भएको मात्र थिच्नुहोस् (रातो हुन्छ)।","សូមកត់តាមលំដាប់ដើរ។ ចុចតែចំណុចមានបញ្ហា ឱ្យទៅជាពណ៌ក្រហម។","บันทึกตามลำดับที่เดินตรวจ กดเฉพาะรายการที่มีปัญหาให้เป็นสีแดง"],
+"목표":["Mục tiêu","लक्ष्य","គោលដៅ","เป้าหมาย"],"이상 없음":["Bình thường","ठीक छ","ធម្មតា","ปกติ"],"점검 기록":["Ghi kiểm tra","जाँच लेख्नुहोस्","កត់ការពិនិត្យ","บันทึกการตรวจ"],"미점검":["Chưa kiểm","जाँच बाँकी","មិនទាន់ពិនិត្យ","ยังไม่ตรวจ"],
+"포유 관리":["Quản lý nuôi con","दूध खुवाउने व्यवस्थापन","គ្រប់គ្រងបំបៅ","จัดการเลี้ยงลูก"],"대리모":["Nái nuôi hộ","धाई माउ","មេចិញ្ចឹមជំនួស","แม่นม"],
+"다른 복 자돈을 맡아 키우는 중 · 이유 알림에서 빠짐":["Đang nuôi con ổ khác · không báo cai sữa","अर्को ब्याँतका पाठा हुर्काउँदै · दूध छुटाउने सूचना छैन","កំពុងចិញ្ចឹមកូនសំបុកផ្សេង · មិនរំលឹកផ្ដាច់ដោះ","เลี้ยงลูกครอกอื่น · ไม่เตือนหย่านม"],
+"대리모로 지정":["Đặt làm nái nuôi hộ","धाई माउ बनाउनुहोस्","កំណត់ជាមេចិញ្ចឹម","ตั้งเป็นแม่นม"],"대리모 해제":["Bỏ nái nuôi hộ","धाई माउ हटाउनुहोस्","ឈប់ជាមេចិញ្ចឹម","ยกเลิกแม่นม"],
+"이유 보류":["Hoãn cai sữa","दूध छुटाउन रोक्ने","ពន្យារផ្ដាច់ដោះ","เลื่อนหย่านม"],"보류 해제":["Bỏ hoãn","रोक हटाउनुहोस्","ឈប់ពន្យារ","ยกเลิกการเลื่อน"],"보류 사유":["Lý do hoãn","रोक्ने कारण","មូលហេតុ","เหตุผล"],"언제까지":["Đến khi nào","कहिलेसम्म","ដល់ពេលណា","ถึงเมื่อไร"],
+"정해진 날 이유하지 않을 때 · 사유와 날짜를 남김":["Khi không cai sữa đúng ngày · ghi lý do và ngày","तोकिएको दिन नछुटाउँदा · कारण र मिति लेख्ने","ពេលមិនផ្ដាច់ដោះតាមថ្ងៃ · កត់មូលហេតុ និងថ្ងៃ","เมื่อไม่หย่านมตามกำหนด · บันทึกเหตุผลและวันที่"],
+"이유 보류를 저장했습니다":["Đã lưu hoãn cai sữa","रोक सुरक्षित भयो","បានរក្សាទុក","บันทึกแล้ว"],"저장했습니다":["Đã lưu","सुरक्षित भयो","បានរក្សាទុក","บันทึกแล้ว"],"고치기":["Sửa","सच्याउनुहोस्","កែ","แก้ไข"],
+"자돈 체중 미달":["Lợn con thiếu cân","पाठा कम तौल","កូនជ្រូកស្រាល","ลูกหมูน้ำหนักน้อย"],"자돈 허약·질병":["Lợn con yếu · bệnh","पाठा कमजोर · बिरामी","កូនជ្រូកខ្សោយ · ឈឺ","ลูกหมูอ่อนแอ · ป่วย"],"모돈 치료 중":["Nái đang điều trị","माउ उपचारमा","មេកំពុងព្យាបាល","แม่กำลังรักษา"],"분만사 자리 여유":["Chuồng đẻ còn chỗ","सुत्केरी घरमा ठाउँ छ","ក្រោលកើតនៅទំនេរ","โรงคลอดมีที่ว่าง"],
+"들어간 시간":["Giờ vào","भित्र गएको समय","ម៉ោងចូល","เวลาเข้า"],"온도":["Nhiệt độ","तापक्रम","សីតុណ្ហភាព","อุณหภูมิ"],"이상 있는 항목만 누르기":["Chỉ bấm mục có vấn đề","समस्या भएको मात्र थिच्नुहोस्","ចុចតែចំណុចមានបញ្ហា","กดเฉพาะที่มีปัญหา"],
+"물":["Nước","पानी","ទឹក","น้ำ"],"공기(환기)":["Không khí (thông gió)","हावा (भेन्टिलेसन)","ខ្យល់ (ចេញចូល)","อากาศ (ระบายอากาศ)"],"이상 개체":["Con bất thường","समस्या भएको सुँगुर","ជ្រូកមិនប្រក្រតី","ตัวผิดปกติ"],"보온 매트":["Thảm sưởi","तातो म्याट","កម្រាលកំដៅ","แผ่นกก"],
+"예: 3번 급수기 막힘 → 교체":["VD: vòi nước số 3 tắc → thay","जस्तै: ३ नम्बर पानी धारा बन्द → फेरियो","ឧ: បំពង់ទឹកលេខ៣ ស្ទះ → ប្ដូរ","เช่น ที่ให้น้ำเบอร์ 3 ตัน → เปลี่ยน"],
+"메모 (선택)":["Ghi chú (tuỳ chọn)","टिप्पणी (ऐच्छिक)","កំណត់ចំណាំ (ស្រេចចិត្ត)","บันทึก (ไม่บังคับ)"],
+"폭염":["Nắng nóng","अत्यधिक गर्मी","កំដៅខ្លាំង","ร้อนจัด"],"한파":["Rét đậm","अत्यधिक चिसो","ត្រជាក់ខ្លាំង","หนาวจัด"],"강풍":["Gió mạnh","तेज हावा","ខ្យល់ខ្លាំង","ลมแรง"],"바람":["Gió","हावा","ខ្យល់","ลม"],
+"환기·급수·쿨링 점검":["Kiểm tra thông gió · nước · làm mát","भेन्टिलेसन · पानी · चिसो जाँच","ពិនិត្យខ្យល់ · ទឹក · ត្រជាក់","ตรวจระบายอากาศ · น้ำ · ระบบทำความเย็น"],
+"보온·급수관 동파 점검":["Kiểm tra sưởi · ống nước đóng băng","तातो · पानी पाइप जम्ने जाँच","ពិនិត្យកំដៅ · បំពង់ទឹកកក","ตรวจการกก · ท่อน้ำแข็ง"],
+"커튼·문·지붕 점검":["Kiểm tra rèm · cửa · mái","पर्दा · ढोका · छाना जाँच","ពិនិត្យវាំងនន · ទ្វារ · ដំបូល","ตรวจม่าน · ประตู · หลังคา"],
+"맑음":["Nắng","घमाइलो","ថ្ងៃភ្លឺ","แจ่มใส"],"구름":["Mây","बादल","ពពក","มีเมฆ"],"안개":["Sương mù","कुहिरो","អ័ព្ទ","หมอก"],"비":["Mưa","पानी","ភ្លៀង","ฝน"],"눈":["Tuyết","हिउँ","ព្រិល","หิมะ"],"소나기":["Mưa rào","झरी","ភ្លៀងធ្លាក់ខ្លាំង","ฝนซู่"],"뇌우":["Dông","चट्याङ","ព្យុះផ្គររន្ទះ","พายุฟ้าคะนอง"]
+});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -1729,7 +1988,8 @@ function statusOf(s){
   else if(st.stage==="임신"){d=diff(st.mate,REF);const left=CFG.gest-d;
     if(left<=CFG.farrowIn){key="분만임박";label=t("분만 임박");sub=left>0?`${t("분만")} D−${left}`:left===0?t("오늘 분만 예정"):`${t("분만")} +${-left}${t("일 지남")}`;cls="c-due"}
     else{key="임신";label=t("임신");sub=`${t("임신")} ${d}${t("일")}`;cls="c-preg"}}
-  else if(st.stage==="포유"){d=diff(st.farrow,REF);key="포유";label=t("포유");sub=`${t("포유")} ${d}${t("일")} · ${t("실산")} ${st.live}`;cls="c-lac"}
+  else if(st.stage==="포유"){d=diff(st.farrow,REF);key="포유";label=t(s.nurse?"대리모":"포유");sub=s.nurse?`${t("대리모")} ${diff(s.nurse.since,REF)}${t("일")}`:`${t("포유")} ${d}${t("일")} · ${t("실산")} ${st.live}`;cls="c-lac";
+    if(s.weanHold&&s.weanHold.until>=REF)sub+=` · ${t("이유 보류")} ~${kDate(s.weanHold.until)}`}
   else {d=diff(st.since,REF);key="재발공태";label=t(st.lastResult||"재발");sub=`${t(st.lastResult)} D+${d} · ${t("재교배 대기")}`;heat=true;cls="c-ret"}
   return {...st,parity,gilt,key,label,sub,cls,heat,d,plan:s.cullPlan};
 }
@@ -1782,11 +2042,11 @@ function render(){
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");
   LANG=m.lang||"ko";document.documentElement.lang=LANG;state.user=m.name;syncLists();
-  $("#hdDate").textContent=kDate(TODAY);
+  $("#hdDate").textContent=kDate(TODAY)+" · W"+isoWeek(TODAY).w;$("#hdVer").textContent=APP_VER;
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vBoard,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vBoard,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -1800,6 +2060,7 @@ function vHome(){
   h+=`<div class="sec-t">${t("모돈 상태")} <button type="button" data-a="tab" data-v="sows">${t("모돈 보기")} ›</button></div><div class="statusrow">`+
     [["heat","발정 관찰"],["발정대기","발정 대기"],["확인전","확인 전"],["임신","임신"],["분만임박","분만 임박"],["포유","포유"],["재발공태","재발·공태"],["후보","후보돈"]]
     .map(([k,l])=>`<button type="button" class="sbox ${k==="heat"&&c.heat?"hot":""}" data-a="sowFilter" data-v="${k==="heat"?"발정관찰":k}"><small>${t(l)}</small><b>${c[k]||0}</b></button>`).join("")+`</div>`;
+  h+=amHomeCard();
   h+=`<div class="sec-t">${t("오늘 입력")}</div><div class="qgrid">${QUICK.filter(q=>!(state.labels.hide||{})[q]).map(q=>{
     let cls="",cnt="";
     if(DAILY.includes(q)){const s=dayStatus(TODAY,q);cls=s.s==="miss"?"miss":s.s==="zero"?"zero":"";cnt=s.s==="ok"?s.n:s.s==="zero"?"0":""}
@@ -1807,16 +2068,16 @@ function vHome(){
     return `<button class="qbtn ${cls}" type="button" data-a="input" data-v="${q}">${icon(q)}${esc(L(q))}<span class="cnt">${cnt}</span></button>`}).join("")}</div>`;
   h+=`<div class="note">${t("빨간 테두리: 오늘 아직 입력하지 않은 매일 기록 · 파란 0: ‘오늘 없음’으로 확인함")}</div>`;
   h+=`</div><div>`;
-  const todos=buildTodos(),st=stalls();
+  const todos=buildTodos().filter(x=>x.k!=="am"),st=stalls();
   const leftN=todos.reduce((s,x)=>s+leftOf(x),0);
   h+=`<div class="sec-t">${t("오늘 할 일")} <button type="button" data-a="tab" data-v="todo">${t("남은")} ${leftN} · ${t("전체 보기")} ›</button></div>`;
   const rank={bad:0,warn:1,ok:2};todos.sort((a,b)=>rank[a.sev]-rank[b.sev]);
   h+=todos.length?todos.slice(0,6).map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   if(st.length)h+=`<button class="todo stall" type="button" data-a="tab" data-v="todo"><span class="bar"></span><span><b>${t("장기 무변동 개체")}</b><small>${st.slice(0,5).map(x=>x.s.id).join(", ")}${st.length>5?" …":""}</small></span><span class="n" style="color:var(--red)">${st.length}</span></button>`;
-  h+=`</div></div><div class="proto">시제품 v0.3 · 기록은 이 기기에만 저장됩니다</div>`;
+  h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 분만군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){return it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 분만군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 분만군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
@@ -1839,6 +2100,10 @@ function openTodo(k){
     const ck=x.k==="pending"?"":`<div class="tdck"><label class="ckbox"><input type="checkbox" data-tdk="${key}" data-tdt="${esc(x.t)}" data-tdtarget="${esc(tdName(it))}" ${it.s?`data-tdsow="${it.s.id}"`:""} ${log?"checked":""}><span>${log?`${t("완료")} · ${esc(log.user)} ${kTime(log.at)}`:t("조치 완료 체크")}</span></label><input type="text" data-tdm="${key}" placeholder="${t("조치 내용 (예: 재발 없음, 수의사 확인)")}" value="${esc(log?log.memo:(ui.memo[key]||""))}" aria-label="${t("내용")}"></div>`;
     if(it.b)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.b.k)} · ${it.v.p.name}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${VST[it.v.st][1]}</span></div><div class="sow-meta">${bAge(it.b)}w · ${t(stagePlan(bAge(it.b)))} · ${it.v.done}/${it.v.need}${t("두")}</div><div class="prog-bar"><i style="width:${Math.min(100,it.v.done/it.v.need*100)}%"></i></div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="돈군백신" data-batch="${it.b.k}" data-vax="${it.v.p.name}">${t("접종 기록")}</button></div>${ck}</div>`;
     if(it.item)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.item.name)}</b><span class="dstate ds-wait">${t("재고 부족")}</span></div><div class="sow-meta">${t(it.item.cat)} · ${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="재고" data-item="${it.item.id}">${t("입고 기록")}</button></div>${ck}</div>`;
+    if(it.feed)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.feed.f)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${it.feed.days}${t("일분")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="사료">${t("입고 기록")}</button></div>${ck}</div>`;
+    if(it.fc)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.fc.b.k)} → ${esc(it.fc.p.feed)}</b><span class="dd">${t(stagePlan(bAge(it.fc.b)))}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
+    if(it.am)return `<div class="sow"><div class="sow-top"><b>${esc(t(it.am.barn))}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"}">${it.issue?t("이상"):t("미점검")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="tab" data-v="morning">${t("아침 점검")}</button></div></div>`;
+    if(it.ann)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ann.name)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${t("연간 일괄")}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.order)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${itemShort(it)}</b></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.pending&&it.day)return `<div class="sow"><div class="sow-top"><b>${esc(it.day.barn)} · ${t("하루 합계")} ${it.day.total}${t("두")}</b></div><div class="sow-meta">${kDate(it.day.date)} · ${it.day.cnt}${t("건")}</div><div class="acts"><button class="act pri" type="button" data-a="judge" data-v="d:${it.day.date}">${t("판단하러 가기")}</button></div></div>`;
     if(it.pending)return `<div class="sow"><div class="sow-top"><b>${esc(summary(it.r))}</b></div><div class="sow-meta">${kDate(it.r.workDate)} · ${esc(it.r.user)}</div><div class="acts"><button class="act pri" type="button" data-a="judge" data-v="d:${it.r.workDate}">${t("판단하러 가기")}</button></div></div>`;
@@ -1848,7 +2113,8 @@ function openTodo(k){
     if(x.act==="check")acts=`<div class="acts"><button class="act pri" type="button" data-a="chk" data-v="임신" data-sow="${it.s.id}">${t("임신")}</button><button class="act warn" type="button" data-a="chk" data-v="재발" data-sow="${it.s.id}">${t("재발")}</button><button class="act bad" type="button" data-a="chk" data-v="공태" data-sow="${it.s.id}">${t("공태")}</button></div>`;
     else if(x.act==="movein")acts=`<div class="acts"><button class="act pri" type="button" data-a="movein" data-v="${it.s.id}">${t("분만사로 이동 완료")}</button></div>`;
     else if(x.act==="cull")acts=can("cull")?`<div class="acts"><button class="act bad" type="button" data-a="sowd" data-v="${it.s.id}">도태 처리하러 가기</button></div>`:"";
-    else acts=`<div class="acts"><button class="act pri" type="button" data-a="input" data-v="${x.act}" data-sow="${it.s.id}">${esc(L(x.act))} ${t("입력")}</button></div>`;
+    else if(!x.act)acts="";
+    else acts=`<div class="acts"><button class="act pri" type="button" data-a="input" data-v="${x.act}" data-sow="${it.s.id}"${it.vx?` data-vname="${esc(it.vx.name)}"`:""}>${esc(L(x.act))} ${t("입력")}</button></div>`;
     return sowCard(it.s,{noLoc:true,cls:log?"done":"",acts:`<div class="sow-meta" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"};font-weight:700">${it.label} · ${t("현재")} ${it.s.loc}</div>`+acts+ck});
   }).join("");
   ctx={k:"todo",v:k};
@@ -1990,7 +2256,7 @@ const stockSt=(it,s)=>s.qty===null?"none":s.qty<it.par?"bad":s.qty<it.par*1.3?"w
 /* ================= v0.3 · 로그인 ================= */
 function vLogin(){
   const L2=ui.loginLang||"ko",sel=ui.loginId?state.accounts.find(a=>a.id===ui.loginId):null,pin=ui.pin||"";
-  let h=`<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"><small class="ver">v0.3</small></div>
+  let h=`<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"><small class="ver">${APP_VER}</small></div>
     <div class="chips" style="justify-content:center;flex-wrap:wrap">${LANGS.map(([c,n])=>`<button type="button" class="chip ${L2===c?"on":""}" data-a="loginLang" data-v="${c}">${n}</button>`).join("")}</div>`;
   if(!sel){
     h+=`<h2 style="text-align:center;margin:8px 0 0">${t("이름을 고르세요")}</h2><div class="acclist">${state.accounts.filter(a=>a.active).map(a=>`<button type="button" class="accbtn" data-a="loginPick" data-v="${a.id}"><b>${esc(a.name)}</b><small>${t(ROLE[a.role])} · ${(LANGS.find(l=>l[0]===a.lang)||["","한국어"])[1]}</small></button>`).join("")}</div>`;
@@ -2025,6 +2291,7 @@ function vSettings(){
     ${ui.myPin?`<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>`:`<div class="acts"><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
   const menu=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`;
   h+=`<div class="more">${menu("guide",t("앱 가이드"),"상황별 사용 방법")}${menu("hus",t("사양관리 가이드"),"임신기간, 포유, 온도, 급수 등 기본 기준")}</div>`;
+  if(can("admin")&&FARM.confirm.length)h+=`<div class="sec-t">확인 필요 <span>${FARM.confirm.length}</span></div><div class="panel"><div class="note">아래 값은 임시로 넣어 두었습니다. 알려 주시면 바로 고칩니다.</div>${FARM.confirm.map(x=>`<div class="setrow"><span>${esc(x)}</span></div>`).join("")}</div>`;
   if(can("admin")){
     h+=`<div class="sec-t">관리자 설정 <span>대표 계정에서만 보입니다</span></div><div class="more">
       ${menu("accounts","계정 관리","직원 추가 · 권한 · 언어 · PIN · 정지")}
@@ -2075,13 +2342,13 @@ function vCriteria(){
     <div class="note">기준 미만 폐사는 알림 없이 ‘조치 추가’ 버튼만 보입니다.</div>`;
   h+=`<div class="sec-t">장기 무변동 기준 (일)</div>`+Object.keys(ST_LABEL).map(k=>`<div class="setrow"><span>${ST_LABEL[k]}</span>${stp("stStep",k,T[k],ST_LABEL[k])}</div>`).join("");
   h+=`<div class="sec-t">돈사별 머무는 주 수</div>`+C.stage.map(([n,w],i)=>`<div class="setrow"><span>${n}</span>${stp("cfgStage",i,w,n)}</div>`).join("")+`<div class="note">출하 ${shipAge()}주령</div>`;
-  h+=`<div class="sec-t">자돈 백신 프로그램 (접종 주령 · 예시)</div>`+C.prog.map((p,i)=>`<div class="setrow"><span>${p.name}</span>${stp("cfgProg",i,p.age,p.name)}</div>`).join("");
+  h+=`<div class="sec-t">돈군 백신 프로그램 (분만 주 월요일부터 일수)</div>`+C.prog.map((p,i)=>`<div class="setrow"><span>${p.name}</span>${stp("cfgProg",i,p.day,p.name)}</div>`).join("");
   h+=`<div class="sec-t">정액</div><div class="setrow"><span>모돈 1두당 교배 횟수</span>${stp("cfgSemen",0,C.semenPerSow,"교배 횟수")}</div>`;
   return h;
 }
 const BULK_ST=[["임신","임신 중","마지막 교배일"],["확인전","교배 후 확인 전","교배일"],["포유","포유 중","분만일"],["이유","이유 후 발정 대기","이유일"],["재발","재발·공태","확인한 날"],["후보","후보돈","도입일"]];
 function vBulk(){
-  const B=ui.bulk||(ui.bulk={st:"임신",date:addDays(TODAY,-40),bp:2,loc:"임신사",live:12,res:null});
+  const B=ui.bulk||(ui.bulk={st:"임신",date:addDays(TODAY,-40),bp:2,loc:"임신사 1동",live:12,res:null});
   const st=BULK_ST.find(x=>x[0]===B.st);
   let h=`<h2>모돈 일괄 등록</h2><div class="note">모돈 번호를 줄마다 하나씩 붙여 넣고, 같은 상태·같은 날짜인 모돈끼리 한 번에 등록합니다. 상태가 다르면 나눠서 여러 번 등록하세요. 등록한 모돈은 바로 할 일과 일정 계산에 들어갑니다.</div>
     <div class="f"><label for="bkIds">모돈 번호 (줄마다 하나)</label><textarea id="bkIds" placeholder="2301&#10;2302&#10;2303">${esc(B.ids||"")}</textarea></div>
@@ -2174,21 +2441,54 @@ function vHusbandry(){
    S.map(([h,rows])=>`<div class="panel"><h3 style="margin:0">${h}</h3><div class="dtbl"><table class="hus"><tbody>${rows.map(([a,b])=>`<tr><td>${a}</td><td>${b}</td></tr>`).join("")}</tbody></table></div></div>`).join("");
 }
 
+/* ================= v0.4 · 아침 점검 ================= */
+// state.am[날짜][돈사] = {time, temp, bad:[이상 항목], memo, user, at}
+const amDay=d=>((state.am=state.am||{})[d]=state.am[d]||{});
+function amProg(d=TODAY){const D=(state.am||{})[d]||{};return {done:FARM.morning.route.filter(r=>D[r.barn]).length,all:FARM.morning.route.length}}
+const nowHM=()=>{const n=new Date();return pad(n.getHours())+":"+pad(n.getMinutes())};
+function amTodos(){if(REF!==TODAY)return [];const D=amDay(TODAY),late=nowHM()>=FARM.morning.due;
+  const left=FARM.morning.route.filter(r=>!D[r.barn]).map(r=>({am:r,label:`${FARM.morning.due}${t("까지")}`,sev:late?"bad":"ok"}));
+  const bad=FARM.morning.route.filter(r=>D[r.barn]&&amIssues(r,D[r.barn]).length).map(r=>({am:r,label:amIssues(r,D[r.barn]).join(" · "),sev:"warn",issue:true}));
+  return [{k:"am",t:"아침 점검",items:[...left,...bad],act:null}]}
+function amIssues(r,x){const a=[...(x.bad||[]).map(b=>t(b)+" "+t("이상"))];if(x.temp!==""&&x.temp!=null&&r.temp){if(+x.temp<r.temp[0])a.push(`${x.temp}℃ ${t("낮음")}`);else if(+x.temp>r.temp[1])a.push(`${x.temp}℃ ${t("높음")}`)}return a}
+function vMorning(){
+  const D=amDay(TODAY),P=amProg(),late=nowHM()>=FARM.morning.due;
+  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="home">‹ ${t("홈")}</button><h2>${t("아침 점검")}</h2><span class="sow-meta" style="font-weight:700;color:${P.done===P.all?"var(--accent)":late?"var(--red)":"var(--ink)"}">${P.done}/${P.all} · ${FARM.morning.due}${t("까지")}</span></div>`;
+  h+=`<div class="note">${t("도는 순서대로 적어 주세요. 문제가 있는 항목만 눌러 빨간색으로 바꾸면 됩니다.")}</div>`;
+  FARM.morning.route.forEach((r,n)=>{const x=D[r.barn],O=ui.am&&ui.am.barn===r.barn?ui.am:null,iss=x?amIssues(r,x):[];
+    h+=`<div class="card amcard ${x?"done":""}"><div class="sow-top"><b>${n+1}. ${esc(t(r.barn))}</b><span class="sow-meta">${t("목표")} ${r.temp[0]}~${r.temp[1]}℃</span></div>`;
+    if(O){const its=[...FARM.morning.items,...(r.extra||[])];
+      h+=`<div class="row2"><div class="f" style="flex:1"><label for="amTime">${t("들어간 시간")}</label><input type="time" id="amTime" value="${O.time}"></div><div class="f" style="flex:1"><label for="amTemp">${t("온도")} ℃</label><input type="number" id="amTemp" inputmode="decimal" step="0.5" value="${O.temp}" placeholder="${(r.temp[0]+r.temp[1])/2}"></div></div>
+        <div class="f"><span class="lb">${t("이상 있는 항목만 누르기")}</span><div class="chipwrap">${its.map(i=>`<button type="button" class="chip wrap ${O.bad.includes(i)?"on bad":""}" data-a="amBad" data-v="${esc(i)}">${O.bad.includes(i)?"✕ ":"✓ "}${esc(t(i))}</button>`).join("")}</div></div>
+        <div class="f"><label for="amMemo">${t("메모 (선택)")}</label><input type="text" id="amMemo" value="${esc(O.memo)}" placeholder="${t("예: 3번 급수기 막힘 → 교체")}"></div>
+        <div class="acts"><button class="act pri" type="button" data-a="amSave">${t("저장")}</button><button class="act" type="button" data-a="amCancel">${t("취소")}</button></div>`}
+    else if(x)h+=`<div class="sow-meta">${x.time} · ${x.temp!==""?x.temp+"℃ · ":""}${esc(x.user)}${x.memo?" · "+esc(x.memo):""}</div><div class="sow-meta" style="font-weight:700;color:${iss.length?"var(--red)":"var(--accent)"}">${iss.length?iss.join(" · "):t("이상 없음")}</div><div class="acts"><button class="act" type="button" data-a="amOpen" data-v="${esc(r.barn)}">${t("고치기")}</button></div>`;
+    else h+=`<div class="acts"><button class="act pri" type="button" data-a="amOpen" data-v="${esc(r.barn)}">${t("점검 기록")}</button></div>`;
+    h+=`</div>`});
+  return h}
+function amHomeCard(){const P=amProg(),late=nowHM()>=FARM.morning.due,fin=P.done===P.all;
+  return `<button class="todo ${fin?"alldone":""}" type="button" data-a="tab" data-v="morning"><span class="bar" style="background:${fin?"var(--accent)":late?"var(--red)":"var(--amber)"}"></span><span><b>${t("아침 점검")}</b><small>${fin?t("모두 완료"):`${FARM.morning.due}${t("까지")} · ${t("남은")} ${P.all-P.done}`}</small></span><span class="n">${P.done}<small>/${P.all}</small></span></button>`}
+Object.assign(A,{
+  amOpen:v=>{const x=amDay(TODAY)[v];ui.am={barn:v,time:x?x.time:nowHM(),temp:x?x.temp:"",bad:x?[...x.bad]:[],memo:x?x.memo:""};render()},
+  amBad:v=>{const O=ui.am;O.time=$("#amTime").value;O.temp=$("#amTemp").value;O.memo=$("#amMemo").value;O.bad=O.bad.includes(v)?O.bad.filter(x=>x!==v):[...O.bad,v];keepScroll(render)},
+  amCancel:()=>{ui.am=null;render()},
+  amSave:()=>{const O=ui.am;amDay(TODAY)[O.barn]={time:$("#amTime").value||nowHM(),temp:$("#amTemp").value,bad:O.bad,memo:$("#amMemo").value.trim(),user:state.user,at:new Date().toISOString()};ui.am=null;save();toast(t("저장했습니다"));render()}
+});
 /* ================= v0.3 · 우리 농장 초기값 ================= */
 function baseState(){
-  return {accounts:[{id:"a1",name:"대표",role:"admin",pin:"9368",lang:"ko",active:true},{id:"a2",name:"팀장 이OO",role:"leader",pin:"1234",lang:"ko",active:true},{id:"a3",name:"Nguyen",role:"worker",pin:"1111",lang:"vi",active:true},{id:"a4",name:"Ram",role:"worker",pin:"2222",lang:"ne",active:true},{id:"a5",name:"Sokha",role:"worker",pin:"3333",lang:"km",active:true},{id:"a6",name:"Somchai",role:"worker",pin:"4444",lang:"th",active:true}],
+  return {accounts:[{id:"a1",name:"대표",role:"admin",pin:"9368",lang:"ko",active:true},{id:"a2",name:"조성훈 팀장",role:"leader",pin:"1234",lang:"ko",active:true},{id:"a3",name:"Nguyen",role:"worker",pin:"1111",lang:"vi",active:true},{id:"a4",name:"Ram",role:"worker",pin:"2222",lang:"ne",active:true},{id:"a5",name:"Sokha",role:"worker",pin:"3333",lang:"km",active:true},{id:"a6",name:"Somchai",role:"worker",pin:"4444",lang:"th",active:true}],
     labels:{nav:{},quick:{},hide:{}},dayDec:{},mbatches:[],
-    cfg:{stage:[["분만사",4],["자돈사",6],["육성사",6],["비육사",10]],prog:[{name:"써코·마이코",prod:"써코·마이코",age:3},{name:"돼지열병 1차",prod:"돼지열병",age:6},{name:"구제역 1차",prod:"구제역",age:8},{name:"돼지열병 2차",prod:"돼지열병",age:10},{name:"구제역 2차",prod:"구제역",age:12}],semenPerSow:2,deadOne:3,deadDay:3}};
+    cfg:{stage:FARM.stage.map(x=>x.slice()),prog:FARM.vax.piglet.map(p=>({...p})),semenPerSow:FARM.semen.perSow,deadOne:3,deadDay:3}};
 }
-const ITEM_DEF=()=>[["i1","호흡기 항생제","항생제","병",10,28],["i2","설사 항생제","항생제","병",8,21],["i3","생균제","사료첨가제","kg",50,0],["i4","축사 소독제","소독제","L",40,0],["i5","주사기","비품","박스",5,0],["i6","써코·마이코","백신","두분",200,0],["i7","돼지열병","백신","두분",300,0],["i8","구제역","백신","두분",300,0],["i9","PED","백신","두분",20,0],["i10","대장균","백신","두분",20,0],["i11","듀록 정액","정액","개",10,0]].map(([id,name,cat,unit,par,withdraw])=>({id,name,cat,unit,par,withdraw}));
-const FARM_LISTS=()=>({barns:mkList(["교배사","임신사","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동"]),causes:mkList(["압사","설사·소화기","호흡기","허약","외상","원인불명","기타"]),actions:mkList(["보온 확인","환기 점검","전해질 급여","초유·젖 확인","격리","소독","분만틀·보온등 점검","수의사 연락","부검·시료 채취","투약","재확인"]),semens:mkList(["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"]),dests:mkList(["○○도축장","△△공판장"]),cull:mkList(["번식장애(재발·공태)","산자수 저조","지제·다리 불량","노산","질병","기타"])});
+const ITEM_DEF=()=>FARM.items.map(([name,cat,unit,par,withdraw],i)=>({id:"i"+(i+1),name,cat,unit,par,withdraw}));
+const FARM_LISTS=()=>({barns:mkList(FARM.barns),causes:mkList(["압사","설사·소화기","호흡기","허약","외상","원인불명","기타"]),actions:mkList(["보온 확인","환기 점검","전해질 급여","초유·젖 확인","격리","소독","분만틀·보온등 점검","수의사 연락","부검·시료 채취","투약","재확인"]),semens:mkList(["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"]),dests:mkList(["○○도축장","△△공판장"]),cull:mkList(["번식장애(재발·공태)","산자수 저조","지제·다리 불량","노산","질병","기타"])});
 function seedFarm(){
   let r=5;const rnd=()=>(r=(r*16807)%2147483647)/2147483647,ri=(a,b)=>a+Math.floor(rnd()*(b-a+1)),pick=a=>a[ri(0,a.length-1)];
   const H0=addDays(TODAY,-548),TAKE=addDays(TODAY,-14),G=CFG.gest,wk0=weekStart(TODAY),recs=[],sows=[];
-  const USERS=["대표","팀장 이OO","Nguyen","Ram","Sokha","Somchai"];
+  const USERS=["대표","조성훈 팀장","Nguyen","Ram","Sokha","Somchai"];
   const at=wd=>{const t0=new Date(toUTC(wd));const t=new Date(t0.getUTCFullYear(),t0.getUTCMonth(),t0.getUTCDate(),ri(7,17),ri(0,59));const now=new Date();return (t>now?new Date(now.getTime()-ri(5,90)*60e3):t).toISOString()};
   const add=(type,wd,data)=>{if(wd<H0||wd>TODAY)return null;const x={id:newId(),type,workDate:wd,createdAt:at(wd),user:pick(USERS),data};recs.push(x);return x};
-  const fBarn=d=>isoWeek(d).w%2?"분만사 1동":"분만사 2동";
+  const fBarn=d=>"분만사";
   const deaths={};                       // "날짜|돈사|단계|원인" → 두수
   const dead=(wd,barn,stage,cause,n=1)=>{if(wd<H0||wd>TODAY)return;const k=`${wd}|${barn}|${stage}|${cause}`;deaths[k]=(deaths[k]||0)+n};
   const litterDeaths=(F,lost,days)=>{for(let i=0;i<lost;i++){const d=Math.min(days,Math.floor(rnd()*rnd()*days));const c=rnd();dead(addDays(F,d),fBarn(F),"포유자돈",c<.4?"압사":c<.65?"허약":c<.9?"설사·소화기":"원인불명")}};
@@ -2198,14 +2498,14 @@ function seedFarm(){
     else{const sofar=diff(F,TODAY);litterDeaths(F,Math.round(lost*Math.min(1,sofar/26)),Math.max(0,sofar))}
     return live};
   const mate=(id,M,ok=true)=>{add("교배",M,{sow:id,round:"1차",semen:"듀록 정액"});add("교배",addDays(M,1),{sow:id,round:"2차",semen:"듀록 정액"});
-    if(ok){if(diff(M,TODAY)>=28)add("임신확인",addDays(M,28),{sow:id,result:"임신"});add("백신",addDays(M,86),{sow:id,kind:"백신",name:"PED"});add("백신",addDays(M,100),{sow:id,kind:"백신",name:"대장균"});if(diff(M,TODAY)>=60)add("BCS",addDays(M,60),{sow:id,score:pick(["3","3","3.5","3.5","4"]),when:"임신 중"})}};
+    if(ok){if(diff(M,TODAY)>=28)add("임신확인",addDays(M,28),{sow:id,result:"임신"});FARM.vax.late.forEach(v=>add("백신",addDays(M,G-v.wk*7+ri(-1,1)),{sow:id,kind:"백신",name:v.name}));if(diff(M,TODAY)>=60)add("BCS",addDays(M,60),{sow:id,score:pick(["3","3","3.5","3.5","4"]),when:"임신 중"})}};
   // 이전 생산 주기를 거꾸로 만든다 (M = 이번 주기 교배일)
   const cycleBack=(id,M)=>{let m=M;for(let n=0;n<6;n++){
     const W=addDays(m,-ri(4,8)),wd=ri(26,28),F=addDays(W,-wd);if(F<addDays(H0,-40))break;
     farrow(id,F,wd);let Mp=addDays(F,-G);
     if(rnd()<.12){mate(id,addDays(Mp,-21),false);add("임신확인",Mp,{sow:id,result:"재발"});Mp=addDays(Mp,-21)}else if(rnd()<.05){mate(id,addDays(Mp,-40),false);add("임신확인",addDays(Mp,-12),{sow:id,result:"공태"});Mp=addDays(Mp,-40)}
     mate(id,Mp,true);m=Mp;if(Mp<H0)break}};
-  let no=1;const mk=loc=>{const id="M"+String(no++).padStart(3,"0");sows.push({id,baseParity:ri(0,3),loc,breed:"LYD"});return id};
+  let no=1;const mk=loc=>{const bp=ri(0,5),id=(bp>=3?pick(["3-","4-","5-"]):FARM.sowPrefix)+String(no++).padStart(3,"0");sows.push({id,baseParity:bp,loc,breed:FARM.breed});return id};
   // 분만사 30 = 분만 대기 8 + 포유 16 + 이유 직후 2 + 분만사에서 교배 4
   for(let k=0;k<8;k++){const id=mk("분만사"),M=addDays(TODAY,-(100+Math.round(k*13/7)+ri(0,1)));mate(id,M);cycleBack(id,M)}
   for(let w=0;w<4;w++)for(let k=0;k<4;k++){const back=diff(wk0,TODAY);const F=addDays(wk0,-7*w+(w===0?ri(0,back):ri(0,6)));if(F>TODAY)continue;
@@ -2213,7 +2513,7 @@ function seedFarm(){
   for(let k=0;k<2;k++){const id=mk("분만사"),W=addDays(TODAY,-ri(0,2)),F=addDays(W,-28),M=addDays(F,-G);mate(id,M);farrow(id,F,28);cycleBack(id,M)}
   for(let k=0;k<4;k++){const id=mk("분만사"),M=addDays(TODAY,-(3+k*5+ri(0,2)));mate(id,M,false);cycleBack(id,M)}
   // 임신사 40 (교배 30~99일)
-  for(let w=0;w<10;w++)for(let k=0;k<4;k++){const id=mk("임신사"),M=addDays(TODAY,-(30+7*w+Math.round(k*7/4)));mate(id,M);cycleBack(id,M)}
+  for(let w=0;w<10;w++)for(let k=0;k<4;k++){const id=mk(w<5?"임신사 1동":"임신사 2동"),M=addDays(TODAY,-(30+7*w+Math.round(k*7/4)));mate(id,M);cycleBack(id,M)}
   // 교배사 22 = 이유 후 대기 3 + 교배 후 확인 전 15 + 재발 3 + 공태 1
   for(let k=0;k<3;k++){const id=mk("교배사"),W=addDays(TODAY,-(2+k)),F=addDays(W,-28),M=addDays(F,-G);mate(id,M);farrow(id,F,28);cycleBack(id,M)}
   for(let k=0;k<15;k++){const id=mk("교배사"),M=addDays(TODAY,-Math.round(k*25/15));mate(id,M,false);cycleBack(id,M)}
@@ -2228,55 +2528,64 @@ function seedFarm(){
     const wn=recs.filter(x=>x.type==="이유"&&byW[k].some(f=>f.data.sow===x.data.sow&&x.workDate>f.workDate&&diff(f.workDate,x.workDate)<=30));
     let n=wn.reduce((s,x)=>s+x.data.n,0);if(!n)return;
     const old=k<cut,ship=addDays(k,SH*7+ri(0,4)),end=old?(ship<=TAKE?ship:TAKE):TODAY;
-    const nb=isoWeek(k).w%2?"자돈사 1동":"자돈사 2동",fb=isoWeek(k).w%2?"비육사 1동":"비육사 2동";
-    const phase=[[28,70,nb,"이유자돈",.03,["설사·소화기","설사·소화기","호흡기","허약","원인불명"]],[70,112,"육성사","육성돈",.015,["호흡기","호흡기","외상","원인불명"]],[112,SH*7,fb,"비육돈",.015,["호흡기","외상","원인불명","기타"]]];
+    const fb="육성비육사";
+    const phase=[[28,42,"인큐베이터","이유자돈",.02,["설사·소화기","설사·소화기","허약","원인불명"]],[42,70,"자돈사","이유자돈",.015,["설사·소화기","호흡기","허약","원인불명"]],[70,112,"군사방","육성돈",.015,["호흡기","호흡기","외상","원인불명"]],[112,SH*7,fb,"비육돈",.015,["호흡기","외상","원인불명","기타"]]];
     let from=fBarn(k);
     for(const [a,b,barn,stage,rate,causes] of phase){const mv=addDays(k,a+ri(0,1));if(mv>end)break;add("이동",mv,{from,to:barn,n});from=barn;
       const nl=Math.round(n*(rate*.7+rnd()*rate*.6));for(let q=0;q<nl;q++){const d=addDays(k,ri(a+1,b-1));if(d<end){dead(d,barn,stage,pick(causes));n--}}}
     if(!old)return;
     if(ship<=TAKE)add("출하",ship,{barn:fb,n,kg:ri(113,119),dest:rnd()<.8?"○○도축장":"△△공판장"});
-    else{const age=diff(k,TAKE),bb=age<70?nb:age<112?"육성사":fb;(bulk[bb]=bulk[bb]||{n:0,w:0});bulk[bb].n+=n;bulk[bb].w+=n*Math.max(25,Math.round(age*.62))}
+    else{const age=diff(k,TAKE),bb=age<42?"인큐베이터":age<70?"자돈사":age<112?"군사방":fb;(bulk[bb]=bulk[bb]||{n:0,w:0});bulk[bb].n+=n;bulk[bb].w+=n*Math.max(25,Math.round(age*.62))}
   });
   Object.entries(bulk).forEach(([barn,v])=>add("출하",TAKE,{barn,n:v.n,kg:Math.round(v.w/v.n),dest:"△△공판장 (인수 시 일괄 판매)",bulk:true}));
-  add("특이사항",TAKE,{barn:"육성사",text:"농장 인수 · 전 주인이 육성·비육돈 일괄 판매. 비육사 비어 있음"});
+  add("특이사항",TAKE,{barn:"육성비육사",text:"농장 인수 · 전 주인이 육성·비육돈 일괄 판매. 육성비육사 비어 있음"});
   // 폐사 기록 (같은 날·돈사·단계·원인은 한 건으로)
   Object.entries(deaths).forEach(([k,n])=>{const [wd,barn,stage,cause]=k.split("|");add("폐사",wd,{barn,stage,n,cause})});
   // 사료 입고 · 약품
-  const FEEDS2=[["포유모돈",3000,6000],["임신모돈",4000,7000],["자돈 1단계",1000,2000],["자돈 2단계",3000,5000],["육성",4000,6000]];
-  for(let d=548;d>=1;d-=ri(2,4)){const f=pick(FEEDS2);add("사료",addDays(TODAY,-d),{kind:f[0],mode:"입고",kg:Math.round(ri(f[1],f[2])/500)*500})}
-  [[60,"설사 항생제","분만사 1동"],[38,"호흡기 항생제","자돈사 2동"],[17,"설사 항생제","분만사 2동"]].forEach(([d,name,barn])=>add("약품",addDays(TODAY,-d),{kind:"항생제",name,barn,qty:ri(1,2),withdraw:addDays(TODAY,-d+21)}));
+  const FK=[...FARM.feed.bins.map(b=>[b.feed,3000,7000]),...FARM.feed.bags.map(b=>[b.feed,200,600])];
+  for(let d=548;d>=11;d-=ri(2,4)){const f=pick(FK);add("사료",addDays(TODAY,-d),{kind:f[0],mode:"입고",kg:Math.round(ri(f[1],f[2])/100)*100})}
+  [[60,"설사 항생제","분만사"],[38,"호흡기 항생제","자돈사"],[17,"설사 항생제","인큐베이터"]].forEach(([d,name,barn])=>add("약품",addDays(TODAY,-d),{kind:"항생제",name,barn,qty:ri(1,2),withdraw:addDays(TODAY,-d+21)}));
   const B=baseState();
   const prevYear={};for(let y=+H0.slice(0,4)-1;y<=+H0.slice(0,4);y++)for(let m=1;m<=12;m++){if(`${y}-${pad(m)}`>=H0.slice(0,7))break;const far=ri(16,18);
     prevYear[`${y}-${pad(m)}`]={far,mates:ri(18,20),frate:ri(84,89),tot:+(13.2+rnd()*.8).toFixed(1),live:+(12+rnd()*.8).toFixed(1),wean:+(10.9+rnd()*.7).toFixed(1),surv:ri(89,92),psy:+(24+rnd()*2).toFixed(1),msy:+(21+rnd()*2).toFixed(1),dead:ri(60,90),ship:ri(160,190),shipKg:ri(115,118)}}
-  return {v:5,user:"대표",sows,records:recs,zero:{},todoLog:{},tasks:[],cfgSt:{...CFG.st},items:ITEM_DEF(),prevYear,memo:{},assign:{},lists:FARM_LISTS(),startDate:H0,batchCut:cut,takeover:TAKE,...B,mbatches:[4,5,6,7,8,9,10,11].map(w=>({k:addDays(wk0,-7*w),age:w,n:50,litters:4,note:"인수 시 실사"}))};
+  return {v:6,user:"대표",sows,records:recs,zero:{},todoLog:{},tasks:[],cfgSt:{...CFG.st},items:ITEM_DEF(),prevYear,memo:{},assign:{},lists:FARM_LISTS(),startDate:H0,batchCut:cut,takeover:TAKE,...B,mbatches:[4,5,6,7,8,9,10,11].map(w=>({k:addDays(wk0,-7*w),age:w,n:50,litters:4,note:"인수 시 실사"}))};
 }
 function seedFarmPost(){
-  const USERS=["대표","팀장 이OO","Nguyen","Ram"];let u=0;
+  const USERS=["대표","조성훈 팀장","Nguyen","Ram"];let u=0;
   const at=wd=>new Date(toUTC(wd)+(9+(u%6))*36e5).toISOString();
   // 지난 돈군 백신 (이번 주 예정분은 남겨 둠)
-  batches().filter(b=>b.k>=addDays(state.startDate,-40)).forEach(b=>state.cfg.prog.forEach(p=>{const due=addDays(b.k,p.age*7),end=b.k<state.batchCut?state.takeover:TODAY;if(due>=weekStart(TODAY)||due>end||due<state.startDate)return;const wd=addDays(due,2);
+  batches().filter(b=>b.k>=addDays(state.startDate,-40)).forEach(b=>state.cfg.prog.forEach(p=>{const due=addDays(b.k,p.day),end=b.k<state.batchCut?state.takeover:TODAY;if(due>=weekStart(TODAY)||due>end||due<state.startDate)return;const wd=addDays(due,2);
     state.records.push({id:newId(),type:"돈군백신",workDate:wd,createdAt:at(wd),user:USERS[u++%4],data:{batch:b.k,vax:p.name,prod:p.prod,n:bVax(b,p).need}})}));
+  // 복별 처치: 어제까지 할 것은 체크 완료로
+  activeSows().forEach(s=>{const i=statusOf(s);if(i.stage!=="포유")return;FARM.vax.litter.forEach(v=>{const on=addDays(i.farrow,v.day);if(on<TODAY)state.todoLog[tdKey("lit",`${s.id}|${i.farrow}|${v.day}`)]={memo:"",user:USERS[u++%4],at:at(on),rec:null}})});
   // 지난 폐사는 판단 완료로
   state.records.forEach(x=>{if(x.type==="폐사"&&x.workDate<TODAY&&x.data.n>=state.cfg.deadOne)x.data.decision="none"});
   const g={};state.records.filter(x=>x.type==="폐사"&&x.workDate<TODAY).forEach(x=>{const k=x.workDate+"|"+x.data.barn;g[k]=(g[k]||0)+x.data.n});
-  Object.entries(g).forEach(([k,n])=>{if(n>=state.cfg.deadDay)state.dayDec[k]={decision:"none",total:n,at:new Date().toISOString(),user:"팀장 이OO"}});
+  Object.entries(g).forEach(([k,n])=>{if(n>=state.cfg.deadDay)state.dayDec[k]={decision:"none",total:n,at:new Date().toISOString(),user:"조성훈 팀장"}});
   // 매일 마감: 기록 없는 항목은 ‘오늘 없음’
   const has=new Set(state.records.map(x=>x.type+"|"+x.workDate));
   for(let d=addDays(TODAY,-1);d>=state.startDate;d=addDays(d,-1)){DAILY.forEach(t2=>{if(!has.has(t2+"|"+d))(state.zero[d]=state.zero[d]||{})[t2]=true})}
   // 재고: 30일 전 실사 + 입고
-  const q={i1:12,i2:9,i3:120,i4:60,i5:8,i6:350,i7:700,i8:450,i9:80,i10:80,i11:25},d30=addDays(TODAY,-30),d12=addDays(TODAY,-12);
-  state.items.forEach(it=>state.records.push({id:newId(),type:"재고",workDate:d30,createdAt:at(d30),user:"대표",data:{item:it.id,mode:"실사",qty:q[it.id]}}));
-  [["i6",200],["i7",300],["i11",40],["i8",100]].forEach(([id,qty])=>state.records.push({id:newId(),type:"재고",workDate:d12,createdAt:at(d12),user:"팀장 이OO",data:{item:id,mode:"입고",qty}}));
-  // 비육사 첫 입식 준비 할 일
+  const q={},d30=addDays(TODAY,-30),d12=addDays(TODAY,-12);
+  state.items.forEach((it,i)=>{q[it.id]=Math.round(it.par*(i%5===3?.9:1.6+(i%3)*.4))+(it.cat==="백신"?it.par:0);state.records.push({id:newId(),type:"재고",workDate:d30,createdAt:at(d30),user:"대표",data:{item:it.id,mode:"실사",qty:q[it.id]}})});
+  [[itemId("FMD(구제역)"),200],[itemId("마이코·글레서"),200],[itemId("듀록 정액"),40],[itemId("대장균+TR"),40]].forEach(([id,qty])=>state.records.push({id:newId(),type:"재고",workDate:d12,createdAt:at(d12),user:"조성훈 팀장",data:{item:id,mode:"입고",qty}}));
+  // 사료: 10일 전 잔량 + 이후 입고 (2호·임신모돈은 주문 시점이 되게)
+  const fu=feedUse(),d10=addDays(TODAY,-10),d5=addDays(TODAY,-5);
+  feedKinds().forEach((f,i)=>{const use=fu[f]||0;if(!use)return;const low=f==="2호"||f==="임신모돈";
+    state.records.push({id:newId(),type:"사료",workDate:d10,createdAt:at(d10),user:"조성훈 팀장",data:{kind:f,mode:"빈 잔량",kg:Math.max(100,Math.round(use*(low?13:9+i%4)/10)*10)}});
+    if(!low)state.records.push({id:newId(),type:"사료",workDate:d5,createdAt:at(d5),user:"조성훈 팀장",data:{kind:f,mode:"입고",kg:Math.max(200,Math.round(use*10/100)*100)}})});
+  // 오늘 아침 점검: 앞의 5곳 완료, 분만사 보온등 이상
+  state.am={[TODAY]:{}};FARM.morning.route.slice(0,5).forEach((r,n)=>{state.am[TODAY][r.barn]={time:`07:${pad(10+n*9)}`,temp:String((r.temp[0]+r.temp[1])/2+(n===3?-3:0)),bad:n===3?["보온등"]:[],memo:n===3?"보온등 1개 나감 → 교체 예정":"",user:"조성훈 팀장",at:at(TODAY)}});
+  // 육성비육사 첫 입식 준비 할 일
   const oldest=liveBatches().slice(-1)[0],now=new Date().toISOString();
-  if(oldest){const fin=addDays(oldest.k,(state.cfg.stage[0][1]+state.cfg.stage[1][1]+state.cfg.stage[2][1])*7);
-    state.tasks.push({id:newId(),src:null,title:"비육사 청소·소독·급이·급수 점검 (첫 입식 준비)",acts:["소독","환기 점검"],due:addDays(fin,-3),who:"팀장 이OO",memo:`첫 입식 ${kDate(fin)} 주 · 비육사 비어 있음`,createdAt:now,user:"대표"})}
+  if(oldest){const fin=addDays(oldest.k,state.cfg.stage.slice(0,-1).reduce((a,x)=>a+x[1],0)*7);
+    state.tasks.push({id:newId(),src:null,title:"육성비육사 청소·소독·급이·급수 점검 (첫 입식 준비)",acts:["소독","환기 점검"],due:addDays(fin,-3),who:"조성훈 팀장",memo:`첫 입식 ${kDate(fin)} 주 · 육성비육사 비어 있음`,createdAt:now,user:"대표"})}
 }
-function upgradeDemo(st){const B=baseState();Object.assign(st,{v:5,lists:{barns:mkList(["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"]),causes:FARM_LISTS().causes,actions:FARM_LISTS().actions,semens:FARM_LISTS().semens,dests:FARM_LISTS().dests,cull:FARM_LISTS().cull},startDate:addDays(TODAY,-60),accounts:B.accounts,labels:B.labels,dayDec:{},mbatches:[]});st.cfg.deadOne=3;st.cfg.deadDay=3;return st}
+function upgradeDemo(st){const B=baseState();Object.assign(st,{v:6,lists:{barns:mkList(["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"]),causes:FARM_LISTS().causes,actions:FARM_LISTS().actions,semens:FARM_LISTS().semens,dests:FARM_LISTS().dests,cull:FARM_LISTS().cull},startDate:addDays(TODAY,-60),accounts:B.accounts,labels:B.labels,dayDec:{},mbatches:[]});st.cfg.deadOne=3;st.cfg.deadDay=3;return st}
 function makeState(kind,keep){
   if(kind==="farm"){state=seedFarm();syncLists();seedFarmPost()}
   else if(kind==="demo"){const L0=BARNS.slice();BARNS.length=0;["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"].forEach(x=>BARNS.push(x));state=upgradeDemo(seed());seedPost()}
-  else{const k=keep;state={v:5,user:k.user,sows:[],records:[],zero:{},todoLog:{},tasks:[],cfgSt:k.cfgSt,items:k.items,prevYear:{},memo:{},assign:{},lists:k.lists,startDate:TODAY,accounts:k.accounts,labels:k.labels,dayDec:{},mbatches:[],cfg:k.cfg}}
+  else{const k=keep;state={v:6,user:k.user,sows:[],records:[],zero:{},todoLog:{},tasks:[],cfgSt:k.cfgSt,items:k.items,prevYear:{},memo:{},assign:{},lists:k.lists,startDate:TODAY,accounts:k.accounts,labels:k.labels,dayDec:{},mbatches:[],cfg:k.cfg}}
   syncLists();save();
 }
 
@@ -2341,7 +2650,7 @@ Object.assign(A,{
   bkCopy:()=>{const txt=JSON.stringify(state),msg=$("#bkMsg");navigator.clipboard.writeText(txt).then(()=>{msg.textContent="복사했습니다. 안전한 곳에 붙여 두세요."}).catch(()=>{const o=$("#bkOut");o.focus();o.select();msg.textContent="내용을 선택해 두었습니다. 직접 복사하세요."})},
   restoreAsk:()=>{ui.restoreTxt=$("#bkIn").value;ui.restoreAsk=true;render();const i=$("#bkIn");if(i)i.value=ui.restoreTxt},
   restoreNo:()=>{ui.restoreAsk=false;render()},
-  restoreOk:()=>{try{const s=JSON.parse(ui.restoreTxt||"");if(!s||!s.sows||!s.records)throw 0;state=s;if(state.v!==5)upgradeDemo(state);syncLists();save();ui.restoreAsk=false;toast("복원했습니다");render()}catch(e){ui.restoreAsk=false;render();toast("복원할 수 없는 내용입니다. 백업한 글자 전체를 붙여 넣어 주세요.")}},
+  restoreOk:()=>{try{const s=JSON.parse(ui.restoreTxt||"");if(!s||!s.sows||!s.records)throw 0;state=s;if(state.v!==6)upgradeDemo(state);syncLists();save();ui.restoreAsk=false;toast("복원했습니다");render()}catch(e){ui.restoreAsk=false;render();toast("복원할 수 없는 내용입니다. 백업한 글자 전체를 붙여 넣어 주세요.")}},
   resetPick:v=>{ui.resetPick=v||null;render()},
   resetDo:v=>{const keep=state;makeState(v,keep);if(!me()){ME=null;try{localStorage.removeItem(SKEY)}catch(e){}}ui.resetPick=null;ui.setPage="main";tab=me()?"home":tab;render();toast("초기화했습니다")},
   judge:v=>{openInput("폐사",{date:String(v).replace(/^d:/,"")})},
@@ -2386,7 +2695,7 @@ function renderGate(err){document.body.classList.add("login");
 
 /* ================= 시작 ================= */
 state=load();
-if(!state||state.v!==5){makeState("farm")}
+if(!state||state.v!==6){makeState("farm")}
 try{ME=localStorage.getItem(SKEY)}catch(e){}
 {const ad=(state.accounts||[]).find(a=>a.id==="a1");if(ad&&ad.pin==="0000"){ad.pin="9368";save()}}
 syncLists();
