@@ -48,3 +48,11 @@ Object.assign(A,{
 document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.sup;if(k){(state.supply=state.supply||{})[k]=e.target.value.trim();save()}});
 // 주사침 재고: 모돈 백신 기록 n두 → n/sowPer 개, 돈군 백신 → 두수/penHeads 개
 function needleUse(it,r){const S=supCfg();if(it.name==="주사침(모돈용)"&&r.type==="백신")return 1/S.sowPer;if(it.name==="주사침(자돈용)"&&r.type==="돈군백신")return (r.data.n||0)/S.penHeads;return 0}
+// 홈 맨 위: 오늘의 퀘스트 반원 게이지
+function questGauge(todos){const q=questStat(todos),r=52,L=Math.PI*r,p=q.pct/100;
+  return `<button type="button" class="qgauge" data-a="tab" data-v="todo" data-tagme="1"><svg viewBox="0 0 132 76" aria-label="${t("오늘의 퀘스트")} ${q.pct}%"><path d="M14 70a52 52 0 0 1 104 0" fill="none" stroke="var(--grid)" stroke-width="12" stroke-linecap="round"/><path d="M14 70a52 52 0 0 1 104 0" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${L*p} ${L}"/><text x="66" y="62" text-anchor="middle" class="qg-n">${q.pct}%</text></svg><span><h3>${t("오늘의 퀘스트")}</h3><p><b class="big">${q.done}</b> / ${q.tot} ${t("완료")} · ${t("남은")} ${q.tot-q.done}</p></span></button>`}
+// ---- 디자인 테마 ----
+const SKINS=[["","기본","지금 디자인"],["clean","클린 라이트","연회색 바탕 · 흰 카드 · 파랑 (삼쩜삼·토스)"],["night","나이트","짙은 남색 · 보라 (알라미)"],["fresh","프레시 그린","흰 바탕 · 초록 · 진한 칩 (네이버페이)"],["sport","스포츠 다크","검정 · 민트 · 굵은 글씨 (플랜핏)"],["soft","소프트 파스텔","아이보리 · 분홍 · 둥근 모서리 (로고)"]];
+function applySkin(){const k=state&&state.skin||"";if(k)document.documentElement.dataset.skin=k;else delete document.documentElement.dataset.skin}
+function vSkinSet(){return `<div class="pagehd"><h2>${t("디자인 테마")}</h2></div><div class="panel">${SKINS.map(([k,n,d])=>`<div class="setrow"><span><b>${t(n)}</b><br><small class="sow-meta">${esc(d)}</small></span><button class="act ${(state.skin||"")===k?"pri":""}" type="button" data-a="skin" data-v="${k}">${(state.skin||"")===k?t("사용 중"):t("고르기")}</button></div>`).join("")}</div>`}
+Object.assign(A,{skin:v=>{state.skin=v;save();render()}});

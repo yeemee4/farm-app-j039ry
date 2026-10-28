@@ -6,7 +6,7 @@ function renderTabs(){
   $("#tabsD").innerHTML=NAV.map(([k])=>btn(k,cur===k)).join("");
 }
 function render(){
-  SIDX=null;const m=me();
+  SIDX=null;applySkin();const m=me();
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");
   LANG=m.lang||"ko";document.documentElement.lang=LANG;state.user=m.name;syncLists();
@@ -23,7 +23,7 @@ function vHome(){
   const yMiss=missCount(addDays(TODAY,-1));let h="";
   if(!storageOK)h+=`<div class="banner info"><b>!</b><span>이 브라우저에서는 기록이 저장되지 않습니다.</span></div>`;
   if(yMiss)h+=`<button class="banner" type="button" data-a="goClose" data-v="${addDays(TODAY,-1)}"><b>${t("어제 미입력")} ${yMiss}</b><span>${t("눌러서 입력하거나 ‘없음’으로 마감하세요")} ›</span></button>`;
-  h+=wxHome();
+  h+=wxHome()+questGauge(buildTodos());
   const c=statusCounts();
   h+=`<div class="homegrid"><div>`;
   h+=`<div class="sec-t">${t("모돈 상태")} <button type="button" data-a="tab" data-v="sows">${t("모돈 보기")} ›</button></div><div class="statusrow">`+
@@ -40,7 +40,7 @@ function vHome(){
   const todos=buildTodos().filter(x=>x.k!=="am"),st=stalls();
   const leftN=todos.reduce((s,x)=>s+leftOf(x),0);
   h+=`<div class="sec-t">${t("오늘 할 일")} <button type="button" data-a="tab" data-v="todo">${t("남은")} ${leftN} · ${t("전체 보기")} ›</button></div>`;
-  const todosS=sortTodos(todos);h+=questHead(todos);
+  const todosS=sortTodos(todos);
   h+=todosS.length?todosS.slice(0,6).map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   if(st.length)h+=`<button class="todo stall" type="button" data-a="tab" data-v="todo"><span class="bar"></span><span><b>${t("장기 무변동 개체")}</b><small>${st.slice(0,5).map(x=>x.s.id).join(", ")}${st.length>5?" …":""}</small></span><span class="n" style="color:var(--red)">${st.length}</span></button>`;
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
