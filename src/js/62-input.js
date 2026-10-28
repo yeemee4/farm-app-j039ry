@@ -31,7 +31,7 @@ function vInput(){
     left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
   }else if(F.sow&&I.editId){const s=state.sows.find(x=>x.id===I.sel[0]);left+=`<div class="f"><span class="lb">${t("모돈")}</span>${s?sowCard(s,{noLoc:true,noLink:true}):""}</div>`}
   const dock=F.sow&&!I.editId;   // 모돈 입력: 입력 칸·저장을 아래 고정 패널로
-  if(dock)left+=`<div class="dock"><div class="dock-hd">${I.sel.length?`${t("선택")} <b>${I.sel.join(", ")}</b>`:`<span class="sow-meta">${t("위에서 모돈을 고르세요")}</span>`}</div><div class="dock-bd">`;
+  if(dock)left+=`<div class="dock ${I.sel.length?"":"min"}"><div class="dock-hd">${I.sel.length?`${t("선택")} <b>${I.sel.join(", ")}</b>`:`<span class="sow-meta">${t("위에서 모돈을 고르세요")}</span>`}</div><div class="dock-bd">`;
   left+=F.f.map(f=>fieldHtml(f,I.fv,sowForCalc)).join("");
   if(I.err)left+=`<div class="errbox">${esc(I.err)}</div>`;
   if(I.warn)left+=`<div class="warnbox"><span><b>${t("확인해 주세요.")}</b><br>${I.warn.map(esc).join("<br>")}</span><div class="acts"><button class="act" type="button" data-a="warnCancel">${t("고치기")}</button><button class="act pri" type="button" data-a="force">${t("그래도 저장")}</button></div></div>`;
