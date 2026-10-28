@@ -66,11 +66,12 @@ function vStats(){
     if(short)h+=`<div class="note">4주보다 짧은 기간은 분만율·PSY·MSY가 크게 흔들려 ‘참고용’으로 표시합니다.</div>`;
     if(cur.src==="man")h+=`<div class="note">이 기간은 앱 기록이 없어 직접 입력한 작년 성적을 보여 줍니다.</div>`;
   }
+  h+=vCharts();
   // 추이
   const mk=S.metric,md=MET.find(m=>m[0]===mk);
   const endYm=S.mode==="월"?S.ym:TODAY.slice(0,7);let [ey,em]=endYm.split("-").map(Number);
   const pts=[];for(let n=11;n>=0;n--){let y=ey,m=em-n;while(m<1){m+=12;y--}const [f,t]=monthRange(y,m);const v=rangeMetrics(f,t);pts.push({y,m,v:v?v[mk]:null,src:v?v.src:null})}
-  h+=`<div class="card"><h3>월별 추이 · ${md[1]}</h3><div class="chips" style="margin-bottom:8px">${MET.filter(m=>m[0]!=="shipKg").map(m=>`<button type="button" class="chip ${mk===m[0]?"on":""}" data-a="stMetric" data-v="${m[0]}">${m[1]}</button>`).join("")}</div>${lineSvg(pts,md)}<div class="note">빈 점: 직접 입력한 작년 성적 · 찬 점: 앱 기록</div></div>`;
+  h+=`<div class="card"><h3>그 밖의 지표 월별 추이 · ${md[1]}</h3><div class="chips" style="margin-bottom:8px">${MET.filter(m=>m[0]!=="shipKg").map(m=>`<button type="button" class="chip ${mk===m[0]?"on":""}" data-a="stMetric" data-v="${m[0]}">${m[1]}</button>`).join("")}</div>${lineSvg(pts,md)}<div class="note">빈 점: 직접 입력한 작년 성적 · 찬 점: 앱 기록</div></div>`;
   h+=prevYearForm();
   return h;
 }

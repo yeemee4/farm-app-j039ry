@@ -10,7 +10,7 @@ const A={
   scrim:(v,el,e)=>{if(e.target===el)closeSheet()},
   closeSheet:()=>closeSheet(),
   sowd:(v)=>{ui.cull=null;ui.pe=null;ui.sowRf="전체";ui.delId=null;openSowDetail(v);window.scrollTo(0,0)},
-  loc:(v,el)=>{moveSow(el.dataset.sow,v);keepScroll(()=>{render();reopen()})},
+  loc:(v,el)=>{const s=state.sows.find(x=>x.id===el.dataset.sow);if(!s||s.loc===v)return;if(!confirm(`${s.id} ${t("모돈을")} ${t(v)}${t("(으)로 변경하시겠습니까?")}`))return;moveSow(el.dataset.sow,v);keepScroll(()=>{render();reopen()})},
   sf:(v)=>{ui.sf=v;render()},
   tlf:(v)=>{ui.tlFilter=v;render()},
   sdays:(v)=>{ui.statsDays=Number(v);render()},

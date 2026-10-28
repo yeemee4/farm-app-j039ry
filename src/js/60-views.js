@@ -40,8 +40,8 @@ function vHome(){
   const todos=buildTodos().filter(x=>x.k!=="am"),st=stalls();
   const leftN=todos.reduce((s,x)=>s+leftOf(x),0);
   h+=`<div class="sec-t">${t("오늘 할 일")} <button type="button" data-a="tab" data-v="todo">${t("남은")} ${leftN} · ${t("전체 보기")} ›</button></div>`;
-  const rank={bad:0,warn:1,ok:2};todos.sort((a,b)=>rank[a.sev]-rank[b.sev]);
-  h+=todos.length?todos.slice(0,6).map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  const todosS=sortTodos(todos);h+=questHead(todos);
+  h+=todosS.length?todosS.slice(0,6).map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   if(st.length)h+=`<button class="todo stall" type="button" data-a="tab" data-v="todo"><span class="bar"></span><span><b>${t("장기 무변동 개체")}</b><small>${st.slice(0,5).map(x=>x.s.id).join(", ")}${st.length>5?" …":""}</small></span><span class="n" style="color:var(--red)">${st.length}</span></button>`;
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
@@ -50,11 +50,12 @@ function itemShort(it){return it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
-  return `<button class="todo ${fin?"alldone":""}" type="button" data-a="todo" data-v="${x.k}"><span class="bar" style="background:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--accent)"}"></span><span><b>${t(x.t)}</b><small>${fin?t("모두 완료")+" · ":""}${esc(names)}</small></span><span class="n" style="color:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--ink)"}">${fin?"✓":left}<small>/${x.items.length}</small></span></button>`;
+  return `<button class="todo ${fin?"alldone":""}" type="button" data-a="todo" data-v="${x.k}"><span class="bar" style="background:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--accent)"}"></span><span><b>${t(x.t)}</b><i class="tq" style="width:${x.items.length?(x.items.length-left)/x.items.length*100:0}%"></i><small>${fin?t("모두 완료")+" · ":""}${esc(names)}</small></span><span class="n" style="color:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--ink)"}">${fin?"✓":left}<small>/${x.items.length}</small></span></button>`;
 }
 function vTodo(){
-  const todos=buildTodos(),st=stalls();
+  const todos=sortTodos(buildTodos()),st=stalls();
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
+  h+=questHead(todos)+todoSortBar()+supplyCard(todos);
   h+=todos.length?todos.map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
   h+=`<div class="note">일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.</div>`;
@@ -95,10 +96,11 @@ function vSows(){
   const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="input" data-v="도입">+ ${esc(L("도입"))}</button></div>`;
   h+=`<input type="search" id="sowQ" inputmode="numeric" pattern="[0-9]*" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
+  h+=sowTools();
   h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
-  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:matchStatus(x.s,x.i,ui.sf))&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
-  h+=`<div class="note">${ui.sf==="도태됨"?"도태된 모돈도 기록이 모두 보관되어 있습니다. 번호를 누르면 생애 기록을 볼 수 있습니다.":t("모돈번호를 누르면 상세 정보가 열립니다. 상태는 기록으로 자동 계산되고, 위치는 참고용입니다.")}</div>`;
-  h+=list.length?`<div class="sowgrid">${list.map(x=>sowCard(x.s)).join("")}</div>`:`<div class="empty">-</div>`;
+  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:matchStatus(x.s,x.i,ui.sf))&&(!ui.sowLoc||ui.sowLoc==="전체"||x.s.loc===ui.sowLoc)&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
+  h+=`<div class="note">${ui.sf==="도태됨"?"도태된 모돈도 기록이 모두 보관되어 있습니다. 번호를 누르면 생애 기록을 볼 수 있습니다.":t("모돈을 누르면 상세 정보가 열립니다. 위치는 상세 화면에서 바꿉니다.")}</div>`;
+  h+=list.length?`<div class="sowtiles">${sortSows(list).map(x=>sowTile(x.s,x.i)).join("")}</div>`:`<div class="empty">-</div>`;
   return h;
 }
 function sowCard(s,opts={}){

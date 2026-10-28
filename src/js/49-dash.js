@@ -41,7 +41,7 @@ const DASH_P={
   barn:()=>{const L2=liveBatches(),sl={};activeSows().forEach(s=>sl[s.loc]=(sl[s.loc]||0)+1);
     const rows=[...SOW_LOCS.filter(x=>x!=="분만사").map(x=>[x,sl[x]||0,"–","–"]),...state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return [n,i===0?(sl["분만사"]||0):"–",inS.length,inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0).toLocaleString()]})];
     return [t("돈사 현황"),"",`<table class="d-tbl"><thead><tr><th></th><th>${t("모돈")}</th><th>${t("돈군")}</th><th>${t("두수")}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${t(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`]},
-  todo:()=>{const D=boardDate();REF=D;const g=buildTodos().filter(x=>!["pending"].includes(x.k));REF=TODAY;const rk={bad:0,warn:1,ok:2};g.sort((a,b)=>rk[a.sev]-rk[b.sev]);
+  todo:()=>{const D=boardDate();REF=D;const g=buildTodos().filter(x=>!["pending"].includes(x.k));REF=TODAY;g.splice(0,g.length,...sortTodos(g));
     const left=g.reduce((s,x)=>s+leftOf(x),0);
     return [t(D===TODAY?"오늘 할 일":"내일 할 일"),`${t("남은")} ${left}`,`<div class="d-todo">${g.map(x=>{const who=(state.assign||{})[`${D}|${x.k}`];return `<div><i style="background:${x.sev==="bad"?DST.crit:x.sev==="warn"?DST.warn:"#6BB892"}"></i><span>${esc(t(x.t).replace(/ \(.*\)/,""))}<small>${who?t("담당")+" "+esc(who)+" · ":""}${esc(x.items.map(itemShort).slice(0,3).join(" · "))}</small></span><b>${x.items.length}</b></div>`}).join("")||`<div class="d-mu">${t("오늘 할 일이 없습니다.")}</div>`}</div>`]},
   kpi:()=>{const y=+TODAY.slice(0,4),m=+TODAY.slice(5,7),pm=m===1?[y-1,12]:[y,m-1],ppm=pm[1]===1?[pm[0]-1,12]:[pm[0],pm[1]-1];
@@ -75,9 +75,11 @@ function vDashSet(){const d=dashCfg(),nm=Object.fromEntries(DASH_LIST.map(x=>[x[
   h+=d.order.map((k,i)=>`<div class="setrow"><span><b>${t(nm[k]||k)}</b></span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="-1" ${i===0?"disabled":""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="1" ${i===d.order.length-1?"disabled":""} aria-label="아래로">▼</button><button class="act ${d.on[k]?"pri":""}" type="button" data-a="dashTog" data-v="${k}">${d.on[k]?t("켜짐"):t("꺼짐")}</button></span></div>`).join("");
   h+=`</div><div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
   h+=Object.keys(DASH_GOAL0).map(k=>`<div class="setrow"><span>${t(LABEL[k]||k)}</span><div class="stepper"><button type="button" data-a="dashGoal" data-v="${k}" data-k="-1" aria-label="줄이기">−</button><input type="number" value="${d.goal[k]}" readonly aria-label="${t(LABEL[k]||k)}"><button type="button" data-a="dashGoal" data-v="${k}" data-k="1" aria-label="늘리기">+</button></div></div>`).join("");
+  const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="-0.5" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="0.5" aria-label="늘리기">+</button></div></div>`).join("")}`;
   return h+`</div><div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
 Object.assign(A,{
   dashTog:v=>{const d=dashCfg();d.on[v]=!d.on[v];save();render()},
   dashMove:(v,el)=>{const d=dashCfg(),i=d.order.indexOf(v),j=i+Number(el.dataset.k);if(j<0||j>=d.order.length)return;[d.order[i],d.order[j]]=[d.order[j],d.order[i]];save();render()},
+  sgoal:(v,el)=>{const g=state.sgoal=state.sgoal||{};g[v]=Math.max(0,sGoal()[v]+Number(el.dataset.k));save();render()},
   dashGoal:(v,el)=>{const d=dashCfg();d.goal[v]=Math.max(0,d.goal[v]+Number(el.dataset.k));save();render()}
 });

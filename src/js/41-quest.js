@@ -1,0 +1,50 @@
+/* ================= v0.5 · 할 일 우선순위 · 퀘스트 달성률 · 백신 준비물 ================= */
+// 할 일 묶음 기본 순위 (대표 설정 › 할 일 순서에서 바꿈)
+const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
+function todoRank(){const r=state.todoRank=state.todoRank||TODO_KINDS.map(x=>x[0]);TODO_KINDS.forEach(x=>{if(!r.includes(x[0]))r.push(x[0])});return r}
+const TODO_SORTS=[["rank","우선순위"],["urgent","급한 순"],["count","남은 개수 많은 순"]];
+function sortTodos(a,mode){const r=todoRank(),ri=x=>{const i=r.indexOf(x.k);return i<0?99:i},sv={bad:0,warn:1,ok:2},m=mode||ui.todoSort||"rank";
+  return [...a].sort((x,y)=>m==="urgent"?sv[x.sev]-sv[y.sev]||ri(x)-ri(y):m==="count"?leftOf(y)-leftOf(x)||ri(x)-ri(y):ri(x)-ri(y))}
+// 퀘스트 달성률
+function questStat(todos){const tot=todos.reduce((s,x)=>s+x.items.length,0),left=todos.reduce((s,x)=>s+leftOf(x),0);return {tot,done:tot-left,pct:tot?Math.round((tot-left)/tot*100):100}}
+function questHead(todos){const q=questStat(todos);
+  return `<div class="quest"><div class="q-top"><b>${t("오늘의 퀘스트")}</b><span><b>${q.done}</b> / ${q.tot} · ${q.pct}%</span></div><div class="q-bar"><i style="width:${q.pct}%"></i></div></div>`}
+function todoSortBar(){return `<div class="sowtools"><label class="sel"><span>${t("정렬")}</span><select data-ch="todoSort" aria-label="${t("정렬")}">${TODO_SORTS.map(([k,l])=>`<option value="${k}" ${(ui.todoSort||"rank")===k?"selected":""}>${t(l)}</option>`).join("")}</select></label></div>`}
+document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.ch==="todoSort"){ui.todoSort=e.target.value;render()}});
+
+// ---- 백신 준비물 ----
+function supCfg(){const s=state.supply=state.supply||{};return {...FARM.supply,...s,dose:{...FARM.supply.dose,...(s.dose||{})}}}
+const vaxByName=n=>[...FARM.vax.annual,...FARM.vax.gilt,...FARM.vax.late,...FARM.vax.piglet].find(v=>n===v.name||String(n).startsWith(v.name));
+// 오늘 할 일 중 백신 묶음에서: 품목별 두수 → 병 수, 주사침 수
+function todaySupplies(todos){const S=supCfg(),need={};let sowHeads=0,pigHeads=0;
+  const add=(prods,n,pig)=>{[].concat(prods).forEach(p=>need[p]=(need[p]||0)+n);if(pig)pigHeads+=n;else sowHeads+=n};
+  todos.forEach(x=>x.items.forEach(it=>{
+    if(x.k==="svax"&&it.vx)add(it.vx.prod,1,false);
+    else if(x.k==="bvax"&&it.v)add(it.v.p.prod,Math.max(0,it.v.need-it.v.done),true);
+    else if(x.k==="annual"&&it.ann&&!tdLog(tdKey("annual",it.ann.key))){const v=vaxByName(it.ann.name);if(v)add(v.prod,activeSows().length,false)}}));
+  const rows=Object.entries(need).filter(([,n])=>n>0).map(([p,n])=>({p,n,bottles:Math.ceil(n/(S.dose[p]||50)),per:S.dose[p]||50}));
+  return {rows,sowN:Math.ceil(sowHeads/S.sowPer),pigN:Math.ceil(pigHeads/S.penHeads),S}}
+function supplyCard(todos){const x=todaySupplies(todos);if(!x.rows.length)return "";
+  const nd=[x.sowN?`${esc(x.S.sowNeedle)} ${x.sowN}${t("개")} (${t("모돈용")})`:"",x.pigN?`${esc(x.S.pigNeedle)} ${x.pigN}${t("개")} (${t("자돈용")})`:""].filter(Boolean);
+  return `<div class="supply"><b>${t("오늘 준비물")}</b><div class="sup-list">${x.rows.map(r=>`<span>${esc(r.p)} <b>${r.bottles}${t("병")}</b> <small>${r.n}${t("두분")}</small></span>`).join("")}</div>${nd.length?`<div class="sup-nd">${t("주사침")}: ${nd.join(" · ")}</div>`:""}</div>`}
+
+// ---- 대표 설정: 할 일 순서 · 백신·주사침 준비물 ----
+function vTodoRankSet(){const r=todoRank(),nm=Object.fromEntries(TODO_KINDS);
+  return `<div class="pagehd"><h2>${t("할 일 순서")}</h2></div><div class="note">${t("위에 있을수록 할 일 목록에서 먼저 나옵니다. 작업자는 할 일 화면에서 ‘급한 순’ 등으로 바꿔 볼 수도 있습니다.")}</div><div class="panel">${r.map((k,i)=>`<div class="setrow"><span><b>${i+1}.</b> ${t(nm[k]||k)}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="-1" ${i===0?"disabled":""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="1" ${i===r.length-1?"disabled":""} aria-label="아래로">▼</button></span></div>`).join("")}</div>`}
+function vSupplySet(){const S=supCfg();
+  let h=`<div class="pagehd"><h2>${t("백신·주사침 준비물")}</h2></div><div class="note">${t("할 일의 백신 두수로 ‘오늘 준비물’(병 수·주사침 수)을 계산합니다. 접종을 기록하면 백신과 주사침 재고에서 자동으로 빠집니다.")}</div>`;
+  h+=`<div class="sec-t">${t("1병당 접종 두수")}</div><div class="panel">${Object.keys(S.dose).map(p=>`<div class="setrow"><span>${esc(p)}</span><div class="stepper"><button type="button" data-a="supDose" data-v="${esc(p)}" data-k="-10" aria-label="줄이기">−</button><input type="number" value="${S.dose[p]}" readonly aria-label="${esc(p)}"><button type="button" data-a="supDose" data-v="${esc(p)}" data-k="10" aria-label="늘리기">+</button></div></div>`).join("")}</div>`;
+  h+=`<div class="sec-t">${t("주사침")}</div><div class="panel">
+    <div class="f"><label for="supSN">${t("모돈용 규격")}</label><input type="text" id="supSN" value="${esc(S.sowNeedle)}" data-sup="sowNeedle"></div>
+    <div class="setrow"><span>${t("모돈 몇 두당 1개")}</span><div class="stepper"><button type="button" data-a="supNum" data-v="sowPer" data-k="-1">−</button><input type="number" value="${S.sowPer}" readonly><button type="button" data-a="supNum" data-v="sowPer" data-k="1">+</button></div></div>
+    <div class="f"><label for="supPN">${t("자돈용 규격")}</label><input type="text" id="supPN" value="${esc(S.pigNeedle)}" data-sup="pigNeedle"></div>
+    <div class="setrow"><span>${t("자돈 1돈방 두수 (1돈방 1개)")}</span><div class="stepper"><button type="button" data-a="supNum" data-v="penHeads" data-k="-5">−</button><input type="number" value="${S.penHeads}" readonly><button type="button" data-a="supNum" data-v="penHeads" data-k="5">+</button></div></div></div>`;
+  return h}
+Object.assign(A,{
+  tdRank:(v,el)=>{const r=todoRank(),i=r.indexOf(v),j=i+Number(el.dataset.k);if(j<0||j>=r.length)return;[r[i],r[j]]=[r[j],r[i]];save();render()},
+  supDose:(v,el)=>{const s=state.supply=state.supply||{};s.dose=s.dose||{};s.dose[v]=Math.max(1,supCfg().dose[v]+Number(el.dataset.k));save();render()},
+  supNum:(v,el)=>{const s=state.supply=state.supply||{};s[v]=Math.max(1,supCfg()[v]+Number(el.dataset.k));save();render()}
+});
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.sup;if(k){(state.supply=state.supply||{})[k]=e.target.value.trim();save()}});
+// 주사침 재고: 모돈 백신 기록 n두 → n/sowPer 개, 돈군 백신 → 두수/penHeads 개
+function needleUse(it,r){const S=supCfg();if(it.name==="주사침(모돈용)"&&r.type==="백신")return 1/S.sowPer;if(it.name==="주사침(자돈용)"&&r.type==="돈군백신")return (r.data.n||0)/S.penHeads;return 0}

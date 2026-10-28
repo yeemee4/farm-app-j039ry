@@ -26,6 +26,8 @@ function vSettings(){
   if(P==="lists")return back+vLists();
   if(P==="labels")return back+vLabels();
   if(P==="dash")return back+vDashSet();
+  if(P==="todorank")return back+vTodoRankSet();
+  if(P==="supply")return back+vSupplySet();
   if(P==="criteria")return back+vCriteria();
   if(P==="bulk")return back+vBulk();
   if(P==="binit")return back+vBatchInit();
@@ -42,7 +44,9 @@ function vSettings(){
     h+=`<div class="sec-t">관리자 설정 <span>대표 계정에서만 보입니다</span></div><div class="more">
       ${menu("accounts","계정 관리","직원 추가 · 권한 · 언어 · PIN · 정지")}
       ${menu("lists","목록·이름 관리","돈사, 폐사 원인, 조치, 정액, 출하처, 도태 사유")}
-      ${menu("dash","현황판 항목","현황판에 보일 칸 켜기·끄기, 순서, 이번 주 번식 목표")}
+      ${menu("todorank","할 일 순서","할 일 묶음의 우선순위 (위에서부터)")}
+      ${menu("supply","백신·주사침 준비물","1병당 접종 두수, 주사침 규격·사용량")}
+      ${menu("dash","현황판 항목 · 목표","현황판 칸 켜기·끄기, 순서, 주간 번식 목표, PSY·MSY 목표")}
       ${menu("labels","메뉴·버튼 이름","탭 이름, 홈 입력 버튼 이름과 표시 여부")}
       ${menu("criteria","기준값","폐사 알림 기준, 무변동 기준, 돈사별 주 수, 백신 프로그램, 정액")}
       ${menu("bulk","모돈 일괄 등록","번호를 붙여 넣고 현재 상태와 날짜로 등록")}

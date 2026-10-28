@@ -63,3 +63,35 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 @media (min-width:1024px){.dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}}
 /* 팝업 '닫기' 버튼: 다른 버튼과 같은 모양 */
 .sh-hd .x{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:7px 13px;font-weight:700;font-size:14px}
+/* 모돈 탭: 2칸 카드 · 정렬/필터 */
+.sowtools{display:flex;gap:8px}.sowtools .sel{flex:1;display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:0 10px}
+.sowtools .sel span{font-size:12.5px;color:var(--muted);font-weight:700;white-space:nowrap}.sowtools select{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;font-weight:700;color:var(--ink);padding:10px 0;-webkit-appearance:none;appearance:none}
+.sowtiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:720px){.sowtiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.stile{display:grid;gap:4px;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 11px;min-width:0}
+.stile .st-top{display:flex;justify-content:space-between;align-items:center;gap:6px}.stile b{font-family:var(--mono);font-size:17px;color:var(--accent)}
+.stile .stage{font-size:11.5px;padding:2px 7px;white-space:nowrap}
+.stile .st-sub{font-weight:800;font-size:16px}.stile .st-meta{font-size:12px;color:var(--muted)}.stile em{font-style:normal;color:var(--amber);font-weight:700}
+.stile.culled{opacity:.6}
+/* 퀘스트 · 준비물 */
+.quest{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;display:grid;gap:7px}
+.quest .q-top{display:flex;justify-content:space-between;align-items:baseline;font-size:14px}.quest .q-top b{font-size:16px}.quest .q-top span b{color:var(--accent);font-size:18px}
+.q-bar{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}.q-bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.todo .tq{display:block;height:4px;background:var(--accent);border-radius:2px;margin:4px 0 3px;max-width:100%;opacity:.8}
+.supply{background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:12px;padding:10px 14px;display:grid;gap:6px;font-size:14px}
+.sup-list{display:flex;flex-wrap:wrap;gap:6px 14px}.sup-list b{color:var(--accent)}.sup-list small{color:var(--muted)}.sup-nd{font-size:13px}
+/* 성적 분석 그래프 */
+:root{--c-a:#2a78d6;--c-b:#eb6834;--good:#1b8a3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-a:#3987e5;--c-b:#d95926;--good:#2fae55}}
+:root[data-theme="dark"]{--c-a:#3987e5;--c-b:#d95926;--good:#2fae55}
+.chartgrid{display:grid;gap:12px}
+@media (min-width:1024px){.chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.chartgrid .card h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.chartgrid .card h3 small{font-size:12px;color:var(--muted);font-weight:500}
+svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;fill:var(--muted)}svg.chart .sl{font-size:10.5px;font-weight:700;fill:var(--ink)}svg.chart .gl{font-size:9.5px}
+.card.ghost{opacity:.75;border-style:dashed}
+.hbars{display:grid;gap:8px}.hb{display:grid;grid-template-columns:84px 1fr 86px;align-items:center;gap:8px;font-size:13.5px}
+.hb-t{height:16px;background:var(--bg);border-radius:4px}.hb-f{height:100%;border-radius:0 4px 4px 0}.hb-v{text-align:right;color:var(--muted);font-weight:700}
+.wk{display:grid;gap:8px;font-size:13px}.wk-h,.wk-r{display:grid;grid-template-columns:44px repeat(4,minmax(0,1fr));gap:6px;align-items:center}.wk-h span{color:var(--muted);font-size:11.5px;text-align:center}
+.wk-c{display:grid;gap:2px;text-align:center}.wk-c b{font-size:13px}.wk-c i{display:block;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}.wk-c em{display:block;height:100%;border-radius:4px}.wk-c small{color:var(--muted);font-size:10.5px}
+.hm{display:grid;grid-template-columns:78px repeat(var(--hc),minmax(0,1fr));gap:3px;font-size:12px}.hm-h{color:var(--muted);text-align:center;font-size:10.5px}.hm-l{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center}
+.hm-c{height:26px;border-radius:5px;display:grid;place-items:center;font-weight:800}
