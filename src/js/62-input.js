@@ -27,7 +27,7 @@ function vInput(){
   if(F.sow&&!I.editId){
     const c=candidates(),leftN=Math.max(c.targetN-c.doneN,0);
     if(F.sow.target)left+=`<div class="target"><span class="big">${I.date===TODAY?t("오늘"):kDate(I.date)} ${t("대상")} ${c.targetN}${t("두")} · ${t("입력")} ${c.doneN} · ${t("남은")} <b class="${leftN?"":"ok"}">${leftN}</b></span></div><div class="prog-bar"><i style="width:${c.targetN?Math.min(100,c.doneN/c.targetN*100):0}%"></i></div>`;
-    left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
+    left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" pattern="[0-9]*" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
     left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
   }else if(F.sow&&I.editId){const s=state.sows.find(x=>x.id===I.sel[0]);left+=`<div class="f"><span class="lb">${t("모돈")}</span>${s?sowCard(s,{noLoc:true,noLink:true}):""}</div>`}
   const dock=F.sow&&!I.editId;   // 모돈 입력: 입력 칸·저장을 아래 고정 패널로

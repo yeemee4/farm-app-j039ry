@@ -31,6 +31,7 @@ const A={
   judge:(v)=>{const r=state.records.find(x=>x.id===v);if(r)openInput("폐사",{date:r.workDate,dec:null})},
   // 입력 페이지
   fv:(v,el)=>{const I=ui.in,k=el.dataset.k;I.fv[k]=v;I.warn=null;
+    if(I.type==="폐사"&&k==="barn")I.fv.stage=FARM.stageOf[v]||"모돈";   // 돈사 → 단계 자동 (바꿀 수 있음)
     if(I.type==="약품"&&k==="kind")I.fv.name=itemNames(v)[0]||"";
     if(I.type==="약품"&&(k==="kind"||k==="name")){const it=state.items.find(x=>x.name===I.fv.name);I.fv.withdraw=it&&it.withdraw?addDays(I.date,it.withdraw):""}
     if(I.type==="돈군백신"&&(k==="batch"||k==="vax"))bvDefault();
@@ -83,8 +84,8 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("input",e=>{
   const t=e.target;
-  if(t.id==="sowQ"){ui.sowQ=t.value.trim();const p=t.selectionStart;render();const q=$("#sowQ");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
-  if(t.id==="in-q"){ui.in.q=t.value;const p=t.selectionStart;render();const q=$("#in-q");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.id==="sowQ"){t.value=t.value.replace(/\D/g,"");ui.sowQ=t.value;const p=t.selectionStart;render();const q=$("#sowQ");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.id==="in-q"){t.value=t.value.replace(/\D/g,"");ui.in.q=t.value;const p=t.selectionStart;render();const q=$("#in-q");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(!ui.in||tab!=="input")return;
   if(t.dataset.num){ui.in.fv[t.dataset.num]=t.value;ui.in.warn=null;const F=FORMS[ui.in.type];F.f.filter(f=>f.t==="calc").forEach(f=>{const c=document.querySelector(`[data-calc="${f.k}"]`);if(c)c.textContent=f.calc(ui.in.fv,ui.in.date,ui.in.sel[0])});return}
   if(t.dataset.txt){ui.in.fv[t.dataset.txt]=t.value;ui.in.err=null;const b=$("[data-a=save]");if(b){const n=needMsg();b.disabled=!!n;b.textContent=saveLabel()}return}

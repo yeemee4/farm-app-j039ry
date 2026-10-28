@@ -61,3 +61,5 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .dock-bd{max-height:34vh;overflow-y:auto;display:grid;gap:10px;overscroll-behavior:contain}
 .dock .save{margin:0}
 @media (min-width:1024px){.dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}}
+/* 팝업 '닫기' 버튼: 다른 버튼과 같은 모양 */
+.sh-hd .x{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:7px 13px;font-weight:700;font-size:14px}

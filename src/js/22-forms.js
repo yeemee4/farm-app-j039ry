@@ -1,4 +1,6 @@
 /* ================= 입력 양식 ================= */
+// 번호 검색: 숫자 일부만 맞아도 찾음. 반환 null=불일치, 0=정확 일치, 1=일부 일치
+function sowMatch(id,q){if(!q)return 1;const num=(String(id).match(/(\d+)$/)||[0,""])[1];if(+num===+q)return 0;return num.includes(q)||String(+num).includes(q)?1:null}
 // 다음 모돈 번호: 올해 끝자리-(올해 번호 중 가장 큰 수 + 1). 2026년 → 6-093, 2027년 → 7-001
 function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
 const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();

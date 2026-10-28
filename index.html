@@ -543,6 +543,8 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .dock-bd{max-height:34vh;overflow-y:auto;display:grid;gap:10px;overscroll-behavior:contain}
 .dock .save{margin:0}
 @media (min-width:1024px){.dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}}
+/* 팝업 '닫기' 버튼: 다른 버튼과 같은 모양 */
+.sh-hd .x{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:7px 13px;font-weight:700;font-size:14px}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -950,6 +952,8 @@ function dayStatus(day,type){
 
 /* ================= 요약 문장 ================= */
 /* ================= 입력 양식 ================= */
+// 번호 검색: 숫자 일부만 맞아도 찾음. 반환 null=불일치, 0=정확 일치, 1=일부 일치
+function sowMatch(id,q){if(!q)return 1;const num=(String(id).match(/(\d+)$/)||[0,""])[1];if(+num===+q)return 0;return num.includes(q)||String(+num).includes(q)?1:null}
 // 다음 모돈 번호: 올해 끝자리-(올해 번호 중 가장 큰 수 + 1). 2026년 → 6-093, 2027년 → 7-001
 function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
 const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
@@ -1060,11 +1064,10 @@ function candidates(){
     EXCL=null;const i=statusOf(s);
     const inTarget=doneIds.has(s.id)?true:F.sow.filter(i,I.date);
     const q=I.q.trim().toLowerCase();
-    const num=(s.id.match(/(\d+)$/)||[0,""])[1],exact=/^\d+$/.test(q)&&+num===+q;
-    const show=q?(exact||s.id.toLowerCase().includes(q)):(I.all||inTarget||I.sel.includes(s.id));
+    const m=q?sowMatch(s.id,q):1,exact=q&&m===0;
+    const show=q?m!==null:(I.all||inTarget||I.sel.includes(s.id));
     if(show)list.push({s,i,done:doneIds.has(s.id),target:inTarget,exact});
   });
-  if(list.some(x=>x.exact))for(let i=list.length-1;i>=0;i--)if(!list[i].exact)list.splice(i,1);   // 숫자가 정확히 맞는 번호가 있으면 그것만
   const pr=x=>x.exact?-1:x.done?2:x.target?0:1;
   list.sort((a,b)=>pr(a)-pr(b)||b.i.d-a.i.d||a.s.id.localeCompare(b.s.id));
   const targetN=state.sows.filter(s=>!culledRec(s.id)&&(doneIds.has(s.id)||F.sow.filter(statusOf(s),I.date))).length;
@@ -1171,6 +1174,7 @@ const A={
   judge:(v)=>{const r=state.records.find(x=>x.id===v);if(r)openInput("폐사",{date:r.workDate,dec:null})},
   // 입력 페이지
   fv:(v,el)=>{const I=ui.in,k=el.dataset.k;I.fv[k]=v;I.warn=null;
+    if(I.type==="폐사"&&k==="barn")I.fv.stage=FARM.stageOf[v]||"모돈";   // 돈사 → 단계 자동 (바꿀 수 있음)
     if(I.type==="약품"&&k==="kind")I.fv.name=itemNames(v)[0]||"";
     if(I.type==="약품"&&(k==="kind"||k==="name")){const it=state.items.find(x=>x.name===I.fv.name);I.fv.withdraw=it&&it.withdraw?addDays(I.date,it.withdraw):""}
     if(I.type==="돈군백신"&&(k==="batch"||k==="vax"))bvDefault();
@@ -1223,8 +1227,8 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("input",e=>{
   const t=e.target;
-  if(t.id==="sowQ"){ui.sowQ=t.value.trim();const p=t.selectionStart;render();const q=$("#sowQ");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
-  if(t.id==="in-q"){ui.in.q=t.value;const p=t.selectionStart;render();const q=$("#in-q");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.id==="sowQ"){t.value=t.value.replace(/\D/g,"");ui.sowQ=t.value;const p=t.selectionStart;render();const q=$("#sowQ");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
+  if(t.id==="in-q"){t.value=t.value.replace(/\D/g,"");ui.in.q=t.value;const p=t.selectionStart;render();const q=$("#in-q");q.focus();try{q.setSelectionRange(p,p)}catch(_){}return}
   if(!ui.in||tab!=="input")return;
   if(t.dataset.num){ui.in.fv[t.dataset.num]=t.value;ui.in.warn=null;const F=FORMS[ui.in.type];F.f.filter(f=>f.t==="calc").forEach(f=>{const c=document.querySelector(`[data-calc="${f.k}"]`);if(c)c.textContent=f.calc(ui.in.fv,ui.in.date,ui.in.sel[0])});return}
   if(t.dataset.txt){ui.in.fv[t.dataset.txt]=t.value;ui.in.err=null;const b=$("[data-a=save]");if(b){const n=needMsg();b.disabled=!!n;b.textContent=saveLabel()}return}
@@ -2340,9 +2344,9 @@ function vSows(){
   const all=state.sows.map(s=>({s,i:statusOf(s)}));
   const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="input" data-v="도입">+ ${esc(L("도입"))}</button></div>`;
-  h+=`<input type="search" id="sowQ" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
+  h+=`<input type="search" id="sowQ" inputmode="numeric" pattern="[0-9]*" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
   h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
-  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:matchStatus(x.s,x.i,ui.sf))&&x.s.id.toLowerCase().includes(ui.sowQ.toLowerCase())).sort((a,b)=>a.s.id.localeCompare(b.s.id));
+  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:matchStatus(x.s,x.i,ui.sf))&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
   h+=`<div class="note">${ui.sf==="도태됨"?"도태된 모돈도 기록이 모두 보관되어 있습니다. 번호를 누르면 생애 기록을 볼 수 있습니다.":t("모돈번호를 누르면 상세 정보가 열립니다. 상태는 기록으로 자동 계산되고, 위치는 참고용입니다.")}</div>`;
   h+=list.length?`<div class="sowgrid">${list.map(x=>sowCard(x.s)).join("")}</div>`:`<div class="empty">-</div>`;
   return h;
@@ -2400,7 +2404,7 @@ function vInput(){
   if(F.sow&&!I.editId){
     const c=candidates(),leftN=Math.max(c.targetN-c.doneN,0);
     if(F.sow.target)left+=`<div class="target"><span class="big">${I.date===TODAY?t("오늘"):kDate(I.date)} ${t("대상")} ${c.targetN}${t("두")} · ${t("입력")} ${c.doneN} · ${t("남은")} <b class="${leftN?"":"ok"}">${leftN}</b></span></div><div class="prog-bar"><i style="width:${c.targetN?Math.min(100,c.doneN/c.targetN*100):0}%"></i></div>`;
-    left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
+    left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" pattern="[0-9]*" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
     left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
   }else if(F.sow&&I.editId){const s=state.sows.find(x=>x.id===I.sel[0]);left+=`<div class="f"><span class="lb">${t("모돈")}</span>${s?sowCard(s,{noLoc:true,noLink:true}):""}</div>`}
   const dock=F.sow&&!I.editId;   // 모돈 입력: 입력 칸·저장을 아래 고정 패널로
