@@ -431,6 +431,55 @@ body.login .app{margin-left:0!important}
 table.hus td{white-space:normal!important;text-align:left!important;vertical-align:top}
 table.hus td:first-child{font-weight:700;width:32%}
 .setrow input[type=text]{flex:1;min-width:0}
+
+/* ===== 현황판 v2 · TV 1920×1080 ===== */
+.bd-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.bd-chips{display:flex;gap:8px;flex-wrap:wrap}
+.bd-chip{background:var(--tvsf);border-radius:10px;padding:6px 12px;display:grid;text-align:center;min-width:72px}
+.bd-chip small{font-size:12px;color:var(--tvmu)}
+.bd-chip b{font-family:var(--display);font-size:22px}
+.bd-chip.hot b{color:var(--tvam)}
+.bd-right{display:grid;gap:6px;justify-items:end}
+.bd-clock{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--tvmu)}
+.bd-main{display:grid;gap:8px;align-content:start}
+@media(min-width:900px){.bd-main{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.bd-tt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.bd-tbl th{font-size:12px;color:var(--tvmu);font-weight:600;text-align:right;padding:2px 6px}
+.bd-tbl td{padding:4px 6px;text-align:right;border-top:1px solid var(--tvln);font-size:15px}
+.bd-tbl th:first-child,.bd-tbl td:first-child{text-align:left;font-weight:700}
+.warnc{color:var(--tvam)}
+.bd-tbl th,.bd-tbl td{color:var(--tvfg);background:transparent}
+.bd-tbl th{color:var(--tvmu)}
+body.tv{overflow:hidden}
+body.tv main{padding:0!important}
+body.tv .board{position:fixed;inset:0;border-radius:0;padding:2vh 1.6vw;gap:1.6vh;grid-template-rows:auto minmax(0,1fr);overflow:hidden;z-index:30}
+body.tv .bd-top{flex-wrap:nowrap}
+body.tv .bd-day{font-size:5.2vh}
+body.tv .bd-date{font-size:2.6vh}
+body.tv .bd-chip{padding:.8vh 1vw;min-width:6vw}
+body.tv .bd-chip small{font-size:1.5vh}
+body.tv .bd-chip b{font-size:3.4vh}
+body.tv .bd-clock{font-size:4vh}
+body.tv .bd-ctl button{font-size:1.4vh;padding:.6vh .8vw;opacity:.7}
+body.tv .bd-grid{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:1.4vw;min-height:0;height:100%}
+body.tv .bd-main{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(var(--rows),minmax(0,1fr));gap:1.2vh;min-height:0;overflow:hidden}
+body.tv .bd-row{padding:1.2vh 1vw;gap:.6vh .8vw;min-height:0;overflow:hidden;align-content:start}
+body.tv .bd-t{font-size:2.7vh}
+body.tv .bd-n{font-size:3.6vh}
+body.tv .bd-ids{font-size:2vh;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.tv .bd-who{font-size:1.7vh;padding:.5vh .8vw}
+body.tv .bd-side{display:grid;grid-template-rows:auto auto auto minmax(0,1fr);gap:1.2vh;min-height:0}
+body.tv .bd-box{padding:1.2vh 1vw;gap:.6vh;min-height:0;overflow:hidden}
+body.tv .bd-box h4{font-size:2.2vh}
+body.tv .bd-al{font-size:1.9vh;padding:.5vh .7vw}
+body.tv .bd-kpi div{padding:.6vh}
+body.tv .bd-kpi small{font-size:1.4vh}
+body.tv .bd-kpi b{font-size:3.4vh}
+body.tv .bd-tbl th{font-size:1.4vh}
+body.tv .bd-tbl td{font-size:1.9vh;padding:.4vh .5vw}
+body.tv .bd-memo{font-size:2vh;overflow:hidden}
+body.tv .board textarea{min-height:0;height:12vh}
 </style>
 
 </head>
@@ -1209,36 +1258,57 @@ function prevYearForm(){
 
 /* ================= v0.2 · 현황판 (TV) ================= */
 function vBoard(){
-  const tmr=addDays(TODAY,1),D=boardDate();
+  const tmr=addDays(TODAY,1),D=boardDate(),tv=document.body.classList.contains("tv");
   REF=D;const groups=buildTodos();const st=stalls();REF=TODAY;
   const work=groups.filter(x=>!["pending","stock","order"].includes(x.k));
   const so=semenOrder(),low=state.items.filter(it=>!it.hidden).map(it=>({it,s:stockOf(it)})).filter(x=>x.s.qty!==null&&x.s.qty<x.it.par);
   const pend=deadPending().length;
-  const carry=(state.tasks||[]).filter(t=>t.due<D&&!tdLog(tdKey("task",t.id))).length;
+  const carry=(state.tasks||[]).filter(x=>x.due<D&&!tdLog(tdKey("task",x.id))).length;
   const vlate=groups.find(x=>x.k==="bvax");const vl=vlate?vlate.items.filter(i=>i.sev==="bad").length:0;
-  const T=t=>state.records.filter(r=>r.type===t&&r.workDate===TODAY);
+  const T=k=>state.records.filter(r=>r.type===k&&r.workDate===TODAY);
   const memo=(state.memo||{})[D]||"";
-  const ids=x=>x.items.map(it=>it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 분만군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"").slice(0,10).join("  ")+(x.items.length>10?` 외 ${x.items.length-10}`:"");
-  let h=`<div class="board"><div class="bd-top"><div><div class="bd-day">${t(D===TODAY?"오늘 할 일":"내일 할 일")}</div><div class="bd-date">${kDate(D)}</div></div>
-    <div class="bd-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${document.body.classList.contains("tv")?"전체 화면 끄기":"TV 전체 화면"}</button></div></div>
-    <div class="bd-grid"><div class="bd-main">${work.length?work.map(x=>{const key=`${D}|${x.k}`,who=(state.assign||{})[key];
-      return `<div class="bd-row ${x.sev}"><div class="bd-t">${t(x.t).replace(/ \(.*\)/,"")}<span class="bd-n">${x.items.length}</span></div><div class="bd-ids">${esc(ids(x))}</div><button type="button" class="bd-who ${who?"":"none"}" data-a="${can("assign")?"assign":""}" data-v="${key}">${who?t("담당")+" "+who:t("담당 지정")}</button></div>`}).join(""):`<div class="bd-row"><div class="bd-t">예정된 일이 없습니다</div></div>`}</div>
-    <div class="bd-side">
-      <div class="bd-box"><h4>${t("주의")}</h4>
-        ${low.map(x=>`<div class="bd-al bad">재고 부족 · ${x.it.name} ${x.s.qty}${x.it.unit}</div>`).join("")}
-        ${so.order?`<div class="bd-al warn">정액 ${so.order}개 오늘 주문 (내일 ${so.n}두 교배)</div>`:""}
-        ${vl?`<div class="bd-al bad">돈군 백신 누락 ${vl}건</div>`:""}
-        ${pend?`<div class="bd-al bad">조치 판단 대기 폐사 ${pend}건</div>`:""}
-        ${carry?`<div class="bd-al warn">이월된 조치 ${carry}건</div>`:""}
-        ${st.length?`<div class="bd-al warn">장기 무변동 개체 ${st.length}두</div>`:""}
-        ${!low.length&&!so.order&&!vl&&!pend&&!carry&&!st.length?`<div class="bd-al">특이 사항 없음</div>`:""}</div>
-      <div class="bd-box"><h4>${t("오늘 실적")}</h4><div class="bd-kpi">
-        <div><small>교배</small><b>${T("교배").length}</b></div><div><small>분만</small><b>${T("분만").length}</b></div><div><small>이유</small><b>${T("이유").length}</b></div>
-        <div><small>폐사</small><b>${T("폐사").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>출하</small><b>${T("출하").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>미입력</small><b>${missCount(TODAY)}</b></div></div></div>
-      <div class="bd-box"><h4>${t("회의 메모")} <button type="button" class="bd-edit" data-a="memoEdit">${ui.memoEdit?"닫기":"쓰기"}</button></h4>${ui.memoEdit?`<textarea id="memoEdit" aria-label="회의 메모">${esc(memo)}</textarea><button type="button" class="bd-who" data-a="memoSave">저장</button>`:`<div class="bd-memo">${memo?esc(memo).replace(/\n/g,"<br>"):"메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요."}</div>`}</div>
-    </div></div>
-    <div class="bd-foot">1분마다 자동으로 새로 고칩니다 · 담당 버튼을 누르면 직원이 차례로 바뀝니다 · 저녁 6시 이후에는 ‘내일’ 화면이 기본입니다</div></div>`;
-  return h;
+  const ids=x=>{const a=x.items.map(it=>it.t?it.t.title:it.s?it.s.id:it.b?`${bName(it.b.k).replace(" 분만군","")} ${it.v.p.name}`:it.r?it.r.data.barn:"");return a.slice(0,14).join("  ")+(a.length>14?`  +${a.length-14}`:"")};
+  // 모돈 상태
+  const c=statusCounts();
+  const sc=[["heat","발정 관찰"],["분만임박","분만 임박"],["포유","포유"],["확인전","확인 전"],["임신","임신"],["재발공태","재발·공태"]].map(([k,l])=>`<span class="bd-chip ${k==="heat"&&c.heat?"hot":""}"><small>${t(l)}</small><b>${c[k]||0}</b></span>`).join("");
+  // 주의
+  const al=[];
+  low.forEach(x=>al.push(["bad",`${t("재고 부족")} · ${x.it.name} ${x.s.qty}${x.it.unit}`]));
+  if(so.order)al.push(["warn",`정액 ${so.order}개 오늘 주문 (내일 ${so.n}두)`]);
+  if(vl)al.push(["bad",`${t("돈군 백신")} 누락 ${vl}`]);
+  if(pend)al.push(["bad",`${t("판단 대기 폐사")} ${pend}`]);
+  if(carry)al.push(["warn",`이월된 조치 ${carry}`]);
+  if(st.length)al.push(["warn",`${t("장기 무변동 개체")} ${st.length}`]);
+  const AMAX=tv?6:20,alH=al.length?al.slice(0,AMAX).map(([k,s])=>`<div class="bd-al ${k}">${esc(s)}</div>`).join("")+(al.length>AMAX?`<div class="bd-al">+${al.length-AMAX}</div>`:""):`<div class="bd-al">특이 사항 없음</div>`;
+  // 돈사 현황
+  const L2=liveBatches(),sowLoc={};activeSows().forEach(s=>sowLoc[s.loc]=(sowLoc[s.loc]||0)+1);
+  const barnRows=[["교배사",sowLoc["교배사"]||0,null],["임신사",sowLoc["임신사"]||0,null],...state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return [n,i===0?(sowLoc["분만사"]||0):null,[inS.length,inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0)]]})];
+  const barnH=`<table class="bd-tbl"><thead><tr><th></th><th>${t("모돈")}</th><th>${t("돈군")}</th><th>${t("두수")}</th></tr></thead><tbody>${barnRows.map(([n,s,b])=>`<tr><td>${t(n)}</td><td>${s===null?"–":s}</td><td>${b?b[0]:"–"}</td><td>${b?b[1].toLocaleString():"–"}</td></tr>`).join("")}</tbody></table>`;
+  // 할 일 카드
+  const CMAX=tv?12:99,shown=work.length>CMAX?work.slice(0,CMAX-1):work,rest=work.length-shown.length;
+  const rows=Math.max(4,Math.ceil((shown.length+(rest?1:0))/2));
+  const cards=shown.map(x=>{const key=`${D}|${x.k}`,who=(state.assign||{})[key];
+    return `<div class="bd-row ${x.sev}"><div class="bd-t"><span class="bd-tt">${t(x.t).replace(/ \(.*\)/,"")}</span><span class="bd-n">${x.items.length}</span></div><div class="bd-ids">${esc(ids(x))}</div><button type="button" class="bd-who ${who?"":"none"}" data-a="${can("assign")?"assign":""}" data-v="${key}">${who?esc(who):t("담당 지정")}</button></div>`}).join("")+(rest?`<div class="bd-row"><div class="bd-t"><span class="bd-tt">+${rest}</span></div><div class="bd-ids">${t("할 일")} → ${t("전체 보기")}</div></div>`:"");
+  const now=new Date();
+  return `<div class="board">
+    <div class="bd-top">
+      <div class="bd-head"><div class="bd-day">${t(D===TODAY?"오늘 할 일":"내일 할 일")}</div><div class="bd-date">${kDate(D)}</div></div>
+      <div class="bd-chips">${sc}</div>
+      <div class="bd-right"><div class="bd-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="bd-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?"TV 끄기":"TV 전체 화면"}</button></div></div>
+    </div>
+    <div class="bd-grid">
+      <section class="bd-main" style="--rows:${rows}" aria-label="${t("할 일")}">${cards||`<div class="bd-row"><div class="bd-t"><span class="bd-tt">예정된 일이 없습니다</span></div></div>`}</section>
+      <section class="bd-side">
+        <div class="bd-box b-alert"><h4>${t("주의")}</h4>${alH}</div>
+        <div class="bd-box b-kpi"><h4>${t("오늘 실적")}</h4><div class="bd-kpi">
+          <div><small>${t("교배")}</small><b>${T("교배").filter(r=>r.data.round==="1차").length}</b></div><div><small>${t("분만")}</small><b>${T("분만").length}</b></div><div><small>${t("이유")}</small><b>${T("이유").length}</b></div>
+          <div><small>${t("폐사")}</small><b>${T("폐사").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>${t("출하")}</small><b>${T("출하").reduce((s,r)=>s+r.data.n,0)}</b></div><div><small>${t("미입력")}</small><b class="${missCount(TODAY)?"warnc":""}">${missCount(TODAY)}</b></div></div></div>
+        <div class="bd-box b-barn"><h4>돈사 현황</h4>${barnH}</div>
+        <div class="bd-box b-memo"><h4>${t("회의 메모")} <button type="button" class="bd-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button></h4>${ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="bd-who" data-a="memoSave">${t("저장")}</button>`:`<div class="bd-memo">${memo?esc(memo).replace(/\n/g,"<br>"):"메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요."}</div>`}</div>
+      </section>
+    </div>
+    ${tv?"":`<div class="bd-foot">1분마다 자동으로 새로 고칩니다 · 담당 버튼을 누르면 직원이 차례로 바뀝니다 · 저녁 6시 이후에는 ‘내일’ 화면이 기본입니다 · TV는 1920×1080 한 화면에 맞춰 보여 줍니다</div>`}
+  </div>`;
 }
 setInterval(()=>{if(tab==="board"&&!ui.memoEdit)render()},60000);
 
