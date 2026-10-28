@@ -33,7 +33,7 @@ function vHome(){
     let cls="",cnt="";
     if(DAILY.includes(q)){const s=dayStatus(TODAY,q);cls=s.s==="miss"?"miss":s.s==="zero"?"zero":"";cnt=s.s==="ok"?s.n:s.s==="zero"?"0":""}
     else{const n=state.records.filter(r=>r.type===q&&r.workDate===TODAY).length;cnt=n||""}
-    return `<button class="qbtn ${cls}" type="button" data-a="input" data-v="${q}">${icon(q)}${esc(L(q))}<span class="cnt">${cnt}</span></button>`}).join("")}</div>`;
+    return `<button class="qbtn ${cls}${ICON_IMG[q]?" pic":""}" type="button" data-a="input" data-v="${q}">${icon(q)}${esc(L(q))}<span class="cnt">${cnt}</span></button>`}).join("")}</div>`;
   h+=`<div class="note">${t("빨간 테두리: 오늘 아직 입력하지 않은 매일 기록 · 파란 0: ‘오늘 없음’으로 확인함")}</div>`;
   h+=`</div><div>`;
   const todos=buildTodos().filter(x=>x.k!=="am"),st=stalls();
