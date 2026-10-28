@@ -108,3 +108,4 @@ FARM.goal={psy:25,msy:22};
 
 // 기본 디자인 테마 (설정 › 디자인 테마에서 기기마다 바꿀 수 있음)
 FARM.skin="fresh";
+FARM.iconStyle="pic";   // 기본 아이콘 스타일

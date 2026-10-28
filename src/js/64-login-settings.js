@@ -36,6 +36,7 @@ function vSettings(){
   if(P==="reset")return back+vReset();
   let h=`<div class="pagehd"><h2>${t("설정")}</h2></div>`;
   h+=`<div class="panel"><div class="sow-top"><b style="font-size:16px">${esc(m.name)}</b><span class="stage c-preg">${t(ROLE[m.role])}</span></div>
+    ${vMyDesign()}
     <div class="f"><span class="lb">${t("언어")}</span><div class="chipwrap">${LANGS.map(([c,n])=>`<button type="button" class="chip wrap ${m.lang===c?"on":""}" data-a="myLang" data-v="${c}">${n}</button>`).join("")}</div></div>
     ${ui.myPin?`<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>`:`<div class="acts"><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
   const menu=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`;
@@ -45,7 +46,6 @@ function vSettings(){
     h+=`<div class="sec-t">관리자 설정 <span>대표 계정에서만 보입니다</span></div><div class="more">
       ${menu("accounts","계정 관리","직원 추가 · 권한 · 언어 · PIN · 정지")}
       ${menu("lists","목록·이름 관리","돈사, 폐사 원인, 조치, 정액, 출하처, 도태 사유")}
-      ${menu("skin","디자인 테마","앱 색·모양 고르기 (5가지)")}
       ${menu("todorank","할 일 순서","할 일 묶음의 우선순위 (위에서부터)")}
       ${menu("supply","백신·주사침 준비물","1병당 접종 두수, 주사침 규격·사용량")}
       ${menu("dash","현황판 항목 · 목표","현황판 칸 켜기·끄기, 순서, 주간 번식 목표, PSY·MSY 목표")}
