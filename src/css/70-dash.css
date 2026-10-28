@@ -89,3 +89,19 @@ body.tv .d-tbl{font-size:1.8vh}body.tv .d-memo{font-size:1.8vh}
 }
 body.tv .tagbtn{display:none!important}
 @media (max-height:500px) and (orientation:landscape){body.tv .d-ctl button,body.tv .d-brand,body.tv .d-wx span{white-space:nowrap}body.tv .d-wx span br{display:none}body.tv .d-brand small{white-space:nowrap}}
+/* 아이폰 가로: 한 화면 4×2 = 8칸 (넘치면 옆으로) */
+@media (max-height:500px) and (orientation:landscape){
+  .d-swipe{grid-template-rows:repeat(2,minmax(0,1fr));grid-auto-columns:calc((100% - 18px)/4);gap:6px}
+  .d-swipe>.d-card:nth-child(3n+1){scroll-snap-align:none}.d-swipe>.d-card:nth-child(8n+1){scroll-snap-align:start}
+  .d-swipe .d-card{padding:5px 7px;border-radius:10px}
+  .d-swipe .d-card h3{font-size:11px;margin:0 0 3px}.d-swipe .d-card h3 small{font-size:8.5px}
+  .d-swipe .d-donut{grid-template-columns:42% 1fr;gap:4px}.d-swipe .d-legend{font-size:9.5px;gap:0}.d-swipe .d-legend button{padding:0 2px;gap:4px}.d-swipe .d-legend i{width:8px;height:8px}
+  .d-swipe .d-bars{gap:3px}.d-swipe .d-bar{font-size:9.5px;grid-template-columns:40px 1fr 34px;gap:4px}.d-swipe .d-track{height:8px}.d-swipe .d-tick{top:-2px;bottom:-2px;width:2px}
+  .d-swipe .d-cols{gap:5px}.d-swipe .d-col{font-size:8.5px;gap:1px}.d-swipe .d-col b{font-size:11px}
+  .d-swipe .d-flow{height:22px;margin:2px 0 3px}.d-swipe .d-flow div{font-size:10px}.d-swipe .d-flowlab{font-size:8.5px}.d-swipe .dk-flow .d-flowlab small{font-size:8px}
+  .d-swipe .d-am{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}.d-swipe .d-am button{font-size:8.5px;padding:2px 3px;border-width:1.5px;border-radius:6px}.d-swipe .d-am button b{font-size:9px}
+  .d-swipe .d-todo{gap:2px}.d-swipe .d-todo>button{grid-template-columns:3px 1fr auto;gap:5px;font-size:10px;padding:2px 6px;border-radius:6px;line-height:1.25}.d-swipe .d-todo b{font-size:12px}.d-swipe .d-todo small{font-size:8px}
+  .d-swipe .d-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 4px}.d-swipe .d-kpis>div{min-width:0;padding:0;border:0}.d-swipe .d-kpis b{font-size:13px}.d-swipe .d-kpis small{font-size:8.5px}.d-swipe .d-kpis i{font-size:8px;margin-left:2px}
+  .d-swipe .d-tbl{font-size:9px}.d-swipe .d-tbl td{padding:1px 3px}.d-swipe .d-memo{font-size:10px}
+  .d-swipe .d-edit{padding:2px 6px;font-size:10px}
+}
