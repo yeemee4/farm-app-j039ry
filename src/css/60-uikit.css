@@ -18,3 +18,7 @@ body.tv .bd-kpi{gap:.5vh}body.tv .bd-kpi div{padding:.3vh}body.tv .bd-kpi b{font
 body.tv .bd-side{grid-template-rows:auto auto minmax(0,1fr) auto}body.tv .b-memo{max-height:11vh}body.tv .bd-al{padding:.35vh .7vw}
 body.tv .bd-kpi{grid-template-columns:repeat(7,1fr)}body.tv .bd-kpi small{font-size:1.25vh;white-space:nowrap}body.tv .b-alert{gap:.5vh}
 body.tv .b-memo{max-height:8vh}body.tv .bd-tbl td{padding:.12vh .5vw}body.tv .b-alert{gap:.35vh}
+/* 아이폰 사파리: 날짜·시간 칸이 옆으로 삐져나오지 않게 */
+input[type=date],input[type=time],input[type=month]{-webkit-appearance:none;appearance:none;display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:44px}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:center;min-width:0}
+.row2 input[type=date],.row2 input[type=time]{flex:1;width:auto}
