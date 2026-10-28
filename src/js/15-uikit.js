@@ -1,7 +1,8 @@
 /* ================= 아이콘 · 테스트 라벨 ================= */
 // 아이콘: src/icons/<종류>.svg 파일 하나 = 아이콘 하나. 파일이 없으면 TYPES 의 글자(s)로 표시.
 function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SVG[type];
-  return `<span class="ic${sm?" sm":""}${svg?" svg":""}" style="background:${T.c}">${svg||T.s}</span>`}
+  const tile=svg&&svg.includes('data-tile');  // 배경까지 그린 그림 아이콘(귀여운 그림 스타일)
+  return `<span class="ic${sm?" sm":""}${svg?" svg":""}${tile?" tile":""}" style="background:${tile?"transparent":T.c}">${svg||T.s}</span>`}
 
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
