@@ -25,3 +25,4 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .ic.tile{padding:0;overflow:hidden}.ic.tile svg{width:100%;height:100%}
 .ic.tile img{width:100%;height:100%;display:block;object-fit:cover}.ic.tile{border-radius:9px}
 .qbtn .ic.tile,.qgrid .qbtn .ic.tile{width:46px;height:46px;border-radius:11px}
+.qgrid .qbtn .ic.tile{width:64px;height:64px;border-radius:14px}
