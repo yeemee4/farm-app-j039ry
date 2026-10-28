@@ -23,10 +23,10 @@ function wxPic(code){const k=code===0?"맑음":code<=2?"구름조금":code===3?"
 // ---- 칸 그리기 ----
 const dWeek=()=>weekStart(TODAY);
 const DASH_P={
-  sows:()=>{const c=statusCounts(),L=[["임신","임신"],["확인전","확인 전"],["포유","포유"],["발정대기","발정 대기"],["재발공태","재발·공태"],["분만임박","분만 임박"]].map(([k,l],i)=>({l,n:c[k]||0,c:DCOL[i]})),
+  sows:()=>{const c=statusCounts(),L=[["임신","임신"],["확인전","확인 전"],["포유","포유"],["발정대기","발정 대기"],["재발공태","재발·공태"],["분만임박","분만 임박"]].map(([k,l],i)=>({k,l,n:c[k]||0,c:DCOL[i]})),
       tot=L.reduce((s,x)=>s+x.n,0)||1,C=2*Math.PI*46;let off=0;
     const arcs=L.filter(x=>x.n).map(x=>{const len=x.n/tot*C,a=`<circle cx="60" cy="60" r="46" stroke="${x.c}" stroke-dasharray="${Math.max(0,len-2)} ${C}" stroke-dashoffset="${-off}"><title>${t(x.l)} ${x.n}</title></circle>`;off+=len;return a}).join("");
-    return [`${t("모돈 상태")}`,`${activeSows().length}${t("두")}`,`<div class="d-donut"><svg viewBox="0 0 120 120"><g transform="rotate(-90 60 60)" fill="none" stroke-width="20">${arcs}</g><text x="60" y="62" text-anchor="middle" class="d-big">${activeSows().length}</text><text x="60" y="78" text-anchor="middle" class="d-mu">${t("두")}</text></svg><div class="d-legend">${L.map(x=>`<span><i style="background:${x.c}"></i>${t(x.l)}<b>${x.n}</b></span>`).join("")}</div></div>`]},
+    return [`${t("모돈 상태")}`,`${activeSows().length}${t("두")}`,`<div class="d-donut"><svg viewBox="0 0 120 120"><g transform="rotate(-90 60 60)" fill="none" stroke-width="20">${arcs}</g><text x="60" y="62" text-anchor="middle" class="d-big">${activeSows().length}</text><text x="60" y="78" text-anchor="middle" class="d-mu">${t("두")}</text></svg><div class="d-legend">${L.map(x=>`<button type="button" data-a="dashSow" data-v="${x.k}"><i style="background:${x.c}"></i>${t(x.l)}<b>${x.n}</b></button>`).join("")}</div></div>`]},
   breed:()=>{const w=dWeek(),G=dashCfg().goal,R=k=>state.records.filter(r=>r.type===k&&r.workDate>=w&&r.workDate<=TODAY);
     const rows=[["교배",R("교배").filter(r=>r.data.round==="1차").length,DCOL[0]],["분만",R("분만").length,DCOL[2]],["이유",R("이유").length,DCOL[3]],["임신확인",R("임신확인").filter(r=>r.data.result==="임신").length,DCOL[5]]];
     return [t("이번 주 번식"),t("목표 대비 · 흰 선 = 목표"),`<div class="d-bars">${rows.map(([k,n,c])=>{const g=G[k]||1,mx=Math.max(g,n);return `<div class="d-bar"><span>${t(LABEL[k]||k)}</span><div class="d-track"><div class="d-fill" style="width:${n/mx*100}%;background:${c}"></div><div class="d-tick" style="left:calc(${g/mx*100}% - 3px)"></div></div><span class="d-v"><b>${n}</b> / ${g}</span></div>`}).join("")}</div>`]},
@@ -35,15 +35,15 @@ const DASH_P={
   flow:()=>{const L2=liveBatches(),S=state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return {n,g:inS.length,h:inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0),c:DCOL[[2,0,5,3,1][i]||0]}}),tot=S.reduce((s,x)=>s+x.h,0)||1;
     return [t("돈군 흐름"),t("돈사별 두수"),`<div class="d-flow">${S.map(x=>`<div style="flex:${Math.max(x.h,tot*.06)};background:${x.h?x.c:"#3a4640"}" title="${t(x.n)} ${x.h}">${x.h.toLocaleString()}</div>`).join("")}</div><div class="d-flowlab">${S.map(x=>`<div style="flex:${Math.max(x.h,tot*.06)}">${t(x.n)}<br><small>${x.g}${t("군")}</small></div>`).join("")}</div>`]},
   feed:()=>{const R=feedTable().filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days),mx=Math.max(14,...R.map(x=>x.days)),o=FARM.feed.orderDays;
-    return [t("사료 남은 일수"),`${o}${t("일")} ${t("이하 주문")}`,`<div class="d-bars">${R.slice(0,6).map(x=>{const c=x.days<=2?DST.crit:x.days<=o?DST.warn:DST.good;return `<div class="d-bar"><span>${esc(x.f)}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.days/mx*100)}%;background:${c}"></div></div><span class="d-v"><b>${x.days}${t("일")}</b>${x.days<=o?" ⚠":""}</span></div>`}).join("")||`<div class="d-mu">${t("잔량 기록 필요")}</div>`}</div>`]},
+    return [t("사료 남은 일수"),`${o}${t("일")} ${t("이하 주문")}`,`<div class="d-bars">${R.slice(0,6).map(x=>{const c=x.days<=2?DST.crit:x.days<=o?DST.warn:DST.good;return `<button type="button" class="d-bar" data-a="dashFeed" data-v="${esc(x.f)}"><span>${esc(x.f)}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.days/mx*100)}%;background:${c}"></div></div><span class="d-v"><b>${x.days}${t("일")}</b>${x.days<=o?" ⚠":""}</span></button>`}).join("")||`<div class="d-mu">${t("잔량 기록 필요")}</div>`}</div>`]},
   am:()=>{const D=amDay(TODAY),P=amProg();
-    return [t("아침 점검"),`${P.done}/${P.all} · ${FARM.morning.due}${t("까지")}`,`<div class="d-am">${FARM.morning.route.map(r=>{const x=D[r.barn],iss=x?amIssues(r,x):[];return `<div class="${!x?"no":iss.length?"bad":"ok"}"><b>${esc(t(r.barn))}</b>${!x?t("미점검"):`${x.temp!==""?x.temp+"℃ ":""}${iss.length?"✕ "+esc(iss.join(" · ")):"✓"}`}</div>`}).join("")}</div>`]},
+    return [t("아침 점검"),`${P.done}/${P.all} · ${FARM.morning.due}${t("까지")}`,`<div class="d-am">${FARM.morning.route.map(r=>{const x=D[r.barn],iss=x?amIssues(r,x):[];return `<button type="button" data-a="dashAm" data-v="${esc(r.barn)}" class="${!x?"no":iss.length?"bad":"ok"}"><b>${esc(t(r.barn))}</b>${!x?t("미점검"):`${x.temp!==""?x.temp+"℃ ":""}${iss.length?"✕ "+esc(iss.join(" · ")):"✓"}`}</button>`}).join("")}</div>`]},
   barn:()=>{const L2=liveBatches(),sl={};activeSows().forEach(s=>sl[s.loc]=(sl[s.loc]||0)+1);
     const rows=[...SOW_LOCS.filter(x=>x!=="분만사").map(x=>[x,sl[x]||0,"–","–"]),...state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return [n,i===0?(sl["분만사"]||0):"–",inS.length,inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0).toLocaleString()]})];
     return [t("돈사 현황"),"",`<table class="d-tbl"><thead><tr><th></th><th>${t("모돈")}</th><th>${t("돈군")}</th><th>${t("두수")}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${t(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`]},
   todo:()=>{const D=boardDate();REF=D;const g=buildTodos().filter(x=>!["pending"].includes(x.k));REF=TODAY;g.splice(0,g.length,...sortTodos(g));
     const left=g.reduce((s,x)=>s+leftOf(x),0);
-    return [t(D===TODAY?"오늘 할 일":"내일 할 일"),`${t("남은")} ${left}`,`<div class="d-todo">${g.map(x=>{const who=(state.assign||{})[`${D}|${x.k}`];return `<div><i style="background:${x.sev==="bad"?DST.crit:x.sev==="warn"?DST.warn:"#6BB892"}"></i><span>${esc(t(x.t).replace(/ \(.*\)/,""))}<small>${who?t("담당")+" "+esc(who)+" · ":""}${esc(x.items.map(itemShort).slice(0,3).join(" · "))}</small></span><b>${x.items.length}</b></div>`}).join("")||`<div class="d-mu">${t("오늘 할 일이 없습니다.")}</div>`}</div>`]},
+    return [t(D===TODAY?"오늘 할 일":"내일 할 일"),`${t("남은")} ${left}`,`<div class="d-todo">${g.map(x=>{const who=(state.assign||{})[`${D}|${x.k}`];return `<button type="button" data-a="todo" data-v="${x.k}"><i style="background:${x.sev==="bad"?DST.crit:x.sev==="warn"?DST.warn:"#6BB892"}"></i><span>${esc(t(x.t).replace(/ \(.*\)/,""))}<small>${who?t("담당")+" "+esc(who)+" · ":""}${esc(x.items.map(itemShort).slice(0,3).join(" · "))}</small></span><b>${x.items.length}</b></button>`}).join("")||`<div class="d-mu">${t("오늘 할 일이 없습니다.")}</div>`}</div>`]},
   kpi:()=>{const y=+TODAY.slice(0,4),m=+TODAY.slice(5,7),pm=m===1?[y-1,12]:[y,m-1],ppm=pm[1]===1?[pm[0]-1,12]:[pm[0],pm[1]-1];
     const A=rangeMetrics(...monthRange(...pm)),B=rangeMetrics(...monthRange(...ppm));
     const K=[["frate","분만율","%",0],["live","복당 실산","",1],["wean","복당 이유","",1],["psy","PSY","",1],["msy","MSY","",1]];
@@ -51,7 +51,10 @@ const DASH_P={
   memo:()=>{const D=boardDate(),memo=(state.memo||{})[D]||"";
     return [t("회의 메모"),`<button type="button" class="d-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button>`,ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="d-edit" data-a="memoSave">${t("저장")}</button>`:`<div class="d-memo">${memo?esc(memo).replace(/\n/g,"<br>"):`<span class="d-mu">${t("메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요.")}</span>`}</div>`]}
 };
-function dashCard(k){const [ti,sub,body]=DASH_P[k]();return `<section class="d-card dk-${k}"><h3>${ti}<small>${sub}</small></h3>${body}</section>`}
+const DASH_GO={sows:"sows",breed:"stats",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
+function dashCard(k){const [ti,sub,body]=DASH_P[k]();return `<section class="d-card dk-${k}"><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
+// 아이폰 가로(높이 500px 이하): 한 화면 3칸씩 옆으로 넘김
+const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)").matches;
 
 function vDash(){
   const d=dashCfg(),on=d.order.filter(k=>d.on[k]&&DASH_P[k]),main=on.filter(k=>!DASH_SIDE.includes(k)&&!DASH_STRIP.includes(k)),side=on.filter(k=>DASH_SIDE.includes(k)),strip=on.filter(k=>DASH_STRIP.includes(k));
@@ -62,9 +65,11 @@ function vDash(){
   h+=`<header class="d-top"><div class="d-brand">${esc(FARM.name)} · ${t(D===TODAY?"오늘":"내일")}<small>${kDate(D)} · W${isoWeek(D).w}</small></div><div class="d-warns">${al.replace(/bd-al wx/g,"d-warn")}</div>`;
   h+=wc?`<div class="d-wx">${wxPic(D===TODAY?wc.weather_code:wd.code)}<b>${D===TODAY?Math.round(wc.temperature_2m)+"℃":""}</b><span>${FARM.place} · ${t(WXC(D===TODAY?wc.weather_code:wd.code))}<br>${wd.min} ~ ${wd.max}℃ · ${t("바람")} ${Math.round((D===TODAY?wc.wind_speed_10m:wd.wind)/3.6)}m/s</span></div>`:`<div class="d-wx"><span>${FARM.place} · ${t("날씨 불러오는 중")}</span></div>`;
   h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
-  h+=`<div class="d-main">${main.map(dashCard).join("")}</div>`;
+  if(dashPhoneL()){const all=[...side.filter(k=>k==="todo"),...main,...strip,...side.filter(k=>k!=="todo")],pg=Math.ceil(all.length/3);
+    h+=`<div class="d-swipe" id="dSwipe">${all.map(dashCard).join("")}</div><div class="d-dots">${Array.from({length:pg},(_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`}
+  else{h+=`<div class="d-main">${main.map(dashCard).join("")}</div>`;
   if(side.length)h+=`<div class="d-side">${side.map(dashCard).join("")}</div>`;
-  if(strip.length)h+=`<div class="d-strip">${strip.map(dashCard).join("")}</div>`;
+  if(strip.length)h+=`<div class="d-strip">${strip.map(dashCard).join("")}</div>`}
   h+=`</div>`;
   if(!tv&&can("admin"))h+=`<div class="note" style="margin-top:10px">${t("보이는 칸은 설정 › 현황판 항목에서 바꿀 수 있습니다.")}</div>`;
   return h}
@@ -78,8 +83,17 @@ function vDashSet(){const d=dashCfg(),nm=Object.fromEntries(DASH_LIST.map(x=>[x[
   const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="-0.5" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="0.5" aria-label="늘리기">+</button></div></div>`).join("")}`;
   return h+`</div><div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
 Object.assign(A,{
+  dashGo:v=>{if(v==="memo")return A.memoEdit();dashLeave();if(v==="feed")ui.drugCat="사료";go(DASH_GO[v]||"home")},
+  dashSow:v=>{dashLeave();ui.sf=v;go("sows")},
+  dashAm:v=>{dashLeave();go("morning");A.amOpen(v)},
+  dashFeed:()=>{dashLeave();openInput("사료")},
   dashTog:v=>{const d=dashCfg();d.on[v]=!d.on[v];save();render()},
   dashMove:(v,el)=>{const d=dashCfg(),i=d.order.indexOf(v),j=i+Number(el.dataset.k);if(j<0||j>=d.order.length)return;[d.order[i],d.order[j]]=[d.order[j],d.order[i]];save();render()},
   sgoal:(v,el)=>{const g=state.sgoal=state.sgoal||{};g[v]=Math.max(0,sGoal()[v]+Number(el.dataset.k));save();render()},
   dashGoal:(v,el)=>{const d=dashCfg();d.goal[v]=Math.max(0,d.goal[v]+Number(el.dataset.k));save();render()}
 });
+// 현황판에서 다른 화면으로 갈 때 TV 모드 끄기
+function dashLeave(){if(!document.body.classList.contains("tv"))return;document.body.classList.remove("tv");try{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}catch(e){}}
+// 옆으로 넘길 때 점 표시 · 화면 돌리면 다시 그리기
+document.addEventListener("scroll",e=>{const el=e.target;if(el&&el.id==="dSwipe"){const n=Math.round(el.scrollLeft/el.clientWidth);document.querySelectorAll(".d-dots i").forEach((d,i)=>d.classList.toggle("on",i===n))}},true);
+let dashOr=null;addEventListener("resize",()=>{const v=dashPhoneL();if(tab==="board"&&v!==dashOr){dashOr=v;render()}});

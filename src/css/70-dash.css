@@ -59,3 +59,33 @@ body.tv .d-tbl{font-size:1.8vh}body.tv .d-memo{font-size:1.8vh}
 .d-memo .d-mu{font-size:inherit}
 .d-flowlab div{white-space:normal;word-break:keep-all;line-height:1.25}
 @media (max-width:899px){.d-main{grid-auto-rows:auto}.d-cols{min-height:160px}}
+/* 누를 수 있는 곳 */
+.d-go{all:unset;cursor:pointer;color:var(--fg)}.d-go:active{opacity:.6}
+.d-legend button,.d-am button,.d-todo button,.d-bar{all:unset;cursor:pointer;box-sizing:border-box}
+.d-legend button{display:flex;align-items:center;gap:7px;white-space:nowrap;border-radius:6px;padding:1px 3px}.d-legend button:active,.d-am button:active,.d-todo button:active,.d-bar:active{filter:brightness(1.3)}
+.d-am button{display:block;border-radius:10px;padding:8px 9px;background:var(--tr);font-size:13px;border:2px solid transparent;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.d-am button b{display:block;font-size:14px;margin-bottom:1px}.d-am .ok{border-color:#1f6b3a}.d-am .bad{border-color:#d03b3b}.d-am .no{opacity:.55;border-style:dashed;border-color:var(--ln)}
+.d-todo>button{display:grid;grid-template-columns:6px 1fr auto;gap:10px;align-items:center;background:var(--tr);border-radius:10px;padding:8px 12px;font-size:15px;color:var(--fg)}
+.d-bar{display:grid;grid-template-columns:72px 1fr 64px;align-items:center;gap:10px;font-size:14px;color:var(--fg)}
+/* 아이폰 가로: 얇은 윗줄 + 한 화면 3칸, 옆으로 넘김 */
+@media (max-height:500px) and (orientation:landscape){
+  body.tv .dash{display:flex;flex-direction:column;gap:6px;padding:6px max(10px,env(safe-area-inset-right)) 4px max(10px,env(safe-area-inset-left))}
+  body.tv .d-top{flex-wrap:nowrap;gap:10px;padding:0 4px 6px}
+  body.tv .d-brand{font-size:16px}body.tv .d-brand small{display:inline;margin-left:6px;font-size:11px}
+  body.tv .d-warns{flex-direction:row;gap:4px;overflow:hidden}body.tv .d-warn{font-size:11px;padding:2px 7px;white-space:nowrap}
+  body.tv .d-wx{padding:2px 10px 2px 4px;gap:6px}body.tv .d-wx svg,body.tv .d-wx img{width:30px;height:30px}body.tv .d-wx b{font-size:18px}body.tv .d-wx span{font-size:10.5px}
+  body.tv .d-right{flex-direction:row;align-items:center;gap:8px}body.tv .d-clock{font-size:18px}body.tv .d-ctl button{padding:4px 8px;font-size:11px}
+  .d-swipe{flex:1;min-height:0;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 16px)/3);gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+  .d-swipe::-webkit-scrollbar{display:none}.d-swipe>.d-card:nth-child(3n+1){scroll-snap-align:start}
+  .d-swipe .d-card{padding:8px 10px;min-height:0}.d-swipe .d-card h3{font-size:13px;margin-bottom:6px}.d-swipe .d-card h3 small{font-size:10px}
+  .d-swipe .d-legend{font-size:11.5px;gap:3px}.d-swipe .d-bars{gap:6px}.d-swipe .d-bar{font-size:11.5px;grid-template-columns:52px 1fr 44px;gap:6px}.d-swipe .d-track{height:12px}
+  .d-swipe .d-cols{min-height:0;gap:8px}.d-swipe .d-col{font-size:10.5px}.d-swipe .d-col b{font-size:13px}
+  .d-swipe .d-flow{height:34px}.d-swipe .d-flow div{font-size:12px}.d-swipe .d-flowlab{font-size:10px}
+  .d-swipe .d-am{gap:5px}.d-swipe .d-am button{font-size:10.5px;padding:5px 6px}.d-swipe .d-am button b{font-size:11.5px}
+  .d-swipe .d-todo{gap:4px;overflow-y:auto}.d-swipe .d-todo>button{font-size:12px;padding:5px 8px}.d-swipe .d-todo b{font-size:15px}.d-swipe .d-todo small{font-size:10px}
+  .d-swipe .d-kpis>div{min-width:70px;padding:2px 8px}.d-swipe .d-kpis b{font-size:18px}.d-swipe .d-kpis small,.d-swipe .d-kpis i{font-size:10px}
+  .d-swipe .d-tbl{font-size:11px}.d-swipe .d-memo{font-size:12px}
+  .d-dots{display:flex;justify-content:center;gap:6px;padding:2px 0}.d-dots i{width:6px;height:6px;border-radius:3px;background:#3a4640}.d-dots i.on{background:#6BB892;width:16px}
+}
+body.tv .tagbtn{display:none!important}
+@media (max-height:500px) and (orientation:landscape){body.tv .d-ctl button,body.tv .d-brand,body.tv .d-wx span{white-space:nowrap}body.tv .d-wx span br{display:none}body.tv .d-brand small{white-space:nowrap}}
