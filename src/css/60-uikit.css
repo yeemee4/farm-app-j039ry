@@ -149,3 +149,8 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .tk-2{font-size:12.5px;color:var(--muted)}.tk-2 .wkn{color:var(--amber)}.tk-2 .late{color:var(--red)}
 .stepper.sm{transform:scale(.82);transform-origin:right center}
 .fp small.fl{display:block;color:var(--accent);font-size:11.5px;font-weight:600}
+/* 구간별 급여 점검 */
+.fp.dv{text-align:left;font:inherit;color:inherit;cursor:pointer}.fp.dv.bad{border-color:var(--red)}.fp.dv.warn{border-color:var(--amber)}.fp.dv.over{border-color:var(--blue)}
+.dv-bar{position:relative;height:10px;border-radius:5px;background:var(--grid)}.dv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--good)}.dv-bar i.warn{background:var(--amber)}.dv-bar i.bad{background:var(--red)}.dv-bar i.over{background:var(--blue)}
+.dv-bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.dv-ok{color:var(--good)}.dv-warn{color:var(--amber)}.dv-bad{color:var(--red)}.dv-over{color:var(--blue)}.dv-tip{color:var(--ink);font-weight:600}

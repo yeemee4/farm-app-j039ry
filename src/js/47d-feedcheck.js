@@ -15,7 +15,7 @@ function vFeedCheck(){const T=feedTable(),it=fcItems(),left=fcLeft().length,cb=f
   const bags=it.filter(x=>x.bag);
   if(bags.length)h+=`<div class="sec-t">${t("포대 사료")} <span>${t("남은 포대 수")}</span></div><div class="panel">${bags.map(x=>{const r=T.find(q=>q.f===x.k)||{},d=fcToday(x.k),n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):0);
     return `<div class="setrow"><span><b>${esc(x.k)}</b> <small class="sow-meta">${x.bag.kg}kg · ${r.use>0?`${t("하루")} ${Math.round(r.use)}kg · ${t("약")} ${Math.floor(n*x.bag.kg/r.use)}${t("일분")}`:t("지금 안 씀")}${d?` · <span style="color:var(--good)">✓ ${t("오늘 기록")}</span>`:""}</small></span><div class="stepper"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="-1" aria-label="−">−</button><input type="number" value="${n}" readonly aria-label="${esc(x.k)}"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="1" aria-label="+">+</button></div></div>`}).join("")}<button class="act pri" type="button" data-a="fcBagSave" style="width:100%;margin-top:8px">${t("포대 수 저장")}</button></div>`;
-  if(!left)h+=vFeedPlan();
+  if(!left)h+=vFeedDev()+vFeedPlan();
   return h+`<div class="acts"><button class="act" type="button" data-a="input" data-v="사료">${t("입고 기록")} ›</button>${left?`<button class="act" type="button" data-a="fcPlan">${t("주문 권장 보기")}</button>`:""}</div>`+(ui.fcPlan&&left?vFeedPlan():"")}
 function localTimeOf(iso){try{const d=new Date(iso);return pad(d.getHours())+":"+pad(d.getMinutes())}catch(e){return ""}}
 Object.assign(A,{fcBag:(v,el)=>{const T=feedTable(),r=T.find(q=>q.f===v)||{},b=feedBag(v),cur=ui.bags[v]??(r.kg!=null?Math.floor(r.kg/b.kg):0);ui.bags[v]=Math.max(0,cur+Number(el.dataset.k));render()},
