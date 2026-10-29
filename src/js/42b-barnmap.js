@@ -37,12 +37,25 @@ function vBarnSvg(b,z,mini){const L=barnLayout(b);if(!L)return "";const {S,occ}=
       else g+=`<text x="${cx}" y="${ty+30}" class="bm-em">${t("빈 칸")}</text>`}
     g+=`</g>`});
   return g+`</svg>`}
+// ---- 칸 목록형 (휴대폰 기본): 모든 줄을 세로 기둥으로, 실제 순서대로 나란히 · 1번(입구 쪽)이 위 · 칸 = 큰 버튼 ----
+function rowColumns(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];
+  // 기둥 순서: 세로 줄은 x 순, 가로 줄은 y 순(위 줄이 왼쪽 기둥)
+  return L.rows.map(r=>({r,S:S.filter(x=>x.id.startsWith(r.id)&&/^\d+$/.test(x.id.slice(r.id.length))).sort((a,c)=>+a.id.slice(r.id.length)-+c.id.slice(r.id.length)),key:r.v?r.x:r.y}))
+    .sort((a,c)=>a.key-c.key)}
+function rowHint(r,L){return t("현장")+" "+(r.v?(r.from==="bottom"?t("1번 = 아래쪽"):t("1번 = 위쪽")):(r.from==="right"?t("1번 = 오른쪽"):t("1번 = 왼쪽")))}
+function vBarnList(b){const L=barnLayout(b),{occ}=barnOcc(b),C=rowColumns(b);let h="";
+  (L.areas||[]).filter(a=>a.stage).forEach(a=>{const Bs=liveBatches().filter(x=>stagePlan(bAge(x))===a.stage),hd=Bs.reduce((n,x)=>n+bHeads(x,bAge(x)),0);h+=`<button type="button" class="bl-pen" data-a="bmPen" data-v="${esc(a.stage)}"><b>${esc(t(a.l))}</b><span>${hd}${t("두")} · ${Bs.map(x=>esc(bName(x.k).replace(" 돈군",""))+" "+bAge(x)+t("주령")).join(" · ")||t("비어 있음")}</span><i>›</i></button>`});
+  h+=`<div class="bl" style="--cols:${C.length}">`+C.map((c,ci)=>`${ci?`<div class="bl-aisle"><span>${t("통로")}</span></div>`:""}<div class="bl-col"><div class="bl-h"><b>${c.r.id}${t("줄")}</b><small>${rowHint(c.r,L)}</small></div>${c.S.map(x=>{const o=occ[x.id],lk=o?stallLook(o.s,b):null,sel=ui.moving&&o&&o.s.id===ui.moving;
+    return `<button type="button" class="bl-st ${lk?"c-"+lk.c:"empty"} ${o&&o.auto?"auto":""} ${sel?"sel":""}" data-a="stall" data-v="${esc(b)}|${x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o?`<b>${esc(o.s.id.replace(/^\d+-/,""))}</b><span>${esc(lk.l1)} ${esc(lk.l2)}</span><em>${lk.live?t("새끼")+" "+lk.live:lk.kg?lk.kg.toFixed(1)+(lk.ov?"*":""):""}</em>`:`<span class="bl-em">${t("빈 칸")}</span>`}</button>`}).join("")}</div>`).join("")+`</div>`;
+  return h}
 function vBarnMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],z=ui.bmZ||60,L=barnLayout(b),{S,occ,over}=barnOcc(b),n=Object.keys(occ).length,auto=Object.values(occ).some(o=>o.auto);
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="sows">‹ ${t("모돈")}</button><h2>${t("돈사 배치도")}</h2><button class="act" type="button" data-a="tab" data-v="board" style="margin-left:auto">${t("현황판에서 보기")} ›</button></div>`;
   h+=`<div class="chips">${B.map(x=>{const c=barnOcc(x);return `<button type="button" class="chip ${x===b?"on":""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))} ${Object.keys(c.occ).length}/${c.S.length}</button>`}).join("")}</div>`;
   if(ui.moving)h+=`<div class="banner warn-b"><b>${t("옮기기")} ${esc(ui.moving)}</b><span>${t("옮길 칸을 누르세요 (다른 돈사는 위 칩으로 바꾼 뒤)")} · <button type="button" class="sbtn" data-a="bmCancel">${t("취소")}</button></span></div>`;
-  h+=`<div class="bm-head"><span>${n}${t("두")} / ${S.length}${t("칸")} · ${t("빈 칸")} ${S.length-n}${over?` · <b class="dv-bad">${t("칸 부족")} ${over}${t("두")}</b>`:""}${!L.sure?` · <b class="dv-warn">${t("가배치 (돈사 그림 받기 전)")}</b>`:""}${auto?` · <span class="sow-meta">${t("흐린 칸 = 칸 번호 미지정(자동 배치)")}</span>`:""}</span><span class="bm-z"><button type="button" class="sbtn" data-a="bmZoom" data-v="-15" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="bmZoom" data-v="15" aria-label="${t("확대")}">＋</button></span></div>`;
-  h+=`<div class="bm-wrap">${vBarnSvg(b,z)}</div>`;
+  h+=`<div class="bm-head"><span>${n}${t("두")} / ${S.length}${t("칸")} · ${t("빈 칸")} ${S.length-n}${over?` · <b class="dv-bad">${t("칸 부족")} ${over}${t("두")}</b>`:""}${!L.sure?` · <b class="dv-warn">${t("가배치 (돈사 그림 받기 전)")}</b>`:""}${auto?` · <span class="sow-meta">${t("흐린 칸 = 칸 번호 미지정(자동 배치)")}</span>`:""}</span>${(ui.bmReal??(innerWidth>=1024))?`<span class="bm-z">`:`<span class="bm-z" hidden>`}<button type="button" class="sbtn" data-a="bmZoom" data-v="-15" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="bmZoom" data-v="15" aria-label="${t("확대")}">＋</button></span></div>`;
+  const real=ui.bmReal??(innerWidth>=1024);
+  h+=`<div class="chips"><button type="button" class="chip ${real?"":"on"}" data-a="bmView" data-v="0">${t("칸 목록")}</button><button type="button" class="chip ${real?"on":""}" data-a="bmView" data-v="1">${t("실제 배치")}</button></div>`;
+  h+=real?`<div class="bm-wrap">${vBarnSvg(b,z)}</div>`:vBarnList(b);
   h+=`<div class="legend bm-lg">${[["preg","임신"],["mate","교배·확인 전"],["heat","이유 후 발정 대기"],["ret","재발·공태"],["due","분만 임박"],["lact","포유"],["gilt","후보"]].map(([c,l])=>`<span><i class="bm-sw c-${c}"></i>${t(l)}</span>`).join("")}<span>* ${t("수동 조정 급여")}</span></div>`;
   return h}
 function openStall(b,sid){const {occ}=barnOcc(b),o=occ[sid];
@@ -56,7 +69,7 @@ function openStall(b,sid){const {occ}=barnOcc(b),o=occ[sid];
     ${g?`<div class="panel gf-ov"><div class="setrow"><span><b>${t("오늘 급여")}</b> <small class="sow-meta">${esc(g.why.join(" · "))}</small></span><div class="stepper"><button type="button" data-a="gfOv" data-v="${s.id}" data-k="-0.1" aria-label="−">−</button><input type="number" value="${g.kg.toFixed(1)}" readonly aria-label="kg"><button type="button" data-a="gfOv" data-v="${s.id}" data-k="0.1" aria-label="+">+</button></div></div>
       <div class="chipwrap">${["식욕 부진","마름","살찜","기타"].map(r=>`<button type="button" class="chip ${(state.gfOv||{})[s.id]&&state.gfOv[s.id].why===r?"on":""}" data-a="gfWhy" data-v="${s.id}|${r}">${t(r)}</button>`).join("")}${g.ov?`<button type="button" class="chip" data-a="gfOvClr" data-v="${s.id}">${t("기준으로")}</button>`:""}</div>${gfUnit(s.loc,g.kg)?`<div class="sow-meta">${gfUnit(s.loc,g.kg)}</div>`:""}</div>`:""}
     <div class="acts"><button class="act" type="button" data-a="sowd" data-v="${s.id}">${t("모돈 상세")} ›</button><button class="act pri" type="button" data-a="bmMove" data-v="${s.id}">${t("옮기기")}</button></div></div></div></div>`}
-Object.assign(A,{bmPen:v=>{ui.batchStage=v;go("batch")},stall:v=>{const [b,sid]=v.split("|");openStall(b,sid)},bmBarn:v=>{ui.bm=v;render()},bmZoom:v=>{ui.bmZ=Math.max(30,Math.min(120,(ui.bmZ||60)+Number(v)));render()},
+Object.assign(A,{bmView:v=>{ui.bmReal=v==="1";render()},bmPen:v=>{ui.batchStage=v;go("batch")},stall:v=>{const [b,sid]=v.split("|");openStall(b,sid)},bmBarn:v=>{ui.bm=v;render()},bmZoom:v=>{ui.bmZ=Math.max(30,Math.min(120,(ui.bmZ||60)+Number(v)));render()},
   bmMove:v=>{ui.moving=v;const s=state.sows.find(x=>x.id===v);if(s&&FARM.layout[s.loc])ui.bm=s.loc;closeSheet();tab="barnmap";render()},bmCancel:()=>{ui.moving=null;render()},
   stallPut:v=>{const [b,sid,id]=v.split("|"),s=state.sows.find(x=>x.id===id);if(!s)return;if(s.loc!==b){if(!confirm(`${id} ${t("모돈을")} ${t(b)}${t("(으)로 변경하시겠습니까?")}`))return;moveSow(id,b)}s.stall=sid;save();closeSheet();render()},
   gfOv:(v,el)=>{const s=state.sows.find(x=>x.id===v),g=gestFeed(s);if(!g)return;const O=state.gfOv=state.gfOv||{},cur=g.kg;O[v]={...(O[v]||{}),kg:Math.round(Math.max(1,Math.min(5,cur+Number(el.dataset.k)))*10)/10,phase:g.phase,at:TODAY,by:state.user};save();const [b,sid]=[s.loc,(barnOcc(s.loc).S.find(x=>barnOcc(s.loc).occ[x.id]&&barnOcc(s.loc).occ[x.id].s.id===v)||{}).id];render();openStall(b,sid)},
