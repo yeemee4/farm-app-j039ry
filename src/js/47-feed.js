@@ -16,7 +16,7 @@ function feedStock(f,use){const rs=state.records.filter(r=>r.type==="사료"&&r.
   return {kg,use,days:use>0?Math.floor(kg/use):null,since:base.workDate}}
 function feedTable(){const u=feedUse();return feedKinds().map(f=>({f,bin:feedBin(f),bag:feedBag(f),...feedStock(f,u[f]||0)}))}
 function feedTodos(){
-  const ord=feedTable().filter(x=>x.days!==null&&x.use>0&&x.days<=FARM.feed.orderDays).map(x=>({feed:x,label:`${x.bin?x.bin.name:t("포대")} · ${x.kg.toLocaleString()}kg${x.bag?` (${Math.floor(x.kg/x.bag.kg)}${t("포")})`:""} · ${t("하루")} ${Math.round(x.use)}kg · ${x.days}${t("일분")}`,sev:x.days<=2?"bad":"warn"}));
+  const T=feedTable(),ord=REF!==TODAY?[]:feedOrderToday().map(o=>{const x=T.find(r=>r.f===o.f)||{f:o.f,days:null};return {feed:x,label:`${o.bin?o.bin.name:t("포대")} · ${o.bin?o.qty.toLocaleString()+"kg":o.qtyBags+t("포")} · ${t("도착")} ${kDate(o.arrive)}${o.weekend?" · "+t("주말 전 주문"):""}`,sev:o.short||o.weekend?"bad":"warn"}});
   const chg=[];liveBatches().forEach(b=>{const d=diff(b.k,REF);FARM.feed.piglet.forEach(p=>{if(d<p.from||d>p.from+2)return;
     const key=`${b.k}|${p.feed}`,lg=tdLog(tdKey("feedchg",key));if(lg&&localDateOf(lg.at)!==TODAY)return;
     chg.push({fc:{key,b,p},label:`${d}일령 · ${p.feed}${p.note?" · "+p.note:""}`,sev:d>p.from+1?"bad":"warn"})})});
