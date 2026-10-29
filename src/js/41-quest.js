@@ -59,3 +59,15 @@ function vSkinSet(){return `<div class="pagehd"><h2>${t("디자인 테마")}</h2
 Object.assign(A,{skin:v=>{try{localStorage.setItem("farm-skin",v)}catch(e){}render()},icostyle:v=>{try{localStorage.setItem("farm-icon",v)}catch(e){}render()}});
 // 개인 설정: 화면 디자인 (이 기기에만 적용)
 function vMyDesign(){const s=mySkin(),i=iconStyle();return `<div class="f"><span class="lb">${t("화면 디자인")} <small class="sow-meta">${t("이 기기에만 적용")}</small></span><div class="chipwrap">${SKINS.map(([k,n])=>`<button type="button" class="chip wrap ${s===k?"on":""}" data-a="skin" data-v="${k}">${t(n)}</button>`).join("")}</div></div><div class="f"><span class="lb">${t("입력 아이콘")}</span><div class="chipwrap">${ICON_STYLES.map(([k,n])=>`<button type="button" class="chip wrap ${i===k?"on":""}" data-a="icostyle" data-v="${k}">${t(n)}</button>`).join("")}</div></div>`}
+// ---- 저장 후 5초 '되돌리기' ----
+let undoT=null;
+function undoToast(m,ids){ui.undo={ids,loc:ui.undoLoc||{}};ui.undoLoc=null;$("#toastRoot").innerHTML=`<div class="toast undo" role="status"><span>${esc(m)}</span><button type="button" data-a="undo">${t("되돌리기")}</button></div>`;clearTimeout(undoT);undoT=setTimeout(()=>{$("#toastRoot").innerHTML="";ui.undo=null},5000)}
+// ---- 아침 점검: 남은 돈사 모두 이상 없음 ----
+// ---- 백신: 남은 모돈 한꺼번에 접종 기록 ----
+Object.assign(A,{
+  undo:()=>{const U=ui.undo;if(!U)return;state.records=state.records.filter(r=>!U.ids.includes(r.id));Object.entries(U.loc).forEach(([s,l])=>{const sw=state.sows.find(x=>x.id===s);if(sw)sw.loc=l});ui.undo=null;save();clearTimeout(undoT);$("#toastRoot").innerHTML="";render();toast(t("되돌렸습니다"))},
+  amAllOk:()=>{const D=amDay(TODAY),left=FARM.morning.route.filter(r=>!D[r.barn]);if(!left.length)return;if(!confirm(`${left.map(r=>t(r.barn)).join(", ")} — ${t("모두 이상 없음으로 저장할까요?")}`))return;
+    left.forEach(r=>D[r.barn]={time:nowHM(),temp:"",bad:[],memo:"",user:state.user,at:new Date().toISOString(),bulk:true});save();toast(t("저장했습니다"));render()},
+  vaxAll:()=>{const g=buildTodos().find(x=>x.k==="svax");if(!g||!g.items.length)return;if(!confirm(`${g.items.length}${t("두")} — ${t("오늘 접종으로 한꺼번에 기록할까요?")}`))return;
+    const ids=g.items.map(it=>addRecord("백신",TODAY,{sow:it.s.id,kind:"백신",name:it.vx.name}).id);save();closeSheet();render();undoToast(`${t("모돈 백신")} ${ids.length}${t("두")} ${t("저장했습니다")}`,ids)}
+});

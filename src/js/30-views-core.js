@@ -102,6 +102,10 @@ function doSave(force){
       if(I.type==="도입")state.sows.push({id:data.sow,baseParity:0,loc:SOW_LOCS[0],gilt:true,breed:data.breed,intro:I.date});
     }
   });
+  if(I.type==="이유"&&!I.editId){let tot=0;sows.forEach(s=>{tot+=+d.n||0});
+    if(d._to&&d._to!=="그대로"&&tot){const r=addRecord("이동",I.date,{from:"분만사",to:d._to,n:tot});ids.push(r.id);msg+=` · 자돈 ${tot}두 → ${d._to}`}
+    if(d._loc&&d._loc!=="그대로")sows.forEach(s=>{const sw=state.sows.find(x=>x.id===s);if(sw&&sw.loc!==d._loc){const r=addRecord("이동",I.date,{sow:s,from:sw.loc,to:d._loc});ids.push(r.id);ui.undoLoc=ui.undoLoc||{};ui.undoLoc[s]=sw.loc;sw.loc=d._loc}});
+    if(d._loc&&d._loc!=="그대로")msg+=` · 모돈 → ${d._loc}`}
   EXCL=null;save();
   const n=ids.length;
   let m=I.editId?"수정했습니다":`${L(I.type)} ${n>1?n+"두 ":""}저장했습니다`;
@@ -115,7 +119,7 @@ function doSave(force){
     F.f.forEach(f=>{if(f.t==="step"&&!["kg"].includes(f.k))I.fv[f.k]=f.def;if((f.t==="text"||f.t==="textarea"||f.t==="date")&&f.k!=="kind")I.fv[f.k]="";});
     if(I.type==="폐사")ui.dec=null;
   }
-  render();toast(m);
+  render();if(I.editId)toast(m);else undoToast(m,ids);
   const el=document.getElementById("r-"+ids[0]);if(el&&window.innerWidth<720)el.scrollIntoView({block:"center",behavior:"smooth"});
   setTimeout(()=>{if(ui.in){ui.in.flash=[];document.querySelectorAll(".srow.flash").forEach(e=>e.classList.remove("flash"))}},4000);
 }

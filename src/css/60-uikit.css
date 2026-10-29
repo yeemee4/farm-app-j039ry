@@ -102,3 +102,4 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .sowpick.sp4:last-child,.spg:last-of-type{margin-bottom:8px}
 .inputgrid>div:first-child:has(.dock.min)::after{content:"";display:block;height:4px}
 .inputgrid>div:first-child:has(.dock:not(.min))::after{content:"";display:block;height:30vh}
+.toast.undo{display:flex;align-items:center;gap:12px}.toast.undo button{background:transparent;border:1.5px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;font-weight:800;white-space:nowrap}

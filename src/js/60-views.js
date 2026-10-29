@@ -89,7 +89,7 @@ function openTodo(k){
   }).join("");
   ctx={k:"todo",v:k};
   const who=(state.assign||{})[TODAY+"|"+k];
-  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(x.t))}"><div class="sh-hd"><h2 style="flex-wrap:wrap">${t(x.t)} ${x.k==="pending"?"":`<span class="prog">${done}/${rows.length} ${t("완료")}</span>`}${can("assign")?`<button type="button" class="sbtn" data-a="assign" data-v="${TODAY}|${k}">${who?t("담당")+" "+who:t("담당 지정")}</button>`:who?`<span class="sbtn">${t("담당")} ${who}</span>`:""}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${x.k==="pending"?"":`<div class="note">${t("조치를 마치면 체크하고 한 줄로 적어 두세요. 체크한 내용은 타임라인에 남습니다.")}</div>`}${items}</div></div></div>`;
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(x.t))}"><div class="sh-hd"><h2 style="flex-wrap:wrap">${t(x.t)} ${x.k==="pending"?"":`<span class="prog">${done}/${rows.length} ${t("완료")}</span>`}${can("assign")?`<button type="button" class="sbtn" data-a="assign" data-v="${TODAY}|${k}">${who?t("담당")+" "+who:t("담당 지정")}</button>`:who?`<span class="sbtn">${t("담당")} ${who}</span>`:""}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${x.k==="svax"&&rows.length?`<button class="act pri" type="button" data-a="vaxAll" style="width:100%;padding:12px">💉 ${t("남은 모돈 한꺼번에 접종 기록")} (${rows.length}${t("두")})</button>`:""}${x.k==="pending"?"":`<div class="note">${t("조치를 마치면 체크하고 한 줄로 적어 두세요. 체크한 내용은 타임라인에 남습니다.")}</div>`}${items}</div></div></div>`;
 }
 function vSows(){
   const all=state.sows.map(s=>({s,i:statusOf(s)}));

@@ -31,6 +31,7 @@ const A={
   judge:(v)=>{const r=state.records.find(x=>x.id===v);if(r)openInput("폐사",{date:r.workDate,dec:null})},
   // 입력 페이지
   fv:(v,el)=>{const I=ui.in,k=el.dataset.k;I.fv[k]=v;I.warn=null;
+    if(I.type==="사료"&&k==="_lvl"){const b=feedBin(I.fv.kind),g=feedBag(I.fv.kind);I.fv.kg=b?Math.round(b.cap*({"¼":.25,"½":.5,"¾":.75,"가득":1}[v]||0)):g?parseInt(v)*g.kg:I.fv.kg;if(I.fv.mode==="입고"&&b)I.fv.mode="빈 잔량"}
     if(I.type==="폐사"&&k==="barn")I.fv.stage=FARM.stageOf[v]||"모돈";   // 돈사 → 단계 자동 (바꿀 수 있음)
     if(I.type==="약품"&&k==="kind")I.fv.name=itemNames(v)[0]||"";
     if(I.type==="약품"&&(k==="kind"||k==="name")){const it=state.items.find(x=>x.name===I.fv.name);I.fv.withdraw=it&&it.withdraw?addDays(I.date,it.withdraw):""}

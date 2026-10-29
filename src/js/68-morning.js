@@ -12,6 +12,7 @@ function vMorning(){
   const D=amDay(TODAY),P=amProg(),late=nowHM()>=FARM.morning.due;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="home">‹ ${t("홈")}</button><h2>${t("아침 점검")}</h2><span class="sow-meta" style="font-weight:700;color:${P.done===P.all?"var(--accent)":late?"var(--red)":"var(--ink)"}">${P.done}/${P.all} · ${FARM.morning.due}${t("까지")}</span></div>`;
   h+=`<div class="note">${t("도는 순서대로 적어 주세요. 문제가 있는 항목만 눌러 빨간색으로 바꾸면 됩니다.")}</div>`;
+  if(P.done<P.all)h+=`<button class="act pri" type="button" data-a="amAllOk" style="width:100%;padding:12px">✓ ${t("남은 돈사 모두 이상 없음")} (${P.all-P.done})</button>`;
   FARM.morning.route.forEach((r,n)=>{const x=D[r.barn],O=ui.am&&ui.am.barn===r.barn?ui.am:null,iss=x?amIssues(r,x):[];
     h+=`<div class="card amcard ${x?"done":""}"><div class="sow-top"><b>${n+1}. ${esc(t(r.barn))}</b><span class="sow-meta">${t("목표")} ${r.temp[0]}~${r.temp[1]}℃</span></div>`;
     if(O){const its=[...FARM.morning.items,...(r.extra||[])];
