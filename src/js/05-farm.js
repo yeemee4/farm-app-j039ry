@@ -146,7 +146,9 @@ FARM.layout={
   // 임신사 2동 (수정): 위쪽 띠(군사방으로 보임 · 확인 필요) + 세로 2줄 × 10칸(=20칸), 넓은 가운데 통로, 아래 입구
   "임신사 2동":{sure:true,w:11.4,h:9.2,rows:[{id:"A",x:2,y:1.3,n:10,cw:.6,cd:2.2,v:1,from:"bottom",head:"right"},{id:"B",x:7.2,y:1.3,n:10,cw:.6,cd:2.2,v:1,from:"bottom",head:"left"}],
     areas:[{x:2,y:0,w:7.4,h:1.3,l:"군사방 (확인 필요)",stage:"군사방"},{x:4.2,y:1.3,w:3,h:7.7,l:"통로",aisle:1}],doors:[{x:5.7,y:9.2,dir:"up"}]},
-  "분만사":{sure:false,auto:[2,15,1.8,2.4]}
+  // 분만사: 자돈 공간은 생략하고 모돈틀(0.6×2.2)만 · 가로 2줄 × 15칸(=30칸) · 입구 좌우(통로 양끝). 줄·칸 수는 그림 받으면 확정
+  "분만사":{sure:false,w:11,h:6.4,rows:[{id:"A",x:1,y:.4,n:15,cw:.6,cd:2.2,from:"left",head:"down"},{id:"B",x:1,y:3.8,n:15,cw:.6,cd:2.2,from:"left",head:"up"}],
+    areas:[{x:0,y:2.6,w:11,h:1.2,l:"통로",aisle:1}],doors:[{x:0,y:3.2,dir:"right"},{x:11,y:3.2,dir:"left"}]}
 };
 FARM.dress=.78;   // 도체율: 도체중 ÷ 도체율 = 생체중
 FARM.birthKg=1.5;   // npd = 모돈당 연간 비생산일수 목표(낮을수록 좋음)
