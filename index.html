@@ -994,7 +994,9 @@ FARM.items=[
 
 // 사료. ★ 확인 필요: 빈별 사료·용량, 포대 무게, 1호 쓰는 시기, 하루 급여량
 FARM.feed={
-  bins:[{name:"1번 빈",feed:"임신모돈",cap:8000},{name:"2번 빈",feed:"포유모돈",cap:6000},{name:"3번 빈",feed:"젖먹이",cap:8000},{name:"4번 빈",feed:"육성",cap:10000}],
+  // 빈: spec = 규격 톤수(펠렛 0.65 기준 판매 규격), dens = 사료 비중 t/m³ (가루사료 0.55, 입고 때 자동 보정). 실제 용량 = 부피 × 비중
+  bins:[{name:"임신사 빈",feed:"임신모돈",spec:5},{name:"분만사 빈",feed:"포유모돈",spec:5},{name:"자돈사 빈",feed:"젖먹이",spec:5},{name:"비육사 빈",feed:"육성",spec:10}],
+  dens:.55,
   bags:[{feed:"특호",kg:20},{feed:"1호",kg:20},{feed:"2호",kg:20},{feed:"3호",kg:20}],
   // 1두 하루 급여량(kg) 추정
   use:{임신모돈:2.6,포유모돈:6,특호:.04,"1호":.15,"2호":.35,"3호":.55,젖먹이:.9,육성:2.1},
@@ -1035,7 +1037,6 @@ FARM.confirm=[
   "포세리스 — 어떤 약인지, 언제 쓰는지",
   "출하처 — 실제 도축장·공판장 이름",
   "대출 금리 — 농협 9억, 부국사료 6억",
-  "사료 빈 4개 — 빈마다 들어가는 사료와 용량(톤)",
   "사료 포대 — 1포 무게, 1호를 쓰는 시기",
   "하루 급여량 — 모돈·자돈 단계별 kg",
   "아침 점검 — 돈사별 목표 온도, 추가 점검 항목",
@@ -1396,7 +1397,7 @@ function openInput(type,opt={}){
   ui.prev=tab==="input"?ui.prev:tab;closeSheet();
   ui.in={type,date:opt.date||TODAY,sel:opt.sow?[opt.sow]:[],fv:defaults(type),editId:null,warn:null,err:null,q:"",all:false,flash:[]};
   ui.dec=opt.dec?{id:opt.dec,acts:null,when:"오늘 중",who:state.user,memo:""}:null;
-  const I0=ui.in;if(opt.batch)I0.fv.batch=opt.batch;if(opt.vax)I0.fv.vax=opt.vax;if(opt.item)I0.fv.item=opt.item;if(opt.vname)I0.fv.name=opt.vname;if(opt.round)I0.fv.round=opt.round;
+  const I0=ui.in;if(opt.batch)I0.fv.batch=opt.batch;if(opt.vax)I0.fv.vax=opt.vax;if(opt.item)I0.fv.item=opt.item;if(opt.vname)I0.fv.name=opt.vname;if(opt.round)I0.fv.round=opt.round;if(opt.fv)Object.assign(I0.fv,opt.fv);
   if(type==="돈군백신")bvDefault();if(type==="약품"&&!I0.fv.name){I0.fv.name=itemNames(I0.fv.kind)[0]||"";const it=state.items.find(x=>x.name===I0.fv.name);if(it&&it.withdraw)I0.fv.withdraw=addDays(I0.date,it.withdraw)}
   tab="input";render();window.scrollTo(0,0);
   if(opt.dec){const el=document.getElementById("r-"+opt.dec);if(el)el.scrollIntoView({block:"center"})}
@@ -2298,7 +2299,9 @@ function sowNeed(a,day,I){if(a.open)return a.gilt?I.gilt:I.open;const p=((a.pos0
   if(p<115)return [p<I.gestLateFrom?I.gestEarly:I.gestLate,"임신모돈"];if(p<143)return [I.lact[Math.min(3,Math.floor((p-115)/7))],"포유모돈"];return [I.open,"임신모돈"]}
 function avgLive(){const m=rangeMetrics(addDays(TODAY,-180),TODAY);return m&&okv(m.live)?m.live:11}
 // 날짜별 사료 종류별 필요량 {feed:kg}
-function feedPlanDays(H=FP_H,S0=TODAY){const I=fIntake(),days=[],sows=activeSows().map(s=>[s,sowAnchor(s)]).filter(x=>x[1]);
+let FPD={};
+function feedPlanDays(H=FP_H,S0=TODAY){const ck=[H,S0,state.records.length,state.sows.length,JSON.stringify(state.intake||{}),JSON.stringify(state.mbatches||[])].join("|");if(FPD.k===ck)return FPD.v;FPD={k:ck,v:feedPlanDays0(H,S0)};return FPD.v}
+function feedPlanDays0(H,S0){const I=fIntake(),days=[],sows=activeSows().map(s=>[s,sowAnchor(s)]).filter(x=>x[1]);
   const bs=batches().map(b=>({k:b.k,b})),lv=avgLive(),born={};
   sows.forEach(([s,a])=>{if(a.open||a.pos0!==0)return;const F=addDays(a.at,115);if(F>=S0&&diff(S0,F)<=H){const k=weekStart(F);born[k]=(born[k]||0)+lv}});
   Object.entries(born).forEach(([k,n])=>{const ex=bs.find(x=>x.k===k);if(ex)ex.extra=n;else bs.push({k,b:{k,live:0,f:[]},extra:n})});
@@ -2308,7 +2311,7 @@ function feedPlanDays(H=FP_H,S0=TODAY){const I=fIntake(),days=[],sows=activeSows
     days.push({d,u})}
   return days}
 // 오늘 하루 사용량 (기존 feedUse 대체 · 남은 일수 계산에 씀)
-function feedUse(){return feedPlanDays(1,REF)[0].u}
+function feedUse(){return REF===TODAY?feedPlanDays()[0].u:feedPlanDays(1,REF)[0].u}
 // 빈마다 주문 권장
 function feedPlan(){const D=feedPlanDays(),F=feedKinds(),lead=FARM.feed.leadDays,safe=FARM.feed.orderDays;
   return F.map(f=>{const need=D.map(x=>x.u[f]||0),bin=feedBin(f),bag=feedBag(f),st=feedStock(f,need[0]),wk=[0,1,2,3,4,5,6,7].map(w=>need.slice(w*7,w*7+7).reduce((a,b)=>a+b,0)),avg4=wk.slice(0,4).reduce((a,b)=>a+b,0)/28;
@@ -2331,50 +2334,97 @@ function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return 
 // 대표 설정: 섭취량 기준표
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
+  h+=binSet();
   h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${[["gestEarly",`${t("임신")} ~${I.gestLateFrom-1}${t("일")}`],["gestLate",`${t("임신")} ${I.gestLateFrom}${t("일")}~`],["open",t("이유 후 공태")],["gilt",t("후보돈")]].map(([k,l])=>`<div class="setrow"><span>${l}</span>${st(k,I[k],null,.1)}</div>`).join("")}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
   h+=`<div class="sec-t">${t("자돈·육성돈 (주령)")} <span>${t("사료 종류는 일령별 급여표를 따름")}</span></div><div class="panel">${I.pig.map((v,i)=>`<div class="setrow"><span>${i}${t("주령")} <small class="sow-meta">${pigFeeds(i*7+3).map(p=>p.feed).join("·")}</small></span>${st("pig",v,i,.05)}</div>`).join("")}</div>`;
   return h+`<div class="acts"><button class="act" type="button" data-a="intkReset">${t("기본값으로")}</button></div>`}
 Object.assign(A,{intk:(v,el)=>{const o=state.intake=state.intake||{},I=fIntake(),s=Number(el.dataset.k),i=el.dataset.i;if(i!==""){o[v]=o[v]||[];o[v][+i]=Math.max(0,Math.round((I[v][+i]+s)*100)/100)}else o[v]=Math.max(0,Math.round((I[v]+s)*100)/100);NPDX=null;save();render()},
   intkReset:()=>{if(confirm(t("섭취량 기준을 기본값으로 되돌릴까요?"))){state.intake={};save();render()}}});
-/* ===== 사료 빈 그림 + 게이지 기록 (사료 화면 위 · 빈을 누르면 큰 빈 + 세로 게이지) =====
-   빈 모양: 둥근 지붕 · 원통 · 깔때기. 높이가 아니라 부피로 kg 계산(깔때기는 같은 높이라도 양이 적음).
-   손잡이 모양: localStorage farm-binknob = round(1번 동그라미) | square(2번 높이선에 붙은 네모) */
-const BV={top:40,cyl:100,cone:65,x0:12,x1:108,cx:60};   // svg 좌표 (가로 120)
-const BV_H=BV.cyl+BV.cone,BV_B=BV.top+BV_H;           // 바닥(깔때기 끝) y=205
-function binFrac(L){const h=L*BV_H,vc=BV.cone/3,vt=vc+BV.cyl;return h<=BV.cone?vc*Math.pow(h/BV.cone,3)/vt:(vc+h-BV.cone)/vt}
-function binLevel(f){const vc=BV.cone/3,vt=vc+BV.cyl,v=Math.max(0,Math.min(1,f))*vt;return (v<=vc?BV.cone*Math.cbrt(v/vc):BV.cone+v-vc)/BV_H}
-const binKnob=()=>{try{return localStorage.getItem("farm-binknob")||"square"}catch(e){return "square"}};
+/* ===== 사료 빈: 규격 → 치수 → 기울어진 사료 면 부피 → kg · 양쪽 게이지 기록 · 비중 자동 보정 =====
+   규격표(판매 규격 톤 = 펠렛 0.65t/m³ 기준, 깔때기 60°, 배출구 지름 30cm)에서 지름·원통 높이를 정함.
+   게이지 높이 0 = 배출구, 1 = 원통 맨 위. 사료 면은 왼쪽·오른쪽 높이를 잇는 기울어진 평면.
+   손잡이: localStorage farm-binknob = both(양쪽 손잡이, 기본) | direct(빈 직접 끌기: 왼쪽 절반·오른쪽 절반) */
+const BIN_SPECS={3:1.8,4:1.8,5:1.8,6:2.3,8:2.3,10:2.3,12:2.3};   // 톤 → 지름(m)
+const BIN_R0=.15,BIN_RATED=.65;
+function binCfg(b){const o=(state.binCfg||{})[b.name]||{};return {spec:o.spec||b.spec,dens:o.dens||null}}
+function binGeo(b){const c=binCfg(b),D=BIN_SPECS[c.spec]||2.3,R=D/2,hc=(R-BIN_R0)*Math.tan(Math.PI/3),Vc=Math.PI*hc/3*(R*R+R*BIN_R0+BIN_R0*BIN_R0),hy=Math.max(.3,(c.spec/BIN_RATED-Vc)/(Math.PI*R*R));
+  return {D,R,hc,hy,H:hc+hy,roof:R*Math.tan(Math.PI/6)}}
+// 입체 격자 (빈 규격별로 한 번만)
+const BIN_GRID={};
+function binGrid(b){const g=binGeo(b),k=g.D+"|"+g.hy.toFixed(3);if(BIN_GRID[k])return BIN_GRID[k];const N=48,da=(2*g.R/N)**2,cells=[];
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const x=-g.R+(i+.5)*2*g.R/N,y=-g.R+(j+.5)*2*g.R/N,r=Math.hypot(x,y);if(r<=g.R)cells.push([x,r<=BIN_R0?0:g.hc*(r-BIN_R0)/(g.R-BIN_R0)])}
+  return BIN_GRID[k]={g,cells,da}}
+// 왼쪽·오른쪽 높이(0~1) → 부피 m³
+function binVol(b,lL,lR=lL){const {g,cells,da}=binGrid(b),zL=lL*g.H,zR=lR*g.H;let v=0;for(const [x,zb] of cells){const zp=Math.max(0,Math.min(g.H,zL+(zR-zL)*(x+g.R)/(2*g.R)));if(zp>zb)v+=zp-zb}return v*da}
+const binVmax=b=>{const G=binGrid(b);return G.vmax??(G.vmax=binVol(b,1,1))};
+function binDens(b){const c=binCfg(b);if(c.dens)return c.dens;const e=binDensEst(b);return e?e.d:FARM.feed.dens||.55}
+function binCap(b){return Math.round(binVmax(b)*binDens(b)*1000/50)*50}
+function binLevelOfKg(b,kg){const tv=Math.max(0,Math.min(binVmax(b),kg/1000/binDens(b)));let a=0,c=1;for(let k=0;k<26;k++){const m=(a+c)/2;binVol(b,m,m)<tv?a=m:c=m}return (a+c)/2}
+// 비중 자동 보정: 같은 날 '입고 전 게이지 → 입고 → 입고 후 게이지' 이면 입고 kg ÷ 늘어난 부피
+let BDE={};function binDensEst(b){const ck=state.records.length+"|"+b.feed;if(ck in BDE)return BDE[ck];return BDE[ck]=binDensEst0(b)}
+function binDensEst0(b){const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed).sort((x,y)=>(x.createdAt||"").localeCompare(y.createdAt||"")),est=[];
+  R.forEach((r,i)=>{if(r.data.mode!=="입고")return;const pre=[...R.slice(0,i)].reverse().find(q=>q.data.vol!=null),post=R.slice(i+1).find(q=>q.data.vol!=null);
+    if(!pre||!post||diff(pre.workDate,post.workDate)>1)return;const inn=R.filter(q=>q.data.mode==="입고"&&q.createdAt>pre.createdAt&&q.createdAt<post.createdAt).reduce((s,q)=>s+q.data.kg,0),dv=post.data.vol-pre.data.vol;
+    if(dv>.3){const d=inn/1000/dv;if(d>.35&&d<.85)est.push(d)}});
+  if(!est.length)return null;const L=[...new Set(est)].slice(-3).sort();return {d:L[Math.floor(L.length/2)],n:est.length}}
+// 기존 코드가 쓰는 bin.cap 은 규격·비중으로 계산
+FARM.feed.bins.forEach(b=>{delete b.cap;Object.defineProperty(b,"cap",{get(){return binCap(this)},configurable:true})});
+const binKnob=()=>{try{const k=localStorage.getItem("farm-binknob");return k==="direct"?"direct":"both"}catch(e){return "both"}};
 function binCol(days){return days===null||days===undefined?"#8a949e":days<=2?"#e5484d":days<=FARM.feed.orderDays?"#e8a317":"#2fb36d"}
-function binSvg(id,L,col,big){const y=BV_B-L*BV_H,o=`M${BV.x0},${BV.top} Q${BV.cx},${BV.top-38} ${BV.x1},${BV.top} L${BV.x1},${BV.top+BV.cyl} L${BV.cx+5},${BV_B} L${BV.cx-5},${BV_B} L${BV.x0},${BV.top+BV.cyl} Z`;
+// 그림 좌표: 가로 96(지름) 기준으로 실제 비율
+// 모든 빈을 같은 축척(지름 2.3m = 96)으로 그려 5톤은 가늘게, 10톤은 굵고 높게
+function binPx(b){const g=binGeo(b),s=96/2.3,roof=g.roof*s,top=roof+6,cy=g.hy*s,cn=g.hc*s,hw=g.R*s;return {s,x0:60-hw,x1:60+hw,cx:60,top,cyl:cy,cone:cn,B:top+cy+cn,H:cy+cn,o:BIN_R0*s,roof}}
+function binSvg(b,id,lL,lR,col,big){const P=binPx(b),yL=P.B-lL*P.H,yR=P.B-lR*P.H,yAt=x=>yL+(yR-yL)*(x-P.x0)/(P.x1-P.x0);
+  const o=`M${P.x0},${P.top} L${P.cx},${P.top-P.roof} L${P.x1},${P.top} L${P.x1},${P.top+P.cyl} L${P.cx+P.o},${P.B} L${P.cx-P.o},${P.B} L${P.x0},${P.top+P.cyl} Z`;
   let g=`<defs><clipPath id="bc${id}"><path d="${o}"/></clipPath><pattern id="bh${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width="7" height="7" fill="${col}"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,.35)" stroke-width="2.5"/></pattern></defs>`;
-  g+=`<path d="${o}" fill="var(--bg)"/><rect class="bv-fill" clip-path="url(#bc${id})" x="0" y="${y}" width="120" height="${BV_B-y+2}" fill="url(#bh${id})"/>`;
-  g+=`<path d="${o}" fill="none" stroke="var(--ink)" stroke-width="${big?2.2:2.6}" stroke-linejoin="round"/><line x1="${BV.x0}" x2="${BV.x1}" y1="${BV.top}" y2="${BV.top}" stroke="var(--ink)" stroke-width="1.4" opacity=".5"/><line x1="${BV.x0}" x2="${BV.x1}" y1="${BV.top+BV.cyl}" y2="${BV.top+BV.cyl}" stroke="var(--ink)" stroke-width="1.4" opacity=".5"/>`;
-  if(big)[.25,.5,.75].forEach(f=>{const yy=BV_B-binLevel(f)*BV_H;g+=`<line x1="${BV.x1-10}" x2="${BV.x1}" y1="${yy}" y2="${yy}" stroke="var(--muted)" stroke-width="1"/><text x="${BV.x1-12}" y="${yy+3}" text-anchor="end" class="bv-t">${f*100}%</text>`});
+  g+=`<path d="${o}" fill="var(--bg)"/><polygon class="bv-fill" clip-path="url(#bc${id})" points="-30,${yAt(-30)} 150,${yAt(150)} 150,${P.B+4} -30,${P.B+4}" fill="url(#bh${id})"/>`;
+  g+=`<path d="${o}" fill="none" stroke="var(--ink)" stroke-width="${big?2.2:2.8}" stroke-linejoin="round"/>`;
+  [P.top,P.top+P.cyl].forEach(y=>g+=`<line x1="${P.x0}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="var(--ink)" stroke-width="1.3" opacity=".45"/>`);
   return g}
 function vFeedBins(){const T=feedTable();
-  return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},f=x.kg==null?0:Math.min(1,x.kg/b.cap);
-    return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 -2 120 210" aria-hidden="true">${binSvg("m"+i,binLevel(f),binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)}</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
-function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},f0=x.kg==null?.5:Math.min(1,x.kg/b.cap),k=binKnob();ui.bin={i,L:binLevel(f0)};
-  const col="#2fb36d";
-  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet binsheet" role="dialog" aria-modal="true" aria-label="${esc(b.name)}"><div class="sh-hd"><h2>${esc(b.name)} · ${esc(b.feed)} <small class="sow-meta">${(b.cap/1000).toFixed(0)}t</small></h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">
-  <div class="note">${t("손잡이를 위아래로 끌어 지금 남은 높이에 맞추세요.")}${x.kg!=null?` ${t("추정")} ${x.kg.toLocaleString()}kg`:""}</div>
-  <div class="bv-wrap"><svg id="bvSvg" viewBox="${k==="round"?"-46":"0"} -4 ${k==="round"?212:190} 216" class="bv-big">${binSvg("B",ui.bin.L,col,1)}
-    <line id="bvLine" x1="${k==="round"?-30:BV.x0-4}" x2="${k==="round"?BV.x1+4:156}" y1="0" y2="0" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="${k==="round"?"4 3":"0"}"/>
-    <rect x="${k==="round"?-36:146}" y="${BV.top}" width="12" height="${BV_H}" rx="6" fill="var(--grid)" stroke="var(--line)"/>
-    <g id="bvKnob">${k==="round"?`<circle cx="-30" cy="0" r="13" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>`:`<rect x="140" y="-11" width="24" height="22" rx="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>`}</g>
-    <rect id="bvHit" x="${k==="round"?-46:130}" y="${BV.top-12}" width="${k==="round"?40:60}" height="${BV_H+24}" fill="transparent" style="cursor:ns-resize;touch-action:none"/></svg>
-  <div class="bv-read"><b id="bvKg"></b><span id="bvPct"></span><div class="bv-step"><button type="button" class="sbtn" data-a="binStep" data-v="-0.02">▼</button><button type="button" class="sbtn" data-a="binStep" data-v="0.02">▲</button></div><div class="chipwrap">${[["비었음",0],["¼",.25],["½",.5],["¾",.75],["가득",1]].map(([l,f])=>`<button type="button" class="chip" data-a="binSet" data-v="${f}">${t(l)}</button>`).join("")}</div></div></div>
+  return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),L=binLevelOfKg(b,x.kg||0),P=binPx(b);
+    return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,L,L,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
+function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},last=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];
+  const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.workDate===TODAY).sort((p,q)=>(p.createdAt||"").localeCompare(q.createdAt||"")),lg=[...R].reverse().find(r=>r.data.vol!=null);
+  if(lg&&lg.data.gauge==="입고 전"&&R.some(r=>r.data.mode==="입고"&&r.createdAt>lg.createdAt))ui.binMode="입고 후";
+  const L0=x.kg==null?.5:binLevelOfKg(b,x.kg),k=binKnob(),P=binPx(b);ui.bin={i,lL:L0,lR:L0};
+  // 마지막 기록의 기울기를 이어서 시작 (높이는 지금 추정량에 맞춤)
+  if(last){const tl=(last.data.lR-last.data.lL)/2;ui.bin.lL=Math.max(0,Math.min(1,L0-tl));ui.bin.lR=Math.max(0,Math.min(1,L0+tl))}
+  const vb=k==="both"?`-46 ${-P.roof-26} 212 ${P.B+P.roof+32}`:`-8 ${-P.roof-26} 136 ${P.B+P.roof+32}`;
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet binsheet" role="dialog" aria-modal="true" aria-label="${esc(b.name)}"><div class="sh-hd"><h2>${esc(b.name)} · ${esc(b.feed)} <small class="sow-meta">${binCfg(b).spec}${t("톤 규격")} · ${t("가득")} ${(b.cap/1000).toFixed(1)}t</small></h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">
+  <div class="note">${k==="both"?t("왼쪽·오른쪽 손잡이를 각각 끌어 사료 면 높이에 맞추세요. 기울어져 있으면 양쪽을 다르게."):t("빈 왼쪽 절반·오른쪽 절반을 각각 끌어 사료 면 높이에 맞추세요.")}${x.kg!=null?` ${t("추정")} ${x.kg.toLocaleString()}kg`:""}</div>
+  <div class="bv-wrap"><svg id="bvSvg" viewBox="${vb}" class="bv-big"></svg>
+  <div class="bv-read"><b id="bvKg"></b><span id="bvPct"></span><div class="chipwrap">${[["비었음",0],["¼",.25],["½",.5],["¾",.75],["가득",1]].map(([l,f])=>`<button type="button" class="chip" data-a="binSet" data-v="${f}">${t(l)}</button>`).join("")}</div>
+  <div class="chipwrap"><button type="button" class="chip ${k==="both"?"on":""}" data-a="binKnob" data-v="both">${t("양쪽 손잡이")}</button><button type="button" class="chip ${k==="direct"?"on":""}" data-a="binKnob" data-v="direct">${t("빈 직접 끌기")}</button></div></div></div>
+  <div class="chipwrap" style="margin-top:8px">${["잔량","입고 전","입고 후"].map(m=>`<button type="button" class="chip ${(ui.binMode||"잔량")===m?"on":""}" data-a="binMode" data-v="${m}">${t(m)}</button>`).join("")}</div>
+  <div class="note">${t("입고 날에는 ‘입고 전’과 ‘입고 후’를 한 번씩 기록하면 이 빈의 사료 비중을 자동으로 맞춥니다.")} ${(()=>{const e=binDensEst(b),c=binCfg(b);return c.dens?`${t("비중")} ${c.dens.toFixed(2)} (${t("직접 입력")})`:e?`${t("비중")} ${e.d.toFixed(2)} (${t("입고")} ${e.n}${t("회로 보정")})`:`${t("비중")} ${(FARM.feed.dens||.55).toFixed(2)} (${t("기본값")})`})()}</div>
   <button class="save" type="button" data-a="binSave">${t("잔량 저장")}</button></div></div></div>`;
-  binDraw();const hit=$("#bvHit"),svg=$("#bvSvg");let drag=false;
-  const mv=e=>{if(!drag)return;const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());ui.bin.L=Math.max(0,Math.min(1,(BV_B-q.y)/BV_H));binDraw();e.preventDefault()};
-  hit.addEventListener("pointerdown",e=>{drag=true;hit.setPointerCapture(e.pointerId);mv(e)});hit.addEventListener("pointermove",mv);hit.addEventListener("pointerup",()=>drag=false);hit.addEventListener("pointercancel",()=>drag=false);
+  binDraw();const svg=$("#bvSvg");let drag=null;
+  const mv=e=>{if(!drag)return;const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse()),Q=binPx(FARM.feed.bins[ui.bin.i]),v=Math.max(0,Math.min(1,(Q.B-q.y)/Q.H));if(drag==="L")ui.bin.lL=v;else ui.bin.lR=v;binDraw();e.preventDefault()};
+  svg.addEventListener("pointerdown",e=>{const h=e.target.closest(".bv-hit");if(!h)return;drag=h.dataset.s;svg.setPointerCapture(e.pointerId);mv(e)});svg.addEventListener("pointermove",mv);["pointerup","pointercancel"].forEach(n=>svg.addEventListener(n,()=>drag=null));
   if(typeof tagsApply==="function")try{tagsApply()}catch(e){}}
-function binDraw(){const B=ui.bin,b=FARM.feed.bins[B.i],y=BV_B-B.L*BV_H,f=binFrac(B.L),kg=Math.round(f*b.cap/50)*50;
-  const fl=document.querySelector("#bvSvg .bv-fill");if(fl){fl.setAttribute("y",y);fl.setAttribute("height",BV_B-y+2)}
-  $("#bvLine").setAttribute("y1",y);$("#bvLine").setAttribute("y2",y);$("#bvKnob").setAttribute("transform",`translate(0,${y})`);
-  $("#bvKg").textContent=kg.toLocaleString()+"kg";$("#bvPct").textContent=`${Math.round(f*100)}% · ${t("높이")} ${Math.round(B.L*100)}%`;B.kg=kg}
-Object.assign(A,{binOpen:v=>openBin(+v),binStep:v=>{ui.bin.L=Math.max(0,Math.min(1,ui.bin.L+Number(v)));binDraw()},binSet:v=>{ui.bin.L=binLevel(Number(v));binDraw()},
-  binSave:()=>{const b=FARM.feed.bins[ui.bin.i];addRecord("사료",TODAY,{kind:b.feed,mode:"빈 잔량",kg:ui.bin.kg});closeSheet();render();toast(`${b.name} ${ui.bin.kg.toLocaleString()}kg ${t("저장")}`)}});
+function binDraw(){const B0=ui.bin,b=FARM.feed.bins[B0.i],P=binPx(b),k=binKnob(),yL=P.B-B0.lL*P.H,yR=P.B-B0.lR*P.H;
+  let g=binSvg(b,"B",B0.lL,B0.lR,"#2fb36d",1)+`<line x1="${P.x0}" x2="${P.x1}" y1="${yL}" y2="${yR}" stroke="var(--accent)" stroke-width="2.4"/>`;
+  [.25,.5,.75].forEach(f=>{const y=P.B-binLevelOfKg(b,f*b.cap)*P.H;g+=`<line x1="${P.x1-9}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="var(--muted)"/><text x="${P.x1-11}" y="${y+3}" text-anchor="end" class="bv-t">${f*100}%</text>`});
+  const kn=(cx,y)=>`<circle cx="${cx}" cy="${y}" r="12" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>`;
+  if(k==="both")g+=`<rect x="-30" y="${P.top}" width="12" height="${P.H}" rx="6" fill="var(--grid)" stroke="var(--line)"/><rect x="138" y="${P.top}" width="12" height="${P.H}" rx="6" fill="var(--grid)" stroke="var(--line)"/><line x1="-24" x2="${P.x0}" y1="${yL}" y2="${yL}" stroke="var(--accent)" stroke-dasharray="3 3"/><line x1="${P.x1}" x2="144" y1="${yR}" y2="${yR}" stroke="var(--accent)" stroke-dasharray="3 3"/>${kn(-24,yL)}${kn(144,yR)}
+    <rect class="bv-hit" data-s="L" x="-46" y="${P.top-24}" width="42" height="${P.H+36}" fill="transparent"/><rect class="bv-hit" data-s="R" x="124" y="${P.top-24}" width="42" height="${P.H+36}" fill="transparent"/>`;
+  else g+=`<circle cx="${P.x0}" cy="${yL}" r="5.5" fill="var(--accent)"/><circle cx="${P.x1}" cy="${yR}" r="5.5" fill="var(--accent)"/><line x1="${P.cx}" x2="${P.cx}" y1="${P.top-P.roof}" y2="${P.B}" stroke="var(--muted)" stroke-dasharray="2 4" opacity=".6"/>
+    <rect class="bv-hit" data-s="L" x="${P.x0-14}" y="${P.top-P.roof-20}" width="${P.cx-P.x0+14}" height="${P.H+P.roof+30}" fill="transparent"/><rect class="bv-hit" data-s="R" x="${P.cx}" y="${P.top-P.roof-20}" width="${P.x1-P.cx+14}" height="${P.H+P.roof+30}" fill="transparent"/>`;
+  g+=`<text x="${k==="both"?-24:P.x0}" y="${P.top-P.roof-10}" text-anchor="${k==="both"?"middle":"start"}" class="bv-t">${t("왼쪽")} ${Math.round(B0.lL*100)}%</text><text x="${k==="both"?144:P.x1}" y="${P.top-P.roof-10}" text-anchor="${k==="both"?"middle":"end"}" class="bv-t">${t("오른쪽")} ${Math.round(B0.lR*100)}%</text>`;
+  $("#bvSvg").innerHTML=g;const v=binVol(b,B0.lL,B0.lR),kg=Math.round(v*binDens(b)*1000/50)*50;B0.kg=kg;B0.vol=v;
+  $("#bvKg").textContent=kg.toLocaleString()+"kg";$("#bvPct").textContent=`${Math.round(kg/b.cap*100)}% · ${v.toFixed(2)}m³`}
+Object.assign(A,{binOpen:v=>openBin(+v),binSet:v=>{const b=FARM.feed.bins[ui.bin.i],L=binLevelOfKg(b,Number(v)*b.cap);ui.bin.lL=ui.bin.lR=L;binDraw()},
+  binKnob:v=>{try{localStorage.setItem("farm-binknob",v)}catch(e){}const B0=ui.bin;openBin(B0.i);ui.bin.lL=B0.lL;ui.bin.lR=B0.lR;binDraw()},
+  binMode:v=>{ui.binMode=v;document.querySelectorAll('[data-a="binMode"]').forEach(c=>c.classList.toggle("on",c.dataset.v===v))},
+  binSave:()=>{const b=FARM.feed.bins[ui.bin.i],B0=ui.bin;addRecord("사료",TODAY,{kind:b.feed,mode:"빈 잔량",kg:B0.kg,vol:+B0.vol.toFixed(3),lL:+B0.lL.toFixed(3),lR:+B0.lR.toFixed(3),gauge:ui.binMode||"잔량"});
+    const m=ui.binMode;ui.binMode=null;closeSheet();render();toast(`${b.name} ${B0.kg.toLocaleString()}kg ${t("저장")}`);if(m==="입고 전")setTimeout(()=>{openInput("사료",{fv:{kind:b.feed,mode:"입고"}});toast(t("입고를 저장한 뒤 빈을 다시 눌러 ‘입고 후’를 기록하세요"))},300)}});
+// 대표 설정: 빈 규격·비중
+function binSet(){return `<div class="sec-t">${t("사료 빈")} <span>${t("규격을 고르면 치수 자동")}</span></div><div class="panel">${FARM.feed.bins.map(b=>{const c=binCfg(b),g=binGeo(b),e=binDensEst(b);
+  return `<div class="setrow" style="flex-wrap:wrap"><span><b>${esc(b.name)}</b> <small class="sow-meta">${esc(b.feed)} · ${t("지름")} ${g.D}m · ${t("둘레")} ${(Math.PI*g.D).toFixed(2)}m · ${t("가득")} ${(b.cap/1000).toFixed(1)}t</small></span><div class="chipwrap">${Object.keys(BIN_SPECS).map(s=>`<button type="button" class="chip ${+s===c.spec?"on":""}" data-a="binSpec" data-v="${b.name}" data-k="${s}">${s}${t("톤")}</button>`).join("")}</div>
+  <div class="setrow" style="width:100%;border:0;padding:4px 0"><span>${t("비중")} <small class="sow-meta">${c.dens?t("직접 입력"):e?`${t("입고")} ${e.n}${t("회로 보정")}`:t("기본값")}</small></span><div class="stepper"><button type="button" data-a="binDens" data-v="${b.name}" data-k="-0.01" aria-label="−">−</button><input type="number" value="${binDens(b).toFixed(2)}" readonly aria-label="${t("비중")}"><button type="button" data-a="binDens" data-v="${b.name}" data-k="0.01" aria-label="+">+</button></div></div></div>`}).join("")}</div>`}
+Object.assign(A,{binSpec:(v,el)=>{const o=state.binCfg=state.binCfg||{};(o[v]=o[v]||{}).spec=+el.dataset.k;save();render()},
+  binDens:(v,el)=>{const o=state.binCfg=state.binCfg||{},b=FARM.feed.bins.find(x=>x.name===v);(o[v]=o[v]||{}).dens=Math.round(Math.max(.35,Math.min(.85,binDens(b)+Number(el.dataset.k)))*100)/100;save();render()}});
 /* ================= v0.2 · 돈군 탭 ================= */
 function vBatch(){
   const L=liveBatches();
@@ -2943,6 +2993,8 @@ Object.assign(TR,{"NPD 비생산일수":["NPD ngày không sản xuất","NPD �
 Object.assign(TR,{"사료 계획":["Kế hoạch cám","दाना योजना","ផែនការចំណី","แผนอาหาร"],"주수별 섭취량 기준 · 앞으로 8주":["Theo lượng ăn theo tuần · 8 tuần tới","हप्ता अनुसार · अर्को ८ हप्ता","តាមសប្តាហ៍ · ៨សប្តាហ៍ខាងមុខ","ตามสัปดาห์ · 8 สัปดาห์ข้างหน้า"],"섭취량 기준":["Tiêu chuẩn ăn","खपत मापदण्ड","ស្តង់ដារបរិភោគ","เกณฑ์การกิน"],"하루 필요 kg":["Cần/ngày kg","दैनिक आवश्यक kg","ត្រូវការ/ថ្ងៃ kg","ต้องการ/วัน kg"],"4주 후 하루":["Sau 4 tuần/ngày","४ हप्तापछि/दिन","ក្រោយ៤សប្តាហ៍/ថ្ងៃ","อีก 4 สัปดาห์/วัน"],"다음 주문":["Đặt tiếp","अर्को अर्डर","បញ្ជាទិញបន្ទាប់","สั่งครั้งถัดไป"],"권장 주문량":["Lượng đặt đề xuất","सिफारिस मात्रा","បរិមាណណែនាំ","ปริมาณที่แนะนำ"],"구매 주기":["Chu kỳ mua","खरिद चक्र","វដ្តទិញ","รอบการซื้อ"],"지금":["Ngay","अहिले","ឥឡូវ","ตอนนี้"],"8주 안 없음":["Không trong 8 tuần","८ हप्तामा छैन","មិនក្នុង៨សប្តាហ៍","ไม่มีใน 8 สัปดาห์"],"포":[" bao"," बोरा"," បាវ"," กระสอบ"],"약":["~","करिब","ប្រហែល","ประมาณ"],"일마다":[" ngày/lần"," दिनमा"," ថ្ងៃម្តង"," วันครั้ง"],"매주":["Hằng tuần","हरेक हप्ता","រៀងរាល់សប្តាហ៍","ทุกสัปดาห์"],"주문일 = 안전 재고":["Ngày đặt = tồn an toàn","अर्डर = सुरक्षित मौज्दात","ថ្ងៃបញ្ជា = ស្តុកសុវត្ថិភាព","วันสั่ง = สต็อกปลอดภัย"],"도착":["giao","आइपुग्ने","មកដល់","ส่งถึง"],"주문량 = 빈 용량까지 (500kg 단위)":["Lượng đặt = đầy silo (500kg)","बिन भरिने सम्म (५००kg)","ពេញធុង (500kg)","เติมเต็มไซโล (500kg)"],"사료 섭취량 기준":["Tiêu chuẩn lượng ăn","दाना खपत मापदण्ड","ស្តង់ដារបរិភោគចំណី","เกณฑ์ปริมาณอาหาร"],"1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.":["Lượng ăn/con/ngày (kg). Dùng để tính kế hoạch và số ngày còn. Hãy sửa theo thực tế.","प्रति टाउको दैनिक (kg)। योजना गणनामा प्रयोग। वास्तविक अनुसार मिलाउनुहोस्।","បរិមាណ/ក្បាល/ថ្ងៃ (kg)។ ប្រើគណនាផែនការ។ សូមកែតាមជាក់ស្តែង។","ปริมาณต่อตัวต่อวัน (kg) ใช้คำนวณแผน กรุณาแก้ตามจริง"],"이유 후 공태":["Trống sau cai sữa","छुटाइपछि खाली","ទំនេរក្រោយផ្តាច់","ว่างหลังหย่านม"],"자돈·육성돈 (주령)":["Heo con·thịt (tuần tuổi)","पाठापाठी (हप्ता)","កូនជ្រូក (សប្តាហ៍)","ลูกสุกร·สุกรรุ่น (สัปดาห์)"],"사료 종류는 일령별 급여표를 따름":["Loại cám theo bảng ngày tuổi","दाना प्रकार उमेर तालिका अनुसार","ប្រភេទតាមតារាងអាយុ","ชนิดอาหารตามตารางอายุ"],"주령":[" tuần tuổi"," हप्ता उमेर"," សប្តាហ៍"," สัปดาห์"],"기본값으로":["Mặc định","पूर्वनिर्धारित","លំនាំដើម","ค่าเริ่มต้น"],"섭취량 기준을 기본값으로 되돌릴까요?":["Đặt lại mặc định?","पूर्वनिर्धारितमा फर्काउने?","ត្រឡប់លំនាំដើម?","คืนค่าเริ่มต้น?"],"이번 주":["Tuần này","यो हप्ता","សប្តាហ៍នេះ","สัปดาห์นี้"]});
 Object.assign(TR,{"빈이 작음":["Silo nhỏ","बिन सानो","ធុងតូច","ไซโลเล็ก"],"가득":["Đầy","भरिएको","ពេញ","เต็ม"]});
 Object.assign(TR,{"사료 빈":["Silo cám","दाना बिन","ធុងចំណី","ไซโลอาหาร"],"빈을 누르면 게이지로 잔량 기록":["Bấm silo để ghi mức còn","बिन थिचेर बाँकी लेख्नुहोस्","ចុចធុងដើម្បីកត់","กดไซโลเพื่อบันทึกคงเหลือ"],"기록 필요":["Cần ghi","रेकर्ड चाहिन्छ","ត្រូវកត់","ต้องบันทึก"],"손잡이를 위아래로 끌어 지금 남은 높이에 맞추세요.":["Kéo tay cầm lên xuống cho đúng mức cám.","ह्यान्डल तानेर उचाइ मिलाउनुहोस्।","អូសដៃកាន់ឡើងចុះឱ្យត្រូវកម្ពស់។","ลากที่จับขึ้นลงให้ตรงระดับ"],"비었음":["Trống","खाली","ទទេ","ว่าง"],"잔량 저장":["Lưu mức còn","बाँकी सेभ","រក្សាទុក","บันทึกคงเหลือ"],"높이":["Cao","उचाइ","កម្ពស់","ความสูง"],"저장":["đã lưu","सेभ भयो","បានរក្សា","บันทึกแล้ว"]});
+Object.assign(TR,{"톤 규격":["t quy cách","टन","តោន","ตัน"],"톤":["t","टन","តោន","ตัน"],"왼쪽·오른쪽 손잡이를 각각 끌어 사료 면 높이에 맞추세요. 기울어져 있으면 양쪽을 다르게.":["Kéo tay cầm trái/phải theo mặt cám. Nếu nghiêng thì đặt khác nhau.","दायाँ-बायाँ ह्यान्डल तानेर मिलाउनुहोस्।","អូសដៃកាន់ឆ្វេង/ស្តាំឱ្យត្រូវផ្ទៃចំណី។","ลากที่จับซ้าย/ขวาให้ตรงผิวอาหาร"],"빈 왼쪽 절반·오른쪽 절반을 각각 끌어 사료 면 높이에 맞추세요.":["Kéo nửa trái/phải của silo theo mặt cám.","बिनको आधा-आधा तानेर मिलाउनुहोस्।","អូសពាក់កណ្តាលឆ្វេង/ស្តាំ។","ลากครึ่งซ้าย/ขวาของไซโล"],"양쪽 손잡이":["Hai tay cầm","दुवै ह्यान्डल","ដៃកាន់ពីរ","ที่จับสองข้าง"],"빈 직접 끌기":["Kéo trực tiếp","सिधै तान्नुहोस्","អូសផ្ទាល់","ลากโดยตรง"],"잔량":["Còn lại","बाँकी","នៅសល់","คงเหลือ"],"입고 전":["Trước nhập","आपूर्ति अघि","មុនទទួល","ก่อนรับเข้า"],"입고 후":["Sau nhập","आपूर्ति पछि","ក្រោយទទួល","หลังรับเข้า"],"입고 날에는 ‘입고 전’과 ‘입고 후’를 한 번씩 기록하면 이 빈의 사료 비중을 자동으로 맞춥니다.":["Ngày nhập cám, ghi ‘trước’ và ‘sau’ để tự hiệu chỉnh tỷ trọng.","आपूर्ति दिन अघि/पछि लेख्दा घनत्व आफैं मिल्छ।","ថ្ងៃទទួល កត់ ‘មុន’ និង ‘ក្រោយ’ ដើម្បីកែដង់ស៊ីតេ។","วันรับเข้า บันทึก ‘ก่อน’ และ ‘หลัง’ เพื่อปรับค่าความหนาแน่น"],"비중":["Tỷ trọng","घनत्व","ដង់ស៊ីតេ","ความหนาแน่น"],"직접 입력":["Nhập tay","आफैं","បញ្ចូលដោយដៃ","กรอกเอง"],"회로 보정":[" lần hiệu chỉnh"," पटक मिलाइयो"," ដងកែ"," ครั้งที่ปรับ"],"기본값":["Mặc định","पूर्वनिर्धारित","លំនាំដើម","ค่าเริ่มต้น"],"입고를 저장한 뒤 빈을 다시 눌러 ‘입고 후’를 기록하세요":["Lưu nhập rồi bấm silo để ghi ‘sau nhập’","आपूर्ति सेभपछि ‘पछि’ लेख्नुहोस्","រក្សាទុក រួចចុចធុងកត់ ‘ក្រោយ’","บันทึกรับเข้าแล้วกดไซโลเพื่อบันทึก ‘หลัง’"],"규격(톤)을 고르면 지름·높이가 정해짐 · 가루사료 비중 0.55":["Chọn quy cách → kích thước · cám bột 0.55","टन छान्नुहोस् · पिठो 0.55","ជ្រើសតោន · ម្សៅ 0.55","เลือกตัน · อาหารผง 0.55"],"지름":["Đường kính","व्यास","អង្កត់ផ្ចិត","เส้นผ่าศูนย์กลาง"],"둘레":["Chu vi","परिधि","បរិមាត្រ","เส้นรอบวง"],"왼쪽":["Trái","बायाँ","ឆ្វេង","ซ้าย"],"오른쪽":["Phải","दायाँ","ស្តាំ","ขวา"]});
+Object.assign(TR,{"규격을 고르면 치수 자동":["Chọn quy cách → tự tính kích thước","टन छान्दा नाप आफैं","ជ្រើសតោន → ទំហំស្វ័យប្រវត្តិ","เลือกขนาด → คำนวณขนาดอัตโนมัติ"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};

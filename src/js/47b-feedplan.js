@@ -11,7 +11,9 @@ function sowNeed(a,day,I){if(a.open)return a.gilt?I.gilt:I.open;const p=((a.pos0
   if(p<115)return [p<I.gestLateFrom?I.gestEarly:I.gestLate,"임신모돈"];if(p<143)return [I.lact[Math.min(3,Math.floor((p-115)/7))],"포유모돈"];return [I.open,"임신모돈"]}
 function avgLive(){const m=rangeMetrics(addDays(TODAY,-180),TODAY);return m&&okv(m.live)?m.live:11}
 // 날짜별 사료 종류별 필요량 {feed:kg}
-function feedPlanDays(H=FP_H,S0=TODAY){const I=fIntake(),days=[],sows=activeSows().map(s=>[s,sowAnchor(s)]).filter(x=>x[1]);
+let FPD={};
+function feedPlanDays(H=FP_H,S0=TODAY){const ck=[H,S0,state.records.length,state.sows.length,JSON.stringify(state.intake||{}),JSON.stringify(state.mbatches||[])].join("|");if(FPD.k===ck)return FPD.v;FPD={k:ck,v:feedPlanDays0(H,S0)};return FPD.v}
+function feedPlanDays0(H,S0){const I=fIntake(),days=[],sows=activeSows().map(s=>[s,sowAnchor(s)]).filter(x=>x[1]);
   const bs=batches().map(b=>({k:b.k,b})),lv=avgLive(),born={};
   sows.forEach(([s,a])=>{if(a.open||a.pos0!==0)return;const F=addDays(a.at,115);if(F>=S0&&diff(S0,F)<=H){const k=weekStart(F);born[k]=(born[k]||0)+lv}});
   Object.entries(born).forEach(([k,n])=>{const ex=bs.find(x=>x.k===k);if(ex)ex.extra=n;else bs.push({k,b:{k,live:0,f:[]},extra:n})});
@@ -21,7 +23,7 @@ function feedPlanDays(H=FP_H,S0=TODAY){const I=fIntake(),days=[],sows=activeSows
     days.push({d,u})}
   return days}
 // 오늘 하루 사용량 (기존 feedUse 대체 · 남은 일수 계산에 씀)
-function feedUse(){return feedPlanDays(1,REF)[0].u}
+function feedUse(){return REF===TODAY?feedPlanDays()[0].u:feedPlanDays(1,REF)[0].u}
 // 빈마다 주문 권장
 function feedPlan(){const D=feedPlanDays(),F=feedKinds(),lead=FARM.feed.leadDays,safe=FARM.feed.orderDays;
   return F.map(f=>{const need=D.map(x=>x.u[f]||0),bin=feedBin(f),bag=feedBag(f),st=feedStock(f,need[0]),wk=[0,1,2,3,4,5,6,7].map(w=>need.slice(w*7,w*7+7).reduce((a,b)=>a+b,0)),avg4=wk.slice(0,4).reduce((a,b)=>a+b,0)/28;
@@ -44,6 +46,7 @@ function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return 
 // 대표 설정: 섭취량 기준표
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
+  h+=binSet();
   h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${[["gestEarly",`${t("임신")} ~${I.gestLateFrom-1}${t("일")}`],["gestLate",`${t("임신")} ${I.gestLateFrom}${t("일")}~`],["open",t("이유 후 공태")],["gilt",t("후보돈")]].map(([k,l])=>`<div class="setrow"><span>${l}</span>${st(k,I[k],null,.1)}</div>`).join("")}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
   h+=`<div class="sec-t">${t("자돈·육성돈 (주령)")} <span>${t("사료 종류는 일령별 급여표를 따름")}</span></div><div class="panel">${I.pig.map((v,i)=>`<div class="setrow"><span>${i}${t("주령")} <small class="sow-meta">${pigFeeds(i*7+3).map(p=>p.feed).join("·")}</small></span>${st("pig",v,i,.05)}</div>`).join("")}</div>`;
   return h+`<div class="acts"><button class="act" type="button" data-a="intkReset">${t("기본값으로")}</button></div>`}

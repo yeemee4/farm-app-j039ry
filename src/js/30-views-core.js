@@ -57,7 +57,7 @@ function openInput(type,opt={}){
   ui.prev=tab==="input"?ui.prev:tab;closeSheet();
   ui.in={type,date:opt.date||TODAY,sel:opt.sow?[opt.sow]:[],fv:defaults(type),editId:null,warn:null,err:null,q:"",all:false,flash:[]};
   ui.dec=opt.dec?{id:opt.dec,acts:null,when:"오늘 중",who:state.user,memo:""}:null;
-  const I0=ui.in;if(opt.batch)I0.fv.batch=opt.batch;if(opt.vax)I0.fv.vax=opt.vax;if(opt.item)I0.fv.item=opt.item;if(opt.vname)I0.fv.name=opt.vname;if(opt.round)I0.fv.round=opt.round;
+  const I0=ui.in;if(opt.batch)I0.fv.batch=opt.batch;if(opt.vax)I0.fv.vax=opt.vax;if(opt.item)I0.fv.item=opt.item;if(opt.vname)I0.fv.name=opt.vname;if(opt.round)I0.fv.round=opt.round;if(opt.fv)Object.assign(I0.fv,opt.fv);
   if(type==="돈군백신")bvDefault();if(type==="약품"&&!I0.fv.name){I0.fv.name=itemNames(I0.fv.kind)[0]||"";const it=state.items.find(x=>x.name===I0.fv.name);if(it&&it.withdraw)I0.fv.withdraw=addDays(I0.date,it.withdraw)}
   tab="input";render();window.scrollTo(0,0);
   if(opt.dec){const el=document.getElementById("r-"+opt.dec);if(el)el.scrollIntoView({block:"center"})}
