@@ -116,3 +116,14 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .cal-x{grid-column:1/-1;display:grid;gap:3px;font-size:12.5px;color:var(--muted);padding-top:4px;border-top:1px dashed var(--line)}.cal-x b{color:var(--ink)}
 .panel.ho{padding:8px}.panel.ho input{flex:1;min-width:0}
 .banner.warn-b{background:var(--amber-soft)}.banner.warn-b b{color:var(--amber)}.banner span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* 사료 빈 */
+.bins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bin{display:grid;justify-items:center;gap:1px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--rad,14px);padding:10px 4px 8px;text-align:center}
+.bin svg{width:100%;max-width:78px;height:auto}.bin b{font-size:13px;margin-top:4px}.bin small{font-size:11.5px;color:var(--muted)}.bin span{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}.bin em{font-style:normal;font-size:12px;font-weight:800}
+.bv-wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
+.bv-big{width:100%;max-height:52vh;height:auto;touch-action:none}.bv-t{font-size:8px;fill:var(--muted)}
+.bv-read{display:grid;gap:8px;justify-items:start}.bv-read b{font:900 30px/1 var(--display);font-variant-numeric:tabular-nums}.bv-read span{color:var(--muted);font-size:13px}
+.bv-step{display:flex;gap:6px}.bv-step .sbtn{min-width:52px;font-size:16px}
+.binsheet .save{width:100%;margin-top:12px}
+@media (min-width:1024px){.bins{grid-template-columns:repeat(4,minmax(0,160px))}}
+.bin span{white-space:nowrap}.bin span small{font-size:11px;font-weight:600}
