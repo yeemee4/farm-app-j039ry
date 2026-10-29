@@ -166,3 +166,8 @@ html[data-skin] .stv-grid .card,.stv-grid .card{background:var(--surface)!import
 @media (max-height:500px) and (orientation:landscape){.stv-grid .pbar,.stv-grid .pbar b,.stv-grid .pbar span{font-size:8px}.stv-grid .pb-t{height:8px}.stv-grid .pb-t i{font-size:7px}.stv-grid .pb-r{font-size:8px;grid-template-columns:24px 1fr}}
 .dk-parity .d-cols{gap:3px}.dk-parity .d-col{min-width:0;font-size:11px}.dk-parity .d-col b{font-size:14px}.dk-parity .d-c{width:82%}
 body.tv .dk-parity .d-col{font-size:1.3vh}body.tv .dk-parity .d-col b{font-size:1.9vh}
+/* NPD */
+.card .hero{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:2px 0 10px}.card .hero b{font:900 36px/1 var(--display);font-variant-numeric:tabular-nums}.card .hero b i{font-style:normal;font-size:15px;color:var(--muted);margin-left:2px}.card .hero span{color:var(--muted);font-size:13px}
+.d-hero{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.d-hero b{font:900 40px/1 var(--display)}.d-hero b small{font-size:15px;color:var(--mu);margin-left:2px}.d-hero span{font-size:14px;font-weight:700}.d-hero span small{color:var(--mu);font-weight:500}
+body.tv .d-hero b{font-size:5vh}body.tv .d-hero span{font-size:1.7vh}
+.dk-npd .d-bar>span:first-child{white-space:nowrap}
