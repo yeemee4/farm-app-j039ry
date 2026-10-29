@@ -105,3 +105,53 @@ body.tv .tagbtn{display:none!important}
   .d-swipe .d-tbl{font-size:9px}.d-swipe .d-tbl td{padding:1px 3px}.d-swipe .d-memo{font-size:10px}
   .d-swipe .d-edit{padding:2px 6px;font-size:10px}
 }
+/* ===== 성적 TV (16:9) ===== */
+.stv{--bg:#0E1411;--surface:#17201B;--line:#2A3630;--ink:#EEF3EF;--muted:#9DB0A5;--grid:#24302A;--c-a:#3987e5;--c-b:#d95926;--good:#3DDC97;--red:#FF6B6B;--amber:#F6B84B;color-scheme:dark;background:var(--bg);color:var(--ink);display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:1.4vh}
+body.tv .stv{position:fixed;inset:0;z-index:30;padding:1.6vh 1.4vw;height:100vh;overflow:hidden}
+.stv-top{display:flex;justify-content:space-between;align-items:center;gap:1vw}
+.stv-ttl{display:flex;align-items:baseline;gap:1.2vw}.stv-ttl h2{margin:0;font-size:4vh;font-weight:900}
+.stv-nav{display:flex;align-items:center;gap:.6vw;font-size:2.6vh}.stv-nav button{font-size:3vh;color:var(--muted);padding:0 .6vw}
+.stv-ctl{display:flex;align-items:center;gap:.6vw}.stv-ctl button{font-size:1.7vh;padding:.6vh .9vw;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.stv-ctl button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stv-clock{font:800 3.6vh/1 var(--mono);margin:0 .8vw}
+.stv-kpi{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:.8vw}
+.stv-k{background:var(--surface);border-radius:1.4vh;padding:1.1vh .9vw;display:grid;gap:.3vh;border-top:.4vh solid transparent}.stv-k.ok{border-top-color:var(--good)}.stv-k.lo{border-top-color:var(--amber)}
+.stv-k small{font-size:1.6vh;color:var(--muted)}.stv-k b{font:900 4.4vh/1 var(--display);font-variant-numeric:tabular-nums}.stv-k b i{font-style:normal;font-size:1.7vh;color:var(--muted);margin-left:.2vw;font-weight:600}
+.stv-k .dlt{font-size:1.6vh}.stv-k em{font-style:normal;font-size:1.4vh;color:var(--muted)}
+.stv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:1vh .8vw;min-height:0}
+.stv-grid .card{background:var(--surface);border:0;border-radius:1.4vh;padding:1.2vh .9vw;display:flex;flex-direction:column;min-height:0;overflow:hidden;color:var(--ink)}
+.stv-grid .card h3{margin:0 0 .6vh;font-size:2vh;display:flex;justify-content:space-between;gap:.6vw;align-items:baseline}.stv-grid .card h3 small{font-size:1.3vh;color:var(--muted);font-weight:500}
+.stv-grid svg.chart{flex:1;min-height:0;height:100%;width:100%}.stv-grid .legend{font-size:1.4vh;margin-top:.3vh}
+.stv-grid .hbars{gap:.7vh}.stv-grid .hb{font-size:1.7vh;grid-template-columns:7vw 1fr 7vw}
+.stv-grid .wk{font-size:1.6vh;gap:.8vh}.stv-grid .hm{font-size:1.4vh}.stv-grid .empty{font-size:1.7vh}
+.stv-k{cursor:pointer}.stv-k.sel{outline:2px solid var(--c-a);outline-offset:-2px}
+.stv-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.stv-grid.zoom{grid-template-columns:1fr;grid-template-rows:1fr}
+.stv-c{display:flex;min-height:0;min-width:0;cursor:zoom-in}.stv-c>.card{flex:1;min-width:0}.stv-grid.zoom .stv-c{cursor:zoom-out}
+.stv-grid .acts{display:none}.stv-grid .card.ghost{opacity:1}
+.stv-grid svg.chart text{font-size:9px}.stv-grid.zoom svg.chart text{font-size:7px}.stv-grid.zoom .hb,.stv-grid.zoom .wk{font-size:2.4vh}
+/* 아이폰 가로: 촘촘하게 */
+@media (max-height:500px) and (orientation:landscape){
+  body.tv .stv{padding:4px max(10px,env(safe-area-inset-right)) 4px max(10px,env(safe-area-inset-left));gap:5px}
+  .stv-ttl h2{font-size:17px}.stv-nav{font-size:12px}.stv-nav button{font-size:15px}.stv-ctl button{font-size:10.5px;padding:2px 8px}.stv-clock{font-size:15px}
+  .stv-kpi{gap:4px}.stv-k{padding:3px 6px;border-radius:8px;gap:0;border-top-width:2px}.stv-k small{font-size:9.5px}.stv-k b{font-size:17px}.stv-k b i{font-size:9px}.stv-k .dlt{font-size:9px}.stv-k em{display:none}
+  .stv-grid{gap:4px}.stv-grid .card{padding:4px 6px;border-radius:8px}.stv-grid .card h3{font-size:10.5px;margin-bottom:2px}.stv-grid .card h3 small,.stv-grid .legend{display:none}
+  .stv-grid .hb{font-size:9px;grid-template-columns:42px 1fr 44px;gap:3px}.stv-grid .hbars{gap:2px}.stv-grid .wk{font-size:9px;gap:2px}.stv-grid .wk small{display:none}.stv-grid .hm{font-size:8px;grid-template-columns:44px repeat(var(--hc),minmax(0,1fr))}.stv-grid .empty{font-size:10px;padding:4px}
+}
+html[data-skin] .stv-grid .card,.stv-grid .card{background:var(--surface)!important;border-color:transparent!important;box-shadow:none!important;color:var(--ink)}
+.stv-grid .hb-t,.stv-grid .wk-c i{background:var(--grid)}
+/* 그래프 상세 */
+.cd-go{cursor:pointer;display:flex;min-width:0}.cd-go>.card,.cd-go>section{flex:1;min-width:0}.chartgrid>.cd-go>.card{transition:transform .12s}.chartgrid>.cd-go:hover>.card{transform:translateY(-2px)}
+.chartgrid .cd-go h3::after{content:"›";margin-left:auto;color:var(--muted);font-weight:700}
+.cdet .card{display:grid;gap:10px}.cdet svg.chart{max-height:42vh}
+.dtab-w{overflow:auto;max-height:46vh;border:1px solid var(--line);border-radius:12px}
+.dtab{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}.dtab th{position:sticky;top:0;background:var(--bg);color:var(--muted);font-weight:700;text-align:right;padding:7px 9px;white-space:nowrap;font-size:12px}
+.dtab td{padding:7px 9px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}.dtab th:first-child,.dtab td:first-child{text-align:left;font-weight:700}.dtab tbody tr:nth-child(even){background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.dtab small.ok{color:var(--good);font-weight:700}.dtab small.lo{color:var(--amber);font-weight:700}.dtab td.empty{text-align:center;color:var(--muted)}
+.dtab.wide{font-size:12px}
+@media (max-height:500px) and (orientation:landscape){.cdet svg.chart{max-height:60vh}.dtab-w{max-height:70vh}}
+.stv-grid .wk-c b{font-size:1.7vh}.stv-grid .wk-h span{font-size:1.4vh}.stv-grid .hm-c{height:auto;aspect-ratio:auto;min-height:2.6vh}.stv-grid .hb-t{height:1.6vh}
+.cdet svg.chart{max-height:34vh}
+@media (max-height:500px) and (orientation:landscape){
+  .stv-grid .wk-h,.stv-grid .wk-r{grid-template-columns:26px repeat(4,minmax(0,1fr));gap:2px}.stv-grid .wk-h span{font-size:8px}.stv-grid .wk-c b{font-size:9px}.stv-grid .wk-c i{height:4px}
+  .stv-grid .hm{gap:1.5px}.stv-grid .hm-h{font-size:7px}.stv-grid .hm-l{font-size:8px}.stv-grid .hm-c{min-height:0;height:11px;font-size:7.5px;border-radius:3px}
+  .stv-grid .hb-t{height:7px}.stv-grid .hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}

@@ -10,3 +10,6 @@
   .sheet.wide{max-width:900px}
   .qbtn:hover,.stile:hover,.todo:hover,.chip:hover{filter:brightness(.97)}
 }
+/* 할 일 목록: PC에서 한 줄 2개 */
+.todolist{display:grid;gap:8px}
+@media (min-width:1024px){.todolist{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}.todolist .todo{margin:0}}

@@ -742,6 +742,56 @@ body.tv .tagbtn{display:none!important}
   .d-swipe .d-tbl{font-size:9px}.d-swipe .d-tbl td{padding:1px 3px}.d-swipe .d-memo{font-size:10px}
   .d-swipe .d-edit{padding:2px 6px;font-size:10px}
 }
+/* ===== 성적 TV (16:9) ===== */
+.stv{--bg:#0E1411;--surface:#17201B;--line:#2A3630;--ink:#EEF3EF;--muted:#9DB0A5;--grid:#24302A;--c-a:#3987e5;--c-b:#d95926;--good:#3DDC97;--red:#FF6B6B;--amber:#F6B84B;color-scheme:dark;background:var(--bg);color:var(--ink);display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:1.4vh}
+body.tv .stv{position:fixed;inset:0;z-index:30;padding:1.6vh 1.4vw;height:100vh;overflow:hidden}
+.stv-top{display:flex;justify-content:space-between;align-items:center;gap:1vw}
+.stv-ttl{display:flex;align-items:baseline;gap:1.2vw}.stv-ttl h2{margin:0;font-size:4vh;font-weight:900}
+.stv-nav{display:flex;align-items:center;gap:.6vw;font-size:2.6vh}.stv-nav button{font-size:3vh;color:var(--muted);padding:0 .6vw}
+.stv-ctl{display:flex;align-items:center;gap:.6vw}.stv-ctl button{font-size:1.7vh;padding:.6vh .9vw;border:1px solid var(--line);border-radius:999px;color:var(--muted)}.stv-ctl button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stv-clock{font:800 3.6vh/1 var(--mono);margin:0 .8vw}
+.stv-kpi{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:.8vw}
+.stv-k{background:var(--surface);border-radius:1.4vh;padding:1.1vh .9vw;display:grid;gap:.3vh;border-top:.4vh solid transparent}.stv-k.ok{border-top-color:var(--good)}.stv-k.lo{border-top-color:var(--amber)}
+.stv-k small{font-size:1.6vh;color:var(--muted)}.stv-k b{font:900 4.4vh/1 var(--display);font-variant-numeric:tabular-nums}.stv-k b i{font-style:normal;font-size:1.7vh;color:var(--muted);margin-left:.2vw;font-weight:600}
+.stv-k .dlt{font-size:1.6vh}.stv-k em{font-style:normal;font-size:1.4vh;color:var(--muted)}
+.stv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:1vh .8vw;min-height:0}
+.stv-grid .card{background:var(--surface);border:0;border-radius:1.4vh;padding:1.2vh .9vw;display:flex;flex-direction:column;min-height:0;overflow:hidden;color:var(--ink)}
+.stv-grid .card h3{margin:0 0 .6vh;font-size:2vh;display:flex;justify-content:space-between;gap:.6vw;align-items:baseline}.stv-grid .card h3 small{font-size:1.3vh;color:var(--muted);font-weight:500}
+.stv-grid svg.chart{flex:1;min-height:0;height:100%;width:100%}.stv-grid .legend{font-size:1.4vh;margin-top:.3vh}
+.stv-grid .hbars{gap:.7vh}.stv-grid .hb{font-size:1.7vh;grid-template-columns:7vw 1fr 7vw}
+.stv-grid .wk{font-size:1.6vh;gap:.8vh}.stv-grid .hm{font-size:1.4vh}.stv-grid .empty{font-size:1.7vh}
+.stv-k{cursor:pointer}.stv-k.sel{outline:2px solid var(--c-a);outline-offset:-2px}
+.stv-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.stv-grid.zoom{grid-template-columns:1fr;grid-template-rows:1fr}
+.stv-c{display:flex;min-height:0;min-width:0;cursor:zoom-in}.stv-c>.card{flex:1;min-width:0}.stv-grid.zoom .stv-c{cursor:zoom-out}
+.stv-grid .acts{display:none}.stv-grid .card.ghost{opacity:1}
+.stv-grid svg.chart text{font-size:9px}.stv-grid.zoom svg.chart text{font-size:7px}.stv-grid.zoom .hb,.stv-grid.zoom .wk{font-size:2.4vh}
+/* 아이폰 가로: 촘촘하게 */
+@media (max-height:500px) and (orientation:landscape){
+  body.tv .stv{padding:4px max(10px,env(safe-area-inset-right)) 4px max(10px,env(safe-area-inset-left));gap:5px}
+  .stv-ttl h2{font-size:17px}.stv-nav{font-size:12px}.stv-nav button{font-size:15px}.stv-ctl button{font-size:10.5px;padding:2px 8px}.stv-clock{font-size:15px}
+  .stv-kpi{gap:4px}.stv-k{padding:3px 6px;border-radius:8px;gap:0;border-top-width:2px}.stv-k small{font-size:9.5px}.stv-k b{font-size:17px}.stv-k b i{font-size:9px}.stv-k .dlt{font-size:9px}.stv-k em{display:none}
+  .stv-grid{gap:4px}.stv-grid .card{padding:4px 6px;border-radius:8px}.stv-grid .card h3{font-size:10.5px;margin-bottom:2px}.stv-grid .card h3 small,.stv-grid .legend{display:none}
+  .stv-grid .hb{font-size:9px;grid-template-columns:42px 1fr 44px;gap:3px}.stv-grid .hbars{gap:2px}.stv-grid .wk{font-size:9px;gap:2px}.stv-grid .wk small{display:none}.stv-grid .hm{font-size:8px;grid-template-columns:44px repeat(var(--hc),minmax(0,1fr))}.stv-grid .empty{font-size:10px;padding:4px}
+}
+html[data-skin] .stv-grid .card,.stv-grid .card{background:var(--surface)!important;border-color:transparent!important;box-shadow:none!important;color:var(--ink)}
+.stv-grid .hb-t,.stv-grid .wk-c i{background:var(--grid)}
+/* 그래프 상세 */
+.cd-go{cursor:pointer;display:flex;min-width:0}.cd-go>.card,.cd-go>section{flex:1;min-width:0}.chartgrid>.cd-go>.card{transition:transform .12s}.chartgrid>.cd-go:hover>.card{transform:translateY(-2px)}
+.chartgrid .cd-go h3::after{content:"›";margin-left:auto;color:var(--muted);font-weight:700}
+.cdet .card{display:grid;gap:10px}.cdet svg.chart{max-height:42vh}
+.dtab-w{overflow:auto;max-height:46vh;border:1px solid var(--line);border-radius:12px}
+.dtab{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}.dtab th{position:sticky;top:0;background:var(--bg);color:var(--muted);font-weight:700;text-align:right;padding:7px 9px;white-space:nowrap;font-size:12px}
+.dtab td{padding:7px 9px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}.dtab th:first-child,.dtab td:first-child{text-align:left;font-weight:700}.dtab tbody tr:nth-child(even){background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.dtab small.ok{color:var(--good);font-weight:700}.dtab small.lo{color:var(--amber);font-weight:700}.dtab td.empty{text-align:center;color:var(--muted)}
+.dtab.wide{font-size:12px}
+@media (max-height:500px) and (orientation:landscape){.cdet svg.chart{max-height:60vh}.dtab-w{max-height:70vh}}
+.stv-grid .wk-c b{font-size:1.7vh}.stv-grid .wk-h span{font-size:1.4vh}.stv-grid .hm-c{height:auto;aspect-ratio:auto;min-height:2.6vh}.stv-grid .hb-t{height:1.6vh}
+.cdet svg.chart{max-height:34vh}
+@media (max-height:500px) and (orientation:landscape){
+  .stv-grid .wk-h,.stv-grid .wk-r{grid-template-columns:26px repeat(4,minmax(0,1fr));gap:2px}.stv-grid .wk-h span{font-size:8px}.stv-grid .wk-c b{font-size:9px}.stv-grid .wk-c i{height:4px}
+  .stv-grid .hm{gap:1.5px}.stv-grid .hm-h{font-size:7px}.stv-grid .hm-l{font-size:8px}.stv-grid .hm-c{min-height:0;height:11px;font-size:7.5px;border-radius:3px}
+  .stv-grid .hb-t{height:7px}.stv-grid .hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -826,6 +876,13 @@ html[data-skin="soft"] .act.pri,html[data-skin="soft"] .save{background:#E07A8F;
 :where(html[data-pc="on"]) .sheet{border-radius:18px;max-height:88%;max-width:680px}
 :where(html[data-pc="on"]) .sheet.wide{max-width:900px}
 :where(html[data-pc="on"]) .qbtn:hover,:where(html[data-pc="on"]) .stile:hover,:where(html[data-pc="on"]) .todo:hover,:where(html[data-pc="on"]) .chip:hover{filter:brightness(.97)}
+
+/* 할 일 목록: PC에서 한 줄 2개 */
+.todolist{display:grid;gap:8px}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .todolist{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+:where(html:not([data-pc="off"])) .todolist .todo{margin:0}}
+:where(html[data-pc="on"]) .todolist{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+:where(html[data-pc="on"]) .todolist .todo{margin:0}
 
 </style>
 </head>
@@ -1794,9 +1851,10 @@ function statPeriod(){
 }
 function fmtV(v,dp){return v===null||v===undefined||isNaN(v)?"-":(+v).toFixed(dp)}
 function vStats(){
+  if(document.body.classList.contains("tv"))return vStatsTV();
   const S=ui.st;
   const noShip=!state.records.some(r=>r.type==="출하");const ob=liveBatches().slice(-1)[0];
-  let h=`<div class="pagehd"><h2>성적</h2></div>${noShip?`<div class="banner info"><b>출하 시작 전</b><span>출하 기록이 아직 없어 MSY·출하 성적은 비어 있습니다.${ob?` 첫 출하 예정: ${kDate(addDays(ob.k,shipAge()*7))} 주 (${bName(ob.k)})`:""}</span></div>`:""}<div class="chips">${["월","분기","연간","전년 비교","기간"].map(m=>`<button type="button" class="chip ${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${m==="월"?"월간":m==="기간"?"기간 설정":m}</button>`).join("")}</div>`;
+  let h=`<div class="pagehd"><h2>성적</h2><button class="act" type="button" data-a="tvMode" style="margin-left:auto">📺 ${t("TV로 보기")}</button></div>${noShip?`<div class="banner info"><b>출하 시작 전</b><span>출하 기록이 아직 없어 MSY·출하 성적은 비어 있습니다.${ob?` 첫 출하 예정: ${kDate(addDays(ob.k,shipAge()*7))} 주 (${bName(ob.k)})`:""}</span></div>`:""}<div class="chips">${["월","분기","연간","전년 비교","기간"].map(m=>`<button type="button" class="chip ${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${m==="월"?"월간":m==="기간"?"기간 설정":m}</button>`).join("")}</div>`;
   if(S.mode==="전년 비교")return h+vYoY();
   const P=statPeriod();
   // 기간 선택
@@ -1869,6 +1927,54 @@ function prevYearForm(){
     <div class="acts"><button class="act pri" type="button" data-a="pySave">저장</button><button class="act" type="button" data-a="pyClose">닫기</button></div></div>`;
 }
 
+/* ===== 그래프 상세 (성적·성적 TV·현황판에서 그래프를 누르면) =====
+   위: 기간을 늘린 큰 그래프 · 아래: 쌓인 기록 표. 기간 칩으로 길이 바꿈 */
+const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count"];   // chartCards() 순서
+const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",trend:"월별 추이"};
+const CD_M=["psy","litter","trend"],CD_W=["week","dead","cause"];   // 월 단위 · 주 단위
+function cdMonths(n){let [y,m]=TODAY.slice(0,7).split("-").map(Number);const a=[];for(let i=n-1;i>=0;i--){let yy=y,mm=m-i;while(mm<1){mm+=12;yy--}a.push([yy,mm])}return a}
+function cdWeeks(n){const w=weekStart(TODAY);return Array.from({length:n},(_,i)=>addDays(w,-7*(n-1-i)))}
+const f1=(v,dp=1)=>okv(v)?(+v).toFixed(dp):"-";
+function cdTable(head,rows,cls=""){return `<div class="dtab-w"><table class="dtab ${cls}"><thead><tr>${head.map(x=>`<th>${t(x)}</th>`).join("")}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${head.length}" class="empty">${t("기록이 없습니다.")}</td></tr>`}</tbody></table></div>`}
+// 묶음 막대 (주간 건수)
+function barsSvg(labels,series,goal){const W=360,H=190,P={l:26,r:8,t:12,b:24},mx=Math.max(1,...series.flatMap(s=>s.v),...(goal?Object.values(goal):[])),n=labels.length,gw=(W-P.l-P.r)/n,bw=Math.max(2,gw*.8/series.length),y=v=>P.t+(1-v/mx)*(H-P.t-P.b);
+  let g=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img">`;[0,mx/2,mx].forEach(v=>g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${P.l-4}" y="${y(v)+4}" text-anchor="end">${Math.round(v)}</text>`);
+  series.forEach((s,si)=>s.v.forEach((v,i)=>{const x=P.l+i*gw+gw*.1+si*bw;g+=`<rect x="${x}" y="${y(v)}" width="${bw-1}" height="${Math.max(0,H-P.b-y(v))}" rx="1.5" fill="${s.c}"><title>${labels[i]} · ${esc(s.l)} ${v}</title></rect>`}));
+  const step=Math.ceil(n/9);labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+=`<text x="${P.l+i*gw+gw/2}" y="${H-7}" text-anchor="middle">${l}</text>`});return g+`</svg>`}
+function cdBody(k,n){const G=sGoal();
+  if(CD_M.includes(k)){const M=cdMonths(n),lab=M.map(([y,m])=>(n>12?String(y).slice(2)+".":"")+m+t("월")),mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),pick=q=>mm.map(v=>v?v[q]:null);
+    if(k==="psy")return linesSvg({title:"PSY MSY",labels:lab,dp:1,series:[{l:"PSY",v:pick("psy"),c:CC.a},{l:"MSY",v:pick("msy"),c:CC.b}],goals:[{l:t("목표")+" "+G.psy,v:G.psy,c:CC.a},{l:t("목표")+" "+G.msy,v:G.msy,c:CC.b}]})+legendH([[CC.a,"PSY"],[CC.b,"MSY"],["var(--muted)",t("목표"),1]])+
+      cdTable(["월","분만복수","복당 이유","PSY","MSY","PSY 목표 대비"],M.map(([y,m],i)=>{const v=mm[i]||{};return [`${y}.${pad(m)}`,v.far??"-",f1(v.wean),f1(v.psy),f1(v.msy),okv(v.psy)?`<span class="dlt ${v.psy>=G.psy?"up":"down"}">${v.psy>=G.psy?"▲":"▼"} ${Math.abs(v.psy-G.psy).toFixed(1)}</span>`:"-"]}).reverse());
+    if(k==="litter")return linesSvg({title:"실산 이유",labels:lab,dp:1,band:t("포유 중 손실"),series:[{l:t("실산"),v:pick("live"),c:CC.a},{l:t("이유"),v:pick("wean"),c:CC.b}]})+legendH([[CC.a,t("복당 실산")],[CC.b,t("복당 이유")]])+
+      cdTable(["월","분만복수","복당 총산","복당 실산","복당 이유","포유 손실","포유 육성률"],M.map(([y,m],i)=>{const v=mm[i]||{};return [`${y}.${pad(m)}`,v.far??"-",f1(v.tot),f1(v.live),f1(v.wean),okv(v.live)&&okv(v.wean)?f1(v.live-v.wean):"-",okv(v.surv)?f1(v.surv)+"%":"-"]}).reverse());
+    const md=MET.find(m=>m[0]===ui.st.metric)||MET[7];
+    return lineSvg(M.map(([y,m],i)=>({y,m,v:mm[i]?mm[i][md[0]]:null,src:mm[i]?mm[i].src:null})),md)+cdTable(["월",...MET.map(m=>m[1])],M.map(([y,m],i)=>{const v=mm[i]||{};return [`${y}.${pad(m)}`,...MET.map(q=>v[q[0]]!=null?fmtV(v[q[0]],q[3]):"-")]}).reverse(),"wide")}
+  if(CD_W.includes(k)){const W=cdWeeks(n),lab=W.map(w=>"W"+isoWeek(w).w),f=W[0];
+    if(k==="week"){const goal=dashCfg().goal,R=(q,a)=>{const b=addDays(a,6),L=state.records.filter(r=>r.type===q&&r.workDate>=a&&r.workDate<=b);return q==="교배"?L.filter(r=>r.data.round==="1차").length:L.length};
+      const S=["교배","분만","이유"].map((q,i)=>({l:t(q),v:W.map(w=>R(q,w)),c:[CC.a,CC.b,"var(--good)"][i]}));
+      return barsSvg(lab,S,goal)+legendH(S.map(s=>[s.c,s.l]))+cdTable(["주","시작일","교배","분만","이유","임신 확인"],W.map((w,i)=>[lab[i],kDate(w),...S.map((s,j)=>{const g=goal[["교배","분만","이유"][j]]||1;return `${s.v[i]} <small class="${s.v[i]>=g?"ok":"lo"}">${Math.round(s.v[i]/g*100)}%</small>`}),R("임신확인",w)]).reverse())}
+    const D=state.records.filter(r=>r.type==="폐사"&&r.workDate>=f).sort((a,b)=>b.workDate.localeCompare(a.workDate));
+    if(k==="dead"){const cell={};let mx=1;D.forEach(r=>{const q=r.data.barn+"|"+weekStart(r.workDate);cell[q]=(cell[q]||0)+r.data.n;mx=Math.max(mx,cell[q])});const B=BARNS.filter(b=>W.some(w=>cell[b+"|"+w]));
+      const tot=W.map(w=>D.filter(r=>weekStart(r.workDate)===w).reduce((s,r)=>s+r.data.n,0));
+      return barsSvg(lab,[{l:t("폐사"),v:tot,c:"var(--red)"}])+(B.length?`<div class="hm" style="--hc:${W.length}"><span></span>${W.map((w,i)=>`<span class="hm-h">${n>12&&i%2?"":lab[i]}</span>`).join("")}${B.map(b=>`<span class="hm-l">${esc(t(b))}</span>${W.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/mx*82)}%, var(--surface))`:"var(--bg)"};color:${v/mx>.55?"#fff":"var(--ink)"}">${v||""}</span>`}).join("")}`).join("")}</div>`:"")+cdDeadTable(D)}
+    const cz={};D.forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);const tot=Object.values(cz).reduce((a,b)=>a+b,0);
+    const bs={};D.forEach(r=>{const q=r.data.cause+"|"+r.data.barn;bs[q]=(bs[q]||0)+r.data.n});
+    return (tot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/tot*100)}%`,c:"var(--red)"}))):"")+
+      cdTable(["원인","돈사","두수"],Object.entries(bs).sort((a,b)=>b[1]-a[1]).map(([q,v])=>{const [c,b]=q.split("|");return [esc(t(c)),esc(t(b)),v]}))+cdDeadTable(D)}
+  if(k==="feed"){const fr=feedTable(),od=FARM.feed.orderDays,R=state.records.filter(r=>r.type==="사료").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
+    return hbarsH(fr.filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days).map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"})))+
+      cdTable(["사료","보관","잔량 kg","하루 사용 kg","남은 일수"],fr.map(x=>[esc(x.f),x.bin?esc(x.bin.name):t("포대"),(x.kg||0).toLocaleString(),Math.round(x.use||0),x.days??"-"]))+
+      `<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
+  if(k==="count"){const R=state.records.filter(r=>r.type==="실사").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
+    return (countChart()||"")+cdTable(["날짜","돈사","실사","장부","차이"],R.map(r=>{const d=r.data.n-r.data.est;return [kDate(r.workDate),esc(t(r.data.barn)),r.data.n,r.data.est,`<span class="dlt ${d<0?"down":d>0?"up":""}">${d>0?"+":""}${d}</span>`]}))}
+  return `<div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div>`}
+function cdDeadTable(D){return `<div class="sec-t">${t("폐사 기록")} <span>${D.reduce((s,r)=>s+r.data.n,0)}${t("두")} · ${D.length}${t("건")}</span></div>`+cdTable(["날짜","돈사","단계","두수","원인","모돈"],D.map(r=>[kDate(r.workDate),esc(t(r.data.barn)),esc(t(r.data.stage||"")),r.data.n,esc(t(r.data.cause)),r.data.sow?esc(r.data.sow):""]))}
+function openChartDetail(k){const c=ui.cd=ui.cd&&ui.cd.k===k?ui.cd:{k,n:CD_M.includes(k)?12:CD_W.includes(k)?12:4};
+  const opts=CD_M.includes(k)?[[6,"6개월"],[12,"12개월"],[24,"24개월"]]:CD_W.includes(k)?[[8,"8주"],[12,"12주"],[26,"26주"]]:k==="feed"||k==="count"?[[4,"최근"],[12,"더 보기"]]:[];
+  const ti=k==="trend"?`${t("월별 추이")} · ${t((MET.find(m=>m[0]===ui.st.metric)||MET[7])[1])}`:t(CD_T[k]||k);
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet wide cdet" role="dialog" aria-modal="true" aria-label="${esc(ti)}"><div class="sh-hd"><h2>${ti}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${opts.length?`<div class="chips">${opts.map(([v,l])=>`<button type="button" class="chip ${c.n===v?"on":""}" data-a="cdN" data-v="${v}">${t(l)}</button>`).join("")}</div>`:""}<div class="card">${cdBody(k,c.n)}</div></div></div></div>`;
+  if(typeof tagsApply==="function")try{tagsApply()}catch(e){}}
+Object.assign(A,{chDetail:v=>openChartDetail(v),cdN:v=>{ui.cd.n=+v;openChartDetail(ui.cd.k)}});
 /* ================= v0.5 · 성적 분석 그래프 (지표마다 알맞은 모양) =================
    흐름=꺾은선(+목표선), 두 값의 차이=꺾은선 2개+사이 면, 목표 달성=진행바,
    돈사×주 폐사=히트맵(한 색 진하기), 원인 비중=많은 순 가로막대, 남은 일수=색 신호 가로막대 */
@@ -1896,36 +2002,58 @@ function legendH(items){return `<div class="legend">${items.map(([c,l,dash])=>`<
 function hbarsH(rows,o={}){const mx=Math.max(1,...rows.map(r=>r.v));
   return `<div class="hbars">${rows.map(r=>`<div class="hb"><span class="hb-l">${esc(r.l)}</span><div class="hb-t"><div class="hb-f" style="width:${Math.max(2,r.v/mx*100)}%;background:${r.c||CC.a}" title="${esc(r.l)} ${r.txt||r.v}"></div></div><span class="hb-v">${r.txt||r.v}</span></div>`).join("")}</div>`}
 
-function vCharts(){
+function vCharts(){return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${chartCards().map((c,i)=>`<div class="cd-go" data-a="chDetail" data-v="${CD_KEYS[i]}">${c}</div>`).join("")}</div>`}
+function chartCards(){const C=[];
   const S=ui.st,P=statPeriod(),endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),M=months12(endYm),lab=M.map(([,m])=>m+t("월"));
   const mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),G=sGoal(),pick=k=>mm.map(v=>v?v[k]:null);
-  let h=`<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">`;
+  let h="";const cut=()=>{C.push(h);h=""};
   // 1. PSY·MSY 추이 + 목표선
   h+=`<div class="card"><h3>${t("PSY · MSY 추이")}<small>${t("두/모돈/년 · 점선 = 목표")}</small></h3>${linesSvg({title:"PSY MSY",labels:lab,dp:1,series:[{l:"PSY",v:pick("psy"),c:CC.a},{l:"MSY",v:pick("msy"),c:CC.b}],goals:[{l:t("목표")+" "+G.psy,v:G.psy,c:CC.a},{l:t("목표")+" "+G.msy,v:G.msy,c:CC.b}]})}${legendH([[CC.a,"PSY"],[CC.b,"MSY"],["var(--muted)",t("목표"),1]])}</div>`;
+  cut();
   // 2. 복당 실산 · 이유두수 (사이 면 = 포유 손실)
   h+=`<div class="card"><h3>${t("복당 실산 · 이유두수")}<small>${t("두 선 사이 = 포유 중 손실")}</small></h3>${linesSvg({title:"실산 이유",labels:lab,dp:1,band:t("포유 중 손실"),series:[{l:t("실산"),v:pick("live"),c:CC.a},{l:t("이유"),v:pick("wean"),c:CC.b}]})}${legendH([[CC.a,t("복당 실산")],[CC.b,t("복당 이유")]])}</div>`;
+  cut();
   // 3. 주간 교배·분만·이유 달성률 (최근 4주)
   const goal=dashCfg().goal,ws=[3,2,1,0].map(i=>addDays(weekStart(TODAY),-7*i));
   const cnt=(k,a)=>{const b=addDays(a,6),R=state.records.filter(r=>r.type===k&&r.workDate>=a&&r.workDate<=b);return k==="교배"?R.filter(r=>r.data.round==="1차").length:R.length};
   h+=`<div class="card"><h3>${t("주간 번식 달성률")}<small>${t("목표")}: ${t("교배")} ${goal.교배} · ${t("분만")} ${goal.분만} · ${t("이유")} ${goal.이유}</small></h3><div class="wk">`+
     `<div class="wk-h"><span></span>${ws.map(w=>`<span>W${isoWeek(w).w}${w===weekStart(TODAY)?" "+t("진행"):""}</span>`).join("")}</div>`+
     ["교배","분만","이유"].map(k=>`<div class="wk-r"><span>${t(k)}</span>${ws.map(w=>{const n=cnt(k,w),p=Math.round(n/(goal[k]||1)*100);return `<span class="wk-c" title="W${isoWeek(w).w} ${t(k)} ${n}/${goal[k]}"><b>${p}%</b><i><em style="width:${Math.min(100,p)}%;background:${p>=100?"var(--good)":p>=75?CC.a:"var(--amber)"}"></em></i><small>${n}/${goal[k]}</small></span>`}).join("")}</div>`).join("")+`</div></div>`;
+  cut();
   // 4. 폐사 히트맵: 돈사 × 주 (최근 8주)
   const w8=[7,6,5,4,3,2,1,0].map(i=>addDays(weekStart(TODAY),-7*i)),barns=BARNS.slice(),cell={};let cmx=1;
   state.records.filter(r=>r.type==="폐사"&&r.workDate>=w8[0]).forEach(r=>{const k=r.data.barn+"|"+weekStart(r.workDate);cell[k]=(cell[k]||0)+r.data.n;cmx=Math.max(cmx,cell[k])});
   const rowsB=barns.filter(b=>w8.some(w=>cell[b+"|"+w]));
   h+=`<div class="card"><h3>${t("폐사 현황")}<small>${t("돈사 × 주 · 진할수록 많음")}</small></h3>${rowsB.length?`<div class="hm" style="--hc:${w8.length}"><span></span>${w8.map(w=>`<span class="hm-h">W${isoWeek(w).w}</span>`).join("")}${rowsB.map(b=>`<span class="hm-l">${esc(t(b))}</span>${w8.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/cmx*82)}%, var(--surface))`:"var(--bg)"};color:${v/cmx>.55?"#fff":"var(--ink)"}" title="${esc(t(b))} W${isoWeek(w).w} ${v}${t("두")}">${v||""}</span>`}).join("")}`).join("")}</div>`:`<div class="empty">${t("최근 8주 폐사 기록이 없습니다.")}</div>`}</div>`;
+  cut();
   // 5. 폐사 원인 비중 (선택 기간, 많은 순)
   const cz={};state.records.filter(r=>r.type==="폐사"&&r.workDate>=P.f&&r.workDate<=P.t).forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);
   const ctot=Object.values(cz).reduce((a,b)=>a+b,0);
   h+=`<div class="card"><h3>${t("폐사 원인 비중")}<small>${esc(P.label)} · ${ctot}${t("두")}</small></h3>${ctot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/ctot*100)}%`,c:"var(--red)"}))):`<div class="empty">${t("이 기간에는 기록이 없습니다.")}</div>`}</div>`;
+  cut();
   // 6. 사료 남은 일수 (색 신호)
   const fr=feedTable().filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days),od=FARM.feed.orderDays;
   h+=`<div class="card"><h3>${t("사료 남은 일수")}<small>${t("빨강 2일 이하 · 노랑")} ${od}${t("일 이하")}</small></h3>${fr.length?hbarsH(fr.map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}${x.days<=od?" ⚠":""}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"}))):`<div class="empty">${t("잔량 기록 필요")}</div>`}</div>`;
+  cut();
   // 7·8. 아직 기록 항목이 없는 그래프
   h+=`<div class="card ghost"><h3>${t("도체 등급 분포")}<small>${t("주별 100% 누적 막대")}</small></h3><div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div></div>`;
+  cut();
   h+=`<div class="card ghost"><h3>${t("재고두수 장부 vs 실사")}<small>${t("돈사별 차이 막대")}</small></h3>${countChart()||`<div class="empty">${t("돈사별 재고두수 실사를 입력하면 표시합니다.")}</div>`}<div class="acts"><button class="act" type="button" data-a="tab" data-v="count">${t("실사 입력")} ›</button></div></div>`;
-  return h+`</div>`}
+  cut();return C}
+/* ===== 성적 TV 화면 (16:9 한 화면 · 성적 › 📺 TV로 보기) ===== */
+const STV_KPI=["psy","msy","frate","live","wean","surv","dead","ship"];
+function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P.cmp?rangeMetrics(P.cmp[0],P.cmp[1]):null,now=new Date(),G=sGoal();
+  const nav=S.mode==="월"||S.mode==="분기"?`<button type="button" data-a="stNav" data-v="-1" aria-label="${t("이전")}">‹</button><b>${esc(P.label)}</b><button type="button" data-a="stNav" data-v="1" aria-label="${t("다음")}">›</button>`:`<b>${esc(P.label)}</b>`;
+  let h=`<div class="stv"><header class="stv-top"><div class="stv-ttl"><h2>${t("성적")}</h2><div class="stv-nav">${nav}</div></div><div class="stv-ctl">${["월","분기","연간"].map(m=>`<button type="button" class="${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${t(m==="월"?"월간":m)}</button>`).join("")}<span class="stv-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</span><button type="button" data-a="tvMode">${t("TV 끄기")}</button></div></header>`;
+  h+=`<div class="stv-kpi">${STV_KPI.map(k=>{const m=MET.find(x=>x[0]===k),[,l,u,dp,dir]=m,v=cur?cur[k]:null,c=cmp?cmp[k]:null,g=k==="psy"||k==="msy"?G[k]:null;let dl="";
+    if(okv(v)&&okv(c)){const d=v-c,good=dir===0||Math.abs(d)<1e-9?null:(d>0)===(dir>0);dl=`<span class="dlt ${good===null?"":good?"up":"down"}">${d>0?"▲":d<0?"▼":"–"} ${Math.abs(d).toFixed(dp)}${u==="%"?"%p":""}</span>`}
+    return `<div class="stv-k${g&&okv(v)?(v>=g?" ok":" lo"):""}${S.metric===k?" sel":""}" data-a="stMetric" data-v="${k}" role="button" tabindex="0"><small>${t(l)}</small><b>${fmtV(v,dp)}<i>${t(u)}</i></b>${dl}${g?`<em>${t("목표")} ${g}</em>`:""}</div>`}).join("")}</div>`;
+  // 8칸: 그래프 6 + 고른 지표 월별 추이 + 재고두수 실사 (칸을 누르면 상세 그래프·기록 표)
+  const md=MET.find(m=>m[0]===S.metric)||MET[7],endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),pts=months12(endYm).map(([y,m])=>{const v=rangeMetrics(...monthRange(y,m));return {y,m,v:v?v[md[0]]:null,src:v?v.src:null}});
+  const C=chartCards();C[6]=`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`;
+  const z=ui.stvZ;
+  return h+`<div class="stv-grid${z!=null?" zoom":""}">${C.map((c,i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${i===6?"trend":CD_KEYS[i]}">${c}</div>`).join("")}</div></div>`}
+Object.assign(A,{stvZoom:v=>{ui.stvZ=ui.stvZ===+v?null:+v;render()}});
 /* ================= v0.4 · 백신 엔진 (모돈·후보돈·연간·복별 처치) ================= */
 // 기록 이름 → 재고 품목 이름들
 function vaxProds(name){const all=[...FARM.vax.annual,...FARM.vax.gilt,...FARM.vax.late,...FARM.vax.piglet],v=all.find(x=>x.name===name);return v?[].concat(v.prod):[name]}
@@ -2215,7 +2343,7 @@ const DASH_P={
     return [t("회의 메모"),`<button type="button" class="d-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button>`,ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="d-edit" data-a="memoSave">${t("저장")}</button>`:`<div class="d-memo">${memo?esc(memo).replace(/\n/g,"<br>"):`<span class="d-mu">${t("메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요.")}</span>`}</div>`]}
 };
 const DASH_GO={sows:"sows",breed:"stats",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
-function dashCard(k){const [ti,sub,body]=DASH_P[k]();return `<section class="d-card dk-${k}"><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
+function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
 // 아이폰 가로(높이 500px 이하): 한 화면 3칸씩 옆으로 넘김
 const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)").matches;
 
@@ -2619,6 +2747,8 @@ Object.assign(TR,{"내 할 일":["Việc của tôi","मेरो काम","�
 "도태 후보":["Ứng viên loại","हटाउने उम्मेदवार","បេក្ខជនបោះបង់","ผู้สมัครคัดทิ้ง"],"도태 후보 기준":["Tiêu chí loại","हटाउने मापदण्ड","លក្ខណៈវិនិច្ឆ័យ","เกณฑ์คัดทิ้ง"],"모돈 탭 ‘도태 후보’ 필터":["Bộ lọc trong tab nái","माउ ट्याबको फिल्टर","តម្រងផ្ទាំងមេ","ตัวกรองแท็บแม่"],"산차 이상":["Lứa từ","ब्याँत वा बढी","កូនលើកពី","ครอกตั้งแต่"],"재발·공태 횟수 이상":["Số lần lên giống lại từ","फेरि गर्मी पटक वा बढी","ចំនួនកំដៅវិញពី","ครั้งกลับสัดตั้งแต่"],"최근 2복 실산 이하":["2 ổ gần nhất sống ≤","पछिल्लो २ ब्याँत जीवित ≤","២សំបុកចុងក្រោយ រស់ ≤","2 ครอกล่าสุด มีชีวิต ≤"],"회":[" lần"," पटक"," ដង"," ครั้ง"],
 "이번 주와 다음 주에 예정된 일입니다. 날짜를 누르면 모돈 번호가 보입니다.":["Việc tuần này và tuần sau. Bấm ngày để xem số nái.","यो र अर्को हप्ताका काम। मिति थिच्दा नम्बर देखिन्छ।","ការងារសប្តាហ៍នេះ និងក្រោយ។ ចុចថ្ងៃដើម្បីមើលលេខ។","งานสัปดาห์นี้และหน้า กดวันที่เพื่อดูหมายเลข"],"다음 주":["Tuần sau","अर्को हप्ता","សប្តាហ៍ក្រោយ","สัปดาห์หน้า"]});
 Object.assign(TR,{"화면 배치":["Bố cục màn hình","स्क्रिन लेआउट","ប្លង់អេក្រង់","รูปแบบหน้าจอ"],"자동 = 창 너비에 맞춤":["Tự động = theo độ rộng","स्वतः = चौडाइ अनुसार","ស្វ័យប្រវត្តិ = តាមទទឹង","อัตโนมัติ = ตามความกว้าง"],"자동":["Tự động","स्वतः","ស្វ័យប្រវត្តិ","อัตโนมัติ"],"휴대폰":["Điện thoại","मोबाइल","ទូរស័ព្ទ","มือถือ"],"PC":["PC","PC","PC","PC"],"PC 화면으로":["Chế độ PC","PC मा","ទៅ PC","โหมด PC"],"휴대폰 화면으로":["Chế độ điện thoại","मोबाइलमा","ទៅទូរស័ព្ទ","โหมดมือถือ"]});
+Object.assign(TR,{"TV로 보기":["Xem trên TV","TV मा हेर्नुहोस्","មើលលើ TV","ดูบนทีวี"],"월별 추이":["Xu hướng theo tháng","मासिक प्रवृत्ति","និន្នាការប្រចាំខែ","แนวโน้มรายเดือน"],"위 숫자를 누르면 바뀝니다":["Bấm số phía trên để đổi","माथिको अंक थिच्नुहोस्","ចុចលេខខាងលើដើម្បីប្តូរ","กดตัวเลขด้านบนเพื่อเปลี่ยน"]});
+Object.assign(TR,{"기록이 없습니다.":["Chưa có ghi chép.","रेकर्ड छैन।","មិនមានកំណត់ត្រា។","ไม่มีบันทึก"],"분만복수":["Số ổ đẻ","ब्याँत संख्या","ចំនួនសំបុក","จำนวนครอก"],"PSY 목표 대비":["So với mục tiêu PSY","PSY लक्ष्य तुलना","ធៀបគោលដៅ PSY","เทียบเป้า PSY"],"복당 총산":["Tổng sinh/ổ","कुल/ब्याँत","សរុប/សំបុក","รวม/ครอก"],"포유 손실":["Hao hụt bú","दूध अवधि क्षति","ខាតពេលបំបៅ","สูญเสียช่วงดูดนม"],"포유 육성률":["Tỷ lệ nuôi sống","बाँच्ने दर","អត្រារស់","อัตรารอด"],"주":["Tuần","हप्ता","សប្តាហ៍","สัปดาห์"],"시작일":["Bắt đầu","सुरु","ចាប់ផ្តើម","เริ่ม"],"임신 확인":["Khám thai","गर्भ जाँच","ពិនិត្យពពោះ","ตรวจท้อง"],"원인":["Nguyên nhân","कारण","មូលហេតុ","สาเหตุ"],"돈사":["Chuồng","खोर","ក្រោល","โรงเรือน"],"두수":["Số con","संख्या","ចំនួន","จำนวนตัว"],"폐사 기록":["Ghi chép chết","मृत्यु रेकर्ड","កំណត់ត្រាស្លាប់","บันทึกตาย"],"건":[" lần"," पटक"," ករណី"," ครั้ง"],"단계":["Giai đoạn","चरण","ដំណាក់កាល","ระยะ"],"모돈":["Nái","माउ","មេ","แม่สุกร"],"보관":["Lưu trữ","भण्डार","ទុក","ที่เก็บ"],"잔량 kg":["Còn lại kg","बाँकी kg","នៅសល់ kg","คงเหลือ kg"],"하루 사용 kg":["Dùng/ngày kg","दैनिक kg","ប្រើ/ថ្ងៃ kg","ใช้/วัน kg"],"남은 일수":["Số ngày còn","बाँकी दिन","ថ្ងៃនៅសល់","วันที่เหลือ"],"최근 사료 기록":["Ghi chép cám gần đây","हालको दाना रेकर्ड","កំណត់ត្រាចំណីថ្មីៗ","บันทึกอาหารล่าสุด"],"날짜":["Ngày","मिति","កាលបរិច្ឆេទ","วันที่"],"구분":["Loại","प्रकार","ប្រភេទ","ประเภท"],"실사":["Thực tế","गणना","រាប់ពិត","นับจริง"],"장부":["Sổ sách","खाता","បញ្ជី","บัญชี"],"차이":["Chênh lệch","फरक","ភាពខុសគ្នា","ส่วนต่าง"],"6개월":["6 tháng","६ महिना","៦ខែ","6 เดือน"],"12개월":["12 tháng","१२ महिना","១២ខែ","12 เดือน"],"24개월":["24 tháng","२४ महिना","២៤ខែ","24 เดือน"],"8주":["8 tuần","८ हप्ता","៨សប្តាហ៍","8 สัปดาห์"],"12주":["12 tuần","१२ हप्ता","១២សប្តាហ៍","12 สัปดาห์"],"26주":["26 tuần","२६ हप्ता","២៦សប្តាហ៍","26 สัปดาห์"],"최근":["Gần đây","हालै","ថ្មីៗ","ล่าสุด"],"더 보기":["Xem thêm","थप","មើលបន្ថែម","ดูเพิ่ม"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -2753,7 +2883,7 @@ function vTodo(){
   const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls();
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
   h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
-  h+=todos.length?todos.map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  h+=todos.length?`<div class="todolist">${todos.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
   h+=`<div class="note">일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.</div>`;
   h+=st.length?st.map(x=>`<div class="stall-it"><div style="min-width:0"><div class="sow-top" style="justify-content:flex-start;gap:8px"><button type="button" class="sow-no" data-a="sowd" data-v="${x.s.id}">${x.s.id}<span class="chev">›</span></button><span class="stage ${x.i.cls}">${x.i.label}</span></div><div class="why" style="color:${x.sev==="bad"?"var(--red)":"var(--amber)"}">${x.why}</div><div class="sow-loc">${t("현재")} ${x.s.loc} · ${x.i.sub}</div></div></div>`).join(""):`<div class="empty">기록이 멈춘 개체가 없습니다.</div>`;

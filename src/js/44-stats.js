@@ -43,9 +43,10 @@ function statPeriod(){
 }
 function fmtV(v,dp){return v===null||v===undefined||isNaN(v)?"-":(+v).toFixed(dp)}
 function vStats(){
+  if(document.body.classList.contains("tv"))return vStatsTV();
   const S=ui.st;
   const noShip=!state.records.some(r=>r.type==="출하");const ob=liveBatches().slice(-1)[0];
-  let h=`<div class="pagehd"><h2>성적</h2></div>${noShip?`<div class="banner info"><b>출하 시작 전</b><span>출하 기록이 아직 없어 MSY·출하 성적은 비어 있습니다.${ob?` 첫 출하 예정: ${kDate(addDays(ob.k,shipAge()*7))} 주 (${bName(ob.k)})`:""}</span></div>`:""}<div class="chips">${["월","분기","연간","전년 비교","기간"].map(m=>`<button type="button" class="chip ${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${m==="월"?"월간":m==="기간"?"기간 설정":m}</button>`).join("")}</div>`;
+  let h=`<div class="pagehd"><h2>성적</h2><button class="act" type="button" data-a="tvMode" style="margin-left:auto">📺 ${t("TV로 보기")}</button></div>${noShip?`<div class="banner info"><b>출하 시작 전</b><span>출하 기록이 아직 없어 MSY·출하 성적은 비어 있습니다.${ob?` 첫 출하 예정: ${kDate(addDays(ob.k,shipAge()*7))} 주 (${bName(ob.k)})`:""}</span></div>`:""}<div class="chips">${["월","분기","연간","전년 비교","기간"].map(m=>`<button type="button" class="chip ${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${m==="월"?"월간":m==="기간"?"기간 설정":m}</button>`).join("")}</div>`;
   if(S.mode==="전년 비교")return h+vYoY();
   const P=statPeriod();
   // 기간 선택

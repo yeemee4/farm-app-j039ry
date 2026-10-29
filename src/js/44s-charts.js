@@ -25,33 +25,41 @@ function legendH(items){return `<div class="legend">${items.map(([c,l,dash])=>`<
 function hbarsH(rows,o={}){const mx=Math.max(1,...rows.map(r=>r.v));
   return `<div class="hbars">${rows.map(r=>`<div class="hb"><span class="hb-l">${esc(r.l)}</span><div class="hb-t"><div class="hb-f" style="width:${Math.max(2,r.v/mx*100)}%;background:${r.c||CC.a}" title="${esc(r.l)} ${r.txt||r.v}"></div></div><span class="hb-v">${r.txt||r.v}</span></div>`).join("")}</div>`}
 
-function vCharts(){
+function vCharts(){return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${chartCards().map((c,i)=>`<div class="cd-go" data-a="chDetail" data-v="${CD_KEYS[i]}">${c}</div>`).join("")}</div>`}
+function chartCards(){const C=[];
   const S=ui.st,P=statPeriod(),endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),M=months12(endYm),lab=M.map(([,m])=>m+t("월"));
   const mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),G=sGoal(),pick=k=>mm.map(v=>v?v[k]:null);
-  let h=`<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">`;
+  let h="";const cut=()=>{C.push(h);h=""};
   // 1. PSY·MSY 추이 + 목표선
   h+=`<div class="card"><h3>${t("PSY · MSY 추이")}<small>${t("두/모돈/년 · 점선 = 목표")}</small></h3>${linesSvg({title:"PSY MSY",labels:lab,dp:1,series:[{l:"PSY",v:pick("psy"),c:CC.a},{l:"MSY",v:pick("msy"),c:CC.b}],goals:[{l:t("목표")+" "+G.psy,v:G.psy,c:CC.a},{l:t("목표")+" "+G.msy,v:G.msy,c:CC.b}]})}${legendH([[CC.a,"PSY"],[CC.b,"MSY"],["var(--muted)",t("목표"),1]])}</div>`;
+  cut();
   // 2. 복당 실산 · 이유두수 (사이 면 = 포유 손실)
   h+=`<div class="card"><h3>${t("복당 실산 · 이유두수")}<small>${t("두 선 사이 = 포유 중 손실")}</small></h3>${linesSvg({title:"실산 이유",labels:lab,dp:1,band:t("포유 중 손실"),series:[{l:t("실산"),v:pick("live"),c:CC.a},{l:t("이유"),v:pick("wean"),c:CC.b}]})}${legendH([[CC.a,t("복당 실산")],[CC.b,t("복당 이유")]])}</div>`;
+  cut();
   // 3. 주간 교배·분만·이유 달성률 (최근 4주)
   const goal=dashCfg().goal,ws=[3,2,1,0].map(i=>addDays(weekStart(TODAY),-7*i));
   const cnt=(k,a)=>{const b=addDays(a,6),R=state.records.filter(r=>r.type===k&&r.workDate>=a&&r.workDate<=b);return k==="교배"?R.filter(r=>r.data.round==="1차").length:R.length};
   h+=`<div class="card"><h3>${t("주간 번식 달성률")}<small>${t("목표")}: ${t("교배")} ${goal.교배} · ${t("분만")} ${goal.분만} · ${t("이유")} ${goal.이유}</small></h3><div class="wk">`+
     `<div class="wk-h"><span></span>${ws.map(w=>`<span>W${isoWeek(w).w}${w===weekStart(TODAY)?" "+t("진행"):""}</span>`).join("")}</div>`+
     ["교배","분만","이유"].map(k=>`<div class="wk-r"><span>${t(k)}</span>${ws.map(w=>{const n=cnt(k,w),p=Math.round(n/(goal[k]||1)*100);return `<span class="wk-c" title="W${isoWeek(w).w} ${t(k)} ${n}/${goal[k]}"><b>${p}%</b><i><em style="width:${Math.min(100,p)}%;background:${p>=100?"var(--good)":p>=75?CC.a:"var(--amber)"}"></em></i><small>${n}/${goal[k]}</small></span>`}).join("")}</div>`).join("")+`</div></div>`;
+  cut();
   // 4. 폐사 히트맵: 돈사 × 주 (최근 8주)
   const w8=[7,6,5,4,3,2,1,0].map(i=>addDays(weekStart(TODAY),-7*i)),barns=BARNS.slice(),cell={};let cmx=1;
   state.records.filter(r=>r.type==="폐사"&&r.workDate>=w8[0]).forEach(r=>{const k=r.data.barn+"|"+weekStart(r.workDate);cell[k]=(cell[k]||0)+r.data.n;cmx=Math.max(cmx,cell[k])});
   const rowsB=barns.filter(b=>w8.some(w=>cell[b+"|"+w]));
   h+=`<div class="card"><h3>${t("폐사 현황")}<small>${t("돈사 × 주 · 진할수록 많음")}</small></h3>${rowsB.length?`<div class="hm" style="--hc:${w8.length}"><span></span>${w8.map(w=>`<span class="hm-h">W${isoWeek(w).w}</span>`).join("")}${rowsB.map(b=>`<span class="hm-l">${esc(t(b))}</span>${w8.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/cmx*82)}%, var(--surface))`:"var(--bg)"};color:${v/cmx>.55?"#fff":"var(--ink)"}" title="${esc(t(b))} W${isoWeek(w).w} ${v}${t("두")}">${v||""}</span>`}).join("")}`).join("")}</div>`:`<div class="empty">${t("최근 8주 폐사 기록이 없습니다.")}</div>`}</div>`;
+  cut();
   // 5. 폐사 원인 비중 (선택 기간, 많은 순)
   const cz={};state.records.filter(r=>r.type==="폐사"&&r.workDate>=P.f&&r.workDate<=P.t).forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);
   const ctot=Object.values(cz).reduce((a,b)=>a+b,0);
   h+=`<div class="card"><h3>${t("폐사 원인 비중")}<small>${esc(P.label)} · ${ctot}${t("두")}</small></h3>${ctot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/ctot*100)}%`,c:"var(--red)"}))):`<div class="empty">${t("이 기간에는 기록이 없습니다.")}</div>`}</div>`;
+  cut();
   // 6. 사료 남은 일수 (색 신호)
   const fr=feedTable().filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days),od=FARM.feed.orderDays;
   h+=`<div class="card"><h3>${t("사료 남은 일수")}<small>${t("빨강 2일 이하 · 노랑")} ${od}${t("일 이하")}</small></h3>${fr.length?hbarsH(fr.map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}${x.days<=od?" ⚠":""}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"}))):`<div class="empty">${t("잔량 기록 필요")}</div>`}</div>`;
+  cut();
   // 7·8. 아직 기록 항목이 없는 그래프
   h+=`<div class="card ghost"><h3>${t("도체 등급 분포")}<small>${t("주별 100% 누적 막대")}</small></h3><div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div></div>`;
+  cut();
   h+=`<div class="card ghost"><h3>${t("재고두수 장부 vs 실사")}<small>${t("돈사별 차이 막대")}</small></h3>${countChart()||`<div class="empty">${t("돈사별 재고두수 실사를 입력하면 표시합니다.")}</div>`}<div class="acts"><button class="act" type="button" data-a="tab" data-v="count">${t("실사 입력")} ›</button></div></div>`;
-  return h+`</div>`}
+  cut();return C}
