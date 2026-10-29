@@ -1,6 +1,6 @@
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 남은 일수",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["memo","회의 메모",1]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
 function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
@@ -38,8 +38,10 @@ const DASH_P={
     return [t("폐사 추이"),t("최근 4주 · 두"),`<div class="d-cols">${W.map(x=>`<div class="d-col ${x.now?"now":""}"><b>${x.n}</b><div class="d-c" style="height:${Math.max(2,x.n/mx*100)}%" title="W${x.k} ${x.n}"></div><span>W${x.k}${x.now?" "+t("진행"):""}</span></div>`).join("")}</div>`]},
   flow:()=>{const L2=liveBatches(),S=state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return {n,g:inS.length,h:inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0),c:DCOL[[2,0,5,3,1][i]||0]}}),tot=S.reduce((s,x)=>s+x.h,0)||1;
     return [t("돈군 흐름"),t("돈사별 두수"),`<div class="d-flow">${S.map(x=>`<div style="flex:${Math.max(x.h,tot*.06)};background:${x.h?x.c:"#3a4640"}" title="${t(x.n)} ${x.h}">${x.h.toLocaleString()}</div>`).join("")}</div><div class="d-flowlab">${S.map(x=>`<div style="flex:${Math.max(x.h,tot*.06)}">${t(x.n)}<br><small>${x.g}${t("군")}</small></div>`).join("")}</div>`]},
-  feed:()=>{const R=feedTable().filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days),mx=Math.max(14,...R.map(x=>x.days)),o=FARM.feed.orderDays;
-    return [t("사료 남은 일수"),`${o}${t("일")} ${t("이하 주문")}`,`<div class="d-bars">${R.slice(0,6).map(x=>{const c=x.days<=2?DST.crit:x.days<=o?DST.warn:DST.good;return `<button type="button" class="d-bar" data-a="dashFeed" data-v="${esc(x.f)}"><span>${esc(x.f)}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.days/mx*100)}%;background:${c}"></div></div><span class="d-v"><b>${x.days}${t("일")}</b>${x.days<=o?" ⚠":""}</span></button>`}).join("")||`<div class="d-mu">${t("잔량 기록 필요")}</div>`}</div>`]},
+  feed:()=>{const T=feedTable(),R=T.filter(x=>x.use>0&&x.days!==null&&!x.bin).sort((a,b)=>a.days-b.days),mx=Math.max(14,...R.map(x=>x.days)),o=FARM.feed.orderDays;
+    const bins=`<div class="d-bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},c=x.days==null?"#6b7684":x.days<=2?DST.crit:x.days<=o?DST.warn:DST.good,[lL,lR]=binLevels(b,Math.min(x.kg||0,b.cap)),P=binPx(b);
+      return `<button type="button" class="d-bin" data-a="dashBin" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"d"+i,lL,lR,c,0,"var(--fg)","var(--tr)")}</svg><b>${esc(b.name.replace(" 빈",""))}</b><span>${x.kg==null?"—":(Math.min(x.kg,b.cap)/1000).toFixed(1)+"t"}</span><em style="color:${c}">${x.days==null?t("기록 필요"):x.days+t("일")}${x.days!=null&&x.days<=o?" ⚠":""}</em></button>`}).join("")}</div>`;
+    return [t("사료 잔량"),`${o}${t("일")} ${t("이하 주문")}`,bins+`<div class="d-bars">${R.slice(0,4).map(x=>{const c=x.days<=2?DST.crit:x.days<=o?DST.warn:DST.good;return `<button type="button" class="d-bar" data-a="dashFeed" data-v="${esc(x.f)}"><span>${esc(x.f)}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.days/mx*100)}%;background:${c}"></div></div><span class="d-v"><b>${x.days}${t("일")}</b>${x.days<=o?" ⚠":""}</span></button>`}).join("")}</div>`]},
   am:()=>{const D=amDay(TODAY),P=amProg();
     return [t("아침 점검"),`${P.done}/${P.all} · ${FARM.morning.due}${t("까지")}`,`<div class="d-am">${FARM.morning.route.map(r=>{const x=D[r.barn],iss=x?amIssues(r,x):[];return `<button type="button" data-a="dashAm" data-v="${esc(r.barn)}" class="${!x?"no":iss.length?"bad":"ok"}"><b>${esc(t(r.barn))}</b>${!x?t("미점검"):`${x.temp!==""?x.temp+"℃ ":""}${iss.length?"✕ "+esc(iss.join(" · ")):"✓"}`}</button>`}).join("")}</div>`]},
   barn:()=>{const L2=liveBatches(),sl={};activeSows().forEach(s=>sl[s.loc]=(sl[s.loc]||0)+1);
@@ -91,6 +93,7 @@ Object.assign(A,{
   dashSow:v=>{dashLeave();ui.sf=v;go("sows")},
   dashAm:v=>{dashLeave();go("morning");A.amOpen(v)},
   dashFeed:()=>{dashLeave();openInput("사료")},
+  dashBin:v=>{dashLeave();ui.drugCat="사료";go("drug");setTimeout(()=>openBin(+v),50)},
   dashTog:v=>{const d=dashCfg();d.on[v]=!d.on[v];save();render()},
   dashMove:(v,el)=>{const d=dashCfg(),i=d.order.indexOf(v),j=i+Number(el.dataset.k);if(j<0||j>=d.order.length)return;[d.order[i],d.order[j]]=[d.order[j],d.order[i]];save();render()},
   sgoal:(v,el)=>{const g=state.sgoal=state.sgoal||{};g[v]=Math.max(0,sGoal()[v]+Number(el.dataset.k));save();render()},

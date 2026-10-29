@@ -34,22 +34,26 @@ function binCol(days){return days===null||days===undefined?"#8a949e":days<=2?"#e
 // 그림 좌표: 가로 96(지름) 기준으로 실제 비율
 // 모든 빈을 같은 축척(지름 2.3m = 96)으로 그려 5톤은 가늘게, 10톤은 굵고 높게
 function binPx(b){const g=binGeo(b),s=96/2.3,roof=g.dome*s,top=roof+6,cy=g.hy*s,cn=g.hc*s,hw=g.R*s;return {s,x0:60-hw,x1:60+hw,cx:60,top,cyl:cy,cone:cn,B:top+cy+cn,H:cy+cn+roof,o:BIN_R0*s,roof}}
-function binSvg(b,id,lL,lR,col,big){const P=binPx(b),yL=P.B-lL*P.H,yR=P.B-lR*P.H,yAt=x=>yL+(yR-yL)*(x-P.x0)/(P.x1-P.x0);
+// 지금 추정 잔량을 마지막 게이지 기록의 기울기 그대로 그릴 때의 왼쪽·오른쪽 높이
+function binLastTilt(b){const r=state.records.filter(x=>x.type==="사료"&&x.data.kind===b.feed&&x.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];return r?(r.data.lR-r.data.lL)/2:0}
+function binLevels(b,kg){const td=binLastTilt(b),tv=Math.max(0,kg)/1000/binDens(b);if(!td)return [binLevelOfKg(b,kg),binLevelOfKg(b,kg)];
+  let a=-Math.abs(td),c=1+Math.abs(td);const f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));for(let k=0;k<24;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;return [Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td))]}
+function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binPx(b),yL=P.B-lL*P.H,yR=P.B-lR*P.H,yAt=x=>yL+(yR-yL)*(x-P.x0)/(P.x1-P.x0);
   const o=`M${P.x0},${P.top} A${P.x1-P.cx},${P.roof} 0 0 1 ${P.x1},${P.top} L${P.x1},${P.top+P.cyl} L${P.cx+P.o},${P.B} L${P.cx-P.o},${P.B} L${P.x0},${P.top+P.cyl} Z`;
   let g=`<defs><clipPath id="bc${id}"><path d="${o}"/></clipPath><pattern id="bh${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width="7" height="7" fill="${col}"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,.35)" stroke-width="2.5"/></pattern></defs>`;
-  g+=`<path d="${o}" fill="var(--bg)"/><polygon class="bv-fill" clip-path="url(#bc${id})" points="-30,${yAt(-30)} 150,${yAt(150)} 150,${P.B+4} -30,${P.B+4}" fill="url(#bh${id})"/>`;
-  g+=`<path d="${o}" fill="none" stroke="var(--ink)" stroke-width="${big?2.2:2.8}" stroke-linejoin="round"/>`;
-  [P.top,P.top+P.cyl].forEach(y=>g+=`<line x1="${P.x0}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="var(--ink)" stroke-width="1.3" opacity=".45"/>`);
+  g+=`<path d="${o}" fill="${bg}"/><polygon class="bv-fill" clip-path="url(#bc${id})" points="-30,${yAt(-30)} 150,${yAt(150)} 150,${P.B+4} -30,${P.B+4}" fill="url(#bh${id})"/>`;
+  g+=`<path d="${o}" fill="none" stroke="${ink}" stroke-width="${big?2.2:2.8}" stroke-linejoin="round"/>`;
+  [P.top,P.top+P.cyl].forEach(y=>g+=`<line x1="${P.x0}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="${ink}" stroke-width="1.3" opacity=".45"/>`);
   return g}
 function vFeedBins(){const T=feedTable();
-  return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),L=binLevelOfKg(b,x.kg||0),P=binPx(b);
-    return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,L,L,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
+  return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),[lL,lR]=binLevels(b,Math.min(x.kg||0,cap)),P=binPx(b);
+    return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
 function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},last=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];
   const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.workDate===TODAY).sort((p,q)=>(p.createdAt||"").localeCompare(q.createdAt||"")),lg=[...R].reverse().find(r=>r.data.vol!=null);
   if(lg&&lg.data.gauge==="입고 전"&&R.some(r=>r.data.mode==="입고"&&r.createdAt>lg.createdAt))ui.binMode="입고 후";
   const L0=x.kg==null?.5:binLevelOfKg(b,x.kg),k=binKnob(),P=binPx(b);ui.bin={i,lL:L0,lR:L0};
   // 마지막 기록의 기울기를 이어서 시작 (높이는 지금 추정량에 맞춤)
-  if(last){const tl=(last.data.lR-last.data.lL)/2;ui.bin.lL=Math.max(0,Math.min(1,L0-tl));ui.bin.lR=Math.max(0,Math.min(1,L0+tl))}
+  if(last&&x.kg!=null){const [a,c]=binLevels(b,Math.min(x.kg,b.cap));ui.bin.lL=a;ui.bin.lR=c}
   ui.bin.lL=Math.round(ui.bin.lL/BIN_SNAP)*BIN_SNAP;ui.bin.lR=Math.round(ui.bin.lR/BIN_SNAP)*BIN_SNAP;
   const vb=k==="both"?`-46 ${-P.roof-26} 212 ${P.B+P.roof+32}`:`-8 ${-P.roof-26} 136 ${P.B+P.roof+32}`;
   $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet binsheet" role="dialog" aria-modal="true" aria-label="${esc(b.name)}"><div class="sh-hd"><h2>${esc(b.name)} · ${esc(b.feed)} <small class="sow-meta">${binCfg(b).spec}${t("톤 규격")} · ${t("가득")} ${(b.cap/1000).toFixed(1)}t</small></h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">

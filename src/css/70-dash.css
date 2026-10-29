@@ -171,3 +171,9 @@ body.tv .dk-parity .d-col{font-size:1.3vh}body.tv .dk-parity .d-col b{font-size:
 .d-hero{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.d-hero b{font:900 40px/1 var(--display)}.d-hero b small{font-size:15px;color:var(--mu);margin-left:2px}.d-hero span{font-size:14px;font-weight:700}.d-hero span small{color:var(--mu);font-weight:500}
 body.tv .d-hero b{font-size:5vh}body.tv .d-hero span{font-size:1.7vh}
 .dk-npd .d-bar>span:first-child{white-space:nowrap}
+/* 현황판 사료 빈 (마지막 기록 기울기) */
+.d-bins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:end;margin-bottom:8px}
+.d-bin{display:grid;justify-items:center;gap:0;color:var(--fg);text-align:center;min-width:0}.d-bin svg{width:100%;max-width:64px;height:auto}
+.d-bin b{font-size:12px;margin-top:3px;white-space:nowrap}.d-bin span{font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}.d-bin em{font-style:normal;font-size:12.5px;font-weight:800}
+body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:1.4vh}body.tv .d-bin em{font-size:1.6vh}
+.d-swipe .d-bin svg{max-width:34px}.d-swipe .d-bin b,.d-swipe .d-bin span,.d-swipe .d-bin em{font-size:9px}
