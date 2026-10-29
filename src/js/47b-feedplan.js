@@ -92,7 +92,7 @@ function fpCard(o){const lead=FARM.feed.leadDays,safe=FARM.feed.orderDays,d4=o.w
   const tk=o.bin&&(ui.trucks||[]).map((x,n)=>({x,n,it:x.items.find(i=>i.o.f===o.f)})).find(z=>z.it),rec=o.bin?(tk?`${tk.n+1}${t("차")} (${kDate(tk.x.order)} ${t("주문")})에 <b>${tk.it.q.toLocaleString()}kg</b>`:t("8주 안 주문 없음"))+` · <small>${t("한 번에 최대")} ${Math.floor(Math.min(o.bin.cap,FARM.feed.freshDays*o.avg4)/500)*500/1000}t (${o.limit==="cap"?t("빈 용량"):`${t("신선도")} ${FARM.feed.freshDays}${t("일")}`})</small>${o.small?` · <span class="warn">⚠ ${t("빈이 작음")}</span>`:""}`:(()=>{const bo=(ui.bagOrd||[]).map((x,n)=>({x,n,it:x.items.find(i=>i.o.f===o.f)})).find(z=>z.it);return `${t("주당")} <b>${o.bagsWk}${t("포")}</b> ${t("필요")}`+(bo?` · ${t("포대")} ${bo.n+1}${t("회")} (${kDate(bo.x.order)} ${t("주문")})에 <b>${bo.it.q}${t("포")}</b>`:"")})();
   return `<div class="fp ${late?"late":""}"><div class="fp-1"><b>${esc(o.f)}</b><small>${o.bin?esc(o.bin.name):t("포대")}</small><span>${when}</span></div>
     <div class="fp-2"><span>${t("하루")} <b>${Math.round(o.d0).toLocaleString()}kg</b> → ${t("4주 후")} ${Math.round(d4).toLocaleString()}kg ${ch?`<i class="${ch>0?"up":"dn"}">${ch>0?"▲":"▼"}${Math.abs(ch)}%</i>`:""}</span>${fpSpark(o.wk)}</div>
-    <div class="fp-3">${now?now+"<br>":""}${rec}</div>${arrive}</div>`}
+    <div class="fp-3">${now?now+"<br>":""}${rec}</div>${arrive}${learnTag(o.f)}</div>`}
 // 주문일이 2일 안쪽인 빈끼리 한 번에 주문
 function fpGroups(B){const L=B.filter(o=>o.orderBy&&o.kg!=null).sort((a,b)=>a.orderBy.localeCompare(b.orderBy)),g=[];L.forEach(o=>{const last=g[g.length-1],d=o.orderBy<TODAY?TODAY:o.orderBy;if(last&&diff(last.d,d)<=2)last.L.push(o);else g.push({d,L:[o]})});return g}
 function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return "";const B=P.filter(o=>o.bin),G=P.filter(o=>!o.bin),lead=FARM.feed.leadDays,safe=FARM.feed.orderDays;
@@ -121,7 +121,7 @@ Object.assign(A,{fOpt:(v,el)=>{const o=state.feedOpt=state.feedOpt||{},lim={fres
 // 대표 설정: 섭취량 기준표
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
-  h+=fcBySet()+fOptSet()+binSet();
+  h+=fcBySet()+fOptSet()+binSet()+learnSet();
   h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${[["gestEarly",`${t("임신")} ~${I.gestLateFrom-1}${t("일")}`],["gestLate",`${t("임신")} ${I.gestLateFrom}${t("일")}~`],["open",t("이유 후 공태")],["gilt",t("후보돈")]].map(([k,l])=>`<div class="setrow"><span>${l}</span>${st(k,I[k],null,.1)}</div>`).join("")}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
   h+=`<div class="sec-t">${t("자돈·육성돈 (주령)")} <span>${t("사료 종류는 일령별 급여표를 따름")}</span></div><div class="panel">${I.pig.map((v,i)=>`<div class="setrow"><span>${i}${t("주령")} <small class="sow-meta">${pigFeeds(i*7+3).map(p=>p.feed).join("·")}</small></span>${st("pig",v,i,.05)}</div>`).join("")}</div>`;
   return h+`<div class="acts"><button class="act" type="button" data-a="intkReset">${t("기본값으로")}</button></div>`}

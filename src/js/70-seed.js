@@ -98,6 +98,13 @@ function seedFarmPost(){
   feedKinds().forEach((f,i)=>{const use=fu[f]||0;if(!use)return;const low=f==="2호"||f==="임신모돈";
     state.records.push({id:newId(),type:"사료",workDate:d10,createdAt:at(d10),user:"조성훈 팀장",data:{kind:f,mode:"빈 잔량",kg:Math.max(100,Math.round(use*(low?13:9+i%4)/10)*10)}});
     if(!low)state.records.push({id:newId(),type:"사료",workDate:d5,createdAt:at(d5),user:"조성훈 팀장",data:{kind:f,mode:"입고",kg:Math.max(200,Math.round(use*10/100)*100)}})});
+  // 사료 학습용: 10일 전 잔량 앞으로 35일 동안 매일 아침 잔량(일요일 빼고)과 입고. 실제 사용 = 모델 × 사료별 숨은 배율 × 하루 흔들림
+  {const d45=addDays(TODAY,-46);state.records=state.records.filter(r=>!(r.type==="사료"&&r.data.mode==="입고"&&r.workDate>=d45&&r.workDate<d10));
+   const raw=feedPlanDays0(37,d45),TF={임신모돈:1.06,포유모돈:.93,젖먹이:1.12,육성:.97,특호:1.35,"1호":1.25,"2호":1.15,"3호":1.08};let seedN=7;const rnd=()=>{seedN=(seedN*9301+49297)%233280;return seedN/233280};
+   feedKinds().forEach(f=>{const r10=state.records.find(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===d10&&r.data.mode==="빈 잔량");if(!r10)return;const bin=feedBin(f),bag=feedBag(f),hi=bin?bin.cap*.95:Math.max(400,(fu[f]||1)*30),lo=bin?bin.cap*.25:(fu[f]||1)*6;
+     let S=r10.data.kg;for(let k=1;k<=35;k++){const d=addDays(d10,-k),x=raw.find(z=>z.d===d),use=(x&&x.u[f]||0)*(TF[f]||1)*(1+(rnd()-.5)*.12);let c=S+use;
+       if(c>hi){const q=bag?Math.round((c-lo)/bag.kg)*bag.kg:Math.round((c-lo)/500)*500;state.records.push({id:newId(),type:"사료",workDate:addDays(d,1),createdAt:new Date(toUTC(addDays(d,1))+(7)*36e5).toISOString(),user:"조성훈 팀장",data:{kind:f,mode:"입고",kg:q}});c-=q}
+       S=c;if(dow(d)!==0)state.records.push({id:newId(),type:"사료",workDate:d,createdAt:new Date(toUTC(d)+8.5*36e5).toISOString(),user:"조성훈 팀장",data:{kind:f,mode:"빈 잔량",kg:Math.max(0,Math.round(S+(bin?(rnd()-.5)*bin.cap*.02:0)))}})}})}
   // 오늘 아침 점검: 앞의 5곳 완료, 분만사 보온등 이상
   state.am={[TODAY]:{}};
   // 지난 7일 아침 점검 (급수량 평균용)
