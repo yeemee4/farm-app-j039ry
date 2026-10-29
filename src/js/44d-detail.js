@@ -36,7 +36,7 @@ function cdBody(k,n){const G=sGoal();
   if(k==="feed"){const fr=feedTable(),od=FARM.feed.orderDays,R=state.records.filter(r=>r.type==="사료").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return hbarsH(fr.filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days).map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"})))+
       cdTable(["사료","보관","잔량 kg","하루 사용 kg","남은 일수"],fr.map(x=>[esc(x.f),x.bin?esc(x.bin.name):t("포대"),(x.kg||0).toLocaleString(),Math.round(x.use||0),x.days??"-"]))+
-      `<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
+      vFeedPlan()+`<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
   if(k==="parity")return parityDetail();
   if(k==="count"){const R=state.records.filter(r=>r.type==="실사").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return (countChart()||"")+cdTable(["날짜","돈사","실사","장부","차이"],R.map(r=>{const d=r.data.n-r.data.est;return [kDate(r.workDate),esc(t(r.data.barn)),r.data.n,r.data.est,`<span class="dlt ${d<0?"down":d>0?"up":""}">${d>0?"+":""}${d}</span>`]}))}

@@ -17,7 +17,7 @@ function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SV
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
 const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.wxcard,.d-card,.d-top,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
-const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN"};
+const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN",feedset:"FS"};
 let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
 function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
   const pre=document.body.classList.contains("login")?"L":(TAG_PRE[typeof tab!=="undefined"?tab:""]||String(tab||"X").slice(0,2).toUpperCase());
