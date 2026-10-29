@@ -1,6 +1,6 @@
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 남은 일수",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 남은 일수",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["memo","회의 메모",1]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
 function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
@@ -30,6 +30,8 @@ const DASH_P={
   breed:()=>{const w=dWeek(),G=dashCfg().goal,R=k=>state.records.filter(r=>r.type===k&&r.workDate>=w&&r.workDate<=TODAY);
     const rows=[["교배",R("교배").filter(r=>r.data.round==="1차").length,DCOL[0]],["분만",R("분만").length,DCOL[2]],["이유",R("이유").length,DCOL[3]],["임신확인",R("임신확인").filter(r=>r.data.result==="임신").length,DCOL[5]]];
     return [t("이번 주 번식"),t("목표 대비 · 흰 선 = 목표"),`<div class="d-bars">${rows.map(([k,n,c])=>{const g=G[k]||1,mx=Math.max(g,n);return `<div class="d-bar"><span>${t(LABEL[k]||k)}</span><div class="d-track"><div class="d-fill" style="width:${n/mx*100}%;background:${c}"></div><div class="d-tick" style="left:calc(${g/mx*100}% - 3px)"></div></div><span class="d-v"><b>${n}</b> / ${g}</span></div>`}).join("")}</div>`]},
+  parity:()=>{const D=parityDist(),G=parGoal(),mx=Math.max(1,...PAR_B.map(b=>D.c[b].length)),gc={young:DCOL[0],core:DCOL[2],old:DCOL[3]};
+    return [t("산차 구성"),`${D.tot}${t("두")} · ${["young","core","old"].map(k=>`${Math.round(D.g[k]/D.tot*100)}/${G[k]}%`).join(" · ")}`,`<div class="d-cols">${PAR_B.map(b=>{const n=D.c[b].length;return `<div class="d-col"><b>${n}</b><div class="d-c" style="height:${Math.max(n?3:0,n/mx*100)}%;background:${gc[parGrp(b)]}"></div><span>${b==="후보"?t("후보"):b}</span></div>`}).join("")}</div>`]},
   dead:()=>{const w=dWeek(),W=[3,2,1,0].map(i=>{const a=addDays(w,-7*i),b=addDays(a,6);return {k:isoWeek(a).w,now:i===0,n:state.records.filter(r=>r.type==="폐사"&&r.workDate>=a&&r.workDate<=b).reduce((s,r)=>s+r.data.n,0)}}),mx=Math.max(1,...W.map(x=>x.n));
     return [t("폐사 추이"),t("최근 4주 · 두"),`<div class="d-cols">${W.map(x=>`<div class="d-col ${x.now?"now":""}"><b>${x.n}</b><div class="d-c" style="height:${Math.max(2,x.n/mx*100)}%" title="W${x.k} ${x.n}"></div><span>W${x.k}${x.now?" "+t("진행"):""}</span></div>`).join("")}</div>`]},
   flow:()=>{const L2=liveBatches(),S=state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return {n,g:inS.length,h:inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0),c:DCOL[[2,0,5,3,1][i]||0]}}),tot=S.reduce((s,x)=>s+x.h,0)||1;
@@ -52,7 +54,7 @@ const DASH_P={
     return [t("회의 메모"),`<button type="button" class="d-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button>`,ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="d-edit" data-a="memoSave">${t("저장")}</button>`:`<div class="d-memo">${memo?esc(memo).replace(/\n/g,"<br>"):`<span class="d-mu">${t("메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요.")}</span>`}</div>`]}
 };
 const DASH_GO={sows:"sows",breed:"stats",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
-function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
+function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy",parity:"parity"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
 // 아이폰 가로(높이 500px 이하): 한 화면 3칸씩 옆으로 넘김
 const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)").matches;
 
@@ -81,7 +83,7 @@ function vDashSet(){const d=dashCfg(),nm=Object.fromEntries(DASH_LIST.map(x=>[x[
   h+=`</div><div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
   h+=Object.keys(DASH_GOAL0).map(k=>`<div class="setrow"><span>${t(LABEL[k]||k)}</span><div class="stepper"><button type="button" data-a="dashGoal" data-v="${k}" data-k="-1" aria-label="줄이기">−</button><input type="number" value="${d.goal[k]}" readonly aria-label="${t(LABEL[k]||k)}"><button type="button" data-a="dashGoal" data-v="${k}" data-k="1" aria-label="늘리기">+</button></div></div>`).join("");
   const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="-0.5" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="0.5" aria-label="늘리기">+</button></div></div>`).join("")}`;
-  return h+`</div>`+cullRuleSet()+closeBySet()+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
+  return h+`</div>`+parGoalSet()+cullRuleSet()+closeBySet()+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
 Object.assign(A,{
   dashGo:v=>{if(v==="memo")return A.memoEdit();dashLeave();if(v==="feed")ui.drugCat="사료";go(DASH_GO[v]||"home")},
   dashSow:v=>{dashLeave();ui.sf=v;go("sows")},

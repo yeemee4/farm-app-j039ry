@@ -8,7 +8,7 @@ function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P
     return `<div class="stv-k${g&&okv(v)?(v>=g?" ok":" lo"):""}${S.metric===k?" sel":""}" data-a="stMetric" data-v="${k}" role="button" tabindex="0"><small>${t(l)}</small><b>${fmtV(v,dp)}<i>${t(u)}</i></b>${dl}${g?`<em>${t("목표")} ${g}</em>`:""}</div>`}).join("")}</div>`;
   // 8칸: 그래프 6 + 고른 지표 월별 추이 + 재고두수 실사 (칸을 누르면 상세 그래프·기록 표)
   const md=MET.find(m=>m[0]===S.metric)||MET[7],endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),pts=months12(endYm).map(([y,m])=>{const v=rangeMetrics(...monthRange(y,m));return {y,m,v:v?v[md[0]]:null,src:v?v.src:null}});
-  const C=chartCards();C[6]=`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`;
+  const C=chartCards();C[7]=C[8];C.length=8;C[6]=`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`;
   const z=ui.stvZ;
-  return h+`<div class="stv-grid${z!=null?" zoom":""}">${C.map((c,i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${i===6?"trend":CD_KEYS[i]}">${c}</div>`).join("")}</div></div>`}
+  return h+`<div class="stv-grid${z!=null?" zoom":""}">${C.map((c,i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${i===6?"trend":i===7?"parity":CD_KEYS[i]}">${c}</div>`).join("")}</div></div>`}
 Object.assign(A,{stvZoom:v=>{ui.stvZ=ui.stvZ===+v?null:+v;render()}});

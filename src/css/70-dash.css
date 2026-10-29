@@ -155,3 +155,14 @@ html[data-skin] .stv-grid .card,.stv-grid .card{background:var(--surface)!import
   .stv-grid .hm{gap:1.5px}.stv-grid .hm-h{font-size:7px}.stv-grid .hm-l{font-size:8px}.stv-grid .hm-c{min-height:0;height:11px;font-size:7.5px;border-radius:3px}
   .stv-grid .hb-t{height:7px}.stv-grid .hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+/* 산차 구성 */
+.pbars{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;align-items:end;height:150px}.pbars.big{height:220px}
+.pbar{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;text-align:center;gap:2px;font-size:11.5px}.pbar b{font-size:12.5px}.pbar span{color:var(--muted);font-size:11px}
+.pb-c{display:flex;align-items:flex-end;min-height:0}.pb-c i{display:block;width:100%;border-radius:4px 4px 0 0}
+.pband{display:grid;gap:4px;margin-top:8px}.pb-r{display:grid;grid-template-columns:34px 1fr;gap:6px;align-items:center;font-size:11.5px;color:var(--muted)}
+.pb-t{display:flex;height:16px;border-radius:5px;overflow:hidden;background:var(--grid)}.pb-t i{display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800;color:#fff;overflow:hidden}
+.pids{white-space:normal;font-size:11.5px;color:var(--muted);text-align:left;display:block;min-width:180px}
+.stv-grid .pbars{flex:1;height:auto;min-height:0}.stv-grid .pbar{font-size:1.4vh}.stv-grid .pbar b{font-size:1.6vh}.stv-grid .pb-t{height:1.8vh}.stv-grid .pb-r{font-size:1.3vh}
+@media (max-height:500px) and (orientation:landscape){.stv-grid .pbar,.stv-grid .pbar b,.stv-grid .pbar span{font-size:8px}.stv-grid .pb-t{height:8px}.stv-grid .pb-t i{font-size:7px}.stv-grid .pb-r{font-size:8px;grid-template-columns:24px 1fr}}
+.dk-parity .d-cols{gap:3px}.dk-parity .d-col{min-width:0;font-size:11px}.dk-parity .d-col b{font-size:14px}.dk-parity .d-c{width:82%}
+body.tv .dk-parity .d-col{font-size:1.3vh}body.tv .dk-parity .d-col b{font-size:1.9vh}

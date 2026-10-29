@@ -1,7 +1,7 @@
 /* ===== 그래프 상세 (성적·성적 TV·현황판에서 그래프를 누르면) =====
    위: 기간을 늘린 큰 그래프 · 아래: 쌓인 기록 표. 기간 칩으로 길이 바꿈 */
-const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count"];   // chartCards() 순서
-const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",trend:"월별 추이"};
+const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count","parity"];   // chartCards() 순서
+const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",parity:"산차 구성",trend:"월별 추이"};
 const CD_M=["psy","litter","trend"],CD_W=["week","dead","cause"];   // 월 단위 · 주 단위
 function cdMonths(n){let [y,m]=TODAY.slice(0,7).split("-").map(Number);const a=[];for(let i=n-1;i>=0;i--){let yy=y,mm=m-i;while(mm<1){mm+=12;yy--}a.push([yy,mm])}return a}
 function cdWeeks(n){const w=weekStart(TODAY);return Array.from({length:n},(_,i)=>addDays(w,-7*(n-1-i)))}
@@ -36,6 +36,7 @@ function cdBody(k,n){const G=sGoal();
     return hbarsH(fr.filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days).map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"})))+
       cdTable(["사료","보관","잔량 kg","하루 사용 kg","남은 일수"],fr.map(x=>[esc(x.f),x.bin?esc(x.bin.name):t("포대"),(x.kg||0).toLocaleString(),Math.round(x.use||0),x.days??"-"]))+
       `<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
+  if(k==="parity")return parityDetail();
   if(k==="count"){const R=state.records.filter(r=>r.type==="실사").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return (countChart()||"")+cdTable(["날짜","돈사","실사","장부","차이"],R.map(r=>{const d=r.data.n-r.data.est;return [kDate(r.workDate),esc(t(r.data.barn)),r.data.n,r.data.est,`<span class="dlt ${d<0?"down":d>0?"up":""}">${d>0?"+":""}${d}</span>`]}))}
   return `<div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div>`}

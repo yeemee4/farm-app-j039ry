@@ -793,6 +793,17 @@ html[data-skin] .stv-grid .card,.stv-grid .card{background:var(--surface)!import
   .stv-grid .hm{gap:1.5px}.stv-grid .hm-h{font-size:7px}.stv-grid .hm-l{font-size:8px}.stv-grid .hm-c{min-height:0;height:11px;font-size:7.5px;border-radius:3px}
   .stv-grid .hb-t{height:7px}.stv-grid .hb-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+/* 산차 구성 */
+.pbars{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;align-items:end;height:150px}.pbars.big{height:220px}
+.pbar{display:grid;grid-template-rows:auto minmax(0,1fr) auto;height:100%;text-align:center;gap:2px;font-size:11.5px}.pbar b{font-size:12.5px}.pbar span{color:var(--muted);font-size:11px}
+.pb-c{display:flex;align-items:flex-end;min-height:0}.pb-c i{display:block;width:100%;border-radius:4px 4px 0 0}
+.pband{display:grid;gap:4px;margin-top:8px}.pb-r{display:grid;grid-template-columns:34px 1fr;gap:6px;align-items:center;font-size:11.5px;color:var(--muted)}
+.pb-t{display:flex;height:16px;border-radius:5px;overflow:hidden;background:var(--grid)}.pb-t i{display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800;color:#fff;overflow:hidden}
+.pids{white-space:normal;font-size:11.5px;color:var(--muted);text-align:left;display:block;min-width:180px}
+.stv-grid .pbars{flex:1;height:auto;min-height:0}.stv-grid .pbar{font-size:1.4vh}.stv-grid .pbar b{font-size:1.6vh}.stv-grid .pb-t{height:1.8vh}.stv-grid .pb-r{font-size:1.3vh}
+@media (max-height:500px) and (orientation:landscape){.stv-grid .pbar,.stv-grid .pbar b,.stv-grid .pbar span{font-size:8px}.stv-grid .pb-t{height:8px}.stv-grid .pb-t i{font-size:7px}.stv-grid .pb-r{font-size:8px;grid-template-columns:24px 1fr}}
+.dk-parity .d-cols{gap:3px}.dk-parity .d-col{min-width:0;font-size:11px}.dk-parity .d-col b{font-size:14px}.dk-parity .d-c{width:82%}
+body.tv .dk-parity .d-col{font-size:1.3vh}body.tv .dk-parity .d-col b{font-size:1.9vh}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1932,8 +1943,8 @@ function prevYearForm(){
 
 /* ===== 그래프 상세 (성적·성적 TV·현황판에서 그래프를 누르면) =====
    위: 기간을 늘린 큰 그래프 · 아래: 쌓인 기록 표. 기간 칩으로 길이 바꿈 */
-const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count"];   // chartCards() 순서
-const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",trend:"월별 추이"};
+const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count","parity"];   // chartCards() 순서
+const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",parity:"산차 구성",trend:"월별 추이"};
 const CD_M=["psy","litter","trend"],CD_W=["week","dead","cause"];   // 월 단위 · 주 단위
 function cdMonths(n){let [y,m]=TODAY.slice(0,7).split("-").map(Number);const a=[];for(let i=n-1;i>=0;i--){let yy=y,mm=m-i;while(mm<1){mm+=12;yy--}a.push([yy,mm])}return a}
 function cdWeeks(n){const w=weekStart(TODAY);return Array.from({length:n},(_,i)=>addDays(w,-7*(n-1-i)))}
@@ -1968,6 +1979,7 @@ function cdBody(k,n){const G=sGoal();
     return hbarsH(fr.filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days).map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"})))+
       cdTable(["사료","보관","잔량 kg","하루 사용 kg","남은 일수"],fr.map(x=>[esc(x.f),x.bin?esc(x.bin.name):t("포대"),(x.kg||0).toLocaleString(),Math.round(x.use||0),x.days??"-"]))+
       `<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
+  if(k==="parity")return parityDetail();
   if(k==="count"){const R=state.records.filter(r=>r.type==="실사").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return (countChart()||"")+cdTable(["날짜","돈사","실사","장부","차이"],R.map(r=>{const d=r.data.n-r.data.est;return [kDate(r.workDate),esc(t(r.data.barn)),r.data.n,r.data.est,`<span class="dlt ${d<0?"down":d>0?"up":""}">${d>0?"+":""}${d}</span>`]}))}
   return `<div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div>`}
@@ -1978,6 +1990,27 @@ function openChartDetail(k){const c=ui.cd=ui.cd&&ui.cd.k===k?ui.cd:{k,n:CD_M.inc
   $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet wide cdet" role="dialog" aria-modal="true" aria-label="${esc(ti)}"><div class="sh-hd"><h2>${ti}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${opts.length?`<div class="chips">${opts.map(([v,l])=>`<button type="button" class="chip ${c.n===v?"on":""}" data-a="cdN" data-v="${v}">${t(l)}</button>`).join("")}</div>`:""}<div class="card">${cdBody(k,c.n)}</div></div></div></div>`;
   if(typeof tagsApply==="function")try{tagsApply()}catch(e){}}
 Object.assign(A,{chDetail:v=>openChartDetail(v),cdN:v=>{ui.cd.n=+v;openChartDetail(ui.cd.k)}});
+/* ===== 산차 구성 (성적 그래프 · 현황판 칸 · 성적 TV · 누르면 상세) =====
+   권장 비율(어린 축 후보~2산 / 중심 3~6산 / 노산 7산~)은 대표 설정 › 현황판 항목 */
+const PAR_B=["후보","0","1","2","3","4","5","6","7","8+"];
+const PAR_G0={young:35,core:50,old:15};
+function parGoal(){return {...PAR_G0,...(state.parGoal||{})}}
+const parGrp=b=>b==="후보"||+b<=2?"young":b==="7"||b==="8+"?"old":"core";
+const PAR_C={young:"var(--c-a)",core:"var(--good)",old:"var(--amber)"},PAR_N={young:"후보~2산",core:"3~6산",old:"7산 이상"};
+function parBucket(s){const i=statusOf(s);if(i.key==="도태됨")return null;return i.gilt?"후보":i.parity>=8?"8+":String(i.parity)}
+function parityDist(){const c=Object.fromEntries(PAR_B.map(b=>[b,[]]));activeSows().forEach(s=>{const b=parBucket(s);if(b)c[b].push(s)});
+  const tot=PAR_B.reduce((a,b)=>a+c[b].length,0)||1,g={young:0,core:0,old:0};PAR_B.forEach(b=>g[parGrp(b)]+=c[b].length);return {c,tot,g}}
+const parLab=b=>b==="후보"?t("후보"):b+t("산");
+// 권장 대비 띠 (실제 / 권장)
+function parBand(D){const G=parGoal();return `<div class="pband">${[["실제",k=>D.g[k]/D.tot*100],["권장",k=>G[k]]].map(([l,f])=>`<div class="pb-r"><span>${t(l)}</span><div class="pb-t">${["young","core","old"].map(k=>`<i style="width:${f(k)}%;background:${PAR_C[k]}" title="${t(PAR_N[k])} ${Math.round(f(k))}%">${f(k)>=9?Math.round(f(k))+"%":""}</i>`).join("")}</div></div>`).join("")}</div>`+legendH(["young","core","old"].map(k=>[PAR_C[k],t(PAR_N[k])]))}
+function parBars(D,big){const mx=Math.max(1,...PAR_B.map(b=>D.c[b].length));
+  return `<div class="pbars${big?" big":""}">${PAR_B.map(b=>{const n=D.c[b].length;return `<div class="pbar" title="${parLab(b)} ${n}${t("두")} · ${Math.round(n/D.tot*100)}%"><b>${n}</b><div class="pb-c"><i style="height:${Math.max(n?3:0,n/mx*100)}%;background:${PAR_C[parGrp(b)]}"></i></div><span>${b==="후보"?t("후보"):b}</span></div>`}).join("")}</div>`}
+function parityCard(){const D=parityDist();return `<div class="card"><h3>${t("산차 구성")}<small>${D.tot}${t("두")} · ${t("막대 = 두수 · 아래 띠 = 권장 대비")}</small></h3>${parBars(D)}${parBand(D)}</div>`}
+// 상세: 산차별 두수 · 평균 실산·이유 · 모돈 번호
+function parityDetail(){const D=parityDist(),st={};state.sows.forEach(s=>sowCycles(s.id).forEach(c=>{const b=c.parity>=8?"8+":String(c.parity),o=st[b]=st[b]||{n:0,l:0,wn:0,w:0};o.n++;o.l+=c.f.data.live||0;if(c.w){o.wn++;o.w+=c.w.data.n||0}}));
+  return parBars(D,1)+parBand(D)+cdTable(["산차","두수","비율","분만 기록","평균 실산","평균 이유","모돈"],PAR_B.map(b=>{const o=st[b];return [parLab(b),D.c[b].length,Math.round(D.c[b].length/D.tot*100)+"%",o?o.n:"-",o?f1(o.l/o.n):"-",o&&o.wn?f1(o.w/o.wn):"-",`<span class="pids">${D.c[b].map(s=>s.id).join(", ")}</span>`]}))}
+function parGoalSet(){const G=parGoal();return `<div class="sec-t">${t("산차 구성 권장 비율")} <span>${t("합계")} ${G.young+G.core+G.old}%</span></div><div class="panel">${["young","core","old"].map(k=>`<div class="setrow"><span>${t(PAR_N[k])}</span><div class="stepper"><button type="button" data-a="parG" data-v="${k}" data-k="-5" aria-label="−">−</button><input type="number" value="${G[k]}" readonly aria-label="${t(PAR_N[k])}"><button type="button" data-a="parG" data-v="${k}" data-k="5" aria-label="+">+</button></div></div>`).join("")}</div>`}
+Object.assign(A,{parG:(v,el)=>{const g=state.parGoal=state.parGoal||{};g[v]=Math.max(0,Math.min(100,parGoal()[v]+Number(el.dataset.k)));save();render()}});
 /* ================= v0.5 · 성적 분석 그래프 (지표마다 알맞은 모양) =================
    흐름=꺾은선(+목표선), 두 값의 차이=꺾은선 2개+사이 면, 목표 달성=진행바,
    돈사×주 폐사=히트맵(한 색 진하기), 원인 비중=많은 순 가로막대, 남은 일수=색 신호 가로막대 */
@@ -2042,7 +2075,7 @@ function chartCards(){const C=[];
   h+=`<div class="card ghost"><h3>${t("도체 등급 분포")}<small>${t("주별 100% 누적 막대")}</small></h3><div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div></div>`;
   cut();
   h+=`<div class="card ghost"><h3>${t("재고두수 장부 vs 실사")}<small>${t("돈사별 차이 막대")}</small></h3>${countChart()||`<div class="empty">${t("돈사별 재고두수 실사를 입력하면 표시합니다.")}</div>`}<div class="acts"><button class="act" type="button" data-a="tab" data-v="count">${t("실사 입력")} ›</button></div></div>`;
-  cut();return C}
+  cut();C.push(parityCard());return C}
 /* ===== 성적 TV 화면 (16:9 한 화면 · 성적 › 📺 TV로 보기) ===== */
 const STV_KPI=["psy","msy","frate","live","wean","surv","dead","ship"];
 function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P.cmp?rangeMetrics(P.cmp[0],P.cmp[1]):null,now=new Date(),G=sGoal();
@@ -2053,9 +2086,9 @@ function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P
     return `<div class="stv-k${g&&okv(v)?(v>=g?" ok":" lo"):""}${S.metric===k?" sel":""}" data-a="stMetric" data-v="${k}" role="button" tabindex="0"><small>${t(l)}</small><b>${fmtV(v,dp)}<i>${t(u)}</i></b>${dl}${g?`<em>${t("목표")} ${g}</em>`:""}</div>`}).join("")}</div>`;
   // 8칸: 그래프 6 + 고른 지표 월별 추이 + 재고두수 실사 (칸을 누르면 상세 그래프·기록 표)
   const md=MET.find(m=>m[0]===S.metric)||MET[7],endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),pts=months12(endYm).map(([y,m])=>{const v=rangeMetrics(...monthRange(y,m));return {y,m,v:v?v[md[0]]:null,src:v?v.src:null}});
-  const C=chartCards();C[6]=`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`;
+  const C=chartCards();C[7]=C[8];C.length=8;C[6]=`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`;
   const z=ui.stvZ;
-  return h+`<div class="stv-grid${z!=null?" zoom":""}">${C.map((c,i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${i===6?"trend":CD_KEYS[i]}">${c}</div>`).join("")}</div></div>`}
+  return h+`<div class="stv-grid${z!=null?" zoom":""}">${C.map((c,i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${i===6?"trend":i===7?"parity":CD_KEYS[i]}">${c}</div>`).join("")}</div></div>`}
 Object.assign(A,{stvZoom:v=>{ui.stvZ=ui.stvZ===+v?null:+v;render()}});
 /* ================= v0.4 · 백신 엔진 (모돈·후보돈·연간·복별 처치) ================= */
 // 기록 이름 → 재고 품목 이름들
@@ -2294,7 +2327,7 @@ Object.assign(A,{
 
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 남은 일수",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 남은 일수",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["memo","회의 메모",1]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
 function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
@@ -2324,6 +2357,8 @@ const DASH_P={
   breed:()=>{const w=dWeek(),G=dashCfg().goal,R=k=>state.records.filter(r=>r.type===k&&r.workDate>=w&&r.workDate<=TODAY);
     const rows=[["교배",R("교배").filter(r=>r.data.round==="1차").length,DCOL[0]],["분만",R("분만").length,DCOL[2]],["이유",R("이유").length,DCOL[3]],["임신확인",R("임신확인").filter(r=>r.data.result==="임신").length,DCOL[5]]];
     return [t("이번 주 번식"),t("목표 대비 · 흰 선 = 목표"),`<div class="d-bars">${rows.map(([k,n,c])=>{const g=G[k]||1,mx=Math.max(g,n);return `<div class="d-bar"><span>${t(LABEL[k]||k)}</span><div class="d-track"><div class="d-fill" style="width:${n/mx*100}%;background:${c}"></div><div class="d-tick" style="left:calc(${g/mx*100}% - 3px)"></div></div><span class="d-v"><b>${n}</b> / ${g}</span></div>`}).join("")}</div>`]},
+  parity:()=>{const D=parityDist(),G=parGoal(),mx=Math.max(1,...PAR_B.map(b=>D.c[b].length)),gc={young:DCOL[0],core:DCOL[2],old:DCOL[3]};
+    return [t("산차 구성"),`${D.tot}${t("두")} · ${["young","core","old"].map(k=>`${Math.round(D.g[k]/D.tot*100)}/${G[k]}%`).join(" · ")}`,`<div class="d-cols">${PAR_B.map(b=>{const n=D.c[b].length;return `<div class="d-col"><b>${n}</b><div class="d-c" style="height:${Math.max(n?3:0,n/mx*100)}%;background:${gc[parGrp(b)]}"></div><span>${b==="후보"?t("후보"):b}</span></div>`}).join("")}</div>`]},
   dead:()=>{const w=dWeek(),W=[3,2,1,0].map(i=>{const a=addDays(w,-7*i),b=addDays(a,6);return {k:isoWeek(a).w,now:i===0,n:state.records.filter(r=>r.type==="폐사"&&r.workDate>=a&&r.workDate<=b).reduce((s,r)=>s+r.data.n,0)}}),mx=Math.max(1,...W.map(x=>x.n));
     return [t("폐사 추이"),t("최근 4주 · 두"),`<div class="d-cols">${W.map(x=>`<div class="d-col ${x.now?"now":""}"><b>${x.n}</b><div class="d-c" style="height:${Math.max(2,x.n/mx*100)}%" title="W${x.k} ${x.n}"></div><span>W${x.k}${x.now?" "+t("진행"):""}</span></div>`).join("")}</div>`]},
   flow:()=>{const L2=liveBatches(),S=state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return {n,g:inS.length,h:inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0),c:DCOL[[2,0,5,3,1][i]||0]}}),tot=S.reduce((s,x)=>s+x.h,0)||1;
@@ -2346,7 +2381,7 @@ const DASH_P={
     return [t("회의 메모"),`<button type="button" class="d-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button>`,ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="d-edit" data-a="memoSave">${t("저장")}</button>`:`<div class="d-memo">${memo?esc(memo).replace(/\n/g,"<br>"):`<span class="d-mu">${t("메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요.")}</span>`}</div>`]}
 };
 const DASH_GO={sows:"sows",breed:"stats",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
-function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
+function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy",parity:"parity"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
 // 아이폰 가로(높이 500px 이하): 한 화면 3칸씩 옆으로 넘김
 const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)").matches;
 
@@ -2375,7 +2410,7 @@ function vDashSet(){const d=dashCfg(),nm=Object.fromEntries(DASH_LIST.map(x=>[x[
   h+=`</div><div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
   h+=Object.keys(DASH_GOAL0).map(k=>`<div class="setrow"><span>${t(LABEL[k]||k)}</span><div class="stepper"><button type="button" data-a="dashGoal" data-v="${k}" data-k="-1" aria-label="줄이기">−</button><input type="number" value="${d.goal[k]}" readonly aria-label="${t(LABEL[k]||k)}"><button type="button" data-a="dashGoal" data-v="${k}" data-k="1" aria-label="늘리기">+</button></div></div>`).join("");
   const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="-0.5" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="0.5" aria-label="늘리기">+</button></div></div>`).join("")}`;
-  return h+`</div>`+cullRuleSet()+closeBySet()+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
+  return h+`</div>`+parGoalSet()+cullRuleSet()+closeBySet()+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
 Object.assign(A,{
   dashGo:v=>{if(v==="memo")return A.memoEdit();dashLeave();if(v==="feed")ui.drugCat="사료";go(DASH_GO[v]||"home")},
   dashSow:v=>{dashLeave();ui.sf=v;go("sows")},
@@ -2753,6 +2788,7 @@ Object.assign(TR,{"화면 배치":["Bố cục màn hình","स्क्रि�
 Object.assign(TR,{"TV로 보기":["Xem trên TV","TV मा हेर्नुहोस्","មើលលើ TV","ดูบนทีวี"],"월별 추이":["Xu hướng theo tháng","मासिक प्रवृत्ति","និន្នាការប្រចាំខែ","แนวโน้มรายเดือน"],"위 숫자를 누르면 바뀝니다":["Bấm số phía trên để đổi","माथिको अंक थिच्नुहोस्","ចុចលេខខាងលើដើម្បីប្តូរ","กดตัวเลขด้านบนเพื่อเปลี่ยน"]});
 Object.assign(TR,{"기록이 없습니다.":["Chưa có ghi chép.","रेकर्ड छैन।","មិនមានកំណត់ត្រា។","ไม่มีบันทึก"],"분만복수":["Số ổ đẻ","ब्याँत संख्या","ចំនួនសំបុក","จำนวนครอก"],"PSY 목표 대비":["So với mục tiêu PSY","PSY लक्ष्य तुलना","ធៀបគោលដៅ PSY","เทียบเป้า PSY"],"복당 총산":["Tổng sinh/ổ","कुल/ब्याँत","សរុប/សំបុក","รวม/ครอก"],"포유 손실":["Hao hụt bú","दूध अवधि क्षति","ខាតពេលបំបៅ","สูญเสียช่วงดูดนม"],"포유 육성률":["Tỷ lệ nuôi sống","बाँच्ने दर","អត្រារស់","อัตรารอด"],"주":["Tuần","हप्ता","សប្តាហ៍","สัปดาห์"],"시작일":["Bắt đầu","सुरु","ចាប់ផ្តើម","เริ่ม"],"임신 확인":["Khám thai","गर्भ जाँच","ពិនិត្យពពោះ","ตรวจท้อง"],"원인":["Nguyên nhân","कारण","មូលហេតុ","สาเหตุ"],"돈사":["Chuồng","खोर","ក្រោល","โรงเรือน"],"두수":["Số con","संख्या","ចំនួន","จำนวนตัว"],"폐사 기록":["Ghi chép chết","मृत्यु रेकर्ड","កំណត់ត្រាស្លាប់","บันทึกตาย"],"건":[" lần"," पटक"," ករណី"," ครั้ง"],"단계":["Giai đoạn","चरण","ដំណាក់កាល","ระยะ"],"모돈":["Nái","माउ","មេ","แม่สุกร"],"보관":["Lưu trữ","भण्डार","ទុក","ที่เก็บ"],"잔량 kg":["Còn lại kg","बाँकी kg","នៅសល់ kg","คงเหลือ kg"],"하루 사용 kg":["Dùng/ngày kg","दैनिक kg","ប្រើ/ថ្ងៃ kg","ใช้/วัน kg"],"남은 일수":["Số ngày còn","बाँकी दिन","ថ្ងៃនៅសល់","วันที่เหลือ"],"최근 사료 기록":["Ghi chép cám gần đây","हालको दाना रेकर्ड","កំណត់ត្រាចំណីថ្មីៗ","บันทึกอาหารล่าสุด"],"날짜":["Ngày","मिति","កាលបរិច្ឆេទ","วันที่"],"구분":["Loại","प्रकार","ប្រភេទ","ประเภท"],"실사":["Thực tế","गणना","រាប់ពិត","นับจริง"],"장부":["Sổ sách","खाता","បញ្ជី","บัญชี"],"차이":["Chênh lệch","फरक","ភាពខុសគ្នា","ส่วนต่าง"],"6개월":["6 tháng","६ महिना","៦ខែ","6 เดือน"],"12개월":["12 tháng","१२ महिना","១២ខែ","12 เดือน"],"24개월":["24 tháng","२४ महिना","២៤ខែ","24 เดือน"],"8주":["8 tuần","८ हप्ता","៨សប្តាហ៍","8 สัปดาห์"],"12주":["12 tuần","१२ हप्ता","១២សប្តាហ៍","12 สัปดาห์"],"26주":["26 tuần","२६ हप्ता","២៦សប្តាហ៍","26 สัปดาห์"],"최근":["Gần đây","हालै","ថ្មីៗ","ล่าสุด"],"더 보기":["Xem thêm","थप","មើលបន្ថែម","ดูเพิ่ม"]});
 Object.assign(TR,{"기록 누락":["Thiếu ghi chép","रेकर्ड छुट्यो","កំណត់ត្រាខ្វះ","บันทึกขาด"],"마감 지남":["Quá hạn","समय सकियो","ហួសម៉ោង","เลยเวลาปิด"],"지남":["đã qua","नाघ्यो","ហួស","เลยแล้ว"],"누락":["thiếu","छुट","ខ្វះ","ขาด"],"일 전":[" ngày trước"," दिन अघि"," ថ្ងៃមុន"," วันก่อน"],"오늘 기록":["Ghi hôm nay","आजको रेकर्ड","កំណត់ត្រាថ្ងៃនេះ","บันทึกวันนี้"],"지난 기록 누락":["Thiếu ghi chép trước","पछिल्ला छुटेका रेकर्ड","កំណត់ត្រាមុនខ្វះ","บันทึกก่อนหน้าขาด"],"할 일 › 기록 누락에서 입력하거나 ‘없음’으로 마감하세요":["Nhập trong Việc › Thiếu ghi chép hoặc chọn ‘Không có’","काम › छुटेका रेकर्डमा भर्नुहोस् वा ‘छैन’","បញ្ចូលក្នុង ការងារ › ខ្វះ ឬ ‘គ្មាន’","กรอกใน งาน › บันทึกขาด หรือกด ‘ไม่มี’"],"당일 기록 마감 시각":["Giờ chốt ghi chép","दैनिक रेकर्ड समय","ម៉ោងបិទកំណត់ត្រា","เวลาปิดบันทึกประจำวัน"],"지나면 ‘기록 누락’으로 다음 날 다시 알림":["Quá giờ sẽ nhắc lại hôm sau","नाघेमा भोलि फेरि सम्झाउँछ","ហួសនឹងរំលឹកថ្ងៃស្អែក","เลยเวลาจะเตือนอีกครั้งพรุ่งนี้"]});
+Object.assign(TR,{"산차 구성":["Cơ cấu lứa","ब्याँत संरचना","រចនាសម្ព័ន្ធកូនលើក","โครงสร้างครอก"],"막대 = 두수 · 아래 띠 = 권장 대비":["Cột = số con · dải = so với khuyến nghị","बार = संख्या · पट्टी = सिफारिस","របារ = ចំនួន · ខ្សែ = ធៀបណែនាំ","แท่ง = จำนวน · แถบ = เทียบเกณฑ์"],"후보~2산":["Hậu bị~lứa 2","उम्मेदवार~२","បេក្ខជន~២","สาว~ครอก 2"],"3~6산":["Lứa 3~6","३~६ ब्याँत","លើក ៣~៦","ครอก 3~6"],"7산 이상":["Lứa 7+","७+ ब्याँत","លើក ៧+","ครอก 7+"],"실제":["Thực tế","वास्तविक","ជាក់ស្តែង","จริง"],"권장":["Khuyến nghị","सिफारिस","ណែនាំ","แนะนำ"],"산차":["Lứa","ब्याँत","លើក","ครอก"],"비율":["Tỷ lệ","अनुपात","អត្រា","สัดส่วน"],"분만 기록":["Lần đẻ","ब्याँत रेकर्ड","កំណត់ត្រាកើត","บันทึกคลอด"],"평균 실산":["TB sống","औसत जीवित","មធ្យមរស់","เฉลี่ยมีชีวิต"],"평균 이유":["TB cai sữa","औसत छुटाइ","មធ្យមផ្តាច់","เฉลี่ยหย่านม"],"산차 구성 권장 비율":["Tỷ lệ lứa khuyến nghị","सिफारिस ब्याँत अनुपात","អត្រាណែនាំ","สัดส่วนครอกที่แนะนำ"],"합계":["Tổng","जम्मा","សរុប","รวม"],"후보":["Hậu bị","उम्मेदवार","បេក្ខជន","สาว"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
