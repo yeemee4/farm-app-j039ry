@@ -115,3 +115,4 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .cal-c{display:flex;flex-wrap:wrap;gap:4px}.cal-c i{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}.cal-c em{color:var(--muted);font-style:normal}
 .cal-x{grid-column:1/-1;display:grid;gap:3px;font-size:12.5px;color:var(--muted);padding-top:4px;border-top:1px dashed var(--line)}.cal-x b{color:var(--ink)}
 .panel.ho{padding:8px}.panel.ho input{flex:1;min-width:0}
+.banner.warn-b{background:var(--amber-soft)}.banner.warn-b b{color:var(--amber)}.banner span{min-width:0;overflow:hidden;text-overflow:ellipsis}
