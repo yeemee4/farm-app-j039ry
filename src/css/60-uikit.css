@@ -173,3 +173,4 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .d-bm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.d-bmb{display:grid;gap:2px;text-align:left;color:var(--fg);min-width:0}.d-bmb b{font-size:12px}.d-bmb b small{color:var(--mu);font-weight:500}.d-bmb .bm-svg{width:100%;height:auto}
 .d-bmb .bm-wall{fill:var(--sf);stroke:var(--fg);stroke-width:2}.d-bmb .bm-st rect:first-child{stroke:#2a3630;stroke-width:.6}
 .bm-pen rect{fill:#F4EFE6;stroke:#8A6D3B;stroke-width:2}.bm-pen{cursor:pointer}.bm-pen:hover rect{stroke:var(--accent)}.bm-pt{font-size:14px;font-weight:800;fill:#5B4520;text-anchor:middle}
+.bm-crate{fill:rgba(255,255,255,.55);stroke:#55615A;stroke-width:1;stroke-dasharray:3 2}.bm-creep{fill:#F6C26B;opacity:.55}
