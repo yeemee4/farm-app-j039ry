@@ -103,3 +103,9 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .inputgrid>div:first-child:has(.dock.min)::after{content:"";display:block;height:4px}
 .inputgrid>div:first-child:has(.dock:not(.min))::after{content:"";display:block;height:30vh}
 .toast.undo{display:flex;align-items:center;gap:12px}.toast.undo button{background:transparent;border:1.5px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;font-weight:800;white-space:nowrap}
+/* 사진 · 마이크 */
+.photo-f{display:flex;align-items:center;gap:10px}.photo-f img{width:84px;height:84px;object-fit:cover;border-radius:10px}
+.photo-btn{cursor:pointer;display:inline-block}
+.pthumb{display:block;margin-top:4px;padding:0;border:0;background:none}.pthumb img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+.mic{margin-left:8px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:1px 8px;font-size:13px}.mic.on{background:var(--red);border-color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.6}}

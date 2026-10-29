@@ -4,8 +4,9 @@ function fieldHtml(f,d,sowForCalc){
   if(f.t==="chips"){const opts=(typeof f.o==="function"?f.o():f.o).map(o=>Array.isArray(o)?o:[o,o]);return `<div class="f"><span class="lb">${lb}</span>${opts.length?`<div class="chipwrap">${opts.map(([v,l])=>`<button type="button" class="chip wrap ${d[f.k]===v?"on":""}" data-a="fv" data-k="${f.k}" data-v="${esc(v)}">${esc(t(l))}</button>`).join("")}</div>`:`<div class="empty">-</div>`}</div>`}
   if(f.t==="step")return `<div class="f"><label for="f-${f.k}">${lb}</label><div class="stepper"><button type="button" data-a="step" data-k="${f.k}" data-v="-1" aria-label="-">−</button><input type="number" inputmode="numeric" id="f-${f.k}" data-num="${f.k}" value="${d[f.k]??""}"><button type="button" data-a="step" data-k="${f.k}" data-v="1" aria-label="+">+</button></div></div>`;
   if(f.t==="calc")return `<div class="calc"><span>${lb}</span><b data-calc="${f.k}">${f.calc(d,I.date,sowForCalc)}</b></div>`;
-  if(f.t==="text")return `<div class="f"><label for="f-${f.k}">${lb}</label><input type="text" id="f-${f.k}" data-txt="${f.k}" value="${esc(d[f.k]||"")}" placeholder="${esc(f.ph||"")}" ${f.list?`list="${f.list}" autocomplete="off"`:""}>${f.list?`<datalist id="${f.list}"></datalist>`:""}</div>`;
-  if(f.t==="textarea")return `<div class="f"><label for="f-${f.k}">${lb}</label><textarea id="f-${f.k}" data-txt="${f.k}" placeholder="${esc(f.ph||"")}">${esc(d[f.k]||"")}</textarea></div>`;
+  if(f.t==="text")return `<div class="f"><label for="f-${f.k}">${lb}${micBtn("f-"+f.k)}</label><input type="text" id="f-${f.k}" data-txt="${f.k}" value="${esc(d[f.k]||"")}" placeholder="${esc(f.ph||"")}" ${f.list?`list="${f.list}" autocomplete="off"`:""}>${f.list?`<datalist id="${f.list}"></datalist>`:""}</div>`;
+  if(f.t==="textarea")return `<div class="f"><label for="f-${f.k}">${lb}${micBtn("f-"+f.k)}</label><textarea id="f-${f.k}" data-txt="${f.k}" placeholder="${esc(f.ph||"")}">${esc(d[f.k]||"")}</textarea></div>`;
+  if(f.t==="photo")return photoField(f,d);
   if(f.t==="date")return `<div class="f"><label for="f-${f.k}">${lb}</label><input type="date" id="f-${f.k}" data-txt="${f.k}" value="${d[f.k]||""}"></div>`;
   return "";
 }
@@ -52,7 +53,7 @@ function vInput(){
 }
 function stackRow(r){
   const I=ui.in,flash=I.flash.includes(r.id),late=r.workDate<localDateOf(r.createdAt);
-  let h=`<div class="srow ${flash?"flash":""}" id="r-${r.id}"><div class="top"><span class="tm">${kTime(r.createdAt)}</span><div class="txt">${esc(summary(r))}<div class="who2">${esc(r.user)}${late?" · "+t("지연 입력"):""}${r.edited?" · "+t("수정됨"):""}</div></div>
+  let h=`<div class="srow ${flash?"flash":""}" id="r-${r.id}"><div class="top"><span class="tm">${kTime(r.createdAt)}</span><div class="txt">${esc(summary(r))}${r.data&&r.data.photo?`<button type="button" class="pthumb" data-a="photoView" data-v="${r.id}"><img src="${r.data.photo}" alt=""></button>`:""}<div class="who2">${esc(r.user)}${late?" · "+t("지연 입력"):""}${r.edited?" · "+t("수정됨"):""}</div></div>
     <div class="rbtns">${ui.delId===r.id?`<button class="sbtn bad" type="button" data-a="delOk" data-v="${r.id}">${t("삭제 확정")}</button><button class="sbtn" type="button" data-a="delNo">${t("취소")}</button>`:`${can("edit",r)?`<button class="sbtn" type="button" data-a="edit" data-v="${r.id}">${t("수정")}</button>`:""}${can("delete")?`<button class="sbtn" type="button" data-a="del" data-v="${r.id}">${t("삭제")}</button>`:""}`}</div></div>`;
   if(r.type==="폐사")h+=decisionHtml(r);
   return h+`</div>`;
@@ -79,7 +80,7 @@ function decisionHtml(r){
   return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${done?`<span class="dstate ds-done">${t("조치 완료")} ✓</span>`:`<span class="dstate ds-task">${t("조치 예정")} · ${tk.due===TODAY?t("오늘"):kDate(tk.due)} · ${esc(tk.who)}</span>`}<span class="sow-meta">${tk.acts.map(t).join(", ")}</span></div>`;
 }
 function recRow(r){
-  return `<div class="srow"><div class="top">${icon(r.type,1)}<div class="txt">${esc(summary(r))}<div class="who2">${kDate(r.workDate)} · ${esc(r.user)}${r.edited?" · "+t("수정됨"):""}</div></div>
+  return `<div class="srow"><div class="top">${icon(r.type,1)}<div class="txt">${esc(summary(r))}${r.data&&r.data.photo?`<button type="button" class="pthumb" data-a="photoView" data-v="${r.id}"><img src="${r.data.photo}" alt=""></button>`:""}<div class="who2">${kDate(r.workDate)} · ${esc(r.user)}${r.edited?" · "+t("수정됨"):""}</div></div>
   <div class="rbtns">${ui.delId===r.id?`<button class="sbtn bad" type="button" data-a="delOk" data-v="${r.id}">${t("삭제 확정")}</button><button class="sbtn" type="button" data-a="delNo">${t("취소")}</button>`:`${EDITABLE(r.type)&&can("edit",r)?`<button class="sbtn" type="button" data-a="editRec" data-v="${r.id}">${t("수정")}</button>`:""}${can("delete")?`<button class="sbtn" type="button" data-a="del" data-v="${r.id}">${t("삭제")}</button>`:""}`}</div></div></div>`;
 }
 

@@ -586,6 +586,12 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .inputgrid>div:first-child:has(.dock.min)::after{content:"";display:block;height:4px}
 .inputgrid>div:first-child:has(.dock:not(.min))::after{content:"";display:block;height:30vh}
 .toast.undo{display:flex;align-items:center;gap:12px}.toast.undo button{background:transparent;border:1.5px solid currentColor;color:inherit;border-radius:8px;padding:4px 10px;font-weight:800;white-space:nowrap}
+/* 사진 · 마이크 */
+.photo-f{display:flex;align-items:center;gap:10px}.photo-f img{width:84px;height:84px;object-fit:cover;border-radius:10px}
+.photo-btn{cursor:pointer;display:inline-block}
+.pthumb{display:block;margin-top:4px;padding:0;border:0;background:none}.pthumb img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+.mic{margin-left:8px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:1px 8px;font-size:13px}.mic.on{background:var(--red);border-color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.6}}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1138,7 +1144,7 @@ function sowMatch(id,q){if(!q)return 1;const num=(String(id).match(/(\d+)$/)||[0
 function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
 const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
 const FORMS={
-  폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"},{k:"sow",l:"어느 복 (포유자돈 · 선택)",t:"chips",opt:true,o:()=>ui.in&&ui.in.fv.stage==="포유자돈"?activeSows().filter(s=>sowState(s.id).stage==="포유").map(s=>s.id):[]}],
+  폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"},{k:"photo",l:"사진 (선택)",t:"photo",opt:true},{k:"sow",l:"어느 복 (포유자돈 · 선택)",t:"chips",opt:true,o:()=>ui.in&&ui.in.fv.stage==="포유자돈"?activeSows().filter(s=>sowState(s.id).stage==="포유").map(s=>s.id):[]}],
     warn:(d,wd)=>{const dup=state.records.find(r=>r.id!==EXCL&&r.type==="폐사"&&r.workDate===wd&&r.data.barn===d.barn&&r.data.cause===d.cause&&r.data.stage===d.stage&&(Date.now()-new Date(r.createdAt))<10*60e3);return dup?`10분 안에 같은 돈사·단계·원인으로 입력한 기록이 있습니다 (${kTime(dup.createdAt)}, ${dup.data.n}두). 중복 입력이 아닌지 확인해 주세요.`:null}},
   교배:{sow:{multi:true,target:true,filter:(i,wd)=>i.key==="후보"||i.key==="발정대기"||i.key==="재발공태"||(i.gilt&&i.key==="후보")||(i.stage==="교배"&&diff(i.mate,wd)<=2)},
     f:[{k:"round",l:"회차",t:"chips",o:["1차","2차","3차"],def:"1차"},{k:"semen",l:"웅돈 / 정액",t:"chips",o:()=>SEMENS,def:"듀록 정액"}],
@@ -1166,7 +1172,7 @@ const FORMS={
     pre:d=>{d.prod=(state.cfg.prog.find(p=>p.name===d.vax)||{}).prod},
     warn:d=>{const b=batches().find(x=>x.k===d.batch),p=state.cfg.prog.find(x=>x.name===d.vax);if(b&&p){const v=bVax(b,p),left=Math.max(v.need-v.done,0);if(d.n>left+10)return `추정 남은 두수(${left}두)보다 많습니다. 숫자를 확인해 주세요.`;if(d.n<=0)return "접종 두수가 0입니다."}return null}},
   재고:{f:[{k:"item",l:"품목",t:"chips",o:()=>state.items.filter(i=>!i.hidden).map(i=>[i.id,i.name])},{k:"mode",l:"구분",t:"chips",o:["입고","사용","실사"],def:"입고"},{k:"qty",l:"수량 (실사는 실제로 센 수량)",t:"step",def:10,min:0},{k:"memo",l:"메모 (선택)",t:"text",opt:true}]},
-  특이사항:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"text",l:"내용",t:"textarea",ph:"예: 2번 환풍기 소음, 급수기 누수"}]},
+  특이사항:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"text",l:"내용",t:"textarea",ph:"예: 2번 환풍기 소음, 급수기 누수"},{k:"photo",l:"사진 (선택)",t:"photo",opt:true}]},
   도입:{f:[{k:"sowid",l:"후보돈 번호 (다음 번호 자동)",t:"text",ph:"예: 6-093",def:()=>nextSowId()},{k:"breed",l:"품종",t:"chips",o:["LY","LYD","YL","기타"],def:FARM.breed},{k:"age",l:"도입 일령",t:"step",def:180,min:30,big:10}],
     err:d=>state.sows.some(s=>s.id===String(d.sowid).trim())?`${d.sowid}번은 이미 있는 번호입니다.`:null}
 };
@@ -2545,6 +2551,7 @@ Object.assign(TR,{"어느 복 (포유자돈 · 선택)":["Ổ nào (lợn con th
 "돈사마다 실제로 센 두수를 넣으세요. 장부(기록으로 계산한 두수)와 차이가 성적 그래프에 나옵니다. 월 1회 권장.":["Nhập số con đếm thực tế mỗi chuồng. Chênh lệch với sổ hiện trên biểu đồ. Nên làm mỗi tháng.","हरेक घरमा गनेको संख्या लेख्नुहोस्। फरक ग्राफमा देखिन्छ। महिनामा एकपटक।","បញ្ចូលចំនួនរាប់ពិតតាមក្រោល។ ភាពខុសគ្នាបង្ហាញក្នុងក្រាហ្វ។ ខែម្ដង។","กรอกจำนวนที่นับจริงแต่ละโรง ส่วนต่างจะแสดงในกราฟ เดือนละครั้ง"],
 "가운데 선 = 장부와 같음 · 왼쪽 빨강 = 실사가 적음(폐사 누락 의심)":["Vạch giữa = khớp sổ · đỏ bên trái = đếm ít hơn (nghi sót chết)","बीच = मिल्छ · बायाँ रातो = कम (मृत्यु छुटेको हुन सक्छ)","កណ្ដាល = ត្រូវ · ឆ្វេងក្រហម = តិចជាង","เส้นกลาง = ตรงสมุด · แดงซ้าย = นับได้น้อยกว่า"],
 "급수량":["Lượng nước","पानी मात्रा","បរិមាណទឹក","ปริมาณน้ำ"],"톤":["tấn","टन","តោន","ตัน"]});
+Object.assign(TR,{"사진 (선택)":["Ảnh (tuỳ chọn)","फोटो (ऐच्छिक)","រូបថត (ស្រេចចិត្ត)","รูป (ไม่บังคับ)"],"사진 찍기·고르기":["Chụp · chọn ảnh","फोटो खिच्नुहोस्","ថត · ជ្រើសរូប","ถ่าย · เลือกรูป"],"사진 빼기":["Bỏ ảnh","फोटो हटाउनुहोस्","ដករូប","เอารูปออก"],"말로 입력":["Nhập bằng giọng nói","बोलेर लेख्नुहोस्","និយាយបញ្ចូល","พูดเพื่อพิมพ์"],"음성 인식을 쓸 수 없습니다. 키보드의 마이크를 눌러 주세요.":["Không dùng được nhận giọng nói. Hãy bấm micro trên bàn phím.","आवाज पहिचान छैन। किबोर्डको माइक थिच्नुहोस्।","មិនអាចប្រើសំឡេងបាន។ ចុចមីក្រូលើក្ដារចុច។","ใช้เสียงไม่ได้ กดไมค์บนคีย์บอร์ด"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -2772,8 +2779,9 @@ function fieldHtml(f,d,sowForCalc){
   if(f.t==="chips"){const opts=(typeof f.o==="function"?f.o():f.o).map(o=>Array.isArray(o)?o:[o,o]);return `<div class="f"><span class="lb">${lb}</span>${opts.length?`<div class="chipwrap">${opts.map(([v,l])=>`<button type="button" class="chip wrap ${d[f.k]===v?"on":""}" data-a="fv" data-k="${f.k}" data-v="${esc(v)}">${esc(t(l))}</button>`).join("")}</div>`:`<div class="empty">-</div>`}</div>`}
   if(f.t==="step")return `<div class="f"><label for="f-${f.k}">${lb}</label><div class="stepper"><button type="button" data-a="step" data-k="${f.k}" data-v="-1" aria-label="-">−</button><input type="number" inputmode="numeric" id="f-${f.k}" data-num="${f.k}" value="${d[f.k]??""}"><button type="button" data-a="step" data-k="${f.k}" data-v="1" aria-label="+">+</button></div></div>`;
   if(f.t==="calc")return `<div class="calc"><span>${lb}</span><b data-calc="${f.k}">${f.calc(d,I.date,sowForCalc)}</b></div>`;
-  if(f.t==="text")return `<div class="f"><label for="f-${f.k}">${lb}</label><input type="text" id="f-${f.k}" data-txt="${f.k}" value="${esc(d[f.k]||"")}" placeholder="${esc(f.ph||"")}" ${f.list?`list="${f.list}" autocomplete="off"`:""}>${f.list?`<datalist id="${f.list}"></datalist>`:""}</div>`;
-  if(f.t==="textarea")return `<div class="f"><label for="f-${f.k}">${lb}</label><textarea id="f-${f.k}" data-txt="${f.k}" placeholder="${esc(f.ph||"")}">${esc(d[f.k]||"")}</textarea></div>`;
+  if(f.t==="text")return `<div class="f"><label for="f-${f.k}">${lb}${micBtn("f-"+f.k)}</label><input type="text" id="f-${f.k}" data-txt="${f.k}" value="${esc(d[f.k]||"")}" placeholder="${esc(f.ph||"")}" ${f.list?`list="${f.list}" autocomplete="off"`:""}>${f.list?`<datalist id="${f.list}"></datalist>`:""}</div>`;
+  if(f.t==="textarea")return `<div class="f"><label for="f-${f.k}">${lb}${micBtn("f-"+f.k)}</label><textarea id="f-${f.k}" data-txt="${f.k}" placeholder="${esc(f.ph||"")}">${esc(d[f.k]||"")}</textarea></div>`;
+  if(f.t==="photo")return photoField(f,d);
   if(f.t==="date")return `<div class="f"><label for="f-${f.k}">${lb}</label><input type="date" id="f-${f.k}" data-txt="${f.k}" value="${d[f.k]||""}"></div>`;
   return "";
 }
@@ -2820,7 +2828,7 @@ function vInput(){
 }
 function stackRow(r){
   const I=ui.in,flash=I.flash.includes(r.id),late=r.workDate<localDateOf(r.createdAt);
-  let h=`<div class="srow ${flash?"flash":""}" id="r-${r.id}"><div class="top"><span class="tm">${kTime(r.createdAt)}</span><div class="txt">${esc(summary(r))}<div class="who2">${esc(r.user)}${late?" · "+t("지연 입력"):""}${r.edited?" · "+t("수정됨"):""}</div></div>
+  let h=`<div class="srow ${flash?"flash":""}" id="r-${r.id}"><div class="top"><span class="tm">${kTime(r.createdAt)}</span><div class="txt">${esc(summary(r))}${r.data&&r.data.photo?`<button type="button" class="pthumb" data-a="photoView" data-v="${r.id}"><img src="${r.data.photo}" alt=""></button>`:""}<div class="who2">${esc(r.user)}${late?" · "+t("지연 입력"):""}${r.edited?" · "+t("수정됨"):""}</div></div>
     <div class="rbtns">${ui.delId===r.id?`<button class="sbtn bad" type="button" data-a="delOk" data-v="${r.id}">${t("삭제 확정")}</button><button class="sbtn" type="button" data-a="delNo">${t("취소")}</button>`:`${can("edit",r)?`<button class="sbtn" type="button" data-a="edit" data-v="${r.id}">${t("수정")}</button>`:""}${can("delete")?`<button class="sbtn" type="button" data-a="del" data-v="${r.id}">${t("삭제")}</button>`:""}`}</div></div>`;
   if(r.type==="폐사")h+=decisionHtml(r);
   return h+`</div>`;
@@ -2847,7 +2855,7 @@ function decisionHtml(r){
   return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${done?`<span class="dstate ds-done">${t("조치 완료")} ✓</span>`:`<span class="dstate ds-task">${t("조치 예정")} · ${tk.due===TODAY?t("오늘"):kDate(tk.due)} · ${esc(tk.who)}</span>`}<span class="sow-meta">${tk.acts.map(t).join(", ")}</span></div>`;
 }
 function recRow(r){
-  return `<div class="srow"><div class="top">${icon(r.type,1)}<div class="txt">${esc(summary(r))}<div class="who2">${kDate(r.workDate)} · ${esc(r.user)}${r.edited?" · "+t("수정됨"):""}</div></div>
+  return `<div class="srow"><div class="top">${icon(r.type,1)}<div class="txt">${esc(summary(r))}${r.data&&r.data.photo?`<button type="button" class="pthumb" data-a="photoView" data-v="${r.id}"><img src="${r.data.photo}" alt=""></button>`:""}<div class="who2">${kDate(r.workDate)} · ${esc(r.user)}${r.edited?" · "+t("수정됨"):""}</div></div>
   <div class="rbtns">${ui.delId===r.id?`<button class="sbtn bad" type="button" data-a="delOk" data-v="${r.id}">${t("삭제 확정")}</button><button class="sbtn" type="button" data-a="delNo">${t("취소")}</button>`:`${EDITABLE(r.type)&&can("edit",r)?`<button class="sbtn" type="button" data-a="editRec" data-v="${r.id}">${t("수정")}</button>`:""}${can("delete")?`<button class="sbtn" type="button" data-a="del" data-v="${r.id}">${t("삭제")}</button>`:""}`}</div></div></div>`;
 }
 
@@ -3248,6 +3256,25 @@ function makeState(kind,keep){
   syncLists();save();
 }
 
+/* ================= v0.5 · 사진 첨부 · 말로 입력 ================= */
+// 14. 사진: 휴대폰 카메라로 찍어 640px JPEG로 줄여 기록에 붙임 (기기 저장 공간 아끼기)
+function photoField(f,d){const v=d[f.k];return `<div class="f"><span class="lb">${esc(t(f.l))}</span><div class="photo-f">${v?`<img src="${v}" alt=""><button type="button" class="act" data-a="photoDel" data-v="${f.k}">${t("사진 빼기")}</button>`:`<label class="act photo-btn">📷 ${t("사진 찍기·고르기")}<input type="file" accept="image/*" capture="environment" data-photo="${f.k}" hidden></label>`}</div></div>`}
+document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.photo,fl=e.target.files&&e.target.files[0];if(!k||!fl)return;
+  const img=new Image(),url=URL.createObjectURL(fl);img.onload=()=>{const M=640,s=Math.min(1,M/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+    ui.in.fv[k]=c.toDataURL("image/jpeg",.62);render()};img.src=url});
+// 15. 말로 입력: 브라우저 음성 인식이 있으면 🎤 버튼 (없으면 휴대폰 키보드의 마이크를 쓰면 됨)
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const SR_LANG={ko:"ko-KR",vi:"vi-VN",ne:"ne-NP",km:"km-KH",th:"th-TH"};
+function micBtn(id){return SR?`<button type="button" class="mic" data-a="mic" data-v="${id}" aria-label="${t("말로 입력")}">🎤</button>`:""}
+let recog=null;
+Object.assign(A,{
+  photoDel:v=>{delete ui.in.fv[v];render()},
+  photoView:v=>{const r=state.records.find(x=>x.id===v);if(!r)return;$("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet"><div class="sh-hd"><h2>${esc(summary(r))}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><img src="${r.data.photo}" alt="" style="width:100%;border-radius:12px"></div></div></div>`},
+  mic:(v,el)=>{if(!SR)return;const inp=document.getElementById(v);if(recog){recog.stop();recog=null;el.classList.remove("on");return}
+    recog=new SR();recog.lang=SR_LANG[LANG]||"ko-KR";recog.interimResults=false;el.classList.add("on");
+    recog.onresult=e=>{const txt=[...e.results].map(r=>r[0].transcript).join(" ");inp.value=(inp.value?inp.value+" ":"")+txt;inp.dispatchEvent(new Event("input",{bubbles:true}))};
+    recog.onend=()=>{el.classList.remove("on");recog=null};recog.onerror=()=>{toast(t("음성 인식을 쓸 수 없습니다. 키보드의 마이크를 눌러 주세요."))};recog.start()}
+});
 /* ================= v0.3 · 동작 ================= */
 function migrateName(k,oldN,newN){
   const F=LISTFIELDS[k]||[];
