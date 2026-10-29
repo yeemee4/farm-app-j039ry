@@ -38,7 +38,7 @@ function extraTodos(){
   return [
     {k:"bvax",t:"돈군 백신 (이번 주 · 누락)",items:bv,act:"bvax"},
     {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`${semenClock().txt} · 내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → ${so.order}${FARM.semen.unit} 주문`,sev:semenClock().sev}]:[],act:null},
-    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...mate2Todos()
+    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...mate2Todos(),...hoTodos()
   ];
 }
 

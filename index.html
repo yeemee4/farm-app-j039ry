@@ -592,6 +592,12 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .pthumb{display:block;margin-top:4px;padding:0;border:0;background:none}.pthumb img{width:56px;height:56px;object-fit:cover;border-radius:8px}
 .mic{margin-left:8px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:1px 8px;font-size:13px}.mic.on{background:var(--red);border-color:var(--red);animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.6}}
+/* 주간 달력 · 인계 */
+.cal{display:grid;gap:6px}.cal-d{display:grid;grid-template-columns:86px 1fr;gap:4px 10px;align-items:center;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:9px 12px}
+.cal-d.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}.cal-d.past{opacity:.55}.cal-d>b{font-size:13.5px}
+.cal-c{display:flex;flex-wrap:wrap;gap:4px}.cal-c i{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c)}.cal-c em{color:var(--muted);font-style:normal}
+.cal-x{grid-column:1/-1;display:grid;gap:3px;font-size:12.5px;color:var(--muted);padding-top:4px;border-top:1px dashed var(--line)}.cal-x b{color:var(--ink)}
+.panel.ho{padding:8px}.panel.ho input{flex:1;min-width:0}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1035,7 +1041,7 @@ function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SV
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
 const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.wxcard,.d-card,.d-top,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
-const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM"};
+const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN"};
 let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
 function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
   const pre=document.body.classList.contains("login")?"L":(TAG_PRE[typeof tab!=="undefined"?tab:""]||String(tab||"X").slice(0,2).toUpperCase());
@@ -1089,10 +1095,10 @@ function stalls(){
 }
 
 /* ================= 할 일 ================= */
-const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
+const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k==="handover"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
 const tdLog=key=>(state.todoLog||{})[key];
-function itemTarget(it){return it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
-function tdName(it){return it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
+function itemTarget(it){return it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
+function tdName(it){return it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
 function buildTodos(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{
@@ -1476,13 +1482,13 @@ function extraTodos(){
   return [
     {k:"bvax",t:"돈군 백신 (이번 주 · 누락)",items:bv,act:"bvax"},
     {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`${semenClock().txt} · 내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → ${so.order}${FARM.semen.unit} 주문`,sev:semenClock().sev}]:[],act:null},
-    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...mate2Todos()
+    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...mate2Todos(),...hoTodos()
   ];
 }
 
 /* ================= v0.5 · 할 일 우선순위 · 퀘스트 달성률 · 백신 준비물 ================= */
 // 할 일 묶음 기본 순위 (대표 설정 › 할 일 순서에서 바꿈)
-const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
+const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
 function todoRank(){const r=state.todoRank=state.todoRank||TODO_KINDS.map(x=>x[0]);TODO_KINDS.forEach(x=>{if(!r.includes(x[0]))r.push(x[0])});return r}
 const TODO_SORTS=[["rank","우선순위"],["urgent","급한 순"],["count","남은 개수 많은 순"]];
 function sortTodos(a,mode){const r=todoRank(),ri=x=>{const i=r.indexOf(x.k);return i<0?99:i},sv={bad:0,warn:1,ok:2},m=mode||ui.todoSort||"rank";
@@ -2181,7 +2187,7 @@ function vDashSet(){const d=dashCfg(),nm=Object.fromEntries(DASH_LIST.map(x=>[x[
   h+=`</div><div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
   h+=Object.keys(DASH_GOAL0).map(k=>`<div class="setrow"><span>${t(LABEL[k]||k)}</span><div class="stepper"><button type="button" data-a="dashGoal" data-v="${k}" data-k="-1" aria-label="줄이기">−</button><input type="number" value="${d.goal[k]}" readonly aria-label="${t(LABEL[k]||k)}"><button type="button" data-a="dashGoal" data-v="${k}" data-k="1" aria-label="늘리기">+</button></div></div>`).join("");
   const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="-0.5" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="0.5" aria-label="늘리기">+</button></div></div>`).join("")}`;
-  return h+`</div><div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
+  return h+`</div>`+cullRuleSet()+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
 Object.assign(A,{
   dashGo:v=>{if(v==="memo")return A.memoEdit();dashLeave();if(v==="feed")ui.drugCat="사료";go(DASH_GO[v]||"home")},
   dashSow:v=>{dashLeave();ui.sf=v;go("sows")},
@@ -2552,6 +2558,9 @@ Object.assign(TR,{"어느 복 (포유자돈 · 선택)":["Ổ nào (lợn con th
 "가운데 선 = 장부와 같음 · 왼쪽 빨강 = 실사가 적음(폐사 누락 의심)":["Vạch giữa = khớp sổ · đỏ bên trái = đếm ít hơn (nghi sót chết)","बीच = मिल्छ · बायाँ रातो = कम (मृत्यु छुटेको हुन सक्छ)","កណ្ដាល = ត្រូវ · ឆ្វេងក្រហម = តិចជាង","เส้นกลาง = ตรงสมุด · แดงซ้าย = นับได้น้อยกว่า"],
 "급수량":["Lượng nước","पानी मात्रा","បរិមាណទឹក","ปริมาณน้ำ"],"톤":["tấn","टन","តោន","ตัน"]});
 Object.assign(TR,{"사진 (선택)":["Ảnh (tuỳ chọn)","फोटो (ऐच्छिक)","រូបថត (ស្រេចចិត្ត)","รูป (ไม่บังคับ)"],"사진 찍기·고르기":["Chụp · chọn ảnh","फोटो खिच्नुहोस्","ថត · ជ្រើសរូប","ถ่าย · เลือกรูป"],"사진 빼기":["Bỏ ảnh","फोटो हटाउनुहोस्","ដករូប","เอารูปออก"],"말로 입력":["Nhập bằng giọng nói","बोलेर लेख्नुहोस्","និយាយបញ្ចូល","พูดเพื่อพิมพ์"],"음성 인식을 쓸 수 없습니다. 키보드의 마이크를 눌러 주세요.":["Không dùng được nhận giọng nói. Hãy bấm micro trên bàn phím.","आवाज पहिचान छैन। किबोर्डको माइक थिच्नुहोस्।","មិនអាចប្រើសំឡេងបាន។ ចុចមីក្រូលើក្ដារចុច។","ใช้เสียงไม่ได้ กดไมค์บนคีย์บอร์ด"]});
+Object.assign(TR,{"내 할 일":["Việc của tôi","मेरो काम","ការងាររបស់ខ្ញុំ","งานของฉัน"],"주간 달력":["Lịch tuần","हप्ता पात्रो","ប្រតិទិនសប្តាហ៍","ปฏิทินสัปดาห์"],"인계 메모":["Ghi chú bàn giao","हस्तान्तरण टिप्पणी","កំណត់ចំណាំប្រគល់","บันทึกส่งต่อ"],"인계 메모 (예: 내일 아침 6-008 분만 확인)":["Bàn giao (VD: sáng mai kiểm tra 6-008 đẻ)","हस्तान्तरण (जस्तै: भोलि बिहान 6-008 जाँच)","ប្រគល់ (ឧ: ព្រឹកស្អែកពិនិត្យ 6-008)","ส่งต่อ (เช่น พรุ่งนี้เช้าดู 6-008 คลอด)"],"내일로":["Sang mai","भोलिलाई","ទៅស្អែក","ไปพรุ่งนี้"],"내일 할 일로 넘겼습니다":["Đã chuyển sang việc ngày mai","भोलिको काममा पठाइयो","បានផ្ទេរទៅការងារស្អែក","ย้ายไปงานพรุ่งนี้แล้ว"],"밀림":["trễ","ढिलो","យឺត","เลื่อน"],
+"도태 후보":["Ứng viên loại","हटाउने उम्मेदवार","បេក្ខជនបោះបង់","ผู้สมัครคัดทิ้ง"],"도태 후보 기준":["Tiêu chí loại","हटाउने मापदण्ड","លក្ខណៈវិនិច្ឆ័យ","เกณฑ์คัดทิ้ง"],"모돈 탭 ‘도태 후보’ 필터":["Bộ lọc trong tab nái","माउ ट्याबको फिल्टर","តម្រងផ្ទាំងមេ","ตัวกรองแท็บแม่"],"산차 이상":["Lứa từ","ब्याँत वा बढी","កូនលើកពី","ครอกตั้งแต่"],"재발·공태 횟수 이상":["Số lần lên giống lại từ","फेरि गर्मी पटक वा बढी","ចំនួនកំដៅវិញពី","ครั้งกลับสัดตั้งแต่"],"최근 2복 실산 이하":["2 ổ gần nhất sống ≤","पछिल्लो २ ब्याँत जीवित ≤","២សំបុកចុងក្រោយ រស់ ≤","2 ครอกล่าสุด มีชีวิต ≤"],"회":[" lần"," पटक"," ដង"," ครั้ง"],
+"이번 주와 다음 주에 예정된 일입니다. 날짜를 누르면 모돈 번호가 보입니다.":["Việc tuần này và tuần sau. Bấm ngày để xem số nái.","यो र अर्को हप्ताका काम। मिति थिच्दा नम्बर देखिन्छ।","ការងារសប្តាហ៍នេះ និងក្រោយ។ ចុចថ្ងៃដើម្បីមើលលេខ។","งานสัปดาห์นี้และหน้า กดวันที่เพื่อดูหมายเลข"],"다음 주":["Tuần sau","अर्को हप्ता","សប្តាហ៍ក្រោយ","สัปดาห์หน้า"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -2644,7 +2653,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -2676,16 +2685,16 @@ function vHome(){
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){return it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
   return `<button class="todo ${fin?"alldone":""}" type="button" data-a="todo" data-v="${x.k}"><span class="bar" style="background:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--accent)"}"></span><span><b>${t(x.t)}</b><i class="tq" style="width:${x.items.length?(x.items.length-left)/x.items.length*100:0}%"></i><small>${fin?t("모두 완료")+" · ":""}${esc(names)}</small></span><span class="n" style="color:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--ink)"}">${fin?"✓":left}<small>/${x.items.length}</small></span></button>`;
 }
 function vTodo(){
-  const todos=sortTodos(buildTodos()),st=stalls();
+  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls();
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
-  h+=questHead(todos)+todoSortBar()+supplyCard(todos);
+  h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
   h+=todos.length?todos.map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
   h+=`<div class="note">일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.</div>`;
@@ -2703,6 +2712,7 @@ function openTodo(k){
     if(it.feed)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.feed.f)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${it.feed.days}${t("일분")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="사료">${t("입고 기록")}</button></div>${ck}</div>`;
     if(it.fc)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.fc.b.k)} → ${esc(it.fc.p.feed)}</b><span class="dd">${t(stagePlan(bAge(it.fc.b)))}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.am)return `<div class="sow"><div class="sow-top"><b>${esc(t(it.am.barn))}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"}">${it.issue?t("이상"):t("미점검")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="tab" data-v="morning">${t("아침 점검")}</button></div></div>`;
+    if(it.ho)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ho.text)}</b></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.ann)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ann.name)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${t("연간 일괄")}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.order)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${itemShort(it)}</b></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.pending&&it.day)return `<div class="sow"><div class="sow-top"><b>${esc(it.day.barn)} · ${t("하루 합계")} ${it.day.total}${t("두")}</b></div><div class="sow-meta">${kDate(it.day.date)} · ${it.day.cnt}${t("건")}</div><div class="acts"><button class="act pri" type="button" data-a="judge" data-v="d:${it.day.date}">${t("판단하러 가기")}</button></div></div>`;
@@ -2724,12 +2734,12 @@ function openTodo(k){
 }
 function vSows(){
   const all=state.sows.map(s=>({s,i:statusOf(s)}));
-  const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
+  const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:k==="도태후보"?all.filter(x=>cullWhy(x.s)).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="input" data-v="도입">+ ${esc(L("도입"))}</button></div>`;
   h+=`<input type="search" id="sowQ" inputmode="numeric" pattern="[0-9]*" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
   h+=sowTools();
-  h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
-  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:matchStatus(x.s,x.i,ui.sf))&&(!ui.sowLoc||ui.sowLoc==="전체"||x.s.loc===ui.sowLoc)&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
+  h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],["도태후보","도태 후보"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
+  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:ui.sf==="도태후보"?!!cullWhy(x.s):matchStatus(x.s,x.i,ui.sf))&&(!ui.sowLoc||ui.sowLoc==="전체"||x.s.loc===ui.sowLoc)&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
   h+=`<div class="note">${ui.sf==="도태됨"?"도태된 모돈도 기록이 모두 보관되어 있습니다. 번호를 누르면 생애 기록을 볼 수 있습니다.":t("모돈을 누르면 상세 정보가 열립니다. 위치는 상세 화면에서 바꿉니다.")}</div>`;
   h+=list.length?`<div class="sowtiles">${sortSows(list).map(x=>sowTile(x.s,x.i)).join("")}</div>`:`<div class="empty">-</div>`;
   return h;
@@ -2771,7 +2781,7 @@ function sortSows(list){const k=ui.sowSort||"번호",big=1e6,v=x=>{const i=x.i;
 function sowTools(){const L=["전체",...SOW_LOCS];
   return `<div class="sowtools"><label class="sel"><span>${t("정렬")}</span><select data-ch="sowSort" aria-label="${t("정렬")}">${SOW_SORTS.map(([k,l])=>`<option value="${k}" ${(ui.sowSort||"번호")===k?"selected":""}>${t(l)}</option>`).join("")}</select></label><label class="sel"><span>${t("돈사")}</span><select data-ch="sowLoc" aria-label="${t("돈사")}">${L.map(l=>`<option value="${esc(l)}" ${(ui.sowLoc||"전체")===l?"selected":""}>${t(l)}</option>`).join("")}</select></label></div>`}
 function sowTile(s,i){const h=heatLeft(i);
-  return `<button type="button" class="stile ${i.key==="도태됨"?"culled":""}" data-a="sowd" data-v="${s.id}"><span class="st-top"><b>${s.id}</b><span class="stage ${i.cls}">${i.label}</span></span><span class="st-sub">${i.sub}</span><span class="st-meta">${i.gilt?t("후보돈"):i.parity+t("산")} · ${esc(t(s.loc))}${i.heat?` · <em>${t("발정 관찰")}</em>`:""}${s.cullPlan&&i.key!=="도태됨"?` · <em>${t("도태 예정")}</em>`:""}</span></button>`}
+  return `<button type="button" class="stile ${i.key==="도태됨"?"culled":""}" data-a="sowd" data-v="${s.id}"><span class="st-top"><b>${s.id}</b><span class="stage ${i.cls}">${i.label}</span></span><span class="st-sub">${i.sub}</span><span class="st-meta">${i.gilt?t("후보돈"):i.parity+t("산")} · ${esc(t(s.loc))}${i.heat?` · <em>${t("발정 관찰")}</em>`:""}${s.cullPlan&&i.key!=="도태됨"?` · <em>${t("도태 예정")}</em>`:""}${ui.sf==="도태후보"?`<br><em>${esc(cullWhy(s)||"")}</em>`:""}</span></button>`}
 document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.ch;if(k==="sowSort"||k==="sowLoc"){ui[k]=e.target.value;render()}});
 /* ================= v0.3 · 입력 페이지 (번역 · 폐사 기준) ================= */
 function fieldHtml(f,d,sowForCalc){
@@ -3274,6 +3284,47 @@ Object.assign(A,{
     recog=new SR();recog.lang=SR_LANG[LANG]||"ko-KR";recog.interimResults=false;el.classList.add("on");
     recog.onresult=e=>{const txt=[...e.results].map(r=>r[0].transcript).join(" ");inp.value=(inp.value?inp.value+" ":"")+txt;inp.dispatchEvent(new Event("input",{bubbles:true}))};
     recog.onend=()=>{el.classList.remove("on");recog=null};recog.onerror=()=>{toast(t("음성 인식을 쓸 수 없습니다. 키보드의 마이크를 눌러 주세요."))};recog.start()}
+});
+/* ================= v0.5 · 내 할 일 · 인계 메모 · 도태 후보 · 주간 달력 ================= */
+// 18. 내 할 일: 나에게 담당된 묶음만
+function myTodoFilter(todos){if(!ui.myTodo)return todos;const m=me()||{};return todos.filter(x=>(state.assign||{})[TODAY+"|"+x.k]===m.name)}
+function myTodoBar(){const m=me()||{},n=buildTodos().filter(x=>(state.assign||{})[TODAY+"|"+x.k]===m.name).length;
+  return `<div class="chips"><button type="button" class="chip ${ui.myTodo?"":"on"}" data-a="myTodo" data-v="0">${t("전체")}</button><button type="button" class="chip ${ui.myTodo?"on":""}" data-a="myTodo" data-v="1">${t("내 할 일")} ${n}</button><button type="button" class="chip" data-a="tab" data-v="cal">📅 ${t("주간 달력")}</button></div>`}
+// 19. 인계 메모: 내일(또는 모레) 할 일로 넘김
+function hoTodos(){const L=(state.handover||[]).filter(h=>h.due<=REF),items=L.filter(h=>{const lg=tdLog(tdKey("handover",h.id));return !lg||localDateOf(lg.at)===TODAY}).map(h=>({ho:h,label:`${esc(h.user)} · ${kDate(h.at.slice(0,10))}${h.due<REF?" · "+t("밀림"):""}`,sev:h.due<REF?"bad":"warn"}));
+  return [{k:"handover",t:"인계 메모",items,act:null}]}
+function hoBox(){return `<div class="panel ho"><div class="row2"><input type="text" id="hoText" placeholder="${t("인계 메모 (예: 내일 아침 6-008 분만 확인)")}" aria-label="${t("인계 메모")}"><button class="act pri" type="button" data-a="hoAdd">${t("내일로")}</button></div></div>`}
+// 20. 도태 후보 (기준은 대표 설정)
+const CULL0={parity:7,returns:2,low:9};
+function cullRule(){return {...CULL0,...(state.cullRule||{})}}
+function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[];
+  if(i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);if(i.returns>=R.returns)w.push(`${t("재발·공태")} ${i.returns}${t("회")}`);
+  const fs=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
+  if(fs.length===2&&fs.every(r=>r.data.live<=R.low))w.push(`${t("실산")} ${fs.map(r=>r.data.live).join("·")}`);
+  return w.length?w.join(" · "):null}
+function cullRuleSet(){const R=cullRule();return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터")}</span></div><div class="panel">${[["parity","산차 이상"],["returns","재발·공태 횟수 이상"],["low","최근 2복 실산 이하"]].map(([k,l])=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`).join("")}</div>`}
+// 22. 주간 달력: 이번 주 + 다음 주 예정
+function calEvents(){const ev={},add=(d,k,txt)=>{(ev[d]=ev[d]||[]).push([k,txt])},w0=weekStart(TODAY),end=addDays(w0,13);
+  activeSows().forEach(s=>{const i=statusOf(s);
+    if(i.stage==="임신"||i.stage==="교배"){const due=addDays(i.mate,CFG.gest);if(due>=w0&&due<=end)add(due,"분만",s.id);const rc=addDays(i.mate,FARM.pregDays[0]);if(i.stage==="교배"&&rc>=w0&&rc<=end)add(rc,"임신확인",s.id);
+      FARM.vax.late.forEach(v=>{const d=addDays(due,-v.wk*7);if(d>=w0&&d<=end&&!sowVaxDone(s.id,v.name,i.mate))add(d,"백신",s.id+" "+v.name.split(" (")[0])})}
+    if(i.stage==="포유"){const d=addDays(i.farrow,CFG.weanDay);if(d>=w0&&d<=end)add(d,"이유",s.id)}
+    if(i.stage==="이유"){const d=addDays(i.since,4);if(d>=w0&&d<=end)add(d,"교배",s.id)}});
+  liveBatches().forEach(b=>state.cfg.prog.forEach(p=>{const d=addDays(b.k,p.day),v=bVax(b,p);if(d>=w0&&d<=end&&v.st!=="done")add(d,"돈군백신",bName(b.k).replace(" 돈군","")+" "+p.name)}));
+  [y=>y].forEach(()=>FARM.vax.annual.forEach(v=>v.when.forEach(([m,w,r])=>{const d=annualDate(+TODAY.slice(0,4),m,w);if(d>=w0&&d<=end)add(d,"백신",`${v.name} ${r} (${t("전체")})`)})));
+  return {ev,w0}}
+function vCal(){const {ev,w0}=calEvents(),O=ui.calOpen;
+  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="todo">‹ ${t("할 일")}</button><h2>${t("주간 달력")}</h2></div><div class="note">${t("이번 주와 다음 주에 예정된 일입니다. 날짜를 누르면 모돈 번호가 보입니다.")}</div>`;
+  for(let wk=0;wk<2;wk++){h+=`<div class="sec-t">W${isoWeek(addDays(w0,wk*7)).w} ${wk?t("다음 주"):t("이번 주")}</div><div class="cal">`;
+    for(let i=0;i<7;i++){const d=addDays(w0,wk*7+i),E=ev[d]||[],g={};E.forEach(([k,x])=>(g[k]=g[k]||[]).push(x));
+      h+=`<button type="button" class="cal-d ${d===TODAY?"today":""} ${d<TODAY?"past":""}" data-a="calOpen" data-v="${d}"><b>${kDate(d)}</b><span class="cal-c">${Object.entries(g).map(([k,a])=>`<i style="--c:${(TYPES[k]||{}).c||"var(--muted)"}">${esc(L(k))} ${a.length}</i>`).join("")||`<em>-</em>`}</span>${O===d?`<span class="cal-x">${Object.entries(g).map(([k,a])=>`<span><b>${esc(L(k))}</b> ${a.map(esc).join(", ")}</span>`).join("")}</span>`:""}</button>`}
+    h+=`</div>`}
+  return h}
+Object.assign(A,{
+  myTodo:v=>{ui.myTodo=v==="1";render()},
+  hoAdd:()=>{const v=($("#hoText").value||"").trim();if(!v)return;(state.handover=state.handover||[]).push({id:newId(),text:v,due:addDays(TODAY,1),user:state.user,at:new Date().toISOString()});save();render();toast(t("내일 할 일로 넘겼습니다"))},
+  cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};r[v]=Math.max(0,cullRule()[v]+Number(el.dataset.k));save();render()},
+  calOpen:v=>{ui.calOpen=ui.calOpen===v?null:v;render()}
 });
 /* ================= v0.3 · 동작 ================= */
 function migrateName(k,oldN,newN){

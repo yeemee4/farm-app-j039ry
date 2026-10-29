@@ -14,7 +14,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -46,16 +46,16 @@ function vHome(){
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){return it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
   return `<button class="todo ${fin?"alldone":""}" type="button" data-a="todo" data-v="${x.k}"><span class="bar" style="background:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--accent)"}"></span><span><b>${t(x.t)}</b><i class="tq" style="width:${x.items.length?(x.items.length-left)/x.items.length*100:0}%"></i><small>${fin?t("모두 완료")+" · ":""}${esc(names)}</small></span><span class="n" style="color:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--ink)"}">${fin?"✓":left}<small>/${x.items.length}</small></span></button>`;
 }
 function vTodo(){
-  const todos=sortTodos(buildTodos()),st=stalls();
+  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls();
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
-  h+=questHead(todos)+todoSortBar()+supplyCard(todos);
+  h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
   h+=todos.length?todos.map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
   h+=`<div class="note">일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.</div>`;
@@ -73,6 +73,7 @@ function openTodo(k){
     if(it.feed)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.feed.f)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${it.feed.days}${t("일분")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="사료">${t("입고 기록")}</button></div>${ck}</div>`;
     if(it.fc)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.fc.b.k)} → ${esc(it.fc.p.feed)}</b><span class="dd">${t(stagePlan(bAge(it.fc.b)))}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.am)return `<div class="sow"><div class="sow-top"><b>${esc(t(it.am.barn))}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"}">${it.issue?t("이상"):t("미점검")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="tab" data-v="morning">${t("아침 점검")}</button></div></div>`;
+    if(it.ho)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ho.text)}</b></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.ann)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ann.name)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${t("연간 일괄")}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.order)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${itemShort(it)}</b></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.pending&&it.day)return `<div class="sow"><div class="sow-top"><b>${esc(it.day.barn)} · ${t("하루 합계")} ${it.day.total}${t("두")}</b></div><div class="sow-meta">${kDate(it.day.date)} · ${it.day.cnt}${t("건")}</div><div class="acts"><button class="act pri" type="button" data-a="judge" data-v="d:${it.day.date}">${t("판단하러 가기")}</button></div></div>`;
@@ -94,12 +95,12 @@ function openTodo(k){
 }
 function vSows(){
   const all=state.sows.map(s=>({s,i:statusOf(s)}));
-  const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
+  const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:k==="도태후보"?all.filter(x=>cullWhy(x.s)).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="input" data-v="도입">+ ${esc(L("도입"))}</button></div>`;
   h+=`<input type="search" id="sowQ" inputmode="numeric" pattern="[0-9]*" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
   h+=sowTools();
-  h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
-  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:matchStatus(x.s,x.i,ui.sf))&&(!ui.sowLoc||ui.sowLoc==="전체"||x.s.loc===ui.sowLoc)&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
+  h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],["도태후보","도태 후보"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
+  const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:ui.sf==="도태후보"?!!cullWhy(x.s):matchStatus(x.s,x.i,ui.sf))&&(!ui.sowLoc||ui.sowLoc==="전체"||x.s.loc===ui.sowLoc)&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
   h+=`<div class="note">${ui.sf==="도태됨"?"도태된 모돈도 기록이 모두 보관되어 있습니다. 번호를 누르면 생애 기록을 볼 수 있습니다.":t("모돈을 누르면 상세 정보가 열립니다. 위치는 상세 화면에서 바꿉니다.")}</div>`;
   h+=list.length?`<div class="sowtiles">${sortSows(list).map(x=>sowTile(x.s,x.i)).join("")}</div>`:`<div class="empty">-</div>`;
   return h;
