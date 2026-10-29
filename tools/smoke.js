@@ -12,7 +12,8 @@ const ROOT = path.join(__dirname, ".."), OUT = process.argv[2] || "/tmp", GATE =
     await p.waitForTimeout(300); await p.screenshot({ path: `${OUT}/${name}-home.png`, fullPage: name === "phone" });
     const tabs = await p.$$eval(`#tabs${name === "phone" ? "M" : "D"} [data-v]`, a => a.map(x => x.dataset.v));
     for (const t of tabs) { await p.evaluate(v => { tab = v; render() }, t); await p.waitForTimeout(150) }
-    for (const q of await p.evaluate(() => QUICK)) { await p.evaluate(v => { tab = "home"; render() }, q); await p.click(`.qbtn[data-v="${q}"]`); await p.waitForTimeout(80) }
+    for (const q of await p.evaluate(() => QUICK)) { await p.evaluate(v => { tab = "home"; render() }, q); if (await p.$(`.qbtn[data-v="${q}"]`)) await p.click(`.qbtn[data-v="${q}"]`); else await p.evaluate(v => openInput(v), q); await p.waitForTimeout(80) }
+    await p.evaluate(() => { tab = "feedchk"; render() }); await p.waitForTimeout(80);
     const tags = await p.evaluate(() => document.querySelectorAll("[data-tag]").length);
     console.log(name, "tabs", tabs.join(","), "tags", tags, "scrollW", await p.evaluate(() => document.documentElement.scrollWidth));
   }

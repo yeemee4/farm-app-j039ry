@@ -649,6 +649,7 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 :where(html[data-pc="on"]) .bins{grid-template-columns:repeat(4,minmax(0,160px))}
 
 .bin span{white-space:nowrap}.bin span small{font-size:11px;font-weight:600}
+.bin.done{border-color:var(--good)}.bin em.fc-ok{color:var(--good)}.bin em.fc-no{color:var(--amber)}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1010,6 +1011,7 @@ FARM.feed={
   piglet:[{from:5,to:21,feed:"특호",note:"밀크 (입질사료)"},{from:15,to:35,feed:"2호",note:"15~21일 밀크+2호 · 인큐 전기"},{from:35,to:45,feed:"3호",note:"인큐 후기"},{from:45,to:76,feed:"젖먹이",note:"자돈사"},{from:76,to:999,feed:"육성",note:"군사방·육성비육사"}],
   orderDays:5,     // 남은 일수가 이 이하이면 주문 알림 (= 안전 재고 일수)
   leadDays:2,      // 주문 후 도착까지 일수
+  checkBy:"10:00", // 매일 사료 잔량 점검 마감 (오늘 입력 [사료])
   // 주수별 1두 하루 섭취량(kg) — 일반 사양 기준값, 대표 설정 › 사료 섭취량 기준에서 바꿈
   intake:{
     pig:[0,.02,.05,.12,.25,.35,.45,.6,.75,.9,1.05,1.2,1.35,1.5,1.65,1.8,1.95,2.1,2.25,2.4,2.5,2.6,2.7,2.8,2.9,3.0],   // 0주~25주령
@@ -1202,7 +1204,7 @@ function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SV
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
 const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.wxcard,.d-card,.d-top,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
-const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN",feedset:"FS"};
+const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN",feedset:"FS",feedchk:"FC"};
 let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
 function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
   const pre=document.body.classList.contains("login")?"L":(TAG_PRE[typeof tab!=="undefined"?tab:""]||String(tab||"X").slice(0,2).toUpperCase());
@@ -1258,8 +1260,8 @@ function stalls(){
 /* ================= 할 일 ================= */
 const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k==="handover"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
 const tdLog=key=>(state.todoLog||{})[key];
-function itemTarget(it){return it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
-function tdName(it){return it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
+function itemTarget(it){return it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
+function tdName(it){return it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
 function buildTodos(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{
@@ -1643,13 +1645,13 @@ function extraTodos(){
   return [
     {k:"bvax",t:"돈군 백신 (이번 주 · 누락)",items:bv,act:"bvax"},
     {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`${semenClock().txt} · 내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → ${so.order}${FARM.semen.unit} 주문`,sev:semenClock().sev}]:[],act:null},
-    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...closeTodos(),...mate2Todos(),...hoTodos()
+    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...fcTodos(),...closeTodos(),...mate2Todos(),...hoTodos()
   ];
 }
 
 /* ================= v0.5 · 할 일 우선순위 · 퀘스트 달성률 · 백신 준비물 ================= */
 // 할 일 묶음 기본 순위 (대표 설정 › 할 일 순서에서 바꿈)
-const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
+const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["feedchk","사료 잔량 점검"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
 function todoRank(){const r=state.todoRank=state.todoRank||TODO_KINDS.map(x=>x[0]);TODO_KINDS.forEach(x=>{if(!r.includes(x[0]))r.push(x[0])});return r}
 const TODO_SORTS=[["rank","우선순위"],["urgent","급한 순"],["count","남은 개수 많은 순"]];
 function sortTodos(a,mode){const r=todoRank(),ri=x=>{const i=r.indexOf(x.k);return i<0?99:i},sv={bad:0,warn:1,ok:2},m=mode||ui.todoSort||"rank";
@@ -2340,7 +2342,7 @@ function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return 
 // 대표 설정: 섭취량 기준표
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
-  h+=binSet();
+  h+=fcBySet()+binSet();
   h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${[["gestEarly",`${t("임신")} ~${I.gestLateFrom-1}${t("일")}`],["gestLate",`${t("임신")} ${I.gestLateFrom}${t("일")}~`],["open",t("이유 후 공태")],["gilt",t("후보돈")]].map(([k,l])=>`<div class="setrow"><span>${l}</span>${st(k,I[k],null,.1)}</div>`).join("")}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
   h+=`<div class="sec-t">${t("자돈·육성돈 (주령)")} <span>${t("사료 종류는 일령별 급여표를 따름")}</span></div><div class="panel">${I.pig.map((v,i)=>`<div class="setrow"><span>${i}${t("주령")} <small class="sow-meta">${pigFeeds(i*7+3).map(p=>p.feed).join("·")}</small></span>${st("pig",v,i,.05)}</div>`).join("")}</div>`;
   return h+`<div class="acts"><button class="act" type="button" data-a="intkReset">${t("기본값으로")}</button></div>`}
@@ -2431,13 +2433,37 @@ Object.assign(A,{binOpen:v=>openBin(+v),binSet:v=>{const b=FARM.feed.bins[ui.bin
   binKnob:v=>{try{localStorage.setItem("farm-binknob",v)}catch(e){}const B0=ui.bin;openBin(B0.i);ui.bin.lL=B0.lL;ui.bin.lR=B0.lR;binDraw()},
   binMode:v=>{ui.binMode=v;document.querySelectorAll('[data-a="binMode"]').forEach(c=>c.classList.toggle("on",c.dataset.v===v))},
   binSave:()=>{const b=FARM.feed.bins[ui.bin.i],B0=ui.bin;addRecord("사료",TODAY,{kind:b.feed,mode:"빈 잔량",kg:B0.kg,vol:+B0.vol.toFixed(3),lL:+B0.lL.toFixed(3),lR:+B0.lR.toFixed(3),gauge:ui.binMode||"잔량"});
-    const m=ui.binMode;ui.binMode=null;closeSheet();render();toast(`${b.name} ${B0.kg.toLocaleString()}kg ${t("저장")}`);if(m==="입고 전")setTimeout(()=>{openInput("사료",{fv:{kind:b.feed,mode:"입고"}});toast(t("입고를 저장한 뒤 빈을 다시 눌러 ‘입고 후’를 기록하세요"))},300)}});
+    const m=ui.binMode;ui.binMode=null;closeSheet();render();if(tab==="feedchk"&&!fcLeft().length)window.scrollTo(0,0);toast(`${b.name} ${B0.kg.toLocaleString()}kg ${t("저장")}`);if(m==="입고 전")setTimeout(()=>{openInput("사료",{fv:{kind:b.feed,mode:"입고"}});toast(t("입고를 저장한 뒤 빈을 다시 눌러 ‘입고 후’를 기록하세요"))},300)}});
 // 대표 설정: 빈 규격·비중
 function binSet(){return `<div class="sec-t">${t("사료 빈")} <span>${t("규격을 고르면 치수 자동")}</span></div><div class="panel">${FARM.feed.bins.map(b=>{const c=binCfg(b),g=binGeo(b),e=binDensEst(b);
   return `<div class="setrow" style="flex-wrap:wrap"><span><b>${esc(b.name)}</b> <small class="sow-meta">${esc(b.feed)} · ${t("지름")} ${g.D}m · ${t("둘레")} ${(Math.PI*g.D).toFixed(2)}m · ${t("가득")} ${(b.cap/1000).toFixed(1)}t</small></span><div class="chipwrap">${Object.keys(BIN_SPECS).map(s=>`<button type="button" class="chip ${+s===c.spec?"on":""}" data-a="binSpec" data-v="${b.name}" data-k="${s}">${s}${t("톤")}</button>`).join("")}</div>
   <div class="setrow" style="width:100%;border:0;padding:4px 0"><span>${t("비중")} <small class="sow-meta">${c.dens?t("직접 입력"):e?`${t("입고")} ${e.n}${t("회로 보정")}`:t("기본값")}</small></span><div class="stepper"><button type="button" data-a="binDens" data-v="${b.name}" data-k="-0.01" aria-label="−">−</button><input type="number" value="${binDens(b).toFixed(2)}" readonly aria-label="${t("비중")}"><button type="button" data-a="binDens" data-v="${b.name}" data-k="0.01" aria-label="+">+</button></div></div></div>`}).join("")}</div>`}
 Object.assign(A,{binSpec:(v,el)=>{const o=state.binCfg=state.binCfg||{};(o[v]=o[v]||{}).spec=+el.dataset.k;save();render()},
   binDens:(v,el)=>{const o=state.binCfg=state.binCfg||{},b=FARM.feed.bins.find(x=>x.name===v);(o[v]=o[v]||{}).dens=Math.round(Math.max(.35,Math.min(.85,binDens(b)+Number(el.dataset.k)))*100)/100;save();render()}});
+/* ===== 사료 잔량 점검 (매일 오전 · 오늘 입력 [사료] · 할 일 '사료 잔량 점검') =====
+   빈은 양쪽 게이지, 포대는 포대 수. 다 재면 다음 주문일·권장량을 바로 보여줌. 마감 시각 FARM.feed.checkBy (대표 설정) */
+function feedCheckBy(){return state.feedCheckBy||FARM.feed.checkBy||"10:00"}
+function fcItems(){const T=feedTable(),bins=FARM.feed.bins.map((b,i)=>({k:b.feed,i,bin:b})),bags=T.filter(x=>x.bag&&x.use>0).map(x=>({k:x.f,bag:x.bag}));return [...bins,...bags]}
+function fcToday(f){return state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===TODAY&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0]}
+function fcLeft(){return fcItems().filter(x=>!fcToday(x.k))}
+function fcTodos(){if(REF!==TODAY)return [{k:"feedchk",t:"사료 잔량 점검",items:[],act:null}];const late=nowHM()>=feedCheckBy();
+  return [{k:"feedchk",t:"사료 잔량 점검",items:fcLeft().map(x=>({fc2:x,label:`${x.bin?esc(x.bin.name):t("포대")} · ${t("오전")} ${feedCheckBy()}${t("까지")}`,sev:late?"bad":"warn"})),act:null}]}
+function vFeedCheck(){const T=feedTable(),it=fcItems(),left=fcLeft().length,cb=feedCheckBy(),late=nowHM()>=cb&&left;ui.bags=ui.bags||{};
+  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="home">‹ ${t("홈")}</button><h2>${t("사료 잔량 점검")}</h2></div>`;
+  h+=`<div class="banner ${left?late?"":"warn-b":"info"}"><b>${left?`${t("남은")} ${left}`:t("오늘 점검 완료")}</b><span>${left?`${t("오전")} ${cb}${t("까지")} · ${t("빈을 눌러 양쪽 높이를 맞추고 저장하세요")}`:t("아래 주문 권장을 확인하세요")}</span></div>`;
+  h+=`<div class="sec-t">${t("사료 빈")}</div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},d=fcToday(b.feed),[lL,lR]=binLevels(b,Math.min(x.kg||0,b.cap)),P=binPx(b);
+    return `<button type="button" class="bin ${d?"done":""}" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"c"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><span>${x.kg==null?t("기록 필요"):(Math.min(x.kg,b.cap)/1000).toFixed(1)+"t"}</span><em class="${d?"fc-ok":"fc-no"}">${d?`✓ ${localTimeOf?localTimeOf(d.createdAt):""}`:t("점검 전")}</em></button>`}).join("")}</div>`;
+  const bags=it.filter(x=>x.bag);
+  if(bags.length)h+=`<div class="sec-t">${t("포대 사료")} <span>${t("남은 포대 수")}</span></div><div class="panel">${bags.map(x=>{const r=T.find(q=>q.f===x.k)||{},d=fcToday(x.k),n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):0);
+    return `<div class="setrow"><span><b>${esc(x.k)}</b> <small class="sow-meta">${x.bag.kg}kg · ${t("하루")} ${Math.round(r.use||0)}kg${d?` · <span style="color:var(--good)">✓ ${t("오늘 기록")}</span>`:""}</small></span><div class="stepper"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="-1" aria-label="−">−</button><input type="number" value="${n}" readonly aria-label="${esc(x.k)}"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="1" aria-label="+">+</button></div></div>`}).join("")}<button class="act pri" type="button" data-a="fcBagSave" style="width:100%;margin-top:8px">${t("포대 수 저장")}</button></div>`;
+  if(!left)h+=vFeedPlan();
+  return h+`<div class="acts"><button class="act" type="button" data-a="input" data-v="사료">${t("입고 기록")} ›</button>${left?`<button class="act" type="button" data-a="fcPlan">${t("주문 권장 보기")}</button>`:""}</div>`+(ui.fcPlan&&left?vFeedPlan():"")}
+function localTimeOf(iso){try{const d=new Date(iso);return pad(d.getHours())+":"+pad(d.getMinutes())}catch(e){return ""}}
+Object.assign(A,{fcBag:(v,el)=>{const T=feedTable(),r=T.find(q=>q.f===v)||{},b=feedBag(v),cur=ui.bags[v]??(r.kg!=null?Math.floor(r.kg/b.kg):0);ui.bags[v]=Math.max(0,cur+Number(el.dataset.k));render()},
+  fcBagSave:()=>{const T=feedTable();fcItems().filter(x=>x.bag).forEach(x=>{const r=T.find(q=>q.f===x.k)||{},n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):null);if(n!=null)addRecord("사료",TODAY,{kind:x.k,mode:"빈 잔량",kg:n*x.bag.kg,bags:n})});ui.bags={};render();toast(t("포대 수를 저장했습니다"))},
+  fcPlan:()=>{ui.fcPlan=!ui.fcPlan;render()},
+  fcByT:v=>{state.feedCheckBy=v;save();render()}});
+function fcBySet(){const c=feedCheckBy();return `<div class="sec-t">${t("사료 잔량 점검 마감")} <span>${t("매일 오전 · 지나면 할 일이 빨강")}</span></div><div class="panel"><div class="chipwrap">${["08:00","09:00","10:00","11:00","12:00"].map(v=>`<button type="button" class="chip wrap ${c===v?"on":""}" data-a="fcByT" data-v="${v}">${v}</button>`).join("")}</div></div>`}
 /* ================= v0.2 · 돈군 탭 ================= */
 function vBatch(){
   const L=liveBatches();
@@ -3013,6 +3039,7 @@ Object.assign(TR,{"톤 규격":["t quy cách","टन","តោន","ตัน"],
 Object.assign(TR,{"규격을 고르면 치수 자동":["Chọn quy cách → tự tính kích thước","टन छान्दा नाप आफैं","ជ្រើសតោន → ទំហំស្វ័យប្រវត្តិ","เลือกขนาด → คำนวณขนาดอัตโนมัติ"]});
 Object.assign(TR,{"사료량":["Lượng cám","दाना मात्रा","បរិមាណចំណី","ปริมาณอาหาร"]});
 Object.assign(TR,{"사료 잔량":["Cám còn lại","बाँकी दाना","ចំណីនៅសល់","อาหารคงเหลือ"],"빈 기울기 = 마지막 기록":["Độ nghiêng = lần ghi cuối","झुकाव = अन्तिम रेकर्ड","ទំនោរ = កំណត់ចុងក្រោយ","ความเอียง = บันทึกล่าสุด"]});
+Object.assign(TR,{"사료 잔량 점검":["Kiểm tra cám còn","दाना जाँच","ពិនិត្យចំណីនៅសល់","ตรวจอาหารคงเหลือ"],"사료 점검":["Kiểm cám","दाना जाँच","ពិនិត្យចំណី","ตรวจอาหาร"],"오전":["sáng","बिहान","ព្រឹក","เช้า"],"오늘 점검 완료":["Đã kiểm hôm nay","आज जाँच सकियो","ពិនិត្យរួច","ตรวจวันนี้แล้ว"],"빈을 눌러 양쪽 높이를 맞추고 저장하세요":["Bấm silo, chỉnh hai bên rồi lưu","बिन थिचेर दुवै उचाइ मिलाई सेभ","ចុចធុង កែកម្ពស់ទាំងពីរ រួចរក្សា","กดไซโล ปรับสองข้างแล้วบันทึก"],"아래 주문 권장을 확인하세요":["Xem đề xuất đặt hàng bên dưới","तलको अर्डर सिफारिस हेर्नुहोस्","មើលការណែនាំខាងក្រោម","ดูคำแนะนำการสั่งด้านล่าง"],"점검 전":["Chưa kiểm","जाँच बाँकी","មិនទាន់ពិនិត្យ","ยังไม่ตรวจ"],"포대 사료":["Cám bao","बोरा दाना","ចំណីបាវ","อาหารกระสอบ"],"남은 포대 수":["Số bao còn","बाँकी बोरा","បាវនៅសល់","กระสอบคงเหลือ"],"포대 수 저장":["Lưu số bao","बोरा सेभ","រក្សាចំនួនបាវ","บันทึกจำนวนกระสอบ"],"포대 수를 저장했습니다":["Đã lưu số bao","बोरा सेभ भयो","បានរក្សា","บันทึกแล้ว"],"입고 기록":["Ghi nhập","आपूर्ति रेकर्ड","កត់ការទទួល","บันทึกรับเข้า"],"주문 권장 보기":["Xem đề xuất đặt","अर्डर सिफारिस","មើលការណែនាំ","ดูคำแนะนำการสั่ง"],"사료 잔량 점검 마감":["Hạn kiểm cám","दाना जाँच समय","ម៉ោងពិនិត្យចំណី","เวลาปิดตรวจอาหาร"],"매일 오전 · 지나면 할 일이 빨강":["Mỗi sáng · quá giờ thành đỏ","हरेक बिहान · नाघे रातो","រៀងរាល់ព្រឹក · ហួសក្រហម","ทุกเช้า · เลยเวลาเป็นสีแดง"],"홈":["Trang chủ","गृह","ទំព័រដើម","หน้าแรก"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -3105,7 +3132,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -3124,6 +3151,7 @@ function vHome(){
   h+=amHomeCard();
   h+=`<div class="sec-t">${t("오늘 입력")}</div><div class="qgrid">${QUICK.filter(q=>!(state.labels.hide||{})[q]).map(q=>{
     let cls="",cnt="";
+    if(q==="사료"){const left=fcLeft().length;return `<button class="qbtn ${left&&nowHM()>=feedCheckBy()?"miss":""}${iconStyle()==="pic"&&ICON_IMG[q]?" pic":" qx"}${left?"":" zero"}" type="button" data-a="tab" data-v="feedchk">${icon(q)}<span class="qlb">${esc(t("사료 점검"))}</span><span class="cnt">${left||"✓"}</span></button>`}
     if(DAILY.includes(q)){const s=dayStatus(TODAY,q);cls=s.s==="miss"?"miss":s.s==="zero"?"zero":"";cnt=s.s==="ok"?s.n:s.s==="zero"?"0":""}
     else{const n=state.records.filter(r=>r.type===q&&r.workDate===TODAY).length;cnt=n||""}
     return `<button class="qbtn ${cls}${iconStyle()==="pic"&&ICON_IMG[q]?" pic":" qx"}" type="button" data-a="input" data-v="${q}">${icon(q)}<span class="qlb">${esc(L(q))}</span><span class="cnt">${cnt}</span></button>`}).join("")}</div>`;
@@ -3138,7 +3166,7 @@ function vHome(){
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.cm?kDate(it.cm.day).replace(/\s*\(.*\)/,"")+" "+L(it.cm.type):it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){return it.fc2?(it.fc2.bin?it.fc2.bin.name.replace(" 빈",""):it.fc2.k):it.cm?kDate(it.cm.day).replace(/\s*\(.*\)/,"")+" "+L(it.cm.type):it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
@@ -3165,6 +3193,7 @@ function openTodo(k){
     if(it.feed)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.feed.f)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${it.feed.days}${t("일분")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="사료">${t("입고 기록")}</button></div>${ck}</div>`;
     if(it.fc)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.fc.b.k)} → ${esc(it.fc.p.feed)}</b><span class="dd">${t(stagePlan(bAge(it.fc.b)))}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.am)return `<div class="sow"><div class="sow-top"><b>${esc(t(it.am.barn))}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"}">${it.issue?t("이상"):t("미점검")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="tab" data-v="morning">${t("아침 점검")}</button></div></div>`;
+    if(it.fc2)return `<div class="sow"><div class="sow-top"><b>${esc(it.fc2.bin?it.fc2.bin.name:it.fc2.k)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${t("점검 전")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="tab" data-v="feedchk">${t("사료 잔량 점검")} ›</button></div></div>`;
     if(it.cm)return `<div class="sow"><div class="sow-top"><b>${esc(L(it.cm.type))}</b><span class="dd" style="color:var(--red)">${kDate(it.cm.day)}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="${it.cm.type}" data-date="${it.cm.day}">${t("입력")}</button><button class="act warn" type="button" data-a="cmZero" data-v="${it.cm.day}|${it.cm.type}">${t("없음")}</button></div></div>`;
     if(it.ho)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ho.text)}</b></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.ann)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.ann.name)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${t("연간 일괄")}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;

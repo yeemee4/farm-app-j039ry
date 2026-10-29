@@ -83,7 +83,7 @@ Object.assign(A,{binOpen:v=>openBin(+v),binSet:v=>{const b=FARM.feed.bins[ui.bin
   binKnob:v=>{try{localStorage.setItem("farm-binknob",v)}catch(e){}const B0=ui.bin;openBin(B0.i);ui.bin.lL=B0.lL;ui.bin.lR=B0.lR;binDraw()},
   binMode:v=>{ui.binMode=v;document.querySelectorAll('[data-a="binMode"]').forEach(c=>c.classList.toggle("on",c.dataset.v===v))},
   binSave:()=>{const b=FARM.feed.bins[ui.bin.i],B0=ui.bin;addRecord("사료",TODAY,{kind:b.feed,mode:"빈 잔량",kg:B0.kg,vol:+B0.vol.toFixed(3),lL:+B0.lL.toFixed(3),lR:+B0.lR.toFixed(3),gauge:ui.binMode||"잔량"});
-    const m=ui.binMode;ui.binMode=null;closeSheet();render();toast(`${b.name} ${B0.kg.toLocaleString()}kg ${t("저장")}`);if(m==="입고 전")setTimeout(()=>{openInput("사료",{fv:{kind:b.feed,mode:"입고"}});toast(t("입고를 저장한 뒤 빈을 다시 눌러 ‘입고 후’를 기록하세요"))},300)}});
+    const m=ui.binMode;ui.binMode=null;closeSheet();render();if(tab==="feedchk"&&!fcLeft().length)window.scrollTo(0,0);toast(`${b.name} ${B0.kg.toLocaleString()}kg ${t("저장")}`);if(m==="입고 전")setTimeout(()=>{openInput("사료",{fv:{kind:b.feed,mode:"입고"}});toast(t("입고를 저장한 뒤 빈을 다시 눌러 ‘입고 후’를 기록하세요"))},300)}});
 // 대표 설정: 빈 규격·비중
 function binSet(){return `<div class="sec-t">${t("사료 빈")} <span>${t("규격을 고르면 치수 자동")}</span></div><div class="panel">${FARM.feed.bins.map(b=>{const c=binCfg(b),g=binGeo(b),e=binDensEst(b);
   return `<div class="setrow" style="flex-wrap:wrap"><span><b>${esc(b.name)}</b> <small class="sow-meta">${esc(b.feed)} · ${t("지름")} ${g.D}m · ${t("둘레")} ${(Math.PI*g.D).toFixed(2)}m · ${t("가득")} ${(b.cap/1000).toFixed(1)}t</small></span><div class="chipwrap">${Object.keys(BIN_SPECS).map(s=>`<button type="button" class="chip ${+s===c.spec?"on":""}" data-a="binSpec" data-v="${b.name}" data-k="${s}">${s}${t("톤")}</button>`).join("")}</div>

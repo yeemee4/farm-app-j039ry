@@ -127,3 +127,4 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .binsheet .save{width:100%;margin-top:12px}
 @media (min-width:1024px){.bins{grid-template-columns:repeat(4,minmax(0,160px))}}
 .bin span{white-space:nowrap}.bin span small{font-size:11px;font-weight:600}
+.bin.done{border-color:var(--good)}.bin em.fc-ok{color:var(--good)}.bin em.fc-no{color:var(--amber)}

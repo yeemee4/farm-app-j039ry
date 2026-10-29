@@ -1,0 +1,24 @@
+/* ===== 사료 잔량 점검 (매일 오전 · 오늘 입력 [사료] · 할 일 '사료 잔량 점검') =====
+   빈은 양쪽 게이지, 포대는 포대 수. 다 재면 다음 주문일·권장량을 바로 보여줌. 마감 시각 FARM.feed.checkBy (대표 설정) */
+function feedCheckBy(){return state.feedCheckBy||FARM.feed.checkBy||"10:00"}
+function fcItems(){const T=feedTable(),bins=FARM.feed.bins.map((b,i)=>({k:b.feed,i,bin:b})),bags=T.filter(x=>x.bag&&x.use>0).map(x=>({k:x.f,bag:x.bag}));return [...bins,...bags]}
+function fcToday(f){return state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===TODAY&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0]}
+function fcLeft(){return fcItems().filter(x=>!fcToday(x.k))}
+function fcTodos(){if(REF!==TODAY)return [{k:"feedchk",t:"사료 잔량 점검",items:[],act:null}];const late=nowHM()>=feedCheckBy();
+  return [{k:"feedchk",t:"사료 잔량 점검",items:fcLeft().map(x=>({fc2:x,label:`${x.bin?esc(x.bin.name):t("포대")} · ${t("오전")} ${feedCheckBy()}${t("까지")}`,sev:late?"bad":"warn"})),act:null}]}
+function vFeedCheck(){const T=feedTable(),it=fcItems(),left=fcLeft().length,cb=feedCheckBy(),late=nowHM()>=cb&&left;ui.bags=ui.bags||{};
+  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="home">‹ ${t("홈")}</button><h2>${t("사료 잔량 점검")}</h2></div>`;
+  h+=`<div class="banner ${left?late?"":"warn-b":"info"}"><b>${left?`${t("남은")} ${left}`:t("오늘 점검 완료")}</b><span>${left?`${t("오전")} ${cb}${t("까지")} · ${t("빈을 눌러 양쪽 높이를 맞추고 저장하세요")}`:t("아래 주문 권장을 확인하세요")}</span></div>`;
+  h+=`<div class="sec-t">${t("사료 빈")}</div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},d=fcToday(b.feed),[lL,lR]=binLevels(b,Math.min(x.kg||0,b.cap)),P=binPx(b);
+    return `<button type="button" class="bin ${d?"done":""}" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"c"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><span>${x.kg==null?t("기록 필요"):(Math.min(x.kg,b.cap)/1000).toFixed(1)+"t"}</span><em class="${d?"fc-ok":"fc-no"}">${d?`✓ ${localTimeOf?localTimeOf(d.createdAt):""}`:t("점검 전")}</em></button>`}).join("")}</div>`;
+  const bags=it.filter(x=>x.bag);
+  if(bags.length)h+=`<div class="sec-t">${t("포대 사료")} <span>${t("남은 포대 수")}</span></div><div class="panel">${bags.map(x=>{const r=T.find(q=>q.f===x.k)||{},d=fcToday(x.k),n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):0);
+    return `<div class="setrow"><span><b>${esc(x.k)}</b> <small class="sow-meta">${x.bag.kg}kg · ${t("하루")} ${Math.round(r.use||0)}kg${d?` · <span style="color:var(--good)">✓ ${t("오늘 기록")}</span>`:""}</small></span><div class="stepper"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="-1" aria-label="−">−</button><input type="number" value="${n}" readonly aria-label="${esc(x.k)}"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="1" aria-label="+">+</button></div></div>`}).join("")}<button class="act pri" type="button" data-a="fcBagSave" style="width:100%;margin-top:8px">${t("포대 수 저장")}</button></div>`;
+  if(!left)h+=vFeedPlan();
+  return h+`<div class="acts"><button class="act" type="button" data-a="input" data-v="사료">${t("입고 기록")} ›</button>${left?`<button class="act" type="button" data-a="fcPlan">${t("주문 권장 보기")}</button>`:""}</div>`+(ui.fcPlan&&left?vFeedPlan():"")}
+function localTimeOf(iso){try{const d=new Date(iso);return pad(d.getHours())+":"+pad(d.getMinutes())}catch(e){return ""}}
+Object.assign(A,{fcBag:(v,el)=>{const T=feedTable(),r=T.find(q=>q.f===v)||{},b=feedBag(v),cur=ui.bags[v]??(r.kg!=null?Math.floor(r.kg/b.kg):0);ui.bags[v]=Math.max(0,cur+Number(el.dataset.k));render()},
+  fcBagSave:()=>{const T=feedTable();fcItems().filter(x=>x.bag).forEach(x=>{const r=T.find(q=>q.f===x.k)||{},n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):null);if(n!=null)addRecord("사료",TODAY,{kind:x.k,mode:"빈 잔량",kg:n*x.bag.kg,bags:n})});ui.bags={};render();toast(t("포대 수를 저장했습니다"))},
+  fcPlan:()=>{ui.fcPlan=!ui.fcPlan;render()},
+  fcByT:v=>{state.feedCheckBy=v;save();render()}});
+function fcBySet(){const c=feedCheckBy();return `<div class="sec-t">${t("사료 잔량 점검 마감")} <span>${t("매일 오전 · 지나면 할 일이 빨강")}</span></div><div class="panel"><div class="chipwrap">${["08:00","09:00","10:00","11:00","12:00"].map(v=>`<button type="button" class="chip wrap ${c===v?"on":""}" data-a="fcByT" data-v="${v}">${v}</button>`).join("")}</div></div>`}
