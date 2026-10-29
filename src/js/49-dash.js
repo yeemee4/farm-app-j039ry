@@ -1,6 +1,6 @@
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["fcr","사료효율 (FCR)",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["memo","회의 메모",1]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
 function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
@@ -30,6 +30,7 @@ const DASH_P={
   breed:()=>{const w=dWeek(),G=dashCfg().goal,R=k=>state.records.filter(r=>r.type===k&&r.workDate>=w&&r.workDate<=TODAY);
     const rows=[["교배",R("교배").filter(r=>r.data.round==="1차").length,DCOL[0]],["분만",R("분만").length,DCOL[2]],["이유",R("이유").length,DCOL[3]],["임신확인",R("임신확인").filter(r=>r.data.result==="임신").length,DCOL[5]]];
     return [t("이번 주 번식"),t("목표 대비 · 흰 선 = 목표"),`<div class="d-bars">${rows.map(([k,n,c])=>{const g=G[k]||1,mx=Math.max(g,n);return `<div class="d-bar"><span>${t(LABEL[k]||k)}</span><div class="d-track"><div class="d-fill" style="width:${n/mx*100}%;background:${c}"></div><div class="d-tick" style="left:calc(${g/mx*100}% - 3px)"></div></div><span class="d-v"><b>${n}</b> / ${g}</span></div>`}).join("")}</div>`]},
+  barnmap:()=>{const B=BM_BARNS();return [t("돈사 배치도"),`${t("누르면 크게 · 칸마다 모돈 상태")}`,`<div class="d-bm">${B.map(b=>{const c=barnOcc(b);return `<button type="button" class="d-bmb" data-a="dashBm" data-v="${esc(b)}"><b>${esc(t(b))} <small>${Object.keys(c.occ).length}/${c.S.length}</small></b>${vBarnSvg(b,10,1)}</button>`}).join("")}</div>`]},
   fcr:()=>{const t2=TODAY,F=farmFCR(addDays(t2,-89),t2),B=batchFCR().filter(x=>x.fcr).slice(0,3),g=sGoal(),c=v=>v<=g.fcr?DCOL[2]:v<=g.fcr*1.08?DCOL[3]:"#ff6b6b";
     return [t("사료효율 (FCR)"),`${t("최근 90일")} · ${t("목표")} ${g.fcr}`,`<div class="d-hero"><b style="color:${F?c(F.fcr):"var(--mu)"}">${F?F.fcr.toFixed(2):"—"}</b><span>${t("농장 전체")}</span></div><div class="d-bars">${B.map(x=>`<div class="d-bar"><span>${esc(bName(x.k).replace(" 돈군",""))}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.fcr/4*100)}%;background:${x.fcr<=g.fcrB?DCOL[2]:DCOL[3]}"></div></div><span class="d-v"><b>${x.fcr.toFixed(2)}</b></span></div>`).join("")}</div>`]},
   npd:()=>{const f=addDays(TODAY,-89),S=npdStat(f,TODAY),C=npdStat(addDays(f,-90),addDays(f,-1)),g=sGoal().npd;if(!S)return [t("NPD 비생산일수"),t("최근 90일"),`<div class="empty">-</div>`];const d=C?S.npd-C.npd:null,col=S.npd<=g?DCOL[2]:S.npd<=g*1.25?DCOL[3]:"#ff6b6b";
@@ -95,6 +96,7 @@ Object.assign(A,{
   dashSow:v=>{dashLeave();ui.sf=v;go("sows")},
   dashAm:v=>{dashLeave();go("morning");A.amOpen(v)},
   dashFeed:()=>{dashLeave();openInput("사료")},
+  dashBm:v=>{dashLeave();ui.bm=v;go("barnmap")},
   dashBin:v=>{dashLeave();ui.drugCat="사료";go("drug");setTimeout(()=>openBin(+v),50)},
   dashTog:v=>{const d=dashCfg();d.on[v]=!d.on[v];save();render()},
   dashMove:(v,el)=>{const d=dashCfg(),i=d.order.indexOf(v),j=i+Number(el.dataset.k);if(j<0||j>=d.order.length)return;[d.order[i],d.order[j]]=[d.order[j],d.order[i]];save();render()},

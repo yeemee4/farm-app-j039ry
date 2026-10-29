@@ -16,7 +16,10 @@ function gestFeed(s,d=TODAY){const C=gCfg(),st=sowState(s.id),i=statusOf(s);if(i
   const b=lastBCS(s.id,d);if(b&&C.bcs[b.score]){kg+=C.bcs[b.score];why.push(`BCS ${b.score} ${C.bcs[b.score]>0?"+":""}${C.bcs[b.score]}`)}
   if(i.parity<=1&&!i.gilt&&st.stage!=="후보"&&C.parity1){kg+=C.parity1;why.push(`${t("초산")} +${C.parity1}`)}
   const tp=barnTemp(s.loc,d);if(tp!=null&&tp<C.lct){const add=kg*C.tempPct*(C.lct-tp);kg+=add;why.push(`${tp}℃ +${add.toFixed(1)}`)}
-  kg=Math.round(Math.max(C.min,Math.min(C.max,kg))*10)/10;return {s,kg,phase,gd,bcs:b,why}}
+  kg=Math.round(Math.max(C.min,Math.min(C.max,kg))*10)/10;
+  // 배치도에서 수동 조정한 값 (임신 단계가 바뀌면 풀림)
+  const ov=(state.gfOv||{})[s.id];if(ov&&ov.phase===phase&&ov.at<=d){why.push(`${t("수동 조정")} ${ov.kg.toFixed(1)}${ov.why?" ("+t(ov.why)+")":""}`);return {s,kg:ov.kg,phase,gd,bcs:b,why,ov:true,calc:kg}}
+  return {s,kg,phase,gd,bcs:b,why}}
 function gfUnit(barn,kg){const B=gCfg().barns[barn];if(!B||!B.kgPer)return "";const v=kg/B.kgPer;return B.mode==="auto"?`${t("눈금")} ${Math.round(v*10)/10}`:`${t("바가지")} ${Math.round(v*4)/4}`}
 function gestToday(){const out=[];activeSows().forEach(s=>{const a=gestFeed(s,TODAY);if(!a)return;const y=gestFeed(s,addDays(TODAY,-1));a.prev=y?y.kg:null;a.chg=y&&Math.abs(y.kg-a.kg)>=.05?a.kg-y.kg:0;out.push(a)});return out}
 // 할 일: 오늘 급여량이 바뀐 모돈 (급이기 눈금 다시 맞추기)

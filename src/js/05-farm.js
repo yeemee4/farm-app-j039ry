@@ -136,6 +136,12 @@ FARM.gest={
   min:1.8,max:4.0,
   barns:{"임신사 1동":{mode:"auto",unit:"눈금",kgPer:null},"임신사 2동":{mode:"auto",unit:"눈금",kgPer:null},"교배사":{mode:"manual",unit:"바가지",kgPer:null}}
 };
+// 돈사 배치도 (단위 m · 실제 비율). sure:false = 그림 받기 전 가배치. 줄: 칸 수 n, 칸 폭 cw·깊이 cd, from = 1번 위치, head = 급이조 방향
+FARM.layout={
+  "교배사":{sure:true,w:8,h:8.1,rows:[{id:"A",x:.2,y:1.7,n:11,cw:.6,cd:2.2,from:"right",head:"down"},{id:"B",x:.2,y:4.9,n:11,cw:.6,cd:2.2,from:"right",head:"up"}],
+    areas:[{x:.2,y:.2,w:7.6,h:1.2,l:"위쪽 공간 (확인 필요)"},{x:.2,y:3.9,w:7.8,h:1,l:"가운데 통로",aisle:1}],door:{x:8,y:4.4},annex:{x:8,y:0,w:2.5,h:3,l:"작은 방"}},
+  "임신사 1동":{sure:false,auto:[2,10,.6,2.2]},"임신사 2동":{sure:false,auto:[2,10,.6,2.2]},"분만사":{sure:false,auto:[2,15,1.8,2.4]}
+};
 FARM.dress=.78;   // 도체율: 도체중 ÷ 도체율 = 생체중
 FARM.birthKg=1.5;   // npd = 모돈당 연간 비생산일수 목표(낮을수록 좋음)
 
