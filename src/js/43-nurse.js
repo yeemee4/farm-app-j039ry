@@ -12,9 +12,14 @@ function vLacBox(s,i){
     <div class="acts"><button class="act pri" type="button" data-a="holdSave">${t("저장")}</button><button class="act" type="button" data-a="holdCancel">${t("취소")}</button></div>`;
   else if(wh)h+=`<div class="setrow"><span><b>${t("이유 보류")} ~${kDate(wh.until)}</b><br><small class="sow-meta">${esc(t(wh.reason))} · ${esc(wh.user)}</small></span><button class="act" type="button" data-a="holdOff" data-v="${s.id}">${t("보류 해제")}</button></div>`;
   else h+=`<div class="setrow"><span><b>${t("이유 보류")}</b><br><small class="sow-meta">${t("정해진 날 이유하지 않을 때 · 사유와 날짜를 남김")}</small></span><button class="act" type="button" data-a="holdOpen" data-v="${s.id}">${t("이유 보류")}</button></div>`;
+  const F=ui.fos&&ui.fos.id===s.id?ui.fos:null,others=activeSows().filter(x=>x.id!==s.id&&sowState(x.id).stage==="포유").map(x=>x.id);
+  if(F)h+=`<div class="f"><span class="lb">${t("양자 보낼 모돈")}</span><div class="chipwrap">${others.map(o=>`<button type="button" class="chip wrap ${F.to===o?"on":""}" data-a="fosTo" data-v="${o}">${o}</button>`).join("")}</div></div><div class="setrow"><span>${t("두수")}</span><div class="stepper"><button type="button" data-a="fosN" data-v="-1">−</button><input type="number" value="${F.n}" readonly><button type="button" data-a="fosN" data-v="1">+</button></div></div><div class="acts"><button class="act pri" type="button" data-a="fosSave" ${F.to?"":"disabled"}>${t("저장")}</button><button class="act" type="button" data-a="fosCancel">${t("취소")}</button></div>`;
+  else h+=`<div class="setrow"><span><b>${t("양자 (위탁 포유)")}</b><br><small class="sow-meta">${t("자돈을 다른 모돈에게 보낼 때 · 복별 두수가 맞춰짐")}</small></span><button class="act" type="button" data-a="fosOpen" data-v="${s.id}">${t("양자 보내기")}</button></div>`;
   return h+`</div>`}
 Object.assign(A,{
   nurseTog:v=>{const s=state.sows.find(x=>x.id===v);s.nurse=s.nurse?null:{since:REF,user:state.user};save();render()},
+  fosOpen:v=>{ui.fos={id:v,to:null,n:1};render()},fosTo:v=>{ui.fos.to=v;render()},fosN:v=>{ui.fos.n=Math.max(1,ui.fos.n+Number(v));render()},fosCancel:()=>{ui.fos=null;render()},
+  fosSave:()=>{const F=ui.fos;const r=addRecord("양자",TODAY,{sow:F.id,to:F.to,n:F.n});ui.fos=null;save();render();undoToast(`${t("양자")} ${F.id} → ${F.to} ${F.n}${t("두")}`,[r.id])},
   holdOpen:v=>{ui.hold={id:v,reason:HOLD_REASONS[0],days:7};render()},
   holdReason:v=>{ui.hold.reason=v;render()},
   holdDays:v=>{ui.hold.days=+v;render()},

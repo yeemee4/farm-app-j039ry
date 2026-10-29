@@ -1,7 +1,7 @@
 /* ================= 모돈 상태 ================= */
 let EXCL=null,SIDX=null;
 function sowState(id){
-  if(!SIDX){SIDX={};state.records.forEach(r=>{if(r.data&&r.data.sow&&(r.type==="교배"||r.type==="임신확인"||r.type==="분만"||r.type==="이유"))(SIDX[r.data.sow]=SIDX[r.data.sow]||[]).push(r)})}
+  if(!SIDX){SIDX={};state.records.forEach(r=>{if(r.data&&r.data.sow&&(r.type==="교배"||r.type==="임신확인"||r.type==="분만"||r.type==="이유"||r.type==="양자"))(SIDX[r.data.sow]=SIDX[r.data.sow]||[]).push(r);if(r.type==="양자"&&r.data.to)(SIDX[r.data.to]=SIDX[r.data.to]||[]).push(r)})}
   const evs=(SIDX[id]||[]).filter(r=>r.id!==EXCL)
     .sort((a,b)=>a.workDate.localeCompare(b.workDate)||a.createdAt.localeCompare(b.createdAt));
   let st={stage:"후보",since:null,mate:null,farrow:null,live:0,farrows:0,returns:0,lastResult:"",pregEver:false};
@@ -10,6 +10,7 @@ function sowState(id){
     else if(e.type==="임신확인"){if(e.data.result==="임신")st={...st,stage:"임신",since:st.mate,pregEver:true};else st={...st,stage:"재교배",since:e.workDate,returns:st.returns+1,lastResult:e.data.result}}
     else if(e.type==="분만")st={...st,stage:"포유",since:e.workDate,farrow:e.workDate,live:e.data.live,farrows:st.farrows+1,pregEver:true};
     else if(e.type==="이유")st={...st,stage:"이유",since:e.workDate};
+    else if(e.type==="양자"&&st.stage==="포유")st={...st,foster:(st.foster||0)+(e.data.to===id?1:-1)*(+e.data.n||0)};
   });
   return st;
 }

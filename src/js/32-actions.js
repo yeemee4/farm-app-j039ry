@@ -4,7 +4,7 @@ const A={
   goSettings:()=>go("settings"),
   goClose:(v)=>{tab="close";ui.closeDay=v;render();window.scrollTo(0,0)},
   sowFilter:(v)=>{ui.sf=v;go("sows")},
-  input:(v,el)=>openInput(v,{sow:el.dataset.sow,date:el.dataset.date,batch:el.dataset.batch,vax:el.dataset.vax,item:el.dataset.item,vname:el.dataset.vname}),
+  input:(v,el)=>openInput(v,{sow:el.dataset.sow,date:el.dataset.date,batch:el.dataset.batch,vax:el.dataset.vax,item:el.dataset.item,vname:el.dataset.vname,round:el.dataset.round}),
   back:()=>{const p=ui.prev||"home";ui.in=null;ui.dec=null;go(p)},
   todo:(v)=>openTodo(v),
   scrim:(v,el,e)=>{if(e.target===el)closeSheet()},

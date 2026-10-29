@@ -14,7 +14,7 @@ const TYPES={
   폐사:{c:"var(--red)",s:"폐"}, 교배:{c:"var(--blue)",s:"교"}, 임신확인:{c:"var(--accent)",s:"진"}, 분만:{c:"var(--accent)",s:"분"},
   이유:{c:"var(--amber)",s:"이"}, 백신:{c:"var(--blue)",s:"백"}, 이동:{c:"var(--muted)",s:"동"}, 출하:{c:"var(--accent)",s:"출"},
   사료:{c:"var(--amber)",s:"사"}, 약품:{c:"var(--blue)",s:"약"}, 특이사항:{c:"var(--muted)",s:"특"}, 도입:{c:"var(--muted)",s:"후"},
-  조치:{c:"var(--accent)",s:"✓"}, 도태:{c:"var(--ink)",s:"도"}, BCS:{c:"var(--muted)",s:"B"}, 돈군백신:{c:"var(--blue)",s:"군"}, 재고:{c:"var(--amber)",s:"재"}
+  조치:{c:"var(--accent)",s:"✓"}, 도태:{c:"var(--ink)",s:"도"}, BCS:{c:"var(--muted)",s:"B"}, 돈군백신:{c:"var(--blue)",s:"군"}, 재고:{c:"var(--amber)",s:"재"}, 양자:{c:"var(--accent)",s:"양"}, 실사:{c:"var(--muted)",s:"실"}
 };
 const LABEL={임신확인:"임신 확인",백신:"모돈 백신",약품:"돈군 약품",도입:"후보돈 도입",돈군백신:"돈군 백신",재고:"재고 입출고"};
 const L=x=>(state&&state.labels&&state.labels.quick&&state.labels.quick[x])||t(LABEL[x]||x);

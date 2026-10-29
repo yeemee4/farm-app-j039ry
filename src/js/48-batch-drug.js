@@ -1,7 +1,7 @@
 /* ================= v0.2 · 돈군 탭 ================= */
 function vBatch(){
   const L=liveBatches();
-  let h=`<div class="pagehd" style="justify-content:space-between"><h2>돈군</h2><button class="act pri" type="button" data-a="input" data-v="돈군백신">+ 백신 기록</button></div>
+  let h=`<div class="pagehd" style="justify-content:space-between"><h2>돈군</h2><span class="row2" style="gap:6px;flex:none"><button class="act" type="button" data-a="tab" data-v="count">${t("두수 실사")}</button><button class="act pri" type="button" data-a="input" data-v="돈군백신">+ 백신 기록</button></span></div>
     <div class="note">분만 주차별로 자돈 돈군을 자동으로 묶습니다. 위치는 설정의 돈사별 주 수로 계산한 계획 위치입니다. 백신은 ‘어디까지 놓았는지’를 단계별로 보여 줍니다.</div>`;
   h+=`<div class="statusrow">${state.cfg.stage.map(([n])=>{const inS=L.filter(b=>stagePlan(bAge(b))===n);return `<div class="sbox"><small>${n}</small><b>${inS.length}군</b><small>${inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0).toLocaleString()}두</small></div>`}).join("")}</div>`;
   if(!L.length)return h+`<div class="empty">사육 중인 돈군이 없습니다.</div>`;

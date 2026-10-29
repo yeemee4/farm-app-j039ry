@@ -5,7 +5,7 @@ function sowMatch(id,q){if(!q)return 1;const num=(String(id).match(/(\d+)$/)||[0
 function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
 const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
 const FORMS={
-  폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"}],
+  폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"},{k:"sow",l:"어느 복 (포유자돈 · 선택)",t:"chips",opt:true,o:()=>ui.in&&ui.in.fv.stage==="포유자돈"?activeSows().filter(s=>sowState(s.id).stage==="포유").map(s=>s.id):[]}],
     warn:(d,wd)=>{const dup=state.records.find(r=>r.id!==EXCL&&r.type==="폐사"&&r.workDate===wd&&r.data.barn===d.barn&&r.data.cause===d.cause&&r.data.stage===d.stage&&(Date.now()-new Date(r.createdAt))<10*60e3);return dup?`10분 안에 같은 돈사·단계·원인으로 입력한 기록이 있습니다 (${kTime(dup.createdAt)}, ${dup.data.n}두). 중복 입력이 아닌지 확인해 주세요.`:null}},
   교배:{sow:{multi:true,target:true,filter:(i,wd)=>i.key==="후보"||i.key==="발정대기"||i.key==="재발공태"||(i.gilt&&i.key==="후보")||(i.stage==="교배"&&diff(i.mate,wd)<=2)},
     f:[{k:"round",l:"회차",t:"chips",o:["1차","2차","3차"],def:"1차"},{k:"semen",l:"웅돈 / 정액",t:"chips",o:()=>SEMENS,def:"듀록 정액"}],
@@ -13,12 +13,12 @@ const FORMS={
   임신확인:{sow:{multi:true,target:true,filter:(i,wd)=>i.stage==="교배"&&diff(i.mate,wd)>=CFG.returnCheck[0]},
     f:[{k:"result",l:"결과",t:"chips",o:["임신","재발","공태","유산"],def:"임신"}]},
   분만:{sow:{multi:false,target:true,filter:(i,wd)=>(i.stage==="임신"||i.stage==="교배")&&diff(i.mate,wd)>=CFG.gest-10},
-    f:[{k:"live",l:"실산",t:"step",def:12,min:0},{k:"still",l:"사산",t:"step",def:0,min:0},{k:"mum",l:"미라",t:"step",def:0,min:0},{k:"_t",t:"calc",l:"총산 (자동)",calc:d=>(+d.live||0)+(+d.still||0)+(+d.mum||0)}],
+    f:[{k:"live",l:"실산",t:"step",def:12,min:0},{k:"still",l:"사산",t:"step",def:0,min:0},{k:"mum",l:"미라",t:"step",def:0,min:0},{k:"_t",t:"calc",l:"총산 (자동)",calc:d=>(+d.live||0)+(+d.still||0)+(+d.mum||0)},{k:"ease",l:"분만 상태 (선택)",t:"chips",opt:true,o:["정상","난산","조력 분만"]},{k:"oxy",l:"옥시토신 (선택)",t:"chips",opt:true,o:["안 씀","씀"]},{k:"start",l:"분만 시작 시각 (선택)",t:"text",opt:true,ph:"예: 03:20"}],
     warn:(d,wd,s)=>{const i=sowState(s);if(i.mate){const g=diff(i.mate,wd);if(g<108||g>120)return `${s}번은 교배 후 ${g}일째입니다. 보통 ${CFG.gest}일 전후에 분만합니다.`}
       if(d.live+d.still+d.mum>22)return "총산이 22두를 넘습니다. 숫자를 확인해 주세요.";return null}},
   이유:{sow:{multi:false,target:true,filter:(i,wd)=>i.stage==="포유"&&diff(i.farrow,wd||TODAY)>=CFG.weanDay-7},
     f:[{k:"n",l:"이유두수",t:"step",def:11,min:0},{k:"_to",l:"자돈 옮길 곳 (같이 기록)",t:"chips",o:()=>["그대로",...BARNS.filter(b=>b!=="분만사")],def:"인큐베이터"},{k:"_loc",l:"모돈 옮길 곳 (같이 기록)",t:"chips",o:()=>["그대로",...SOW_LOCS.filter(b=>b!=="분만사")],def:"교배사"},{k:"_d",t:"calc",l:"포유일수 (자동)",calc:(d,wd,s)=>{const i=s?sowState(s):null;return i&&i.farrow?diff(i.farrow,wd)+"일":"-"}}],
-    warn:(d,wd,s)=>{const i=sowState(s);if(i.stage!=="포유")return `${s}번은 지금 포유 중이 아닙니다(${t(statusOf(state.sows.find(x=>x.id===s)).label)}). 그래도 이유로 기록할까요?`;if(i.live&&d.n>i.live+2)return `${s}번은 실산 ${i.live}두인데 이유두수가 ${d.n}두입니다. 양자를 받았다면 그대로 저장하세요.`;return null},
+    warn:(d,wd,s)=>{const i=sowState(s);if(i.stage!=="포유")return `${s}번은 지금 포유 중이 아닙니다(${t(statusOf(state.sows.find(x=>x.id===s)).label)}). 그래도 이유로 기록할까요?`;if(i.live&&d.n>i.live+(i.foster||0)+2)return `${s}번은 실산 ${i.live}두인데 이유두수가 ${d.n}두입니다. 양자를 받았다면 그대로 저장하세요.`;return null},
     pre:(d,wd,s)=>{const i=sowState(s);d.days=i.farrow?diff(i.farrow,wd):0}},
   백신:{sow:{multi:true,target:false,filter:()=>true},
     f:[{k:"kind",l:"구분",t:"chips",o:["백신","투약","구충"],def:"백신"},{k:"name",l:"백신·약품",t:"chips",o:()=>[...FARM.vax.late.map(v=>v.name),...FARM.vax.gilt.map(v=>v.name),...FARM.vax.annual.map(v=>v.name),"기타"],def:FARM.vax.late[0].name},{k:"memo",l:"메모 (선택)",t:"text",opt:true,ph:"예: 2차 접종"}]},

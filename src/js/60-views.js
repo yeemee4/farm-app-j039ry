@@ -14,7 +14,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -83,8 +83,9 @@ function openTodo(k){
     if(x.act==="check")acts=`<div class="acts"><button class="act pri" type="button" data-a="chk" data-v="임신" data-sow="${it.s.id}">${t("임신")}</button><button class="act warn" type="button" data-a="chk" data-v="재발" data-sow="${it.s.id}">${t("재발")}</button><button class="act bad" type="button" data-a="chk" data-v="공태" data-sow="${it.s.id}">${t("공태")}</button></div>`;
     else if(x.act==="movein")acts=`<div class="acts"><button class="act pri" type="button" data-a="movein" data-v="${it.s.id}">${t("분만사로 이동 완료")}</button></div>`;
     else if(x.act==="cull")acts=can("cull")?`<div class="acts"><button class="act bad" type="button" data-a="sowd" data-v="${it.s.id}">도태 처리하러 가기</button></div>`:"";
+    else if(it.lit)acts=litChips(it,tdKey(k,itemTarget(it)));
     else if(!x.act)acts="";
-    else acts=`<div class="acts"><button class="act pri" type="button" data-a="input" data-v="${x.act}" data-sow="${it.s.id}"${it.vx?` data-vname="${esc(it.vx.name)}"`:""}>${esc(L(x.act))} ${t("입력")}</button></div>`;
+    else acts=`<div class="acts"><button class="act pri" type="button" data-a="input" data-v="${x.act}" data-sow="${it.s.id}"${it.vx?` data-vname="${esc(it.vx.name)}"`:""}${x.k==="mate2"?` data-round="2차"`:""}>${esc(L(x.act))} ${t("입력")}</button></div>`;
     return sowCard(it.s,{noLoc:true,cls:log?"done":"",acts:`<div class="sow-meta" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"};font-weight:700">${it.label} · ${t("현재")} ${it.s.loc}</div>`+acts+ck});
   }).join("");
   ctx={k:"todo",v:k};

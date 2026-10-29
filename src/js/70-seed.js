@@ -99,7 +99,9 @@ function seedFarmPost(){
     state.records.push({id:newId(),type:"사료",workDate:d10,createdAt:at(d10),user:"조성훈 팀장",data:{kind:f,mode:"빈 잔량",kg:Math.max(100,Math.round(use*(low?13:9+i%4)/10)*10)}});
     if(!low)state.records.push({id:newId(),type:"사료",workDate:d5,createdAt:at(d5),user:"조성훈 팀장",data:{kind:f,mode:"입고",kg:Math.max(200,Math.round(use*10/100)*100)}})});
   // 오늘 아침 점검: 앞의 5곳 완료, 분만사 보온등 이상
-  state.am={[TODAY]:{}};FARM.morning.route.slice(0,5).forEach((r,n)=>{state.am[TODAY][r.barn]={time:`07:${pad(10+n*9)}`,temp:String((r.temp[0]+r.temp[1])/2+(n===3?-3:0)),bad:n===3?["보온등"]:[],memo:n===3?"보온등 1개 나감 → 교체 예정":"",user:"조성훈 팀장",at:at(TODAY)}});
+  state.am={[TODAY]:{}};
+  // 지난 7일 아침 점검 (급수량 평균용)
+  for(let i=1;i<=7;i++){const d=addDays(TODAY,-i);state.am[d]={};FARM.morning.route.forEach((r,n)=>{state.am[d][r.barn]={time:"07:20",temp:String((r.temp[0]+r.temp[1])/2),water:String((2+n*.6+((i*7+n)%5)*.1).toFixed(1)),bad:[],memo:"",user:"조성훈 팀장",at:at(d)}})}FARM.morning.route.slice(0,5).forEach((r,n)=>{state.am[TODAY][r.barn]={time:`07:${pad(10+n*9)}`,temp:String((r.temp[0]+r.temp[1])/2+(n===3?-3:0)),bad:n===3?["보온등"]:[],memo:n===3?"보온등 1개 나감 → 교체 예정":"",user:"조성훈 팀장",at:at(TODAY)}});
   // 육성비육사 첫 입식 준비 할 일
   const oldest=liveBatches().slice(-1)[0],now=new Date().toISOString();
   if(oldest){const fin=addDays(oldest.k,state.cfg.stage.slice(0,-1).reduce((a,x)=>a+x[1],0)*7);

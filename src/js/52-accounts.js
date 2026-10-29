@@ -30,18 +30,20 @@ function statusOf(s){
   else if(st.stage==="임신"){d=diff(st.mate,REF);const left=CFG.gest-d;
     if(left<=CFG.farrowIn){key="분만임박";label=t("분만 임박");sub=left>0?`${t("분만")} D−${left}`:left===0?t("오늘 분만 예정"):`${t("분만")} +${-left}${t("일 지남")}`;cls="c-due"}
     else{key="임신";label=t("임신");sub=`${t("임신")} ${d}${t("일")}`;cls="c-preg"}}
-  else if(st.stage==="포유"){d=diff(st.farrow,REF);key="포유";label=t(s.nurse?"대리모":"포유");sub=s.nurse?`${t("대리모")} ${diff(s.nurse.since,REF)}${t("일")}`:`${t("포유")} ${d}${t("일")} · ${t("실산")} ${st.live}`;cls="c-lac";
+  else if(st.stage==="포유"){d=diff(st.farrow,REF);key="포유";label=t(s.nurse?"대리모":"포유");sub=s.nurse?`${t("대리모")} ${diff(s.nurse.since,REF)}${t("일")}`:`${t("포유")} ${d}${t("일")} · ${t("실산")} ${st.live}${st.foster?` (${t("양자")} ${st.foster>0?"+":""}${st.foster})`:""}`;cls="c-lac";
     if(s.weanHold&&s.weanHold.until>=REF)sub+=` · ${t("이유 보류")} ~${kDate(s.weanHold.until)}`}
   else {d=diff(st.since,REF);key="재발공태";label=t(st.lastResult||"재발");sub=`${t(st.lastResult)} D+${d} · ${t("재교배 대기")}`;heat=true;cls="c-ret"}
   return {...st,parity,gilt,key,label,sub,cls,heat,d,plan:s.cullPlan};
 }
 function summary(r){const d=r.data;switch(r.type){
-  case "폐사":return `${d.barn} ${t(d.stage)} ${t("폐사")} ${d.n}${t("두")} · ${t(d.cause)}`;
+  case "폐사":return `${d.barn} ${t(d.stage)} ${t("폐사")} ${d.n}${t("두")} · ${t(d.cause)}${d.sow?` · ${d.sow}${t("의 복")}`:""}`;
   case "교배":return `${d.sow} ${t("교배")} (${t(d.round)}) · ${d.semen}`;
   case "임신확인":return `${d.sow} ${t(d.result)}`;
-  case "분만":return `${d.sow} ${t("분만")} · ${t("실산")} ${d.live} / ${t("사산")} ${d.still} / ${t("미라")} ${d.mum}`;
+  case "분만":return `${d.sow} ${t("분만")} · ${t("실산")} ${d.live} / ${t("사산")} ${d.still} / ${t("미라")} ${d.mum}${d.ease&&d.ease!=="정상"?` · ${t(d.ease)}`:""}${d.oxy==="씀"?` · ${t("옥시토신")}`:""}${d.start?` · ${d.start}`:""}`;
   case "이유":return `${d.sow} ${t("이유")} ${d.n}${t("두")} · ${d.days}${t("일")}`;
   case "백신":return `${d.sow} ${t(d.kind)} · ${d.name}${d.memo?` · ${d.memo}`:""}`;
+  case "양자":return `${t("양자")} ${d.sow} → ${d.to} ${d.n}${t("두")}`;
+  case "실사":return `${t("재고두수 실사")} · ${d.barn} ${d.n}${t("두")} (${t("장부")} ${d.est})`;
   case "이동":return d.sow?`${d.sow} ${d.from} → ${d.to}`:`${d.from} → ${d.to} ${d.n}${t("두")}`;
   case "출하":return `${d.barn} ${t("출하")} ${d.n}${t("두")} · ${d.kg}kg · ${d.dest}`;
   case "사료":return `${d.kind} ${t(d.mode)} ${Number(d.kg).toLocaleString()}kg`;
