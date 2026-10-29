@@ -37,12 +37,18 @@ function fpBars(P){const C=["#2a78d6","#eb6834","#199e70","#c98500","#9085e9","#
   for(let w=0;w<W;w++){let y=H;P.forEach((o,i)=>{const h=o.wk[w]/mx*(H-16);if(h<=0)return;y-=h;g+=`<rect x="${w*50+8}" y="${y}" width="34" height="${h}" fill="${C[i%C.length]}"><title>${t("주")} ${w+1} · ${esc(o.f)} ${Math.round(o.wk[w]).toLocaleString()}kg</title></rect>`});
     const tot=P.reduce((s,o)=>s+o.wk[w],0);g+=`<text x="${w*50+25}" y="${y-4}" text-anchor="middle">${(tot/1000).toFixed(1)}t</text><text x="${w*50+25}" y="${H+16}" text-anchor="middle">${w?`+${w}${t("주")}`:t("이번 주")}</text>`}
   return g+`</svg>`+legendH(P.map((o,i)=>[C[i%C.length],o.f]))}
-function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return "";
-  let h=`<div class="sec-t">${t("사료 계획")} <span>${t("주수별 섭취량 기준 · 앞으로 8주")}</span>${can("admin")?`<button type="button" data-a="tab" data-v="feedset">${t("섭취량 기준")} ›</button>`:""}</div><div class="card">${fpBars(P)}`;
-  h+=cdTable(["사료","보관","하루 필요 kg","4주 후 하루","다음 주문","권장 주문량","구매 주기"],P.map(o=>{const late=o.orderOn&&o.orderOn<=TODAY;return [esc(o.f),o.bin?esc(o.bin.name)+` <small>${(o.bin.cap/1000).toFixed(0)}t</small>`:t("포대"),Math.round(o.d0).toLocaleString(),Math.round(o.wk[4]/7).toLocaleString(),
-    o.bin?(o.kg==null?`<small>${t("잔량 기록 필요")}</small>`:o.orderOn?`<b style="color:${late?"var(--red)":"inherit"}">${late?t("지금"):kDate(o.orderOn)}</b>`:`<small>${t("8주 안 없음")}</small>`):"-",
-    o.bin?`${o.qty.toLocaleString()}kg`:o.bagsWk?`${o.bagsWk}${t("포")}/${t("주")}`:"-",o.bin?`${t("약")} ${o.cycle}${t("일마다")}${o.small?`<br><small style="color:var(--red)">⚠ ${t("빈이 작음")} · ${t("가득")} ≈ ${o.full}${t("일분")}</small>`:""}`:o.bagsWk?t("매주"):"-"]}));
-  return h+`<div class="note">${t("주문일 = 안전 재고")} ${FARM.feed.orderDays}${t("일분")} + ${t("도착")} ${FARM.feed.leadDays}${t("일 전")} · ${t("주문량 = 빈 용량까지 (500kg 단위)")}</div></div>`}
+// 사료마다 한 줄 카드: 다음 주문일 · 하루 필요량(지금→4주 후) · 8주 흐름(사료마다 따로 눈금) · 권장 주문
+function fpSpark(wk){const mx=Math.max(...wk)||1,mn=Math.min(...wk),W=8*12,flat=mx-mn<mx*.03;return `<svg viewBox="0 0 ${W} 26" class="fp-sp" role="img" aria-label="${t("8주 흐름")}">${wk.map((v,i)=>{const h=flat?14:6+(v-mn)/(mx-mn)*18;return `<rect x="${i*12+1}" y="${26-h}" width="9" height="${h}" rx="1.5" fill="${i?"var(--c-a)":"var(--ink)"}" opacity="${i?.55:.9}"><title>${i?"+"+i+t("주"):t("이번 주")} ${Math.round(v).toLocaleString()}kg</title></rect>`}).join("")}</svg>`}
+function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return "";const lead=FARM.feed.leadDays,safe=FARM.feed.orderDays;
+  let h=`<div class="sec-t">${t("사료 계획")} <span>${t("앞으로 8주")}</span>${can("admin")?`<button type="button" data-a="tab" data-v="feedset">${t("섭취량 기준")} ›</button>`:""}</div><div class="fplist">`;
+  h+=P.map(o=>{const d4=o.wk[4]/7,ch=o.d0?Math.round((d4-o.d0)/o.d0*100):0;
+    if(o.bag&&o.kg!=null){const dl=Math.floor(o.kg/o.avg4);o.orderOn=addDays(TODAY,Math.max(0,dl-lead-safe))}
+    const late=o.orderOn&&o.orderOn<=TODAY,when=o.kg==null?`<small>${t("잔량 기록 필요")}</small>`:o.orderOn?`<b class="${late?"late":""}">${late?t("지금 주문"):kDate(o.orderOn)+" "+t("주문")}</b>`:`<small>${t("8주 안 주문 없음")}</small>`;
+    const rec=o.bin?`${t("권장")} <b>${o.qty.toLocaleString()}kg</b> · ${t("약")} ${o.cycle}${t("일마다")}${o.small?` · <span class="warn">⚠ ${t("빈이 작음")}</span>`:""}`:`${t("주당")} <b>${o.bagsWk}${t("포")}</b>${o.kg!=null?` · ${t("남은")} ${Math.floor(o.kg/o.bag.kg)}${t("포")}`:""}`;
+    return `<div class="fp ${late?"late":""}"><div class="fp-1"><b>${esc(o.f)}</b><small>${o.bin?esc(o.bin.name):t("포대")}</small><span>${when}</span></div>
+      <div class="fp-2"><span>${t("하루")} <b>${Math.round(o.d0).toLocaleString()}kg</b> → ${t("4주 후")} ${Math.round(d4).toLocaleString()}kg ${ch?`<i class="${ch>0?"up":"dn"}">${ch>0?"▲":"▼"}${Math.abs(ch)}%</i>`:""}</span>${fpSpark(o.wk)}</div>
+      <div class="fp-3">${rec}</div></div>`}).join("");
+  return h+`</div><div class="note">${t("주문일 = 안전 재고")} ${safe}${t("일분")} + ${t("도착")} ${lead}${t("일 전")} · ${t("빈 주문량 = 빈 용량까지 (500kg 단위)")} · ${t("작은 막대 = 8주 흐름 (첫 칸 = 이번 주)")}</div>`}
 // 대표 설정: 섭취량 기준표
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;

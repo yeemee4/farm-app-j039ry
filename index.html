@@ -650,6 +650,17 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 
 .bin span{white-space:nowrap}.bin span small{font-size:11px;font-weight:600}
 .bin.done{border-color:var(--good)}.bin em.fc-ok{color:var(--good)}.bin em.fc-no{color:var(--amber)}
+/* 사료 계획 카드 */
+.fplist{display:grid;gap:8px}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .fplist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+:where(html[data-pc="on"]) .fplist{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+.fp{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--rad,14px);padding:10px 12px;display:grid;gap:5px;min-width:0}
+.fp.late{border-color:var(--red)}
+.fp-1{display:flex;align-items:baseline;gap:8px}.fp-1 b{font-size:15.5px}.fp-1 small{color:var(--muted);font-size:12px}.fp-1 span{margin-left:auto;font-size:13.5px;white-space:nowrap}.fp-1 b.late,.fp-1 span b.late{color:var(--red)}
+.fp-2{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:13px;color:var(--muted)}.fp-2 b{color:var(--ink)}.fp-2 i{font-style:normal;font-weight:700}.fp-2 i.up{color:var(--amber)}.fp-2 i.dn{color:var(--good)}
+.fp-sp{width:96px;height:26px;flex:none}
+.fp-3{font-size:13px;color:var(--muted)}.fp-3 b{color:var(--ink)}.fp-3 .warn{color:var(--red);font-weight:700}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -2333,12 +2344,18 @@ function fpBars(P){const C=["#2a78d6","#eb6834","#199e70","#c98500","#9085e9","#
   for(let w=0;w<W;w++){let y=H;P.forEach((o,i)=>{const h=o.wk[w]/mx*(H-16);if(h<=0)return;y-=h;g+=`<rect x="${w*50+8}" y="${y}" width="34" height="${h}" fill="${C[i%C.length]}"><title>${t("주")} ${w+1} · ${esc(o.f)} ${Math.round(o.wk[w]).toLocaleString()}kg</title></rect>`});
     const tot=P.reduce((s,o)=>s+o.wk[w],0);g+=`<text x="${w*50+25}" y="${y-4}" text-anchor="middle">${(tot/1000).toFixed(1)}t</text><text x="${w*50+25}" y="${H+16}" text-anchor="middle">${w?`+${w}${t("주")}`:t("이번 주")}</text>`}
   return g+`</svg>`+legendH(P.map((o,i)=>[C[i%C.length],o.f]))}
-function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return "";
-  let h=`<div class="sec-t">${t("사료 계획")} <span>${t("주수별 섭취량 기준 · 앞으로 8주")}</span>${can("admin")?`<button type="button" data-a="tab" data-v="feedset">${t("섭취량 기준")} ›</button>`:""}</div><div class="card">${fpBars(P)}`;
-  h+=cdTable(["사료","보관","하루 필요 kg","4주 후 하루","다음 주문","권장 주문량","구매 주기"],P.map(o=>{const late=o.orderOn&&o.orderOn<=TODAY;return [esc(o.f),o.bin?esc(o.bin.name)+` <small>${(o.bin.cap/1000).toFixed(0)}t</small>`:t("포대"),Math.round(o.d0).toLocaleString(),Math.round(o.wk[4]/7).toLocaleString(),
-    o.bin?(o.kg==null?`<small>${t("잔량 기록 필요")}</small>`:o.orderOn?`<b style="color:${late?"var(--red)":"inherit"}">${late?t("지금"):kDate(o.orderOn)}</b>`:`<small>${t("8주 안 없음")}</small>`):"-",
-    o.bin?`${o.qty.toLocaleString()}kg`:o.bagsWk?`${o.bagsWk}${t("포")}/${t("주")}`:"-",o.bin?`${t("약")} ${o.cycle}${t("일마다")}${o.small?`<br><small style="color:var(--red)">⚠ ${t("빈이 작음")} · ${t("가득")} ≈ ${o.full}${t("일분")}</small>`:""}`:o.bagsWk?t("매주"):"-"]}));
-  return h+`<div class="note">${t("주문일 = 안전 재고")} ${FARM.feed.orderDays}${t("일분")} + ${t("도착")} ${FARM.feed.leadDays}${t("일 전")} · ${t("주문량 = 빈 용량까지 (500kg 단위)")}</div></div>`}
+// 사료마다 한 줄 카드: 다음 주문일 · 하루 필요량(지금→4주 후) · 8주 흐름(사료마다 따로 눈금) · 권장 주문
+function fpSpark(wk){const mx=Math.max(...wk)||1,mn=Math.min(...wk),W=8*12,flat=mx-mn<mx*.03;return `<svg viewBox="0 0 ${W} 26" class="fp-sp" role="img" aria-label="${t("8주 흐름")}">${wk.map((v,i)=>{const h=flat?14:6+(v-mn)/(mx-mn)*18;return `<rect x="${i*12+1}" y="${26-h}" width="9" height="${h}" rx="1.5" fill="${i?"var(--c-a)":"var(--ink)"}" opacity="${i?.55:.9}"><title>${i?"+"+i+t("주"):t("이번 주")} ${Math.round(v).toLocaleString()}kg</title></rect>`}).join("")}</svg>`}
+function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return "";const lead=FARM.feed.leadDays,safe=FARM.feed.orderDays;
+  let h=`<div class="sec-t">${t("사료 계획")} <span>${t("앞으로 8주")}</span>${can("admin")?`<button type="button" data-a="tab" data-v="feedset">${t("섭취량 기준")} ›</button>`:""}</div><div class="fplist">`;
+  h+=P.map(o=>{const d4=o.wk[4]/7,ch=o.d0?Math.round((d4-o.d0)/o.d0*100):0;
+    if(o.bag&&o.kg!=null){const dl=Math.floor(o.kg/o.avg4);o.orderOn=addDays(TODAY,Math.max(0,dl-lead-safe))}
+    const late=o.orderOn&&o.orderOn<=TODAY,when=o.kg==null?`<small>${t("잔량 기록 필요")}</small>`:o.orderOn?`<b class="${late?"late":""}">${late?t("지금 주문"):kDate(o.orderOn)+" "+t("주문")}</b>`:`<small>${t("8주 안 주문 없음")}</small>`;
+    const rec=o.bin?`${t("권장")} <b>${o.qty.toLocaleString()}kg</b> · ${t("약")} ${o.cycle}${t("일마다")}${o.small?` · <span class="warn">⚠ ${t("빈이 작음")}</span>`:""}`:`${t("주당")} <b>${o.bagsWk}${t("포")}</b>${o.kg!=null?` · ${t("남은")} ${Math.floor(o.kg/o.bag.kg)}${t("포")}`:""}`;
+    return `<div class="fp ${late?"late":""}"><div class="fp-1"><b>${esc(o.f)}</b><small>${o.bin?esc(o.bin.name):t("포대")}</small><span>${when}</span></div>
+      <div class="fp-2"><span>${t("하루")} <b>${Math.round(o.d0).toLocaleString()}kg</b> → ${t("4주 후")} ${Math.round(d4).toLocaleString()}kg ${ch?`<i class="${ch>0?"up":"dn"}">${ch>0?"▲":"▼"}${Math.abs(ch)}%</i>`:""}</span>${fpSpark(o.wk)}</div>
+      <div class="fp-3">${rec}</div></div>`}).join("");
+  return h+`</div><div class="note">${t("주문일 = 안전 재고")} ${safe}${t("일분")} + ${t("도착")} ${lead}${t("일 전")} · ${t("빈 주문량 = 빈 용량까지 (500kg 단위)")} · ${t("작은 막대 = 8주 흐름 (첫 칸 = 이번 주)")}</div>`}
 // 대표 설정: 섭취량 기준표
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
@@ -3041,6 +3058,7 @@ Object.assign(TR,{"사료량":["Lượng cám","दाना मात्रा"
 Object.assign(TR,{"사료 잔량":["Cám còn lại","बाँकी दाना","ចំណីនៅសល់","อาหารคงเหลือ"],"빈 기울기 = 마지막 기록":["Độ nghiêng = lần ghi cuối","झुकाव = अन्तिम रेकर्ड","ទំនោរ = កំណត់ចុងក្រោយ","ความเอียง = บันทึกล่าสุด"]});
 Object.assign(TR,{"사료 잔량 점검":["Kiểm tra cám còn","दाना जाँच","ពិនិត្យចំណីនៅសល់","ตรวจอาหารคงเหลือ"],"사료 점검":["Kiểm cám","दाना जाँच","ពិនិត្យចំណី","ตรวจอาหาร"],"오전":["sáng","बिहान","ព្រឹក","เช้า"],"오늘 점검 완료":["Đã kiểm hôm nay","आज जाँच सकियो","ពិនិត្យរួច","ตรวจวันนี้แล้ว"],"빈을 눌러 양쪽 높이를 맞추고 저장하세요":["Bấm silo, chỉnh hai bên rồi lưu","बिन थिचेर दुवै उचाइ मिलाई सेभ","ចុចធុង កែកម្ពស់ទាំងពីរ រួចរក្សា","กดไซโล ปรับสองข้างแล้วบันทึก"],"아래 주문 권장을 확인하세요":["Xem đề xuất đặt hàng bên dưới","तलको अर्डर सिफारिस हेर्नुहोस्","មើលការណែនាំខាងក្រោម","ดูคำแนะนำการสั่งด้านล่าง"],"점검 전":["Chưa kiểm","जाँच बाँकी","មិនទាន់ពិនិត្យ","ยังไม่ตรวจ"],"포대 사료":["Cám bao","बोरा दाना","ចំណីបាវ","อาหารกระสอบ"],"남은 포대 수":["Số bao còn","बाँकी बोरा","បាវនៅសល់","กระสอบคงเหลือ"],"포대 수 저장":["Lưu số bao","बोरा सेभ","រក្សាចំនួនបាវ","บันทึกจำนวนกระสอบ"],"포대 수를 저장했습니다":["Đã lưu số bao","बोरा सेभ भयो","បានរក្សា","บันทึกแล้ว"],"입고 기록":["Ghi nhập","आपूर्ति रेकर्ड","កត់ការទទួល","บันทึกรับเข้า"],"주문 권장 보기":["Xem đề xuất đặt","अर्डर सिफारिस","មើលការណែនាំ","ดูคำแนะนำการสั่ง"],"사료 잔량 점검 마감":["Hạn kiểm cám","दाना जाँच समय","ម៉ោងពិនិត្យចំណី","เวลาปิดตรวจอาหาร"],"매일 오전 · 지나면 할 일이 빨강":["Mỗi sáng · quá giờ thành đỏ","हरेक बिहान · नाघे रातो","រៀងរាល់ព្រឹក · ហួសក្រហម","ทุกเช้า · เลยเวลาเป็นสีแดง"],"홈":["Trang chủ","गृह","ទំព័រដើម","หน้าแรก"]});
 Object.assign(TR,{"지금 안 씀":["Hiện không dùng","अहिले प्रयोग छैन","មិនប្រើឥឡូវ","ตอนนี้ไม่ได้ใช้"]});
+Object.assign(TR,{"앞으로 8주":["8 tuần tới","अर्को ८ हप्ता","៨សប្តាហ៍ខាងមុខ","8 สัปดาห์ข้างหน้า"],"지금 주문":["Đặt ngay","अहिले अर्डर","បញ្ជាឥឡូវ","สั่งตอนนี้"],"주문":["đặt","अर्डर","បញ្ជា","สั่ง"],"8주 안 주문 없음":["Không cần đặt trong 8 tuần","८ हप्ता अर्डर छैन","មិនបាច់បញ្ជា","ไม่ต้องสั่งใน 8 สัปดาห์"],"권장":["Đề xuất","सिफारिस","ណែនាំ","แนะนำ"],"주당":["Mỗi tuần","प्रति हप्ता","ក្នុងមួយសប្តាហ៍","ต่อสัปดาห์"],"4주 후":["sau 4 tuần","४ हप्तापछि","ក្រោយ៤សប្តាហ៍","อีก 4 สัปดาห์"],"8주 흐름":["Xu hướng 8 tuần","८ हप्ता प्रवृत्ति","និន្នាការ៨សប្តាហ៍","แนวโน้ม 8 สัปดาห์"],"빈 주문량 = 빈 용량까지 (500kg 단위)":["Lượng đặt silo = đầy (500kg)","बिन भरिने सम्म","ពេញធុង (500kg)","เติมไซโลเต็ม (500kg)"],"작은 막대 = 8주 흐름 (첫 칸 = 이번 주)":["Cột nhỏ = 8 tuần (cột đầu = tuần này)","सानो बार = ८ हप्ता","របារតូច = ៨សប្តាហ៍","แท่งเล็ก = 8 สัปดาห์ (แรก = สัปดาห์นี้)"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
