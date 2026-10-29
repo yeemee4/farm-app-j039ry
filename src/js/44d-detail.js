@@ -1,7 +1,7 @@
 /* ===== 그래프 상세 (성적·성적 TV·현황판에서 그래프를 누르면) =====
    위: 기간을 늘린 큰 그래프 · 아래: 쌓인 기록 표. 기간 칩으로 길이 바꿈 */
-const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count","parity","npd"];   // chartCards() 순서
-const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",parity:"산차 구성",npd:"NPD 비생산일수",trend:"월별 추이"};
+const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count","parity","npd","fcr"];   // chartCards() 순서
+const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",parity:"산차 구성",npd:"NPD 비생산일수",fcr:"사료효율 (FCR)",trend:"월별 추이"};
 const CD_M=["psy","litter","trend","npd"],CD_W=["week","dead","cause"];   // 월 단위 · 주 단위
 function cdMonths(n){let [y,m]=TODAY.slice(0,7).split("-").map(Number);const a=[];for(let i=n-1;i>=0;i--){let yy=y,mm=m-i;while(mm<1){mm+=12;yy--}a.push([yy,mm])}return a}
 function cdWeeks(n){const w=weekStart(TODAY);return Array.from({length:n},(_,i)=>addDays(w,-7*(n-1-i)))}
@@ -14,6 +14,7 @@ function barsSvg(labels,series,goal){const W=360,H=190,P={l:26,r:8,t:12,b:24},mx
   const step=Math.ceil(n/9);labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+=`<text x="${P.l+i*gw+gw/2}" y="${H-7}" text-anchor="middle">${l}</text>`});return g+`</svg>`}
 function cdBody(k,n){const G=sGoal();
   if(k==="npd")return npdDetail(n);
+  if(k==="fcr")return fcrDetail();
   if(CD_M.includes(k)){const M=cdMonths(n),lab=M.map(([y,m])=>(n>12?String(y).slice(2)+".":"")+m+t("월")),mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),pick=q=>mm.map(v=>v?v[q]:null);
     if(k==="psy")return linesSvg({title:"PSY MSY",labels:lab,dp:1,series:[{l:"PSY",v:pick("psy"),c:CC.a},{l:"MSY",v:pick("msy"),c:CC.b}],goals:[{l:t("목표")+" "+G.psy,v:G.psy,c:CC.a},{l:t("목표")+" "+G.msy,v:G.msy,c:CC.b}]})+legendH([[CC.a,"PSY"],[CC.b,"MSY"],["var(--muted)",t("목표"),1]])+
       cdTable(["월","분만복수","복당 이유","PSY","MSY","PSY 목표 대비"],M.map(([y,m],i)=>{const v=mm[i]||{};return [`${y}.${pad(m)}`,v.far??"-",f1(v.wean),f1(v.psy),f1(v.msy),okv(v.psy)?`<span class="dlt ${v.psy>=G.psy?"up":"down"}">${v.psy>=G.psy?"▲":"▼"} ${Math.abs(v.psy-G.psy).toFixed(1)}</span>`:"-"]}).reverse());

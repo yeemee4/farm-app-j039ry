@@ -62,4 +62,4 @@ function chartCards(){const C=[];
   h+=`<div class="card ghost"><h3>${t("도체 등급 분포")}<small>${t("주별 100% 누적 막대")}</small></h3><div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div></div>`;
   cut();
   h+=`<div class="card ghost"><h3>${t("재고두수 장부 vs 실사")}<small>${t("돈사별 차이 막대")}</small></h3>${countChart()||`<div class="empty">${t("돈사별 재고두수 실사를 입력하면 표시합니다.")}</div>`}<div class="acts"><button class="act" type="button" data-a="tab" data-v="count">${t("실사 입력")} ›</button></div></div>`;
-  cut();C.push(parityCard(),npdCard());return C}
+  cut();C.push(parityCard(),npdCard(),fcrCard());return C}

@@ -852,6 +852,7 @@ body.tv .d-hero b{font-size:5vh}body.tv .d-hero span{font-size:1.7vh}
 .d-bin b{font-size:12px;margin-top:3px;white-space:nowrap}.d-bin span{font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}.d-bin em{font-style:normal;font-size:12.5px;font-weight:800}
 body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:1.4vh}body.tv .d-bin em{font-size:1.6vh}
 .d-swipe .d-bin svg{max-width:34px}.d-swipe .d-bin b,.d-swipe .d-bin span,.d-swipe .d-bin em{font-size:9px}
+.fcr2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}.fcr2>div{display:grid;gap:2px}.fcr2 small{color:var(--muted);font-size:12px}.fcr2 small i{font-style:normal;opacity:.8}.fcr2 b{font:900 32px/1 var(--display);font-variant-numeric:tabular-nums}.fcr2 span{color:var(--muted);font-size:12px}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1092,7 +1093,9 @@ FARM.supply={
 };
 FARM.items.push(["주사침(모돈용)","비품","개",50,0],["주사침(자돈용)","비품","개",50,0]);
 // 성적 목표 (대표 설정)
-FARM.goal={psy:25,msy:22,npd:40};   // npd = 모돈당 연간 비생산일수 목표(낮을수록 좋음)
+FARM.goal={psy:25,msy:22,npd:40,fcr:3.0,fcrB:2.7};   // fcr = 농장 전체(모돈 사료 포함), fcrB = 돈군(태어나서 출하까지)
+FARM.dress=.78;   // 도체율: 도체중 ÷ 도체율 = 생체중
+FARM.birthKg=1.5;   // npd = 모돈당 연간 비생산일수 목표(낮을수록 좋음)
 
 // 기본 디자인 테마 (설정 › 디자인 테마에서 기기마다 바꿀 수 있음)
 FARM.skin="fresh";
@@ -1363,7 +1366,7 @@ const FORMS={
     f:[{k:"kind",l:"구분",t:"chips",o:["백신","투약","구충"],def:"백신"},{k:"name",l:"백신·약품",t:"chips",o:()=>[...FARM.vax.late.map(v=>v.name),...FARM.vax.gilt.map(v=>v.name),...FARM.vax.annual.map(v=>v.name),"기타"],def:FARM.vax.late[0].name},{k:"memo",l:"메모 (선택)",t:"text",opt:true,ph:"예: 2차 접종"}]},
   이동:{f:[{k:"from",l:"출발 돈사",t:"chips",o:BARNS,def:"분만사"},{k:"to",l:"도착 돈사",t:"chips",o:BARNS,def:"인큐베이터"},{k:"n",l:"두수",t:"step",def:100,min:1,big:10}],
     warn:d=>d.from===d.to?"출발과 도착 돈사가 같습니다.":null},
-  출하:{f:[{k:"barn",l:"출하 돈사",t:"chips",o:()=>{const f=BARNS.filter(b=>b.includes("비육"));return f.length?f:BARNS},def:"육성비육사"},{k:"n",l:"출하두수",t:"step",def:20,min:1},{k:"kg",l:"출하 평균체중 (kg)",t:"step",def:115,min:60},{k:"dest",l:"출하처",t:"chips",o:()=>DESTS,def:"○○도축장"}],
+  출하:{f:[{k:"barn",l:"출하 돈사",t:"chips",o:()=>{const f=BARNS.filter(b=>b.includes("비육"));return f.length?f:BARNS},def:"육성비육사"},{k:"n",l:"출하두수",t:"step",def:20,min:1},{k:"kg",l:"출하 평균체중 (kg)",t:"step",def:115,min:60},{k:"dest",l:"출하처",t:"chips",o:()=>DESTS,def:"○○도축장"},{k:"carc",l:"도체중 붙여넣기 (선택 · 나중에 도축장 성적이 나오면)",t:"textarea",opt:true}],
     warn:(d,wd)=>{const w=state.records.find(r=>r.type==="약품"&&r.data.barn===d.barn&&r.data.withdraw&&r.data.withdraw>wd);return w?`${d.barn}은 휴약 중입니다 (종료 ${kDate(w.data.withdraw)}). 출하해도 되는지 확인해 주세요.`:null}},
   사료:{f:[{k:"kind",l:"사료",t:"chips",o:()=>feedKinds(),def:FARM.feed.bins[0].feed},{k:"mode",l:"구분",t:"chips",o:["입고","빈 잔량"],def:"입고"},{k:"_lvl",l:"눈대중 (누르면 kg 자동)",t:"chips",opt:true,o:()=>{const k=ui.in&&ui.in.fv.kind;return feedBin(k)?["¼","½","¾","가득"]:["1포","5포","10포","20포","40포"]}},{k:"kg",l:"수량 (kg)",t:"step",def:5000,min:0,big:500}]},
   약품:{f:[{k:"kind",l:"구분",t:"chips",o:()=>CATS.filter(c=>c!=="백신"&&c!=="정액"),def:"항생제"},{k:"name",l:"품목 (약품·재고 탭에서 추가)",t:"chips",o:()=>itemNames(ui.in?ui.in.fv.kind:"항생제")},{k:"barn",l:"대상 돈사",t:"chips",o:BARNS,def:"육성비육사"},{k:"qty",l:"사용량",t:"step",def:1,min:0},{k:"withdraw",l:"휴약 종료일 (항생제 · 자동 제안)",t:"date",opt:true}]},
@@ -2009,8 +2012,8 @@ function prevYearForm(){
 
 /* ===== 그래프 상세 (성적·성적 TV·현황판에서 그래프를 누르면) =====
    위: 기간을 늘린 큰 그래프 · 아래: 쌓인 기록 표. 기간 칩으로 길이 바꿈 */
-const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count","parity","npd"];   // chartCards() 순서
-const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",parity:"산차 구성",npd:"NPD 비생산일수",trend:"월별 추이"};
+const CD_KEYS=["psy","litter","week","dead","cause","feed","grade","count","parity","npd","fcr"];   // chartCards() 순서
+const CD_T={psy:"PSY · MSY 추이",litter:"복당 실산 · 이유두수",week:"주간 번식 달성률",dead:"폐사 현황",cause:"폐사 원인 비중",feed:"사료 남은 일수",count:"재고두수 장부 vs 실사",parity:"산차 구성",npd:"NPD 비생산일수",fcr:"사료효율 (FCR)",trend:"월별 추이"};
 const CD_M=["psy","litter","trend","npd"],CD_W=["week","dead","cause"];   // 월 단위 · 주 단위
 function cdMonths(n){let [y,m]=TODAY.slice(0,7).split("-").map(Number);const a=[];for(let i=n-1;i>=0;i--){let yy=y,mm=m-i;while(mm<1){mm+=12;yy--}a.push([yy,mm])}return a}
 function cdWeeks(n){const w=weekStart(TODAY);return Array.from({length:n},(_,i)=>addDays(w,-7*(n-1-i)))}
@@ -2023,6 +2026,7 @@ function barsSvg(labels,series,goal){const W=360,H=190,P={l:26,r:8,t:12,b:24},mx
   const step=Math.ceil(n/9);labels.forEach((l,i)=>{if(i%step===0||i===n-1)g+=`<text x="${P.l+i*gw+gw/2}" y="${H-7}" text-anchor="middle">${l}</text>`});return g+`</svg>`}
 function cdBody(k,n){const G=sGoal();
   if(k==="npd")return npdDetail(n);
+  if(k==="fcr")return fcrDetail();
   if(CD_M.includes(k)){const M=cdMonths(n),lab=M.map(([y,m])=>(n>12?String(y).slice(2)+".":"")+m+t("월")),mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),pick=q=>mm.map(v=>v?v[q]:null);
     if(k==="psy")return linesSvg({title:"PSY MSY",labels:lab,dp:1,series:[{l:"PSY",v:pick("psy"),c:CC.a},{l:"MSY",v:pick("msy"),c:CC.b}],goals:[{l:t("목표")+" "+G.psy,v:G.psy,c:CC.a},{l:t("목표")+" "+G.msy,v:G.msy,c:CC.b}]})+legendH([[CC.a,"PSY"],[CC.b,"MSY"],["var(--muted)",t("목표"),1]])+
       cdTable(["월","분만복수","복당 이유","PSY","MSY","PSY 목표 대비"],M.map(([y,m],i)=>{const v=mm[i]||{};return [`${y}.${pad(m)}`,v.far??"-",f1(v.wean),f1(v.psy),f1(v.msy),okv(v.psy)?`<span class="dlt ${v.psy>=G.psy?"up":"down"}">${v.psy>=G.psy?"▲":"▼"} ${Math.abs(v.psy-G.psy).toFixed(1)}</span>`:"-"]}).reverse());
@@ -2057,6 +2061,44 @@ function openChartDetail(k){const c=ui.cd=ui.cd&&ui.cd.k===k?ui.cd:{k,n:CD_M.inc
   $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet wide cdet" role="dialog" aria-modal="true" aria-label="${esc(ti)}"><div class="sh-hd"><h2>${ti}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${opts.length?`<div class="chips">${opts.map(([v,l])=>`<button type="button" class="chip ${c.n===v?"on":""}" data-a="cdN" data-v="${v}">${t(l)}</button>`).join("")}</div>`:""}<div class="card">${cdBody(k,c.n)}</div></div></div></div>`;
   if(typeof tagsApply==="function")try{tagsApply()}catch(e){}}
 Object.assign(A,{chDetail:v=>openChartDetail(v),cdN:v=>{ui.cd.n=+v;openChartDetail(ui.cd.k)}});
+/* ===== 사료효율 FCR (성적 카드 · 현황판 칸 · 누르면 상세) =====
+   돈군 FCR = 태어나서 출하까지 먹은 사료(두수 × 주령별 섭취량 × 학습 보정) ÷ (출하 생체중 합 − 태어날 때 체중)
+   농장 FCR = 기간 실제 사료(입고 − 재고 변화, 모돈 포함) ÷ (출하 생체중 + 재고 돼지 체중 변화)
+   출하 체중: 도축장 평균 → 나중에 도체중 붙여넣으면 도체중 ÷ 도체율. 재고 돼지 체중은 주령 성장 곡선을 출하 체중으로 보정 */
+const GROW=[1.5,2.5,4,5.8,7.5,9.5,12,14.5,17.5,21,25,29,33,37.5,42,47,52,57,62,67,72,78,84,90,96,102,108];   // 0~26주령 kg
+const dress=()=>state.dress||FARM.dress;
+function carcList(r){return String(r.data.carc||"").split(/[^0-9.]+/).map(Number).filter(v=>v>=40&&v<=200)}
+function shipLive(r){const c=carcList(r);return c.length?{n:c.length,kg:c.reduce((a,b)=>a+b,0)/dress(),src:"carc",avgC:c.reduce((a,b)=>a+b,0)/c.length}:{n:r.data.n,kg:r.data.n*r.data.kg,src:"avg"}}
+const shipsReal=()=>state.records.filter(r=>r.type==="출하"&&!r.data.bulk).sort((a,b)=>a.workDate.localeCompare(b.workDate));
+// 출하 → 돈군: 그날 출하 일령 ±6주 안의 돈군 중 가장 나이 많고 아직 다 안 나간 돈군
+let FCX={};
+function shipMap(){const k=state.records.length;if(FCX.k===k)return FCX;const B=batches(),sa=shipAge(),left={},map={};B.forEach(b=>left[b.k]=bHeads(b,sa));
+  shipsReal().forEach(r=>{const c=B.filter(b=>{const w=diff(b.k,r.workDate)/7;return w>=sa-6&&w<=sa+6&&left[b.k]>0}).sort((a,b)=>a.k.localeCompare(b.k))[0];if(!c)return;const n=shipLive(r).n;left[c.k]-=n;(map[c.k]=map[c.k]||[]).push(r)});
+  FCX={k,map};return FCX}
+function growCal(){const S=shipsReal().slice(-10);if(!S.length)return 1;const sa=shipAge(),avg=S.reduce((a,r)=>a+shipLive(r).kg,0)/S.reduce((a,r)=>a+shipLive(r).n,0);return Math.max(.8,Math.min(1.25,avg/GROW[Math.min(GROW.length-1,sa)]))}
+const growKg=w=>{const c=growCal(),g=GROW[Math.max(0,Math.min(GROW.length-1,w))];return w>=10?g*c:g};
+// 돈군이 날짜 end까지 먹은 사료 kg (출하해 나간 두수는 뺌)
+function batchFeed(b,end){const I=fIntake(),F={};let kg=0;
+  for(let d=b.k;d<=end;d=addDays(d,1)){const age=diff(b.k,d),w=Math.floor(age/7),n=bHeads(b,w);if(!n)continue;
+    const fs=pigFeeds(age);if(!fs.length)continue;const per=(I.pig[Math.min(I.pig.length-1,w)]||0)/fs.length;fs.forEach(p=>{const f=F[p.feed]??(F[p.feed]=feedFactor(p.feed));kg+=n*per*f})}
+  return kg}
+function batchFCR(){const M=shipMap().map;return Object.entries(M).map(([k,R])=>{const b=batches().find(x=>x.k===k);if(!b)return null;const L=R.map(shipLive),n=L.reduce((a,x)=>a+x.n,0),live=L.reduce((a,x)=>a+x.kg,0),end=R[R.length-1].workDate,mid=addDays(b.k,Math.round(R.reduce((a,r,i)=>a+diff(b.k,r.workDate)*L[i].n,0)/n)),hs=bHeads(b,Math.floor(diff(b.k,mid)/7))||n,
+    feed=batchFeed(b,mid)*n/hs,gain=live-n*FARM.birthKg;   // 출하된 두수 몫(폐사돈이 먹은 사료 포함)만
+  return {k,b,n,born:b.live,live,avg:live/n,feed,perHead:feed/n,fcr:gain>0?feed/gain:null,carc:L.some(x=>x.src==="carc"),end,days:diff(k,end)}}).filter(Boolean).sort((a,b)=>b.end.localeCompare(a.end))}
+// 농장 전체
+function invKg(d){return batches().reduce((a,b)=>{const age=diff(b.k,d);if(age<0||age>=shipAge()*7+42)return a;const w=Math.floor(age/7),out=(shipMap().map[b.k]||[]).filter(r=>r.workDate<=d).reduce((x,r)=>x+shipLive(r).n,0);return a+Math.max(0,bHeads(b,w)-out)*growKg(w)},0)}
+function stockAt(f,d){const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate<=d&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];if(!R)return null;
+  const inn=state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.data.mode==="입고"&&r.createdAt>R.createdAt&&r.workDate<=d).reduce((a,r)=>a+r.data.kg,0);let use=0;const M=rawPast();for(let x=R.workDate;x<d;x=addDays(x,1))use+=((M[x]||{})[f]||0)*feedFactor(f);return Math.max(0,R.data.kg+inn-use)}
+function farmFCR(f,t2){const F=feedKinds();let feed=0;for(const k of F){const inn=state.records.filter(r=>r.type==="사료"&&r.data.kind===k&&r.data.mode==="입고"&&r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+r.data.kg,0),s0=stockAt(k,f),s1=stockAt(k,t2);feed+=inn+(s0!=null&&s1!=null?s0-s1:0)}
+  const live=shipsReal().filter(r=>r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+shipLive(r).kg,0),dInv=invKg(t2)-invKg(f),gain=live+dInv;return gain>0?{fcr:feed/gain,feed,live,dInv}:null}
+function fcrCard(){const P=statPeriod(),t2=P.t>TODAY?TODAY:P.t,f=diff(P.f,t2)<55?addDays(t2,-55):P.f,F=farmFCR(f,t2),B=batchFCR().filter(x=>x.fcr),g=sGoal(),b5=B.slice(0,5),bAvg=b5.length?b5.reduce((a,x)=>a+x.feed,0)/b5.reduce((a,x)=>a+x.live-x.n*FARM.birthKg,0):null;
+  const col=(v,gl)=>!okv(v)?"var(--muted)":v<=gl?"var(--good)":v<=gl*1.08?"var(--amber)":"var(--red)";
+  return `<div class="card"><h3>${t("사료효율 (FCR)")}<small>${t("사료 kg ÷ 늘어난 체중 kg · 낮을수록 좋음")}</small></h3><div class="fcr2"><div><small>${t("농장 전체")} <i>${t("모돈 포함")}</i></small><b style="color:${col(F&&F.fcr,g.fcr)}">${F?F.fcr.toFixed(2):"—"}</b><span>${t("목표")} ${g.fcr} · ${kDate(f)}~</span></div><div><small>${t("돈군 (태어나서 출하까지)")}</small><b style="color:${col(bAvg,g.fcrB)}">${bAvg?bAvg.toFixed(2):"—"}</b><span>${t("목표")} ${g.fcrB} · ${t("최근")} ${b5.length}${t("개 돈군")}</span></div></div>
+  ${b5.length?hbarsH(b5.map(x=>({l:bName(x.k).replace(" 돈군",""),v:x.fcr,txt:`${x.fcr.toFixed(2)} · ${Math.round(x.avg)}kg${x.carc?" ✓":""}`,c:col(x.fcr,g.fcrB)}))):`<div class="empty">${t("출하 기록이 쌓이면 표시합니다.")}</div>`}</div>`}
+function fcrDetail(){const B=batchFCR(),g=sGoal(),M=cdMonths(12),pts=M.map(([y,m])=>{const [f,t2]=monthRange(y,m);if(t2>TODAY)return null;const r=farmFCR(addDays(t2,-90),t2);return r?r.fcr:null});   // 점마다 그 달 말까지 최근 90일 (입고 시기에 따른 출렁임 줄임)
+  return linesSvg({title:"FCR",labels:M.map(([y,m])=>m+t("월")),dp:2,series:[{l:t("농장 전체 (90일)"),v:pts,c:CC.a}],goals:[{l:t("목표")+" "+g.fcr,v:g.fcr,c:"var(--good)"}]})+
+    `<div class="sec-t">${t("돈군별")} <span>${t("✓ = 도체중으로 계산")}</span></div>`+cdTable(["돈군","출하 마친 날","출하 두수","평균 생체중","두당 사료","FCR","일령"],B.map(x=>[esc(bName(x.k)),kDate(x.end),`${x.n} / ${x.born}`,`${x.avg.toFixed(1)}kg${x.carc?" ✓":""}`,`${Math.round(x.perHead)}kg`,x.fcr?`<b>${x.fcr.toFixed(2)}</b>`:"-",x.days+t("일")]))+
+    `<div class="note">${t("두당 사료는 학습 보정이 곱해진 예측 사용량입니다. 매일 사료 잔량을 기록할수록 정확해집니다. 출하 기록에 도체중을 붙여넣으면 생체중 = 도체중 ÷ 도체율")} ${Math.round(dress()*100)}%.</div>`}
 /* ===== NPD 비생산일수 (성적 카드 · 현황판 칸 · 누르면 상세) =====
    생산일 = 임신(분만으로 이어진 1차 교배 → 분만) + 포유(분만 → 이유). 나머지 = 비생산일.
    모돈 일수는 후보돈은 첫 교배부터, 도태되면 도태일까지. 연환산 = 비생산일 ÷ 모돈 일수 × 365
@@ -2173,7 +2215,7 @@ function chartCards(){const C=[];
   h+=`<div class="card ghost"><h3>${t("도체 등급 분포")}<small>${t("주별 100% 누적 막대")}</small></h3><div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div></div>`;
   cut();
   h+=`<div class="card ghost"><h3>${t("재고두수 장부 vs 실사")}<small>${t("돈사별 차이 막대")}</small></h3>${countChart()||`<div class="empty">${t("돈사별 재고두수 실사를 입력하면 표시합니다.")}</div>`}<div class="acts"><button class="act" type="button" data-a="tab" data-v="count">${t("실사 입력")} ›</button></div></div>`;
-  cut();C.push(parityCard(),npdCard());return C}
+  cut();C.push(parityCard(),npdCard(),fcrCard());return C}
 /* ===== 성적 TV 화면 (16:9 한 화면 · 성적 › 📺 TV로 보기) ===== */
 const STV_KPI=["psy","msy","frate","live","wean","surv","dead","ship"];
 function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P.cmp?rangeMetrics(P.cmp[0],P.cmp[1]):null,now=new Date(),G=sGoal();
@@ -2697,7 +2739,7 @@ Object.assign(A,{
 
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["fcr","사료효율 (FCR)",1],["memo","회의 메모",1]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
 function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
@@ -2727,6 +2769,8 @@ const DASH_P={
   breed:()=>{const w=dWeek(),G=dashCfg().goal,R=k=>state.records.filter(r=>r.type===k&&r.workDate>=w&&r.workDate<=TODAY);
     const rows=[["교배",R("교배").filter(r=>r.data.round==="1차").length,DCOL[0]],["분만",R("분만").length,DCOL[2]],["이유",R("이유").length,DCOL[3]],["임신확인",R("임신확인").filter(r=>r.data.result==="임신").length,DCOL[5]]];
     return [t("이번 주 번식"),t("목표 대비 · 흰 선 = 목표"),`<div class="d-bars">${rows.map(([k,n,c])=>{const g=G[k]||1,mx=Math.max(g,n);return `<div class="d-bar"><span>${t(LABEL[k]||k)}</span><div class="d-track"><div class="d-fill" style="width:${n/mx*100}%;background:${c}"></div><div class="d-tick" style="left:calc(${g/mx*100}% - 3px)"></div></div><span class="d-v"><b>${n}</b> / ${g}</span></div>`}).join("")}</div>`]},
+  fcr:()=>{const t2=TODAY,F=farmFCR(addDays(t2,-89),t2),B=batchFCR().filter(x=>x.fcr).slice(0,3),g=sGoal(),c=v=>v<=g.fcr?DCOL[2]:v<=g.fcr*1.08?DCOL[3]:"#ff6b6b";
+    return [t("사료효율 (FCR)"),`${t("최근 90일")} · ${t("목표")} ${g.fcr}`,`<div class="d-hero"><b style="color:${F?c(F.fcr):"var(--mu)"}">${F?F.fcr.toFixed(2):"—"}</b><span>${t("농장 전체")}</span></div><div class="d-bars">${B.map(x=>`<div class="d-bar"><span>${esc(bName(x.k).replace(" 돈군",""))}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.fcr/4*100)}%;background:${x.fcr<=g.fcrB?DCOL[2]:DCOL[3]}"></div></div><span class="d-v"><b>${x.fcr.toFixed(2)}</b></span></div>`).join("")}</div>`]},
   npd:()=>{const f=addDays(TODAY,-89),S=npdStat(f,TODAY),C=npdStat(addDays(f,-90),addDays(f,-1)),g=sGoal().npd;if(!S)return [t("NPD 비생산일수"),t("최근 90일"),`<div class="empty">-</div>`];const d=C?S.npd-C.npd:null,col=S.npd<=g?DCOL[2]:S.npd<=g*1.25?DCOL[3]:"#ff6b6b";
     return [t("NPD 비생산일수"),`${t("최근 90일 · 연환산")} · ${t("목표")} ${g}${t("일")}`,`<div class="d-hero"><b style="color:${col}">${S.npd.toFixed(1)}<small>${t("일")}</small></b>${okv(d)?`<span style="color:${d<=0?DCOL[2]:"#ff6b6b"}">${d>0?"▲":"▼"} ${Math.abs(d).toFixed(1)} <small>${t("직전 90일 대비")}</small></span>`:""}</div><div class="d-bars">${NPD_R.map(([k,l],i)=>{const v=S.R[k]/S.sd*365;return `<div class="d-bar"><span>${t(l)}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,v/(S.npd||1)*100)}%;background:${[DCOL[0],"#ff6b6b",DCOL[3]][i]}"></div></div><span class="d-v"><b>${v.toFixed(1)}</b>${t("일")}</span></div>`}).join("")}</div>`]},
   parity:()=>{const D=parityDist(),G=parGoal(),mx=Math.max(1,...PAR_B.map(b=>D.c[b].length)),gc={young:DCOL[0],core:DCOL[2],old:DCOL[3]};
@@ -2755,7 +2799,7 @@ const DASH_P={
     return [t("회의 메모"),`<button type="button" class="d-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button>`,ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="d-edit" data-a="memoSave">${t("저장")}</button>`:`<div class="d-memo">${memo?esc(memo).replace(/\n/g,"<br>"):`<span class="d-mu">${t("메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요.")}</span>`}</div>`]}
 };
 const DASH_GO={sows:"sows",breed:"stats",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
-function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy",parity:"parity",npd:"npd"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
+function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy",parity:"parity",npd:"npd",fcr:"fcr"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
 // 아이폰 가로(높이 500px 이하): 한 화면 3칸씩 옆으로 넘김
 const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)").matches;
 
@@ -2783,7 +2827,7 @@ function vDashSet(){const d=dashCfg(),nm=Object.fromEntries(DASH_LIST.map(x=>[x[
   h+=d.order.map((k,i)=>`<div class="setrow"><span><b>${t(nm[k]||k)}</b></span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="-1" ${i===0?"disabled":""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="1" ${i===d.order.length-1?"disabled":""} aria-label="아래로">▼</button><button class="act ${d.on[k]?"pri":""}" type="button" data-a="dashTog" data-v="${k}">${d.on[k]?t("켜짐"):t("꺼짐")}</button></span></div>`).join("");
   h+=`</div><div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
   h+=Object.keys(DASH_GOAL0).map(k=>`<div class="setrow"><span>${t(LABEL[k]||k)}</span><div class="stepper"><button type="button" data-a="dashGoal" data-v="${k}" data-k="-1" aria-label="줄이기">−</button><input type="number" value="${d.goal[k]}" readonly aria-label="${t(LABEL[k]||k)}"><button type="button" data-a="dashGoal" data-v="${k}" data-k="1" aria-label="늘리기">+</button></div></div>`).join("");
-  const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"],["npd","NPD"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="${k==="npd"?-1:-0.5}" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="${k==="npd"?1:0.5}" aria-label="늘리기">+</button></div></div>`).join("")}`;
+  const SG=sGoal();h+=`</div><div class="sec-t">${t("성적 목표")} <span>${t("성적 그래프의 점선")}</span></div><div class="panel">${[["psy","PSY"],["msy","MSY"],["npd","NPD"],["fcr","FCR"],["fcrB","FCR (돈군)"]].map(([k,l])=>`<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="${k==="npd"?-1:k.startsWith("fcr")?-0.05:-0.5}" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="${k==="npd"?1:k.startsWith("fcr")?0.05:0.5}" aria-label="늘리기">+</button></div></div>`).join("")}`;
   return h+`</div>`+parGoalSet()+cullRuleSet()+closeBySet()+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="board">${t("현황판 보기")} ›</button></div>`}
 Object.assign(A,{
   dashGo:v=>{if(v==="memo")return A.memoEdit();dashLeave();if(v==="feed")ui.drugCat="사료";go(DASH_GO[v]||"home")},
@@ -3183,6 +3227,8 @@ Object.assign(TR,{"한 번에":["Mỗi lần","एकपटक","ម្តង","
 Object.assign(TR,{"최소 주문량 때문에":["Do lượng đặt tối thiểu","न्यूनतम अर्डरको कारण","ដោយសារអប្បបរមា","เพราะขั้นต่ำการสั่ง"],"일분 넘음":[" ngày bị vượt"," दिन नाघ्यो"," ថ្ងៃលើស"," วันเกิน"]});
 Object.assign(TR,{"예측 학습 중":["Đang học dự báo","पूर्वानुमान सिक्दै","កំពុងរៀន","กำลังเรียนรู้"],"잔량 기록":["Ghi tồn","बाँकी रेकर्ड","កត់នៅសល់","บันทึกคงเหลือ"],"학습 보정":["Hiệu chỉnh học","सिकेको सुधार","កែតម្រូវ","ค่าปรับที่เรียนรู้"],"예측 오차":["Sai số dự báo","पूर्वानुमान त्रुटि","កំហុសព្យាករ","ความคลาดเคลื่อน"],"처음":["ban đầu","सुरुमा","ដំបូង","ตอนแรก"],"사료 예측 학습":["Học dự báo cám","दाना पूर्वानुमान सिकाइ","ការរៀនព្យាករចំណី","การเรียนรู้พยากรณ์อาหาร"],"매일 잔량 기록으로 사료마다 스스로 보정":["Tự hiệu chỉnh theo ghi tồn hằng ngày","दैनिक रेकर्डबाट आफैं सुधार","កែដោយខ្លួនឯងតាមកំណត់ត្រា","ปรับเองจากบันทึกทุกวัน"],"오차":["Sai số","त्रुटि","កំហុស","คลาดเคลื่อน"],"기록 부족":["Thiếu dữ liệu","रेकर्ड कम","ទិន្នន័យតិច","ข้อมูลไม่พอ"],"부터":[" trở đi","देखि"," ទៅ"," เป็นต้นไป"],"다시 배우기":["Học lại","फेरि सिक्नुहोस्","រៀនម្តងទៀត","เรียนใหม่"],"보정값 = 실제 사용량 ÷ 섭취량 기준 예측. 허실·실제 섭취·두수 차이가 모두 들어갑니다. 사료 배합이나 급이기를 바꿨으면 ‘다시 배우기’를 누르세요.":["Hệ số = thực tế ÷ dự báo. Gồm hao hụt, lượng ăn, số con. Đổi cám/máng thì bấm ‘Học lại’.","सुधार = वास्तविक ÷ अनुमान। दाना फेरिए ‘फेरि सिक्नुहोस्’।","មេគុណ = ជាក់ស្តែង ÷ ព្យាករ។ ប្តូរចំណី ចុច ‘រៀនម្តងទៀត’។","ค่าปรับ = จริง ÷ พยากรณ์ เปลี่ยนสูตรอาหารให้กด ‘เรียนใหม่’"],"오늘부터 다시 배웁니다":["Học lại từ hôm nay","आजदेखि फेरि सिक्छ","រៀនម្តងទៀតពីថ្ងៃនេះ","เริ่มเรียนใหม่ตั้งแต่วันนี้"]});
 Object.assign(TR,{"주간 예측 오차":["Sai số dự báo tuần","हप्ता पूर्वानुमान त्रुटि","កំហុសព្យាករសប្តាហ៍","คลาดเคลื่อนรายสัปดาห์"]});
+Object.assign(TR,{"사료효율 (FCR)":["Hiệu quả cám (FCR)","दाना दक्षता (FCR)","ប្រសិទ្ធភាពចំណី (FCR)","อัตราแลกเนื้อ (FCR)"],"사료 kg ÷ 늘어난 체중 kg · 낮을수록 좋음":["kg cám ÷ kg tăng trọng · càng thấp càng tốt","दाना ÷ तौल वृद्धि · कम राम्रो","ចំណី ÷ ទម្ងន់កើន · ទាបល្អ","อาหาร ÷ น้ำหนักที่เพิ่ม · ต่ำดี"],"농장 전체":["Toàn trại","सम्पूर्ण फार्म","កសិដ្ឋានទាំងមូល","ทั้งฟาร์ม"],"모돈 포함":["gồm nái","माउ सहित","រួមមេ","รวมแม่"],"돈군 (태어나서 출하까지)":["Lứa (sinh → xuất)","समूह (जन्म → बिक्री)","ក្រុម (កើត → លក់)","กลุ่ม (เกิด → ส่งขาย)"],"개 돈군":[" lứa"," समूह"," ក្រុម"," กลุ่ม"],"출하 기록이 쌓이면 표시합니다.":["Hiển thị khi có dữ liệu xuất","बिक्री रेकर्ड भएपछि देखिन्छ","បង្ហាញពេលមានទិន្នន័យ","แสดงเมื่อมีบันทึกส่งขาย"],"돈군별":["Theo lứa","समूह अनुसार","តាមក្រុម","ตามกลุ่ม"],"✓ = 도체중으로 계산":["✓ = theo trọng lượng thịt xẻ","✓ = शव तौलबाट","✓ = តាមទម្ងន់សាច់","✓ = คำนวณจากซาก"],"출하 마친 날":["Ngày xuất xong","बिक्री सकिएको","ថ្ងៃលក់ចប់","วันส่งขายเสร็จ"],"출하 두수":["Số con xuất","बिक्री संख्या","ចំនួនលក់","จำนวนส่งขาย"],"평균 생체중":["TB thể trọng","औसत तौल","ទម្ងន់មធ្យម","น้ำหนักเฉลี่ย"],"두당 사료":["Cám/con","प्रति टाउको दाना","ចំណី/ក្បាល","อาหาร/ตัว"],"일령":["Ngày tuổi","उमेर","អាយុ","อายุ"],"두당 사료는 학습 보정이 곱해진 예측 사용량입니다. 매일 사료 잔량을 기록할수록 정확해집니다. 출하 기록에 도체중을 붙여넣으면 생체중 = 도체중 ÷ 도체율":["Cám/con là dự báo đã hiệu chỉnh. Ghi tồn hằng ngày để chính xác hơn. Thể trọng = thịt xẻ ÷ tỷ lệ","प्रति टाउको दाना अनुमानित हो। तौल = शव ÷ दर","ចំណី/ក្បាល គឺព្យាករ។ ទម្ងន់ = សាច់ ÷ អត្រា","อาหาร/ตัวเป็นค่าพยากรณ์ที่ปรับแล้ว น้ำหนักมีชีวิต = ซาก ÷ อัตรา"]});
+Object.assign(TR,{"농장 전체 (90일)":["Toàn trại (90 ngày)","सम्पूर्ण फार्म (९० दिन)","កសិដ្ឋាន (៩០ថ្ងៃ)","ทั้งฟาร์ม (90 วัน)"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
