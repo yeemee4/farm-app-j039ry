@@ -41,7 +41,7 @@ function vSow(){
     <div class="kv">
       <div><small>현재 산차</small><b>${i.gilt?"0":i.parity}</b></div>
       <div><small>도입</small><b style="font-size:14px">${s.intro?kDate(s.intro):"-"}</b></div>
-      <div><small>최근 BCS</small><b>${bcs.length?bcs[bcs.length-1].data.score:"-"}</b></div>
+      <div><small>최근 BCS</small><b>${bcs.length?bcs[bcs.length-1].data.score:"-"}</b></div>${(()=>{const g=gestFeed(s);return g?`<div><small>${t("오늘 급여")}</small><b title="${esc(g.why.join(" · "))}">${g.kg.toFixed(1)}kg</b></div>`:""})()}
       <div><small>위치</small><b style="font-size:14px">${s.loc}</b></div>
     </div>
     ${s.memo?`<div class="sow-meta">메모: ${esc(s.memo)}</div>`:""}

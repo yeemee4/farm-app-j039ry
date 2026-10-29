@@ -9,8 +9,9 @@ function sowAnchor(s){const st=sowState(s.id),i=statusOf(s);if(i.key==="도태�
   if(st.stage==="이유")return {pos0:143,at:st.since};
   if((st.stage==="임신"||st.stage==="교배")&&st.mate)return {pos0:0,at:st.mate};
   return {gilt:st.stage==="후보",open:true}}
-function sowNeed(a,day,I){if(a.open)return a.gilt?I.gilt:I.open;const p=((a.pos0+diff(a.at,day))%FP_CYC+FP_CYC)%FP_CYC;
-  if(p<115)return [p<I.gestLateFrom?I.gestEarly:I.gestLate,"임신모돈"];if(p<143)return [I.lact[Math.min(3,Math.floor((p-115)/7))],"포유모돈"];return [I.open,"임신모돈"]}
+// 임신·공태·후보는 임신돈 급여 기준(47g gCfg)을 따름
+function sowNeed(a,day,I){const C=gCfg();if(a.open)return a.gilt?C.gilt:C.flush;const p=((a.pos0+diff(a.at,day))%FP_CYC+FP_CYC)%FP_CYC;
+  if(p<115){const ph=C.phases.find(x=>p<=x.to)||C.phases[C.phases.length-1];return [ph.kg,"임신모돈"]}if(p<143)return [I.lact[Math.min(3,Math.floor((p-115)/7))],"포유모돈"];return [C.flush,"임신모돈"]}
 function avgLive(){const m=rangeMetrics(addDays(TODAY,-180),TODAY);return m&&okv(m.live)?m.live:11}
 // 날짜별 사료 종류별 필요량 {feed:kg}
 let FPD={};
@@ -122,7 +123,7 @@ Object.assign(A,{fOpt:(v,el)=>{const o=state.feedOpt=state.feedOpt||{},lim={fres
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
   h+=fcBySet()+fOptSet()+binSet()+learnSet();
-  h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${[["gestEarly",`${t("임신")} ~${I.gestLateFrom-1}${t("일")}`],["gestLate",`${t("임신")} ${I.gestLateFrom}${t("일")}~`],["open",t("이유 후 공태")],["gilt",t("후보돈")]].map(([k,l])=>`<div class="setrow"><span>${l}</span>${st(k,I[k],null,.1)}</div>`).join("")}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
+  h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${`<div class="setrow"><span>${t("임신·공태·후보돈")}</span><button class="act" type="button" data-a="tab" data-v="gestset">${t("임신돈 급여 기준")} ›</button></div>`}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
   h+=`<div class="sec-t">${t("자돈·육성돈 (주령)")} <span>${t("사료 종류는 일령별 급여표를 따름")}</span></div><div class="panel">${I.pig.map((v,i)=>`<div class="setrow"><span>${i}${t("주령")} <small class="sow-meta">${pigFeeds(i*7+3).map(p=>p.feed).join("·")}</small></span>${st("pig",v,i,.05)}</div>`).join("")}</div>`;
   return h+`<div class="acts"><button class="act" type="button" data-a="intkReset">${t("기본값으로")}</button></div>`}
 Object.assign(A,{intk:(v,el)=>{const o=state.intake=state.intake||{},I=fIntake(),s=Number(el.dataset.k),i=el.dataset.i;if(i!==""){o[v]=o[v]||[];o[v][+i]=Math.max(0,Math.round((I[v][+i]+s)*100)/100)}else o[v]=Math.max(0,Math.round((I[v]+s)*100)/100);NPDX=null;save();render()},

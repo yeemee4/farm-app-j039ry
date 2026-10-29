@@ -154,3 +154,9 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .dv-bar{position:relative;height:10px;border-radius:5px;background:var(--grid)}.dv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--good)}.dv-bar i.warn{background:var(--amber)}.dv-bar i.bad{background:var(--red)}.dv-bar i.over{background:var(--blue)}
 .dv-bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
 .dv-ok{color:var(--good)}.dv-warn{color:var(--amber)}.dv-bad{color:var(--red)}.dv-over{color:var(--blue)}.dv-tip{color:var(--ink);font-weight:600}
+/* 임신돈 급여표 */
+.gf{display:grid;gap:8px}.gf-r{display:grid;grid-template-columns:78px 1fr;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.gf-k b{font:900 20px var(--display);display:block}.gf-k small{color:var(--muted);font-size:11.5px}
+.gf-s{display:flex;flex-wrap:wrap;gap:5px}.gf-c{font:700 13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:4px 7px;background:var(--bg);color:var(--ink)}
+.gf-c.up{border-color:var(--amber);background:var(--amber-soft)}.gf-c.dn{border-color:var(--blue);background:var(--blue-soft)}.gf-c i{font-style:normal;font-size:10.5px;margin-left:3px}
+.gfw{display:grid;gap:6px;font-size:13.5px}

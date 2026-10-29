@@ -678,6 +678,12 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .dv-bar{position:relative;height:10px;border-radius:5px;background:var(--grid)}.dv-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--good)}.dv-bar i.warn{background:var(--amber)}.dv-bar i.bad{background:var(--red)}.dv-bar i.over{background:var(--blue)}
 .dv-bar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
 .dv-ok{color:var(--good)}.dv-warn{color:var(--amber)}.dv-bad{color:var(--red)}.dv-over{color:var(--blue)}.dv-tip{color:var(--ink);font-weight:600}
+/* 임신돈 급여표 */
+.gf{display:grid;gap:8px}.gf-r{display:grid;grid-template-columns:78px 1fr;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.gf-k b{font:900 20px var(--display);display:block}.gf-k small{color:var(--muted);font-size:11.5px}
+.gf-s{display:flex;flex-wrap:wrap;gap:5px}.gf-c{font:700 13px var(--mono);border:1px solid var(--line);border-radius:8px;padding:4px 7px;background:var(--bg);color:var(--ink)}
+.gf-c.up{border-color:var(--amber);background:var(--amber-soft)}.gf-c.dn{border-color:var(--blue);background:var(--blue-soft)}.gf-c i{font-style:normal;font-size:10.5px;margin-left:3px}
+.gfw{display:grid;gap:6px;font-size:13.5px}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1099,6 +1105,17 @@ FARM.supply={
 FARM.items.push(["주사침(모돈용)","비품","개",50,0],["주사침(자돈용)","비품","개",50,0]);
 // 성적 목표 (대표 설정)
 FARM.goal={psy:25,msy:22,npd:40,fcr:3.0,fcrB:2.7};   // fcr = 농장 전체(모돈 사료 포함), fcrB = 돈군(태어나서 출하까지)
+// 임신돈 급여 기준 (일반 범위의 기본값 · 사료회사·수의사 기준으로 대표 설정에서 고침)
+FARM.gest={
+  phases:[{to:3,kg:1.9,l:"교배 직후"},{to:84,kg:2.3,l:"임신 초·중기"},{to:110,kg:3.0,l:"임신 후기 증량"},{to:999,kg:2.3,l:"분만 전 감량"}],
+  flush:3.2,       // 이유 후 교배 전 (체력 회복)
+  gilt:2.6,        // 후보돈
+  bcs:{"1":.8,"1.5":.6,"2":.5,"2.5":.25,"3":0,"3.5":-.15,"4":-.3,"4.5":-.4,"5":-.5},   // BCS별 더하기/빼기 kg
+  parity1:.2,      // 1산(초산돈) 성장분
+  lct:18,tempPct:.025,   // 돈사 온도가 이 아래면 1℃당 2.5% 증량
+  min:1.8,max:4.0,
+  barns:{"임신사 1동":{mode:"auto",unit:"눈금",kgPer:null},"임신사 2동":{mode:"auto",unit:"눈금",kgPer:null},"교배사":{mode:"manual",unit:"바가지",kgPer:null}}
+};
 FARM.dress=.78;   // 도체율: 도체중 ÷ 도체율 = 생체중
 FARM.birthKg=1.5;   // npd = 모돈당 연간 비생산일수 목표(낮을수록 좋음)
 
@@ -1243,7 +1260,7 @@ function icon(type,sm){const T=TYPES[type]||{c:"var(--muted)",s:"?"},svg=ICON_SV
 // 테스트 라벨(포스트잇): 화면 구역마다 H3, P2 같은 번호를 붙여 "여기!"라고 지목하기 쉽게 한다.
 // 정식 배포 때는 python3 tools/build.py --no-tags 로 빼고 만든다.
 const TAG_SEL=".pagehd,.sec-t,.panel,.card,.banner,.warnbox,.datebar,.seg,.chipwrap,.dtbl,.setrow,.qgrid>*,.more>*,.sowgrid,.statusrow,.sh-hd,.wxcard,.d-card,.d-top,.todo,.srow,.bd-head,.bd-kpi,.bd-main>*,.bd-side>*,.bd-right>*,.bd-foot,[data-tagme]";
-const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN",feedset:"FS",feedchk:"FC"};
+const TAG_PRE={home:"H",sows:"M",sow:"MD",input:"I",batch:"G",stats:"S",board:"TV",settings:"E",more:"R",drug:"Y",timeline:"T",criteria:"C",guide:"GU",morning:"AM",cal:"CA",count:"CN",feedset:"FS",feedchk:"FC",gfeed:"GF",gestset:"GS"};
 let tagOn=(()=>{try{const v=localStorage.getItem("farm-tags");return v?v==="1":BUILD_TAGS}catch(e){return BUILD_TAGS}})(),tagRaf=0;
 function tagsApply(){tagRaf=0;document.body.classList.toggle("tagson",tagOn);const tb=$("#tagBtn");if(tb)tb.hidden=!BUILD_TAGS;if(!tagOn)return;
   const pre=document.body.classList.contains("login")?"L":(TAG_PRE[typeof tab!=="undefined"?tab:""]||String(tab||"X").slice(0,2).toUpperCase());
@@ -1297,7 +1314,7 @@ function stalls(){
 }
 
 /* ================= 할 일 ================= */
-const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k==="handover"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
+const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k==="handover"||k==="bcsdue"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
 const tdLog=key=>(state.todoLog||{})[key];
 function itemTarget(it){return it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
 function tdName(it){return it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
@@ -1684,13 +1701,13 @@ function extraTodos(){
   return [
     {k:"bvax",t:"돈군 백신 (이번 주 · 누락)",items:bv,act:"bvax"},
     {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`${semenClock().txt} · 내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → ${so.order}${FARM.semen.unit} 주문`,sev:semenClock().sev}]:[],act:null},
-    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...fcTodos(),...devTodos(),...closeTodos(),...mate2Todos(),...hoTodos()
+    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...fcTodos(),...devTodos(),...gfTodos(),...closeTodos(),...mate2Todos(),...hoTodos()
   ];
 }
 
 /* ================= v0.5 · 할 일 우선순위 · 퀘스트 달성률 · 백신 준비물 ================= */
 // 할 일 묶음 기본 순위 (대표 설정 › 할 일 순서에서 바꿈)
-const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["feedchk","사료 잔량 점검"],["feeddev","사료 급여 점검"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
+const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["feedchk","사료 잔량 점검"],["feeddev","사료 급여 점검"],["gfchg","임신돈 급여량 변경"],["bcsdue","BCS 측정"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
 function todoRank(){const r=state.todoRank=state.todoRank||TODO_KINDS.map(x=>x[0]);TODO_KINDS.forEach(x=>{if(!r.includes(x[0]))r.push(x[0])});return r}
 const TODO_SORTS=[["rank","우선순위"],["urgent","급한 순"],["count","남은 개수 많은 순"]];
 function sortTodos(a,mode){const r=todoRank(),ri=x=>{const i=r.indexOf(x.k);return i<0?99:i},sv={bad:0,warn:1,ok:2},m=mode||ui.todoSort||"rank";
@@ -1804,7 +1821,7 @@ function vSow(){
     <div class="kv">
       <div><small>현재 산차</small><b>${i.gilt?"0":i.parity}</b></div>
       <div><small>도입</small><b style="font-size:14px">${s.intro?kDate(s.intro):"-"}</b></div>
-      <div><small>최근 BCS</small><b>${bcs.length?bcs[bcs.length-1].data.score:"-"}</b></div>
+      <div><small>최근 BCS</small><b>${bcs.length?bcs[bcs.length-1].data.score:"-"}</b></div>${(()=>{const g=gestFeed(s);return g?`<div><small>${t("오늘 급여")}</small><b title="${esc(g.why.join(" · "))}">${g.kg.toFixed(1)}kg</b></div>`:""})()}
       <div><small>위치</small><b style="font-size:14px">${s.loc}</b></div>
     </div>
     ${s.memo?`<div class="sow-meta">메모: ${esc(s.memo)}</div>`:""}
@@ -2383,8 +2400,9 @@ function sowAnchor(s){const st=sowState(s.id),i=statusOf(s);if(i.key==="도태�
   if(st.stage==="이유")return {pos0:143,at:st.since};
   if((st.stage==="임신"||st.stage==="교배")&&st.mate)return {pos0:0,at:st.mate};
   return {gilt:st.stage==="후보",open:true}}
-function sowNeed(a,day,I){if(a.open)return a.gilt?I.gilt:I.open;const p=((a.pos0+diff(a.at,day))%FP_CYC+FP_CYC)%FP_CYC;
-  if(p<115)return [p<I.gestLateFrom?I.gestEarly:I.gestLate,"임신모돈"];if(p<143)return [I.lact[Math.min(3,Math.floor((p-115)/7))],"포유모돈"];return [I.open,"임신모돈"]}
+// 임신·공태·후보는 임신돈 급여 기준(47g gCfg)을 따름
+function sowNeed(a,day,I){const C=gCfg();if(a.open)return a.gilt?C.gilt:C.flush;const p=((a.pos0+diff(a.at,day))%FP_CYC+FP_CYC)%FP_CYC;
+  if(p<115){const ph=C.phases.find(x=>p<=x.to)||C.phases[C.phases.length-1];return [ph.kg,"임신모돈"]}if(p<143)return [I.lact[Math.min(3,Math.floor((p-115)/7))],"포유모돈"];return [C.flush,"임신모돈"]}
 function avgLive(){const m=rangeMetrics(addDays(TODAY,-180),TODAY);return m&&okv(m.live)?m.live:11}
 // 날짜별 사료 종류별 필요량 {feed:kg}
 let FPD={};
@@ -2496,7 +2514,7 @@ Object.assign(A,{fOpt:(v,el)=>{const o=state.feedOpt=state.feedOpt||{},lim={fres
 function vFeedSet(){const I=fIntake(),st=(k,v,i,step)=>`<div class="stepper"><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(2)}" readonly><button type="button" data-a="intk" data-v="${k}" data-i="${i??""}" data-k="${step}" aria-label="+">+</button></div>`;
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="drug">‹ ${t("사료")}</button><h2>${t("사료 섭취량 기준")}</h2></div><div class="note">${t("1두 하루 섭취량(kg)입니다. 사료 계획·남은 일수 계산에 쓰입니다. 실제 급여량에 맞춰 고쳐 주세요.")}</div>`;
   h+=fcBySet()+fOptSet()+binSet()+learnSet();
-  h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${[["gestEarly",`${t("임신")} ~${I.gestLateFrom-1}${t("일")}`],["gestLate",`${t("임신")} ${I.gestLateFrom}${t("일")}~`],["open",t("이유 후 공태")],["gilt",t("후보돈")]].map(([k,l])=>`<div class="setrow"><span>${l}</span>${st(k,I[k],null,.1)}</div>`).join("")}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
+  h+=`<div class="sec-t">${t("모돈")}</div><div class="panel">${`<div class="setrow"><span>${t("임신·공태·후보돈")}</span><button class="act" type="button" data-a="tab" data-v="gestset">${t("임신돈 급여 기준")} ›</button></div>`}${I.lact.map((v,i)=>`<div class="setrow"><span>${t("포유")} ${i+1}${t("주")}</span>${st("lact",v,i,.1)}</div>`).join("")}</div>`;
   h+=`<div class="sec-t">${t("자돈·육성돈 (주령)")} <span>${t("사료 종류는 일령별 급여표를 따름")}</span></div><div class="panel">${I.pig.map((v,i)=>`<div class="setrow"><span>${i}${t("주령")} <small class="sow-meta">${pigFeeds(i*7+3).map(p=>p.feed).join("·")}</small></span>${st("pig",v,i,.05)}</div>`).join("")}</div>`;
   return h+`<div class="acts"><button class="act" type="button" data-a="intkReset">${t("기본값으로")}</button></div>`}
 Object.assign(A,{intk:(v,el)=>{const o=state.intake=state.intake||{},I=fIntake(),s=Number(el.dataset.k),i=el.dataset.i;if(i!==""){o[v]=o[v]||[];o[v][+i]=Math.max(0,Math.round((I[v][+i]+s)*100)/100)}else o[v]=Math.max(0,Math.round((I[v]+s)*100)/100);NPDX=null;save();render()},
@@ -2611,7 +2629,7 @@ function vFeedCheck(){const T=feedTable(),it=fcItems(),left=fcLeft().length,cb=f
   if(bags.length)h+=`<div class="sec-t">${t("포대 사료")} <span>${t("남은 포대 수")}</span></div><div class="panel">${bags.map(x=>{const r=T.find(q=>q.f===x.k)||{},d=fcToday(x.k),n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):0);
     return `<div class="setrow"><span><b>${esc(x.k)}</b> <small class="sow-meta">${x.bag.kg}kg · ${r.use>0?`${t("하루")} ${Math.round(r.use)}kg · ${t("약")} ${Math.floor(n*x.bag.kg/r.use)}${t("일분")}`:t("지금 안 씀")}${d?` · <span style="color:var(--good)">✓ ${t("오늘 기록")}</span>`:""}</small></span><div class="stepper"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="-1" aria-label="−">−</button><input type="number" value="${n}" readonly aria-label="${esc(x.k)}"><button type="button" data-a="fcBag" data-v="${esc(x.k)}" data-k="1" aria-label="+">+</button></div></div>`}).join("")}<button class="act pri" type="button" data-a="fcBagSave" style="width:100%;margin-top:8px">${t("포대 수 저장")}</button></div>`;
   if(!left)h+=vFeedDev()+vFeedPlan();
-  return h+`<div class="acts"><button class="act" type="button" data-a="input" data-v="사료">${t("입고 기록")} ›</button>${left?`<button class="act" type="button" data-a="fcPlan">${t("주문 권장 보기")}</button>`:""}</div>`+(ui.fcPlan&&left?vFeedPlan():"")}
+  return h+`<div class="acts"><button class="act" type="button" data-a="tab" data-v="gfeed">${t("임신돈 급여표")} ›</button><button class="act" type="button" data-a="input" data-v="사료">${t("입고 기록")} ›</button>${left?`<button class="act" type="button" data-a="fcPlan">${t("주문 권장 보기")}</button>`:""}</div>`+(ui.fcPlan&&left?vFeedPlan():"")}
 function localTimeOf(iso){try{const d=new Date(iso);return pad(d.getHours())+":"+pad(d.getMinutes())}catch(e){return ""}}
 Object.assign(A,{fcBag:(v,el)=>{const T=feedTable(),r=T.find(q=>q.f===v)||{},b=feedBag(v),cur=ui.bags[v]??(r.kg!=null?Math.floor(r.kg/b.kg):0);ui.bags[v]=Math.max(0,cur+Number(el.dataset.k));render()},
   fcBagSave:()=>{const T=feedTable();fcItems().filter(x=>x.bag).forEach(x=>{const r=T.find(q=>q.f===x.k)||{},n=ui.bags[x.k]??(r.kg!=null?Math.floor(r.kg/x.bag.kg):null);if(n!=null)addRecord("사료",TODAY,{kind:x.k,mode:"빈 잔량",kg:n*x.bag.kg,bags:n})});ui.bags={};render();toast(t("포대 수를 저장했습니다"))},
@@ -2666,6 +2684,66 @@ function devDetail(f){const e=devEnd(f),W=[5,4,3,2,1,0].map(i=>{const b=addDays(
   return linesSvg({title:"dev",labels:W.map(x=>kDate(x.a).replace(/\s*\(.*\)/,"")),dp:2,series:[{l:t("실제"),v:W.map(x=>x.w?x.w.r:null),c:CC.a}],goals:[{l:"+15%",v:1.15,c:"var(--amber)"},{l:t("적정"),v:1,c:"var(--good)"},{l:"−10%",v:.9,c:"var(--amber)"}]})+
     `<div class="note">${esc(feedZone(f))}</div>`+cdTable(["주","적정 kg","실제 kg","차이","판정"],W.slice().reverse().map(x=>x.w?[kDate(x.a),Math.round(x.w.pred).toLocaleString(),Math.round(x.w.act).toLocaleString(),`${x.w.r>=1?"+":""}${Math.round((x.w.r-1)*100)}%`,`<span class="dv-${devJudge(x.w.r)[0]}">${t(devJudge(x.w.r)[1])}</span>`]:[kDate(x.a),"-","-","-",t("기록 부족")]))+
     (()=>{const C=devCohorts(f,r);return C.length?`<div class="sec-t">${t("이 사료를 먹는 돈군")} <span>${t("7일 적정 → 추정 실제")}</span></div>`+cdTable(["돈군","주령","돈사","두수","적정 7일","추정 실제"],C.map(c=>[esc(bName(c.b.k)),`${c.w}${t("주령")} (${c.age}${t("일")})`,esc(t(c.barn)),c.n,`${Math.round(c.std).toLocaleString()}kg`,c.est!=null?`<b class="dv-${devJudge(r)[0]}">${Math.round(c.est).toLocaleString()}kg</b>`:"-"])):""})()}
+/* ===== 임신돈 급여 가이드: 모돈마다 오늘 권장 급여량 = 임신 일수 단계 + BCS + 산차 + 돈사 온도 =====
+   임신사 1·2동 = 자동 급이기(눈금), 교배사 = 수동(바가지). 단위 환산(1눈금·1바가지 = kg)은 대표 설정.
+   어제와 달라진 모돈은 할 일 '급여량 변경'으로. 매주 조절 제안(대표). 기준값은 일반 범위의 기본값 */
+function gCfg(){const G=FARM.gest,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
+const GF_BARNS=()=>Object.keys(gCfg().barns);
+function lastBCS(id,before){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===id&&x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
+function barnTemp(barn,d){const a=(state.am||{})[d];const v=a&&a[barn]&&parseFloat(a[barn].temp);if(!isNaN(v))return v;if(d===TODAY&&typeof wxDay==="function"){const w=wxDay(0);if(w)return null}return null}
+// 모돈 한 마리의 그날 권장량
+function gestFeed(s,d=TODAY){const C=gCfg(),st=sowState(s.id),i=statusOf(s);if(i.key==="도태됨"||!GF_BARNS().includes(s.loc))return null;
+  let base,phase,gd=null;
+  if(st.stage==="후보"){base=C.gilt;phase="후보돈"}
+  else if(st.stage==="이유"||st.stage==="재교배"){base=C.flush;phase=st.stage==="이유"?"이유 후 교배 전":"재발·공태"}
+  else if((st.stage==="교배"||st.stage==="임신")&&st.mate){gd=diff(st.mate,d);const p=C.phases.find(x=>gd<=x.to)||C.phases[C.phases.length-1];base=p.kg;phase=p.l}
+  else return null;
+  const why=[`${t(phase)}${gd!=null?` ${gd}${t("일")}`:""} ${base.toFixed(1)}`];let kg=base;
+  const b=lastBCS(s.id,d);if(b&&C.bcs[b.score]){kg+=C.bcs[b.score];why.push(`BCS ${b.score} ${C.bcs[b.score]>0?"+":""}${C.bcs[b.score]}`)}
+  if(i.parity<=1&&!i.gilt&&st.stage!=="후보"&&C.parity1){kg+=C.parity1;why.push(`${t("초산")} +${C.parity1}`)}
+  const tp=barnTemp(s.loc,d);if(tp!=null&&tp<C.lct){const add=kg*C.tempPct*(C.lct-tp);kg+=add;why.push(`${tp}℃ +${add.toFixed(1)}`)}
+  kg=Math.round(Math.max(C.min,Math.min(C.max,kg))*10)/10;return {s,kg,phase,gd,bcs:b,why}}
+function gfUnit(barn,kg){const B=gCfg().barns[barn];if(!B||!B.kgPer)return "";const v=kg/B.kgPer;return B.mode==="auto"?`${t("눈금")} ${Math.round(v*10)/10}`:`${t("바가지")} ${Math.round(v*4)/4}`}
+function gestToday(){const out=[];activeSows().forEach(s=>{const a=gestFeed(s,TODAY);if(!a)return;const y=gestFeed(s,addDays(TODAY,-1));a.prev=y?y.kg:null;a.chg=y&&Math.abs(y.kg-a.kg)>=.05?a.kg-y.kg:0;out.push(a)});return out}
+// 할 일: 오늘 급여량이 바뀐 모돈 (급이기 눈금 다시 맞추기)
+function gfTodos(){if(REF!==TODAY)return [{k:"gfchg",t:"임신돈 급여량 변경",items:[],act:null}];
+  return [{k:"gfchg",t:"임신돈 급여량 변경",items:gestToday().filter(a=>a.chg).map(a=>({s:a.s,gf:a,label:`${t(a.s.loc)} · ${a.prev.toFixed(1)} → ${a.kg.toFixed(1)}kg${gfUnit(a.s.loc,a.kg)?" ("+gfUnit(a.s.loc,a.kg)+")":""} · ${esc(a.why[a.why.length-1])}`,sev:"warn"})),act:null},
+    {k:"bcsdue",t:"BCS 측정",items:bcsDue(),act:null}]}
+// BCS 측정 시점: 교배 0~3일, 임신 28~32일, 83~87일, 이유 당일~3일 · 최근 7일 안에 측정 없으면
+function bcsDue(){const L=[];activeSows().forEach(s=>{const st=sowState(s.id);let when=null;if((st.stage==="교배"||st.stage==="임신")&&st.mate){const g=diff(st.mate,TODAY);when=g<=3?"교배 시":g>=28&&g<=32?"임신 30일":g>=83&&g<=87?"임신 85일":null}else if(st.stage==="이유"&&diff(st.since,TODAY)<=3)when="이유 시";
+  if(!when)return;const b=lastBCS(s.id,TODAY);if(b&&diff(b.d,TODAY)<=7)return;L.push({s,label:`${t(when)} · ${t("최근 BCS")} ${b?b.score+" ("+kDate(b.d)+")":"-"}`,sev:"warn"})});return L}
+function vGestFeed(){const A=gestToday(),C=gCfg();let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="home">‹ ${t("홈")}</button><h2>${t("임신돈 급여표")}</h2></div>`;
+  const ch=A.filter(a=>a.chg).length;h+=`<div class="banner ${ch?"warn-b":"info"}"><b>${ch?`${t("오늘 바뀜")} ${ch}${t("두")}`:t("어제와 같음")}</b><span>${t("임신 일수·BCS·산차·돈사 온도로 계산 · 바뀐 모돈만 급이기를 다시 맞추세요")}</span></div>`;
+  GF_BARNS().forEach(barn=>{const L=A.filter(a=>a.s.loc===barn);if(!L.length)return;const B=C.barns[barn],G={};L.forEach(a=>(G[a.kg.toFixed(1)]=G[a.kg.toFixed(1)]||[]).push(a));
+    h+=`<div class="sec-t">${esc(t(barn))} <span>${B.mode==="auto"?t("자동 급이기"):t("수동 급여")}${B.kgPer?"":` (${t(B.unit)} ${t("단위 설정 전")})`} · ${L.length}${t("두")} · ${t("합계")} ${L.reduce((x,a)=>x+a.kg,0).toFixed(0)}kg</span></div><div class="gf">`+
+    Object.keys(G).sort((a,b)=>a-b).map(k=>`<div class="gf-r"><div class="gf-k"><b>${k}kg</b><small>${gfUnit(barn,+k)}</small></div><div class="gf-s">${G[k].sort((a,b)=>a.s.id.localeCompare(b.s.id)).map(a=>`<button type="button" class="gf-c ${a.chg?(a.chg>0?"up":"dn"):""}" data-a="sowd" data-v="${a.s.id}" title="${esc(a.why.join(" · "))}">${a.s.id}${a.chg?`<i>${a.chg>0?"▲":"▼"}${Math.abs(a.chg).toFixed(1)}</i>`:""}</button>`).join("")}</div></div>`).join("")+`</div>`});
+  if(can("admin"))h+=gfWeekly(A);
+  return h+`<div class="note">${t("숫자를 누르면 그 모돈 상세로 갑니다. 기준값은 일반적인 범위의 기본값이라 사료회사·수의사 기준으로 대표 설정에서 고치세요.")}</div>`}
+// 매주 조절 제안 (대표)
+function gfWeekly(A){const C=gCfg(),S=[],noB=A.filter(a=>!a.bcs||diff(a.bcs.d,TODAY)>60).length,fat=A.filter(a=>a.bcs&&+a.bcs.score>=4).length,thin=A.filter(a=>a.bcs&&+a.bcs.score<=2).length;
+  const late7=activeSows().filter(s=>{const st=sowState(s.id);if(!(st.stage==="임신"||st.stage==="교배")||!st.mate)return false;const g=diff(st.mate,TODAY);return g<85&&g>=78}).length;
+  if(noB)S.push(`${t("BCS 기록이 없거나 60일 지난 모돈")} ${noB}${t("두")} → ${t("BCS를 재야 급여량 보정이 됩니다")}`);
+  if(late7)S.push(`${t("다음 7일 안에 85일(후기 증량) 들어가는 모돈")} ${late7}${t("두")} → ${C.phases[2].kg}kg${t("으로 올릴 준비")}`);
+  if(fat)S.push(`BCS 4 ${t("이상")} ${fat}${t("두")} → ${t("감량 적용 중 · 2주 뒤 BCS 다시 확인")}`);if(thin)S.push(`BCS 2 ${t("이하")} ${thin}${t("두")} → ${t("증량 적용 중 · 2주 뒤 BCS 다시 확인")}`);
+  if(typeof wxDay==="function"){let mn=99;for(let i=0;i<7;i++){const w=wxDay(i);if(w)mn=Math.min(mn,w.min)}if(mn<5)S.push(`${t("이번 주 최저기온")} ${mn}℃ → ${t("돈사 온도가")} ${C.lct}℃ ${t("아래로 내려가면 자동 증량 · 아침 점검 온도를 꼭 입력")}`)}
+  const F=state.records.filter(r=>r.type==="분만"&&r.workDate>=addDays(TODAY,-90));if(F.length>=5){const lo=F.filter(r=>r.data.live<=9).map(r=>lastBCS(r.data.sow,addDays(r.workDate,-5))).filter(Boolean),loT=lo.filter(b=>+b.score<=2.5).length;if(lo.length>=3&&loT/lo.length>=.5)S.push(`${t("최근 90일 실산 9두 이하 분만의 절반 이상이 분만 전 BCS 2.5 이하")} → ${t("임신 후기 증량을 0.2~0.3kg 더 올리는 것을 검토")}`)}
+  return `<div class="sec-t">${t("이번 주 급여 조절 제안")}</div><div class="panel gfw">${S.length?S.map(x=>`<div>💡 ${x}</div>`).join(""):`<div>${t("특별히 조절할 점이 없습니다.")}</div>`}<button class="act" type="button" data-a="tab" data-v="gestset">${t("급여 기준 고치기")} ›</button></div>`}
+// 대표 설정: 임신돈 급여 기준
+function vGestSet(){const C=gCfg(),st=(path,v,step)=>`<div class="stepper"><button type="button" data-a="gSet" data-v="${path}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(step<1?(step<.1?2:1):0)}" readonly><button type="button" data-a="gSet" data-v="${path}" data-k="${step}" aria-label="+">+</button></div>`;
+  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="gfeed">‹ ${t("임신돈 급여표")}</button><h2>${t("임신돈 급여 기준")}</h2></div><div class="note">${t("일반적인 범위의 기본값입니다. 사료 에너지·품종에 따라 다르니 사료회사·수의사 기준으로 고치세요.")}</div>`;
+  h+=`<div class="sec-t">${t("임신 일수별 (kg/일, BCS 3 기준)")}</div><div class="panel">${C.phases.map((p,i)=>`<div class="setrow"><span>${t(p.l)} <small class="sow-meta">~${p.to>500?t("분만사 이동"):p.to+t("일")}</small></span>${st("phases."+i+".kg",p.kg,.1)}</div>`).join("")}
+    <div class="setrow"><span>${t("이유 후 교배 전")}</span>${st("flush",C.flush,.1)}</div><div class="setrow"><span>${t("후보돈")}</span>${st("gilt",C.gilt,.1)}</div><div class="setrow"><span>${t("초산돈 추가")}</span>${st("parity1",C.parity1,.1)}</div></div>`;
+  h+=`<div class="sec-t">${t("BCS 보정 (kg)")}</div><div class="panel">${Object.keys(C.bcs).map(k=>`<div class="setrow"><span>BCS ${k}</span>${st("bcs."+k,C.bcs[k],.05)}</div>`).join("")}</div>`;
+  h+=`<div class="sec-t">${t("온도 보정")}</div><div class="panel"><div class="setrow"><span>${t("기준 온도 (℃)")} <small class="sow-meta">${t("이 아래면 증량")}</small></span>${st("lct",C.lct,1)}</div><div class="setrow"><span>${t("1℃당 증량 (%)")}</span>${st("tempPct",C.tempPct*100,.5).replace(/data-v="tempPct"/g,'data-v="tempPctP"')}</div></div>`;
+  h+=`<div class="sec-t">${t("급이 단위")} <span>${t("한 번 재서 넣으면 눈금·바가지로도 보여줌")}</span></div><div class="panel">${Object.entries(C.barns).map(([b,B])=>`<div class="setrow"><span>${esc(t(b))} <small class="sow-meta">${B.mode==="auto"?t("자동 급이기"):t("수동")} · 1${t(B.unit)} = ${B.kgPer?B.kgPer.toFixed(2)+"kg":t("모름")}</small></span>${st("barns."+b+".kgPer",B.kgPer||0,.05)}</div>`).join("")}</div>`;
+  return h+`<div class="acts"><button class="act" type="button" data-a="gReset">${t("기본값으로")}</button></div>`}
+Object.assign(A,{gSet:(v,el)=>{const o=state.gest=state.gest||{},C=gCfg(),k=Number(el.dataset.k),P=v.split(".");
+    if(v==="tempPctP"){o.tempPct=Math.max(0,Math.round((C.tempPct*100+k)*10)/1000)}
+    else if(P[0]==="phases"){o.phases=o.phases||[];o.phases[+P[1]]={...(o.phases[+P[1]]||{}),kg:Math.max(1,Math.round((C.phases[+P[1]].kg+k)*10)/10)}}
+    else if(P[0]==="bcs"){o.bcs=o.bcs||{};o.bcs[P[1]]=Math.round((C.bcs[P[1]]+k)*100)/100}
+    else if(P[0]==="barns"){o.barns=o.barns||{};const b=P.slice(1,-1).join(".");o.barns[b]={...(o.barns[b]||{}),kgPer:Math.max(0,Math.round(((C.barns[b].kgPer||0)+k)*100)/100)||null}}
+    else o[v]=Math.round((C[v]+k)*100)/100;save();render()},
+  gReset:()=>{state.gest={};save();render()}});
 /* ================= v0.2 · 돈군 탭 ================= */
 function vBatch(){
   const L=liveBatches();
@@ -2691,7 +2769,7 @@ function vDrug(){
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>약품·재고</h2><button class="act pri" type="button" data-a="input" data-v="재고">+ 입고·사용·실사</button></div>`;
   h+=`<div class="chips">${["전체","사료",...CATS].map(c=>`<button type="button" class="chip ${cf===c?"on":""}" data-a="drugCat" data-v="${c}">${c} ${c==="전체"?state.items.filter(i=>!i.hidden).length:c==="사료"?feedKinds().length:state.items.filter(i=>!i.hidden&&i.cat===c).length}</button>`).join("")}</div>`;
   if(so.order&&(cf==="전체"||cf==="정액"))h+=`<div class="banner"><b>정액 주문</b><span>내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → <b>${so.order}${FARM.semen.unit}</b> 오늘 ${FARM.semen.deadline}까지 주문</span></div>`;
-  if(cf==="사료")return h+vFeedBins()+vFeedDev()+vFeedPlan();
+  if(cf==="사료")return h+`<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="gfeed">${t("임신돈 급여표")} ›</button></div>`+vFeedBins()+vFeedDev()+vFeedPlan();
   h+=`<div class="note">처음에는 ‘실사’로 현재 수량을 넣어 시작하세요. 재고는 입고·사용·실사 기록과 접종·투약·교배 기록으로 자동 계산합니다. <b>적정 재고</b>는 관리자가 정하는 값이며, 그보다 적으면 할 일과 현황판에 알립니다.</div>`;
   h+=`<div class="sowgrid">${list.map(({it,s})=>{const st=stockSt(it,s),pct=Math.min(100,it.par?(s.qty||0)/(it.par*2)*100:100),E=ui.itemEdit===it.id;
     return `<div class="batch"><div class="bt"><b>${esc(it.name)}</b><span class="dstate ${st==="none"?"ds-none":st==="bad"?"ds-wait":st==="warn"?"ds-task":"ds-done"}">${st==="none"?"미입력":st==="bad"?"부족":st==="warn"?"주의":"충분"}</span></div>
@@ -3258,6 +3336,7 @@ Object.assign(TR,{"사료효율 (FCR)":["Hiệu quả cám (FCR)","दाना 
 Object.assign(TR,{"농장 전체 (90일)":["Toàn trại (90 ngày)","सम्पूर्ण फार्म (९० दिन)","កសិដ្ឋាន (៩០ថ្ងៃ)","ทั้งฟาร์ม (90 วัน)"]});
 Object.assign(TR,{"구간별 급여 점검":["Kiểm tra cho ăn theo giai đoạn","चरण अनुसार दाना जाँच","ពិនិត្យការផ្តល់ចំណីតាមដំណាក់កាល","ตรวจการให้อาหารตามช่วง"],"최근 7일 · 실제 ÷ 적정":["7 ngày · thực tế ÷ chuẩn","७ दिन · वास्तविक ÷ उपयुक्त","៧ថ្ងៃ · ជាក់ស្តែង ÷ ស្តង់ដារ","7 วัน · จริง ÷ มาตรฐาน"],"사료 잔량을 3일 이상 기록하면 적정량과 비교합니다.":["Ghi tồn ≥3 ngày để so sánh.","३ दिन रेकर्डपछि तुलना","កត់≥៣ថ្ងៃដើម្បីប្រៀបធៀប","บันทึก ≥3 วันเพื่อเปรียบเทียบ"],"적정":["Chuẩn","उपयुक्त","ស្តង់ដារ","มาตรฐาน"],"실제":["Thực tế","वास्तविक","ជាក់ស្តែង","จริง"],"부족":["Thiếu","कम","ខ្វះ","ขาด"],"부족 주의":["Hơi thiếu","केही कम","ខ្វះបន្តិច","ค่อนข้างขาด"],"과다":["Thừa","बढी","លើស","เกิน"],"입질사료는 조금씩 자주 · 급이판 청결 · 사료 신선도 확인 → 더 주세요":["Cám tập ăn: ít mà nhiều lần · máng sạch · cám tươi → cho thêm","थोरै-थोरै धेरै पटक · सफा · ताजा → थप दिनुहोस्","តិចៗញឹកញាប់ · ស្អាត · ស្រស់ → ផ្តល់បន្ថែម","ให้ทีละน้อยบ่อยๆ · รางสะอาด · อาหารสด → ให้เพิ่ม"],"급이기 막힘·급이 횟수·사료 상태·급수 확인 → 더 주세요":["Kiểm tra máng tắc·số lần·cám·nước → cho thêm","फिडर·पटक·दाना·पानी जाँच → थप","ពិនិត្យរាង·ចំនួន·ចំណី·ទឹក → បន្ថែម","ตรวจรางตัน·จำนวนครั้ง·อาหาร·น้ำ → ให้เพิ่ม"],"건강 상태도 확인":["Kiểm tra sức khỏe","स्वास्थ्य जाँच","ពិនិត្យសុខភាព","ตรวจสุขภาพ"],"허실 확인(급이기 조절·흘림) · 이동·폐사 기록 누락 확인":["Kiểm tra hao hụt (chỉnh máng·rơi vãi) · thiếu ghi di chuyển/chết","खेर जाँच · रेकर्ड छुट जाँच","ពិនិត្យខាត · កំណត់ត្រាខ្វះ","ตรวจการสูญเสีย · บันทึกย้าย/ตายที่ขาด"],"적정 = 섭취량 기준표 × 두수(학습 보정 없이). 주문은 실제 사용량을 따르므로 적게 먹어도 재고가 쌓이지 않게 맞춰집니다.":["Chuẩn = bảng lượng ăn × số con. Đặt hàng theo thực tế nên không tồn lâu.","उपयुक्त = तालिका × संख्या। अर्डर वास्तविक अनुसार।","ស្តង់ដារ = តារាង × ចំនួន។ បញ្ជាតាមជាក់ស្តែង។","มาตรฐาน = ตาราง × จำนวน การสั่งตามจริงจึงไม่ค้างสต็อก"],"사료 급여 점검":["Kiểm tra cho ăn","दाना जाँच","ពិនិត្យការផ្តល់ចំណី","ตรวจการให้อาหาร"],"적정 대비":["so với chuẩn","उपयुक्तको तुलना","ធៀបស្តង់ដារ","เทียบมาตรฐาน"],"급여 점검":["Kiểm tra cho ăn","दाना जाँच","ពិនិត្យ","ตรวจการให้อาหาร"],"실제 ÷ 적정":["Thực tế ÷ chuẩn","वास्तविक ÷ उपयुक्त","ជាក់ស្តែង ÷ ស្តង់ដារ","จริง ÷ มาตรฐาน"],"적정 kg":["Chuẩn kg","उपयुक्त kg","ស្តង់ដារ kg","มาตรฐาน kg"],"실제 kg":["Thực tế kg","वास्तविक kg","ជាក់ស្តែង kg","จริง kg"],"판정":["Đánh giá","निर्णय","វិនិច្ឆ័យ","ผล"],"이 사료를 먹는 돈군":["Lứa đang ăn cám này","यो दाना खाने समूह","ក្រុមដែលស៊ីចំណីនេះ","กลุ่มที่กินอาหารนี้"],"7일 적정 → 추정 실제":["Chuẩn 7 ngày → ước tính","७ दिन उपयुक्त → अनुमान","ស្តង់ដារ៧ថ្ងៃ → ប៉ាន់","มาตรฐาน 7 วัน → ประมาณจริง"],"적정 7일":["Chuẩn 7 ngày","उपयुक्त ७ दिन","ស្តង់ដារ៧ថ្ងៃ","มาตรฐาน 7 วัน"],"추정 실제":["Ước tính thực tế","अनुमानित वास्तविक","ប៉ាន់ជាក់ស្តែង","ประมาณจริง"],"근거 보기":["Xem căn cứ","आधार हेर्नुहोस्","មើលមូលដ្ឋាន","ดูหลักฐาน"]});
 Object.assign(TR,{"일 전 기록까지":[" ngày trước"," दिन अघिसम्म"," ថ្ងៃមុន"," วันก่อน"]});
+Object.assign(TR,{"임신돈 급여표":["Bảng cho ăn nái mang thai","गर्भवती माउ दाना तालिका","តារាងចំណីមេពពោះ","ตารางอาหารแม่อุ้มท้อง"],"임신돈 급여량 변경":["Đổi lượng cho ăn nái","गर्भवती दाना परिवर्तन","ប្តូរបរិមាណចំណី","เปลี่ยนปริมาณอาหารแม่อุ้มท้อง"],"BCS 측정":["Đo BCS","BCS नाप","វាស់ BCS","วัด BCS"],"오늘 바뀜":["Hôm nay đổi","आज परिवर्तन","ប្តូរថ្ងៃនេះ","วันนี้เปลี่ยน"],"어제와 같음":["Giống hôm qua","हिजो जस्तै","ដូចម្សិលមិញ","เหมือนเมื่อวาน"],"임신 일수·BCS·산차·돈사 온도로 계산 · 바뀐 모돈만 급이기를 다시 맞추세요":["Tính theo ngày mang thai·BCS·lứa·nhiệt độ · chỉ chỉnh máng nái thay đổi","गर्भ दिन·BCS·ब्याँत·तापक्रम · परिवर्तित मात्र मिलाउनुहोस्","គណនាតាមថ្ងៃ·BCS·លើក·សីតុណ្ហភាព · កែតែមេដែលប្តូរ","คำนวณจากวันอุ้มท้อง·BCS·ครอก·อุณหภูมิ · ปรับเฉพาะตัวที่เปลี่ยน"],"자동 급이기":["Máng tự động","स्वचालित फिडर","រាងស្វ័យប្រវត្តិ","เครื่องให้อาหารอัตโนมัติ"],"수동 급여":["Cho ăn tay","हातले दाना","ផ្តល់ដោយដៃ","ให้อาหารด้วยมือ"],"단위 설정 전":["Chưa đặt đơn vị","एकाइ सेट छैन","មិនទាន់កំណត់","ยังไม่ตั้งหน่วย"],"눈금":["Vạch","चिन्ह","ខ្នាត","ขีด"],"바가지":["Gáo","बाल्टी","ចាន","กระบวย"],"숫자를 누르면 그 모돈 상세로 갑니다. 기준값은 일반적인 범위의 기본값이라 사료회사·수의사 기준으로 대표 설정에서 고치세요.":["Bấm số để xem nái. Giá trị mặc định chung — sửa theo công ty cám/thú y.","नम्बर थिच्नुहोस्। मान पूर्वनिर्धारित हो।","ចុចលេខ។ តម្លៃលំនាំដើម។","กดหมายเลขเพื่อดูแม่ ค่าเริ่มต้นทั่วไป ควรแก้ตามบริษัทอาหาร/สัตวแพทย์"],"이번 주 급여 조절 제안":["Đề xuất điều chỉnh tuần này","यो हप्ताको सुझाव","សំណើសប្តាហ៍នេះ","คำแนะนำสัปดาห์นี้"],"특별히 조절할 점이 없습니다.":["Không cần điều chỉnh.","समायोजन आवश्यक छैन।","មិនចាំបាច់កែ។","ไม่มีสิ่งที่ต้องปรับ"],"급여 기준 고치기":["Sửa tiêu chuẩn","मापदण्ड सम्पादन","កែស្តង់ដារ","แก้เกณฑ์"],"임신돈 급여 기준":["Tiêu chuẩn cho ăn nái","गर्भवती दाना मापदण्ड","ស្តង់ដារចំណីមេពពោះ","เกณฑ์อาหารแม่อุ้มท้อง"],"교배 직후":["Ngay sau phối","मिलनपछि तुरुन्त","ក្រោយបង្កាត់","หลังผสม"],"임신 초·중기":["Đầu·giữa thai kỳ","गर्भ सुरु·मध्य","ដើម·កណ្តាល","ต้น·กลางอุ้มท้อง"],"임신 후기 증량":["Tăng cuối thai kỳ","गर्भ अन्त्य वृद्धि","បង្កើនចុងក្រោយ","เพิ่มช่วงท้าย"],"분만 전 감량":["Giảm trước đẻ","ब्याँत अघि घटाउने","បន្ថយមុនកើត","ลดก่อนคลอด"],"이유 후 교배 전":["Sau cai sữa trước phối","छुटाइपछि मिलन अघि","ក្រោយផ្តាច់មុនបង្កាត់","หลังหย่านมก่อนผสม"],"재발·공태":["Lên giống lại·trống","फेरि गर्मी·खाली","កំដៅវិញ·ទំនេរ","กลับสัด·ว่าง"],"초산":["Lứa đầu","पहिलो ब्याँत","លើកដំបូង","ท้องแรก"],"오늘 급여":["Cho ăn hôm nay","आजको दाना","ចំណីថ្ងៃនេះ","อาหารวันนี้"],"최근 BCS":["BCS gần nhất","हालको BCS","BCS ចុងក្រោយ","BCS ล่าสุด"],"교배 시":["Khi phối","मिलन बेला","ពេលបង្កាត់","ตอนผสม"],"임신 30일":["Mang thai 30 ngày","गर्भ ३० दिन","ពពោះ៣០ថ្ងៃ","อุ้มท้อง 30 วัน"],"임신 85일":["Mang thai 85 ngày","गर्भ ८५ दिन","ពពោះ៨៥ថ្ងៃ","อุ้มท้อง 85 วัน"],"이유 시":["Khi cai sữa","छुटाइ बेला","ពេលផ្តាច់","ตอนหย่านม"],"BCS 기록이 없거나 60일 지난 모돈":["Nái không có BCS hoặc quá 60 ngày","BCS नभएका माउ","មេគ្មាន BCS","แม่ที่ไม่มี BCS หรือเกิน 60 วัน"],"BCS를 재야 급여량 보정이 됩니다":["Cần đo BCS để hiệu chỉnh","BCS नापेपछि सुधार","ត្រូវវាស់ BCS","ต้องวัด BCS เพื่อปรับ"],"다음 7일 안에 85일(후기 증량) 들어가는 모돈":["Nái vào ngày 85 trong 7 ngày tới","७ दिनमा ८५ दिन पुग्ने","មេចូល៨៥ថ្ងៃក្នុង៧ថ្ងៃ","แม่ที่จะถึง 85 วันใน 7 วัน"],"으로 올릴 준비":[" — chuẩन bị tăng","मा बढाउने तयारी"," រៀបចំបង្កើន"," เตรียมเพิ่ม"],"이상":["trở lên","वा बढी","ឡើង","ขึ้นไป"],"이하":["trở xuống","वा कम","ចុះ","ลงไป"],"감량 적용 중 · 2주 뒤 BCS 다시 확인":["Đang giảm · đo lại BCS sau 2 tuần","घटाइँदै · २ हप्तापछि BCS","កំពុងបន្ថយ · វាស់ម្តងទៀត២សប្តាហ៍","กำลังลด · วัด BCS อีกครั้งใน 2 สัปดาห์"],"증량 적용 중 · 2주 뒤 BCS 다시 확인":["Đang tăng · đo lại BCS sau 2 tuần","बढाइँदै · २ हप्तापछि BCS","កំពុងបង្កើន · វាស់ម្តងទៀត","กำลังเพิ่ม · วัด BCS อีกครั้งใน 2 สัปดาห์"],"이번 주 최저기온":["Nhiệt độ thấp nhất tuần","यो हप्ता न्यूनतम","សីតុណ្ហភាពទាបបំផុត","อุณหภูมิต่ำสุดสัปดาห์นี้"],"돈사 온도가":["Nhiệt độ chuồng","खोर तापक्रम","សីតុណ្ហភាពក្រោល","อุณหภูมิโรงเรือน"],"아래로 내려가면 자동 증량 · 아침 점검 온도를 꼭 입력":["thấp hơn thì tự tăng · nhớ nhập nhiệt độ buổi sáng","भन्दा कम भए स्वतः बढ्छ","ទាបជាងនេះបង្កើន","ต่ำกว่านี้เพิ่มอัตโนมัติ · กรอกอุณหภูมิเช้า"],"최근 90일 실산 9두 이하 분만의 절반 이상이 분만 전 BCS 2.5 이하":["Hơn nửa ổ ≤9 con sống có BCS ≤2.5 trước đẻ","कम जीवित ब्याँतमा BCS कम","ច្រើនជាងពាក់កណ្តាល BCS ទាប","ครอกมีชีวิต ≤9 ส่วนใหญ่ BCS ≤2.5 ก่อนคลอด"],"임신 후기 증량을 0.2~0.3kg 더 올리는 것을 검토":["Cân nhắc tăng thêm 0.2–0.3kg cuối kỳ","अन्त्यमा ०.२–०.३kg थप्ने विचार","ពិចារណាបន្ថែម 0.2–0.3kg","พิจารณาเพิ่ม 0.2–0.3kg ช่วงท้าย"],"일반적인 범위의 기본값입니다. 사료 에너지·품종에 따라 다르니 사료회사·수의사 기준으로 고치세요.":["Giá trị mặc định chung. Sửa theo công ty cám/thú y.","सामान्य पूर्वनिर्धारित मान।","តម្លៃលំនាំដើមទូទៅ។","ค่าเริ่มต้นทั่วไป แก้ตามบริษัทอาหาร/สัตวแพทย์"],"임신 일수별 (kg/일, BCS 3 기준)":["Theo ngày mang thai (kg/ngày, BCS 3)","गर्भ दिन अनुसार","តាមថ្ងៃពពោះ","ตามวันอุ้มท้อง (kg/วัน, BCS 3)"],"분만사 이동":["Chuyển chuồng đẻ","ब्याँत खोर सार्ने","ផ្លាស់ទៅក្រោលកើត","ย้ายไปคอกคลอด"],"초산돈 추가":["Thêm cho lứa đầu","पहिलो ब्याँत थप","បន្ថែមលើកដំបូង","เพิ่มสำหรับท้องแรก"],"BCS 보정 (kg)":["Hiệu chỉnh BCS (kg)","BCS सुधार (kg)","កែ BCS (kg)","ปรับตาม BCS (kg)"],"온도 보정":["Hiệu chỉnh nhiệt độ","तापक्रम सुधार","កែសីតុណ្ហភាព","ปรับตามอุณหภูมิ"],"기준 온도 (℃)":["Nhiệt độ chuẩn (℃)","आधार तापक्रम","សីតុណ្ហភាពគោល","อุณหภูมิอ้างอิง"],"이 아래면 증량":["Thấp hơn thì tăng","कम भए बढाउने","ទាបជាងបង្កើន","ต่ำกว่าให้เพิ่ม"],"1℃당 증량 (%)":["Tăng mỗi 1℃ (%)","प्रति १℃ (%)","ក្នុងមួយ១℃ (%)","เพิ่มต่อ 1℃ (%)"],"급이 단위":["Đơn vị cho ăn","दाना एकाइ","ឯកតាចំណី","หน่วยการให้อาหาร"],"한 번 재서 넣으면 눈금·바가지로도 보여줌":["Đo một lần để hiển thị vạch/gáo","एकपटक नापेर राख्नुहोस्","វាស់ម្តង","วัดครั้งเดียวแล้วแสดงเป็นขีด/กระบวย"],"수동":["Thủ công","हाते","ដៃ","มือ"],"모름":["Chưa biết","थाहा छैन","មិនដឹង","ไม่ทราบ"],"임신·공태·후보돈":["Nái mang thai·trống·hậu bị","गर्भवती·खाली·उम्मेदवार","មេពពោះ·ទំនេរ·បេក្ខជន","แม่อุ้มท้อง·ว่าง·สาว"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -3350,7 +3429,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
