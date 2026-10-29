@@ -142,7 +142,9 @@ FARM.layout={
     areas:[{x:.2,y:.2,w:7.6,h:1.2,l:"위쪽 공간 (확인 필요)"},{x:.2,y:3.9,w:7.8,h:1,l:"가운데 통로",aisle:1}],door:{x:8,y:4.4},annex:{x:8,y:0,w:2.5,h:3,l:"작은 방"}},
   // 임신사 1동: 세로 2줄 × 20칸(=40칸). 아래 가운데·오른쪽 위 입구. 급이조는 가운데 통로 쪽(확인 필요), 1번 = 아래쪽(입구 쪽)
   "임신사 1동":{sure:true,w:8.1,h:13.9,rows:[{id:"A",x:1,y:.4,n:20,cw:.6,cd:2.2,v:1,from:"bottom",head:"right"},{id:"B",x:4.4,y:.4,n:20,cw:.6,cd:2.2,v:1,from:"bottom",head:"left"}],
-    areas:[{x:3.2,y:.2,w:1.2,h:13.6,l:"가운데 통로",aisle:1},{x:.2,y:12.4,w:7.7,h:1.3,l:"아래 통로",aisle:1}],doors:[{x:3.8,y:13.9,dir:"up"},{x:7.35,y:0,dir:"down"}]},"임신사 2동":{sure:false,auto:[2,10,.6,2.2]},"분만사":{sure:false,auto:[2,15,1.8,2.4]}
+    areas:[{x:3.2,y:.2,w:1.2,h:13.6,l:"가운데 통로",aisle:1},{x:.2,y:12.4,w:7.7,h:1.3,l:"아래 통로",aisle:1}],doors:[{x:3.8,y:13.9,dir:"up"},{x:7.35,y:0,dir:"down"}]},// 임신사 2동: 위쪽 군사방(돈군 · 위 입구) + 아래 세로 2줄 × 10칸(=20칸), 둘레 통로, 아래 입구
+  "임신사 2동":{sure:true,w:8.8,h:15.1,rows:[{id:"A",x:1.2,y:7.6,n:10,cw:.6,cd:2.2,v:1,from:"bottom",head:"right"},{id:"B",x:5.4,y:7.6,n:10,cw:.6,cd:2.2,v:1,from:"bottom",head:"left"}],
+    areas:[{x:1.2,y:.8,w:6.4,h:6.8,l:"군사방",stage:"군사방"},{x:3.4,y:7.6,w:2,h:7.3,l:"통로",aisle:1}],doors:[{x:4.4,y:15.1,dir:"up"},{x:4.4,y:0,dir:"down"}]},"분만사":{sure:false,auto:[2,15,1.8,2.4]}
 };
 FARM.dress=.78;   // 도체율: 도체중 ÷ 도체율 = 생체중
 FARM.birthKg=1.5;   // npd = 모돈당 연간 비생산일수 목표(낮을수록 좋음)
