@@ -1,19 +1,20 @@
 /* ===== 사료 빈: 규격 → 치수 → 기울어진 사료 면 부피 → kg · 양쪽 게이지 기록 · 비중 자동 보정 =====
-   규격표(판매 규격 톤 = 펠렛 0.65t/m³ 기준, 깔때기 60°, 배출구 지름 30cm)에서 지름·원통 높이를 정함.
-   게이지 높이 0 = 배출구, 1 = 원통 맨 위. 사료 면은 왼쪽·오른쪽 높이를 잇는 기울어진 평면.
+   비담 빈 비율: 지붕 반구(높이 0.5x) · 원통 · 깔때기 높이 x = 지름 · 배출구 30cm.
+   규격 톤 = 지붕까지 가득 × 펠렛 0.65t/m³. 지름은 규격표, 원통 높이는 규격 톤에 맞춰 계산.
+   게이지 높이 0 = 배출구, 1 = 지붕 꼭대기. 사료 면은 왼쪽·오른쪽 높이를 잇는 기울어진 평면.
    손잡이: localStorage farm-binknob = both(양쪽 손잡이, 기본) | direct(빈 직접 끌기: 왼쪽 절반·오른쪽 절반) */
 const BIN_SPECS={3:1.8,4:1.8,5:1.8,6:2.3,8:2.3,10:2.3,12:2.3};   // 톤 → 지름(m)
 const BIN_R0=.15,BIN_RATED=.65;
 function binCfg(b){const o=(state.binCfg||{})[b.name]||{};return {spec:o.spec||b.spec,dens:o.dens||null}}
-function binGeo(b){const c=binCfg(b),D=BIN_SPECS[c.spec]||2.3,R=D/2,hc=(R-BIN_R0)*Math.tan(Math.PI/3),Vc=Math.PI*hc/3*(R*R+R*BIN_R0+BIN_R0*BIN_R0),hy=Math.max(.3,(c.spec/BIN_RATED-Vc)/(Math.PI*R*R));
-  return {D,R,hc,hy,H:hc+hy,roof:R*Math.tan(Math.PI/6)}}
+function binGeo(b){const c=binCfg(b),D=BIN_SPECS[c.spec]||2.3,R=D/2,hc=D,Vc=Math.PI*hc/3*(R*R+R*BIN_R0+BIN_R0*BIN_R0),Vd=2/3*Math.PI*R**3,hy=Math.max(.3,(c.spec/BIN_RATED-Vc-Vd)/(Math.PI*R*R));
+  return {D,R,hc,hy,dome:R,H:hc+hy+R,roof:R}}
 // 입체 격자 (빈 규격별로 한 번만)
 const BIN_GRID={};
 function binGrid(b){const g=binGeo(b),k=g.D+"|"+g.hy.toFixed(3);if(BIN_GRID[k])return BIN_GRID[k];const N=48,da=(2*g.R/N)**2,cells=[];
-  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const x=-g.R+(i+.5)*2*g.R/N,y=-g.R+(j+.5)*2*g.R/N,r=Math.hypot(x,y);if(r<=g.R)cells.push([x,r<=BIN_R0?0:g.hc*(r-BIN_R0)/(g.R-BIN_R0)])}
+  for(let i=0;i<N;i++)for(let j=0;j<N;j++){const x=-g.R+(i+.5)*2*g.R/N,y=-g.R+(j+.5)*2*g.R/N,r=Math.hypot(x,y);if(r<=g.R)cells.push([x,r<=BIN_R0?0:g.hc*(r-BIN_R0)/(g.R-BIN_R0),g.hc+g.hy+Math.sqrt(g.R*g.R-r*r)])}
   return BIN_GRID[k]={g,cells,da}}
 // 왼쪽·오른쪽 높이(0~1) → 부피 m³
-function binVol(b,lL,lR=lL){const {g,cells,da}=binGrid(b),zL=lL*g.H,zR=lR*g.H;let v=0;for(const [x,zb] of cells){const zp=Math.max(0,Math.min(g.H,zL+(zR-zL)*(x+g.R)/(2*g.R)));if(zp>zb)v+=zp-zb}return v*da}
+function binVol(b,lL,lR=lL){const {g,cells,da}=binGrid(b),zL=lL*g.H,zR=lR*g.H;let v=0;for(const [x,zb,zt] of cells){const zp=Math.max(0,Math.min(zt,zL+(zR-zL)*(x+g.R)/(2*g.R)));if(zp>zb)v+=zp-zb}return v*da}
 const binVmax=b=>{const G=binGrid(b);return G.vmax??(G.vmax=binVol(b,1,1))};
 function binDens(b){const c=binCfg(b);if(c.dens)return c.dens;const e=binDensEst(b);return e?e.d:FARM.feed.dens||.55}
 function binCap(b){return Math.round(binVmax(b)*binDens(b)*1000/50)*50}
@@ -32,9 +33,9 @@ const BIN_SNAP=.05;          // 게이지는 5%마다 걸림(스냅)
 function binCol(days){return days===null||days===undefined?"#8a949e":days<=2?"#e5484d":days<=FARM.feed.orderDays?"#e8a317":"#2fb36d"}
 // 그림 좌표: 가로 96(지름) 기준으로 실제 비율
 // 모든 빈을 같은 축척(지름 2.3m = 96)으로 그려 5톤은 가늘게, 10톤은 굵고 높게
-function binPx(b){const g=binGeo(b),s=96/2.3,roof=g.roof*s,top=roof+6,cy=g.hy*s,cn=g.hc*s,hw=g.R*s;return {s,x0:60-hw,x1:60+hw,cx:60,top,cyl:cy,cone:cn,B:top+cy+cn,H:cy+cn,o:BIN_R0*s,roof}}
+function binPx(b){const g=binGeo(b),s=96/2.3,roof=g.dome*s,top=roof+6,cy=g.hy*s,cn=g.hc*s,hw=g.R*s;return {s,x0:60-hw,x1:60+hw,cx:60,top,cyl:cy,cone:cn,B:top+cy+cn,H:cy+cn+roof,o:BIN_R0*s,roof}}
 function binSvg(b,id,lL,lR,col,big){const P=binPx(b),yL=P.B-lL*P.H,yR=P.B-lR*P.H,yAt=x=>yL+(yR-yL)*(x-P.x0)/(P.x1-P.x0);
-  const o=`M${P.x0},${P.top} L${P.cx},${P.top-P.roof} L${P.x1},${P.top} L${P.x1},${P.top+P.cyl} L${P.cx+P.o},${P.B} L${P.cx-P.o},${P.B} L${P.x0},${P.top+P.cyl} Z`;
+  const o=`M${P.x0},${P.top} A${P.x1-P.cx},${P.roof} 0 0 1 ${P.x1},${P.top} L${P.x1},${P.top+P.cyl} L${P.cx+P.o},${P.B} L${P.cx-P.o},${P.B} L${P.x0},${P.top+P.cyl} Z`;
   let g=`<defs><clipPath id="bc${id}"><path d="${o}"/></clipPath><pattern id="bh${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width="7" height="7" fill="${col}"/><line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,.35)" stroke-width="2.5"/></pattern></defs>`;
   g+=`<path d="${o}" fill="var(--bg)"/><polygon class="bv-fill" clip-path="url(#bc${id})" points="-30,${yAt(-30)} 150,${yAt(150)} 150,${P.B+4} -30,${P.B+4}" fill="url(#bh${id})"/>`;
   g+=`<path d="${o}" fill="none" stroke="var(--ink)" stroke-width="${big?2.2:2.8}" stroke-linejoin="round"/>`;
@@ -67,11 +68,11 @@ function binDraw(){const B0=ui.bin,b=FARM.feed.bins[B0.i],P=binPx(b),k=binKnob()
   let g=binSvg(b,"B",B0.lL,B0.lR,"#2fb36d",1)+`<line x1="${P.x0}" x2="${P.x1}" y1="${yL}" y2="${yR}" stroke="var(--accent)" stroke-width="2.4"/>`;
   [.25,.5,.75].forEach(f=>{const y=P.B-binLevelOfKg(b,f*b.cap)*P.H;g+=`<line x1="${P.x1-9}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="var(--muted)"/><text x="${P.x1-11}" y="${y+3}" text-anchor="end" class="bv-t">${f*100}%</text>`});
   const kn=(cx,y)=>`<circle cx="${cx}" cy="${y}" r="12" fill="var(--surface)" stroke="var(--accent)" stroke-width="3"/>`;
-  if(k==="both")g+=`<rect x="-30" y="${P.top}" width="12" height="${P.H}" rx="6" fill="var(--grid)" stroke="var(--line)"/><rect x="138" y="${P.top}" width="12" height="${P.H}" rx="6" fill="var(--grid)" stroke="var(--line)"/>${[...Array(21).keys()].map(i=>{const y=P.B-i*.05*P.H,m=i%2===0;return [[-34,-30],[150,154]].map(([a,c])=>`<line x1="${a-(m?3:0)}" x2="${c+(m?0:0)}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-width="${m?1.2:.7}" opacity="${m?.8:.5}"/>`).join("")}).join("")}<line x1="-24" x2="${P.x0}" y1="${yL}" y2="${yL}" stroke="var(--accent)" stroke-dasharray="3 3"/><line x1="${P.x1}" x2="144" y1="${yR}" y2="${yR}" stroke="var(--accent)" stroke-dasharray="3 3"/>${kn(-24,yL)}${kn(144,yR)}
-    <rect class="bv-hit" data-s="L" x="-46" y="${P.top-24}" width="42" height="${P.H+36}" fill="transparent"/><rect class="bv-hit" data-s="R" x="124" y="${P.top-24}" width="42" height="${P.H+36}" fill="transparent"/>`;
+  if(k==="both")g+=`<rect x="-30" y="${P.B-P.H}" width="12" height="${P.H}" rx="6" fill="var(--grid)" stroke="var(--line)"/><rect x="138" y="${P.B-P.H}" width="12" height="${P.H}" rx="6" fill="var(--grid)" stroke="var(--line)"/>${[...Array(21).keys()].map(i=>{const y=P.B-i*.05*P.H,m=i%2===0;return [[-34,-30],[150,154]].map(([a,c])=>`<line x1="${a-(m?3:0)}" x2="${c+(m?0:0)}" y1="${y}" y2="${y}" stroke="var(--muted)" stroke-width="${m?1.2:.7}" opacity="${m?.8:.5}"/>`).join("")}).join("")}<line x1="-24" x2="${P.x0}" y1="${yL}" y2="${yL}" stroke="var(--accent)" stroke-dasharray="3 3"/><line x1="${P.x1}" x2="144" y1="${yR}" y2="${yR}" stroke="var(--accent)" stroke-dasharray="3 3"/>${kn(-24,yL)}${kn(144,yR)}
+    <rect class="bv-hit" data-s="L" x="-46" y="${P.B-P.H-16}" width="42" height="${P.H+30}" fill="transparent"/><rect class="bv-hit" data-s="R" x="124" y="${P.B-P.H-16}" width="42" height="${P.H+30}" fill="transparent"/>`;
   else g+=`<circle cx="${P.x0}" cy="${yL}" r="5.5" fill="var(--accent)"/><circle cx="${P.x1}" cy="${yR}" r="5.5" fill="var(--accent)"/><line x1="${P.cx}" x2="${P.cx}" y1="${P.top-P.roof}" y2="${P.B}" stroke="var(--muted)" stroke-dasharray="2 4" opacity=".6"/>
     <rect class="bv-hit" data-s="L" x="${P.x0-14}" y="${P.top-P.roof-20}" width="${P.cx-P.x0+14}" height="${P.H+P.roof+30}" fill="transparent"/><rect class="bv-hit" data-s="R" x="${P.cx}" y="${P.top-P.roof-20}" width="${P.x1-P.cx+14}" height="${P.H+P.roof+30}" fill="transparent"/>`;
-  g+=`<text x="${k==="both"?-24:P.x0}" y="${P.top-P.roof-10}" text-anchor="${k==="both"?"middle":"start"}" class="bv-t">${t("왼쪽")} ${t("높이")} ${Math.round(B0.lL*100)}%</text><text x="${k==="both"?144:P.x1}" y="${P.top-P.roof-10}" text-anchor="${k==="both"?"middle":"end"}" class="bv-t">${t("오른쪽")} ${t("높이")} ${Math.round(B0.lR*100)}%</text>`;
+  g+=`<text x="${k==="both"?-24:P.x0}" y="${P.top-P.roof-14}" text-anchor="${k==="both"?"middle":"start"}" class="bv-t">${t("높이")} ${Math.round(B0.lL*100)}%</text><text x="${k==="both"?144:P.x1}" y="${P.top-P.roof-14}" text-anchor="${k==="both"?"middle":"end"}" class="bv-t">${t("높이")} ${Math.round(B0.lR*100)}%</text>`;
   $("#bvSvg").innerHTML=g;const v=binVol(b,B0.lL,B0.lR),kg=Math.round(v*binDens(b)*1000/50)*50;B0.kg=kg;B0.vol=v;
   $("#bvKg").textContent=kg.toLocaleString()+"kg";$("#bvPct").textContent=`${t("사료량")} ${Math.round(kg/b.cap*100)}% · ${v.toFixed(2)}m³`}
 Object.assign(A,{binOpen:v=>openBin(+v),binSet:v=>{const b=FARM.feed.bins[ui.bin.i],L=binLevelOfKg(b,Number(v)*b.cap);ui.bin.lL=ui.bin.lR=L;binDraw()},
