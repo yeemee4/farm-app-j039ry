@@ -208,32 +208,51 @@ button.sow-no .chev{font-family:var(--body);font-size:15px;line-height:1}
 .sowgrid,.chartgrid{display:grid;gap:12px}
 
 /* 태블릿 */
-@media (min-width:720px){
-  .app{max-width:920px}
-  nav.tabs .in{max-width:920px}
-  .homegrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}
-  .sowgrid,.chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
-  main.v-tl,main.v-close{max-width:720px;width:100%;margin:0 auto}
-  .scrim{align-items:center;padding:24px}
-  .sheet{border-radius:18px;max-height:88%;max-width:600px}
-  .sheet.wide{max-width:760px}
-  .sh-ft{padding-bottom:12px}
-  .qbtn{min-height:96px;font-size:15px}
-}
+@media (min-width:720px){:where(html:not([data-pc="off"])) .app{max-width:920px}
+:where(html:not([data-pc="off"])) nav.tabs .in{max-width:920px}
+:where(html:not([data-pc="off"])) .homegrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}
+:where(html:not([data-pc="off"])) .sowgrid,:where(html:not([data-pc="off"])) .chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+:where(html:not([data-pc="off"])) .tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+:where(html:not([data-pc="off"])) main.v-tl,:where(html:not([data-pc="off"])) main.v-close{max-width:720px;width:100%;margin:0 auto}
+:where(html:not([data-pc="off"])) .scrim{align-items:center;padding:24px}
+:where(html:not([data-pc="off"])) .sheet{border-radius:18px;max-height:88%;max-width:600px}
+:where(html:not([data-pc="off"])) .sheet.wide{max-width:760px}
+:where(html:not([data-pc="off"])) .sh-ft{padding-bottom:12px}
+:where(html:not([data-pc="off"])) .qbtn{min-height:96px;font-size:15px}}
+:where(html[data-pc="on"]) .app{max-width:920px}
+:where(html[data-pc="on"]) nav.tabs .in{max-width:920px}
+:where(html[data-pc="on"]) .homegrid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}
+:where(html[data-pc="on"]) .sowgrid,:where(html[data-pc="on"]) .chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+:where(html[data-pc="on"]) .tiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+:where(html[data-pc="on"]) main.v-tl,:where(html[data-pc="on"]) main.v-close{max-width:720px;width:100%;margin:0 auto}
+:where(html[data-pc="on"]) .scrim{align-items:center;padding:24px}
+:where(html[data-pc="on"]) .sheet{border-radius:18px;max-height:88%;max-width:600px}
+:where(html[data-pc="on"]) .sheet.wide{max-width:760px}
+:where(html[data-pc="on"]) .sh-ft{padding-bottom:12px}
+:where(html[data-pc="on"]) .qbtn{min-height:96px;font-size:15px}
+
 /* 데스크톱: 왼쪽 세로 메뉴 */
-@media (min-width:1024px){
-  nav.tabs{top:0;right:auto;width:96px;border-top:0;border-right:1px solid var(--line);padding:calc(18px + env(safe-area-inset-top,0px)) 8px 16px max(8px,env(safe-area-inset-left,0px))}
-  nav.tabs .in{grid-template-columns:1fr;gap:6px;max-width:none;margin:0}
-  nav.tabs button{padding:12px 0;border-radius:12px;font-size:12.5px}
-  nav.tabs button.on{background:var(--accent-soft)}
-  .app{max-width:none;margin-left:96px}
-  header.hd{padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
-  main{padding:20px max(32px,env(safe-area-inset-right,0px)) 40px max(32px,env(safe-area-inset-left,0px));max-width:1240px;width:100%;margin:0 auto}
-  main.v-tl,main.v-close{max-width:780px}
-  .sowgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .toast{bottom:32px;left:calc(50% + 48px)}
-}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) nav.tabs{top:0;right:auto;width:96px;border-top:0;border-right:1px solid var(--line);padding:calc(18px + env(safe-area-inset-top,0px)) 8px 16px max(8px,env(safe-area-inset-left,0px))}
+:where(html:not([data-pc="off"])) nav.tabs .in{grid-template-columns:1fr;gap:6px;max-width:none;margin:0}
+:where(html:not([data-pc="off"])) nav.tabs button{padding:12px 0;border-radius:12px;font-size:12.5px}
+:where(html:not([data-pc="off"])) nav.tabs button.on{background:var(--accent-soft)}
+:where(html:not([data-pc="off"])) .app{max-width:none;margin-left:96px}
+:where(html:not([data-pc="off"])) header.hd{padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+:where(html:not([data-pc="off"])) main{padding:20px max(32px,env(safe-area-inset-right,0px)) 40px max(32px,env(safe-area-inset-left,0px));max-width:1240px;width:100%;margin:0 auto}
+:where(html:not([data-pc="off"])) main.v-tl,:where(html:not([data-pc="off"])) main.v-close{max-width:780px}
+:where(html:not([data-pc="off"])) .sowgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+:where(html:not([data-pc="off"])) .toast{bottom:32px;left:calc(50% + 48px)}}
+:where(html[data-pc="on"]) nav.tabs{top:0;right:auto;width:96px;border-top:0;border-right:1px solid var(--line);padding:calc(18px + env(safe-area-inset-top,0px)) 8px 16px max(8px,env(safe-area-inset-left,0px))}
+:where(html[data-pc="on"]) nav.tabs .in{grid-template-columns:1fr;gap:6px;max-width:none;margin:0}
+:where(html[data-pc="on"]) nav.tabs button{padding:12px 0;border-radius:12px;font-size:12.5px}
+:where(html[data-pc="on"]) nav.tabs button.on{background:var(--accent-soft)}
+:where(html[data-pc="on"]) .app{max-width:none;margin-left:96px}
+:where(html[data-pc="on"]) header.hd{padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+:where(html[data-pc="on"]) main{padding:20px max(32px,env(safe-area-inset-right,0px)) 40px max(32px,env(safe-area-inset-left,0px));max-width:1240px;width:100%;margin:0 auto}
+:where(html[data-pc="on"]) main.v-tl,:where(html[data-pc="on"]) main.v-close{max-width:780px}
+:where(html[data-pc="on"]) .sowgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+:where(html[data-pc="on"]) .toast{bottom:32px;left:calc(50% + 48px)}
+
 .tdck{display:grid;gap:6px;border-top:1px dashed var(--line);padding-top:8px}
 .ckbox{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;cursor:pointer;min-height:32px}
 .ckbox input{width:22px;height:22px;accent-color:var(--accent);flex:none;margin:0}
@@ -247,12 +266,15 @@ button.sow-no .chev{font-family:var(--body);font-size:15px;line-height:1}
 
 /* ===== 2차 시제품 추가 스타일 ===== */
 nav.tabs .in.d{display:none}
-@media (min-width:1024px){
-  nav.tabs .in.m{display:none}
-  nav.tabs .in.d{display:grid;grid-template-columns:1fr;gap:4px}
-  nav.tabs{overflow-y:auto}
-  nav.tabs .in.d button{padding:9px 0}
-}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) nav.tabs .in.m{display:none}
+:where(html:not([data-pc="off"])) nav.tabs .in.d{display:grid;grid-template-columns:1fr;gap:4px}
+:where(html:not([data-pc="off"])) nav.tabs{overflow-y:auto}
+:where(html:not([data-pc="off"])) nav.tabs .in.d button{padding:9px 0}}
+:where(html[data-pc="on"]) nav.tabs .in.m{display:none}
+:where(html[data-pc="on"]) nav.tabs .in.d{display:grid;grid-template-columns:1fr;gap:4px}
+:where(html[data-pc="on"]) nav.tabs{overflow-y:auto}
+:where(html[data-pc="on"]) nav.tabs .in.d button{padding:9px 0}
+
 .pagehd{display:flex;align-items:center;gap:10px}
 .pagehd h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;display:flex;align-items:center;gap:8px}
 .back{font-size:14px;font-weight:700;color:var(--accent);border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px}
@@ -348,16 +370,19 @@ nav.tabs .in.d{display:none}
 .cullbox{border-radius:12px;padding:12px;display:grid;gap:8px;background:var(--surface);border:1px solid var(--line)}
 .cullbox.on{border-color:var(--red);background:var(--red-soft)}
 .cullbox h4{margin:0;font-size:14.5px}
-@media (min-width:720px){
-  .inputgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
-  .inputgrid>div{display:grid;gap:12px;min-width:0}
-}
+@media (min-width:720px){:where(html:not([data-pc="off"])) .inputgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+:where(html:not([data-pc="off"])) .inputgrid>div{display:grid;gap:12px;min-width:0}}
+:where(html[data-pc="on"]) .inputgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+:where(html[data-pc="on"]) .inputgrid>div{display:grid;gap:12px;min-width:0}
+
 .inputgrid>div{display:grid;gap:12px;min-width:0}
 .inputgrid{display:grid;gap:12px}
 
 .todo .n{white-space:nowrap}
 .toast{top:calc(72px + env(safe-area-inset-top,0px));bottom:auto}
-@media (min-width:1024px){.toast{top:84px;bottom:auto}}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .toast{top:84px;bottom:auto}}
+:where(html[data-pc="on"]) .toast{top:84px;bottom:auto}
+
 
 /* ===== v0.2 ===== */
 main>*,.inputgrid>div>*,.panel>*{min-width:0}
@@ -384,7 +409,9 @@ main>*,.inputgrid>div>*,.panel>*{min-width:0}
 .bd-ctl button{border:1px solid var(--tvln);border-radius:10px;padding:8px 14px;color:var(--tvfg);font-weight:700;font-size:14px;background:var(--tvsf)}
 .bd-ctl button.on{background:var(--tvac);color:var(--tvbg);border-color:var(--tvac)}
 .bd-grid{display:grid;gap:14px}
-@media(min-width:900px){.bd-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}}
+@media(min-width:900px){:where(html:not([data-pc="off"])) .bd-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}}
+:where(html[data-pc="on"]) .bd-grid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)}
+
 .bd-main{display:grid;gap:8px;align-content:start}
 .bd-row{background:var(--tvsf);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;border-left:6px solid var(--tvac)}
 .bd-row.warn{border-left-color:var(--tvam)} .bd-row.bad{border-left-color:var(--tvrd)}
@@ -443,7 +470,9 @@ table.hus td:first-child{font-weight:700;width:32%}
 .bd-right{display:grid;gap:6px;justify-items:end}
 .bd-clock{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--tvmu)}
 .bd-main{display:grid;gap:8px;align-content:start}
-@media(min-width:900px){.bd-main{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:900px){:where(html:not([data-pc="off"])) .bd-main{grid-template-columns:repeat(2,minmax(0,1fr))}}
+:where(html[data-pc="on"]) .bd-main{grid-template-columns:repeat(2,minmax(0,1fr))}
+
 .bd-tt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bd-tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .bd-tbl th{font-size:12px;color:var(--tvmu);font-weight:600;text-align:right;padding:2px 6px}
@@ -537,20 +566,26 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .sowpick.sp4 button{padding:6px 3px;border-radius:9px}
 .sowpick.sp4 button b{font-size:14px}.sowpick.sp4 button small{font-size:10.5px}
 .sowpick.sp4 button.tg{border-color:var(--amber)}
-@media (min-width:700px){.sowpick.sp4{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media (min-width:700px){:where(html:not([data-pc="off"])) .sowpick.sp4{grid-template-columns:repeat(6,minmax(0,1fr))}}
+:where(html[data-pc="on"]) .sowpick.sp4{grid-template-columns:repeat(6,minmax(0,1fr))}
+
 /* 모돈 입력: 아래 고정 패널 (탭 바 바로 위) */
 .dock{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:15;margin:10px -14px -14px;padding:10px 14px 12px;background:var(--surface);border-top:2px solid var(--accent);border-radius:16px 16px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.18);display:grid;gap:8px}
 .dock-hd{font-size:14.5px}.dock-hd b{font-family:var(--mono);color:var(--accent)}
 .dock-bd{max-height:34vh;overflow-y:auto;display:grid;gap:10px;overscroll-behavior:contain}
 .dock .save{margin:0}
-@media (min-width:1024px){.dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}}
+:where(html[data-pc="on"]) .dock{bottom:12px;border-radius:16px;border:1px solid var(--line);border-top:2px solid var(--accent)}
+
 /* 팝업 '닫기' 버튼: 다른 버튼과 같은 모양 */
 .sh-hd .x{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:7px 13px;font-weight:700;font-size:14px}
 /* 모돈 탭: 2칸 카드 · 정렬/필터 */
 .sowtools{display:flex;gap:8px}.sowtools .sel{flex:1;display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:0 10px}
 .sowtools .sel span{font-size:12.5px;color:var(--muted);font-weight:700;white-space:nowrap}.sowtools select{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;font-weight:700;color:var(--ink);padding:10px 0;-webkit-appearance:none;appearance:none}
 .sowtiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-@media (min-width:720px){.sowtiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:720px){:where(html:not([data-pc="off"])) .sowtiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+:where(html[data-pc="on"]) .sowtiles{grid-template-columns:repeat(4,minmax(0,1fr))}
+
 .stile{display:grid;gap:4px;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 11px;min-width:0}
 .stile .st-top{display:flex;justify-content:space-between;align-items:center;gap:6px}.stile b{font-family:var(--mono);font-size:17px;color:var(--accent)}
 .stile .stage{font-size:11.5px;padding:2px 7px;white-space:nowrap}
@@ -568,7 +603,9 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-a:#3987e5;--c-b:#d95926;--good:#2fae55}}
 :root[data-theme="dark"]{--c-a:#3987e5;--c-b:#d95926;--good:#2fae55}
 .chartgrid{display:grid;gap:12px}
-@media (min-width:1024px){.chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+:where(html[data-pc="on"]) .chartgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
 .chartgrid .card h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.chartgrid .card h3 small{font-size:12px;color:var(--muted);font-weight:500}
 svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;fill:var(--muted)}svg.chart .sl{font-size:10.5px;font-weight:700;fill:var(--ink)}svg.chart .gl{font-size:9.5px}
 .card.ghost{opacity:.75;border-style:dashed}
@@ -771,12 +808,32 @@ html[data-skin="soft"] .act.pri,html[data-skin="soft"] .save{background:#E07A8F;
 .qbtn.qx .cnt{top:-8px;right:-8px;min-width:28px;height:28px;padding:0 7px;border-radius:14px;display:grid;place-items:center;background:var(--red);color:#fff;font:800 20px/1 var(--mono);box-shadow:0 2px 5px rgba(0,0,0,.25);border:2px solid var(--surface);z-index:2}
 .qbtn.qx .cnt:empty{display:none}.qbtn.qx.zero .cnt{background:var(--blue)}.qbtn.qx.miss .cnt{color:#fff}
 .ic.ipoly{background:transparent;padding:0}.ic.ipoly svg{width:100%;height:100%;display:block}.qgrid .qbtn.qx .ic.ipoly{width:64px;height:64px}
+/* ===== PC 화면: 더 넓게 (min-width 규칙 → build.py가 PC 설정으로도 켬) ===== */
+.hd .pcbtn{margin-left:auto;font-size:18px;width:38px;height:34px;border:1px solid var(--line);border-radius:999px;display:grid;place-items:center;background:var(--surface)}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .sowtiles{grid-template-columns:repeat(6,minmax(0,1fr))}
+:where(html:not([data-pc="off"])) .qgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+:where(html:not([data-pc="off"])) .homegrid{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+:where(html:not([data-pc="off"])) main{max-width:1440px}
+:where(html:not([data-pc="off"])) .scrim{align-items:center;padding:32px}
+:where(html:not([data-pc="off"])) .sheet{border-radius:18px;max-height:88%;max-width:680px}
+:where(html:not([data-pc="off"])) .sheet.wide{max-width:900px}
+:where(html:not([data-pc="off"])) .qbtn:hover,:where(html:not([data-pc="off"])) .stile:hover,:where(html:not([data-pc="off"])) .todo:hover,:where(html:not([data-pc="off"])) .chip:hover{filter:brightness(.97)}}
+:where(html[data-pc="on"]) .sowtiles{grid-template-columns:repeat(6,minmax(0,1fr))}
+:where(html[data-pc="on"]) .qgrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+:where(html[data-pc="on"]) .homegrid{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+:where(html[data-pc="on"]) main{max-width:1440px}
+:where(html[data-pc="on"]) .scrim{align-items:center;padding:32px}
+:where(html[data-pc="on"]) .sheet{border-radius:18px;max-height:88%;max-width:680px}
+:where(html[data-pc="on"]) .sheet.wide{max-width:900px}
+:where(html[data-pc="on"]) .qbtn:hover,:where(html[data-pc="on"]) .stile:hover,:where(html[data-pc="on"]) .todo:hover,:where(html[data-pc="on"]) .chip:hover{filter:brightness(.97)}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hd">
     <div><h1>비담농장 <small class="ver" id="hdVer"></small></h1><div class="date" id="hdDate"></div></div>
+    <button class="pcbtn" id="pcBtn" type="button" data-a="pcTog">🖥</button>
     <button class="who" id="whoBtn" type="button" data-a="goSettings"><i></i><span id="whoName"></span></button>
   </header>
   <main id="view"></main>
@@ -2561,6 +2618,7 @@ Object.assign(TR,{"사진 (선택)":["Ảnh (tuỳ chọn)","फोटो (ऐ�
 Object.assign(TR,{"내 할 일":["Việc của tôi","मेरो काम","ការងាររបស់ខ្ញុំ","งานของฉัน"],"주간 달력":["Lịch tuần","हप्ता पात्रो","ប្រតិទិនសប្តាហ៍","ปฏิทินสัปดาห์"],"인계 메모":["Ghi chú bàn giao","हस्तान्तरण टिप्पणी","កំណត់ចំណាំប្រគល់","บันทึกส่งต่อ"],"인계 메모 (예: 내일 아침 6-008 분만 확인)":["Bàn giao (VD: sáng mai kiểm tra 6-008 đẻ)","हस्तान्तरण (जस्तै: भोलि बिहान 6-008 जाँच)","ប្រគល់ (ឧ: ព្រឹកស្អែកពិនិត្យ 6-008)","ส่งต่อ (เช่น พรุ่งนี้เช้าดู 6-008 คลอด)"],"내일로":["Sang mai","भोलिलाई","ទៅស្អែក","ไปพรุ่งนี้"],"내일 할 일로 넘겼습니다":["Đã chuyển sang việc ngày mai","भोलिको काममा पठाइयो","បានផ្ទេរទៅការងារស្អែក","ย้ายไปงานพรุ่งนี้แล้ว"],"밀림":["trễ","ढिलो","យឺត","เลื่อน"],
 "도태 후보":["Ứng viên loại","हटाउने उम्मेदवार","បេក្ខជនបោះបង់","ผู้สมัครคัดทิ้ง"],"도태 후보 기준":["Tiêu chí loại","हटाउने मापदण्ड","លក្ខណៈវិនិច្ឆ័យ","เกณฑ์คัดทิ้ง"],"모돈 탭 ‘도태 후보’ 필터":["Bộ lọc trong tab nái","माउ ट्याबको फिल्टर","តម្រងផ្ទាំងមេ","ตัวกรองแท็บแม่"],"산차 이상":["Lứa từ","ब्याँत वा बढी","កូនលើកពី","ครอกตั้งแต่"],"재발·공태 횟수 이상":["Số lần lên giống lại từ","फेरि गर्मी पटक वा बढी","ចំនួនកំដៅវិញពី","ครั้งกลับสัดตั้งแต่"],"최근 2복 실산 이하":["2 ổ gần nhất sống ≤","पछिल्लो २ ब्याँत जीवित ≤","២សំបុកចុងក្រោយ រស់ ≤","2 ครอกล่าสุด มีชีวิต ≤"],"회":[" lần"," पटक"," ដង"," ครั้ง"],
 "이번 주와 다음 주에 예정된 일입니다. 날짜를 누르면 모돈 번호가 보입니다.":["Việc tuần này và tuần sau. Bấm ngày để xem số nái.","यो र अर्को हप्ताका काम। मिति थिच्दा नम्बर देखिन्छ।","ការងារសប្តាហ៍នេះ និងក្រោយ។ ចុចថ្ងៃដើម្បីមើលលេខ។","งานสัปดาห์นี้และหน้า กดวันที่เพื่อดูหมายเลข"],"다음 주":["Tuần sau","अर्को हप्ता","សប្តាហ៍ក្រោយ","สัปดาห์หน้า"]});
+Object.assign(TR,{"화면 배치":["Bố cục màn hình","स्क्रिन लेआउट","ប្លង់អេក្រង់","รูปแบบหน้าจอ"],"자동 = 창 너비에 맞춤":["Tự động = theo độ rộng","स्वतः = चौडाइ अनुसार","ស្វ័យប្រវត្តិ = តាមទទឹង","อัตโนมัติ = ตามความกว้าง"],"자동":["Tự động","स्वतः","ស្វ័យប្រវត្តិ","อัตโนมัติ"],"휴대폰":["Điện thoại","मोबाइल","ទូរស័ព្ទ","มือถือ"],"PC":["PC","PC","PC","PC"],"PC 화면으로":["Chế độ PC","PC मा","ទៅ PC","โหมด PC"],"휴대폰 화면으로":["Chế độ điện thoại","मोबाइलमा","ទៅទូរស័ព្ទ","โหมดมือถือ"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -3326,6 +3384,18 @@ Object.assign(A,{
   cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};r[v]=Math.max(0,cullRule()[v]+Number(el.dataset.k));save();render()},
   calOpen:v=>{ui.calOpen=ui.calOpen===v?null:v;render()}
 });
+/* ===== PC 화면 (설정 › 화면 배치 · 상단 📱/🖥 버튼, 이 기기에만 저장) =====
+   넓은 화면 규칙은 build.py 의 pc_css 가 html[data-pc] 로 켜고 끔 */
+const PC_MODES=[["auto","자동"],["off","휴대폰"],["on","PC"]];
+function pcMode(){try{return localStorage.getItem("farm-pc")||"auto"}catch(e){return "auto"}}
+function isPC(){const m=pcMode();return m==="on"||(m==="auto"&&innerWidth>=1024)}
+const _applySkin0=applySkin;
+applySkin=function(){_applySkin0();const m=pcMode(),de=document.documentElement;if(m==="auto")delete de.dataset.pc;else de.dataset.pc=m;
+  const b=$("#pcBtn");if(b){const pc=isPC();b.textContent=pc?"📱":"🖥";b.title=t(pc?"휴대폰 화면으로":"PC 화면으로");b.setAttribute("aria-label",b.title)}};
+function pcSet(){const m=pcMode();return `<div class="f"><span class="lb">${t("화면 배치")} <small class="sow-meta">${t("자동 = 창 너비에 맞춤")}</small></span><div class="chipwrap">${PC_MODES.map(([k,n])=>`<button type="button" class="chip wrap ${m===k?"on":""}" data-a="pcMode" data-v="${k}">${t(n)}</button>`).join("")}</div></div>`}
+const _vMyDesign0=vMyDesign;vMyDesign=function(){return pcSet()+_vMyDesign0()};
+Object.assign(A,{pcMode:v=>{try{localStorage.setItem("farm-pc",v)}catch(e){}render()},pcTog:()=>A.pcMode(isPC()?"off":"on")});
+addEventListener("resize",()=>{if(pcMode()==="auto")applySkin()});
 /* ================= v0.3 · 동작 ================= */
 function migrateName(k,oldN,newN){
   const F=LISTFIELDS[k]||[];
