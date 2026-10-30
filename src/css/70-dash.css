@@ -183,3 +183,11 @@ body.tv .d-donut{min-height:0;height:100%;grid-template-columns:auto 1fr}body.tv
 .d-bm-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}.d-bm-btns .d-bmb{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface2,rgba(127,127,127,.08));color:inherit;font-size:15px;white-space:nowrap;min-width:0}.d-bm-btns .d-bmb b{overflow:hidden;text-overflow:clip}.d-bm-btns .d-bmb small{margin-left:auto;opacity:.75}
 body.tv .d-bm-btns .d-bmb{font-size:1.8vh;padding:1vh .8vw}
 .d-bm-btns .d-bmb b{font-size:inherit;font-weight:800}
+/* 넘치는 글씨: 옆으로 흐르기 · 넘치는 카드: 위아래로 오르내리기 */
+.mq-on{overflow:hidden!important;white-space:nowrap!important;text-overflow:clip!important;max-width:100%;display:block}
+.mq{display:inline-block;animation:mqx 8s ease-in-out infinite alternate;will-change:transform}
+@keyframes mqx{0%,18%{transform:translateX(0)}82%,100%{transform:translateX(var(--dx))}}
+.d-rollbox{flex:1;min-height:0;overflow:hidden;position:relative}
+@media (prefers-reduced-motion:reduce){.mq{animation:none}}
+body.tv .d-card{display:flex;flex-direction:column}
+.ascroll{overflow-y:auto!important;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;cursor:grab}.ascroll::-webkit-scrollbar{display:none}.d-rollbox{overflow-y:auto}

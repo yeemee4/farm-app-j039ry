@@ -172,8 +172,25 @@ function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")ret
   // 세로 줄마다 위에서부터 차곡차곡 (두 칸 카드 포함) → 빈칸 없이
   const used=Array(cols).fill(0);C.forEach(c=>{let sp=big.has(c)?2:1,col=used.findIndex(u=>u+sp<=rows);if(col<0&&sp===2){sp=1;col=used.findIndex(u=>u+1<=rows)}if(col<0)return;
     c.style.gridColumn=String(col+1);c.style.gridRow=`${used[col]+1} / span ${sp}`;used[col]+=sp});
-  requestAnimationFrame(()=>C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const cs=getComputedStyle(c),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),h3=c.querySelector(":scope>h3"),hh=h3?h3.offsetHeight+parseFloat(getComputedStyle(h3).marginBottom||0):0;
-    const avail=c.clientHeight-pad-hh,need=c.scrollHeight-pad-hh;if(need<=0)return;const f=Math.max(.45,Math.min(1,avail/need));[...c.children].forEach(x=>{if(x!==h3)x.style.zoom=f})}))}
-const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(dashFit,0);return r};
+  // 세로로 넘치는 카드: 줄이지 않고 천천히 위아래로 (위·아래에서 잠깐 멈춤)
+  requestAnimationFrame(()=>{C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const h3=c.querySelector(":scope>h3"),kids=[...c.children].filter(x=>x!==h3&&!x.classList.contains("d-roll"));if(!kids.length)return;
+    const w=document.createElement("div");w.className="d-roll";kids.forEach(k=>w.appendChild(k));c.appendChild(w);const box=document.createElement("div");box.className="d-rollbox";c.insertBefore(box,w);box.appendChild(w);
+    box.classList.add("ascroll")});document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))})}
+// 넘치는 칸: 저절로 천천히 오르내림 + 손가락·마우스로 끌어 보기(끄는 동안·놓고 6초는 멈춤)
+const ASC=new WeakMap();
+setInterval(()=>{document.querySelectorAll(".ascroll").forEach(el=>{const max=el.scrollHeight-el.clientHeight;if(max<=2)return;let o=ASC.get(el);if(!o){o={dir:1,wait:Date.now()+2500,hold:0,pos:el.scrollTop};ASC.set(el,o)}
+  const now=Date.now();if(o.hold||now<o.wait)return;if(Math.abs(el.scrollTop-o.pos)>2)o.pos=el.scrollTop;o.pos+=o.dir*0.6;if(o.pos>=max){o.pos=max;o.dir=-1;o.wait=now+2500}else if(o.pos<=0){o.pos=0;o.dir=1;o.wait=now+2500}el.scrollTop=o.pos})},40);
+const ascHold=el=>{const o=ASC.get(el)||{dir:1,pos:el.scrollTop};o.hold=1;ASC.set(el,o)},ascFree=el=>{const o=ASC.get(el);if(o){o.hold=0;o.wait=Date.now()+6000;o.pos=el.scrollTop}};
+let DRG=null;
+document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;ascHold(el);if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);
+document.addEventListener("pointermove",e=>{if(!DRG)return;const d=e.clientY-DRG.y;if(Math.abs(d)>4)DRG.moved=true;if(DRG.moved){DRG.el.scrollTop=DRG.top-d;e.preventDefault()}},true);
+document.addEventListener("pointerup",e=>{document.querySelectorAll(".ascroll").forEach(ascFree);if(DRG&&DRG.moved){const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener("click",stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener("click",stop,true),50)}DRG=null},true);
+document.addEventListener("wheel",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el){ascHold(el);clearTimeout(el.__wt);el.__wt=setTimeout(()=>ascFree(el),300)}},{passive:true,capture:true});
+// 가로로 넘치는 글씨: 전광판처럼 옆으로 흘렀다 돌아옴
+function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,div,button").forEach(el=>{if(el.childElementCount||el.closest(".mq")||!el.textContent.trim())return;
+  const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
+  el.classList.add("mq-on");el.innerHTML=`<span class="mq">${el.innerHTML}</span>`;const m=el.firstChild,d=m.scrollWidth-el.clientWidth;if(d<=2){el.classList.remove("mq-on");el.innerHTML=m.innerHTML;return}
+  m.style.setProperty("--dx",-d+"px");m.style.animationDuration=Math.max(5,d/30+4)+"s"})}
+const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0);return r};
 addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
 document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));
