@@ -68,14 +68,12 @@ const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)"
 function vDash(){
   const d=dashCfg(),on=d.order.filter(k=>d.on[k]&&DASH_P[k]),main=on.filter(k=>!DASH_SIDE.includes(k)&&!DASH_STRIP.includes(k)),side=on.filter(k=>DASH_SIDE.includes(k)),strip=on.filter(k=>DASH_STRIP.includes(k));
   const tv=document.body.classList.contains("tv"),D=boardDate(),tmr=addDays(TODAY,1),now=new Date();
-  const per=6,pages=tv&&!dashPhoneL()?Math.max(1,Math.ceil(main.length/per)):1;ui.tvPage=Math.min(Math.max(1,ui.tvPage||1),pages);
-  if(pages>1)main.splice(0,main.length,...main.slice((ui.tvPage-1)*per,ui.tvPage*per));
   const cols=main.length<=2?Math.max(1,main.length):main.length===4?2:3,rows=Math.max(1,Math.ceil(main.length/cols));
   wxLoad();const wc=WX&&WX.current,wd=wxDay(D===TODAY?0:1),al=wxAlerts(D===TODAY?0:1);
   let h=`<div class="dash ${side.length?"has-side":""} ${strip.length?"has-strip":""}" style="--dc:${cols};--dr:${rows}">`;
   h+=`<header class="d-top"><div class="d-brand">${esc(FARM.name)} · ${t(D===TODAY?"오늘":"내일")}<small>${kDate(D)} · W${isoWeek(D).w}</small></div><div class="d-warns">${al.replace(/bd-al wx/g,"d-warn")}</div>`;
   h+=wc?`<div class="d-wx">${wxPic(D===TODAY?wc.weather_code:wd.code)}<b>${D===TODAY?Math.round(wc.temperature_2m)+"℃":""}</b><span>${FARM.place} · ${t(WXC(D===TODAY?wc.weather_code:wd.code))}<br>${wd.min} ~ ${wd.max}℃ · ${t("바람")} ${Math.round((D===TODAY?wc.wind_speed_10m:wd.wind)/3.6)}m/s</span></div>`:`<div class="d-wx"><span>${FARM.place} · ${t("날씨 불러오는 중")}</span></div>`;
-  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl">${pages>1?Array.from({length:pages},(_,i)=>`<button type="button" class="d-pg ${ui.tvPage===i+1?"on":""}" data-a="tvPg" data-v="${i+1}">P${i+1}</button>`).join(""):""}<button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
+  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
   if(dashPhoneL()){const all=[...side.filter(k=>k==="todo"),...main,...strip,...side.filter(k=>k!=="todo")],pg=Math.ceil(all.length/8);
     h+=`<div class="d-swipe" id="dSwipe">${all.map(dashCard).join("")}</div><div class="d-dots">${Array.from({length:pg},(_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`}
   else{h+=`<div class="d-main">${main.map(dashCard).join("")}</div>`;

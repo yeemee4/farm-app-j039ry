@@ -164,7 +164,21 @@ binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,
   return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
 
 // ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
-function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))}
+function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));
+  if(document.body.classList.contains("tv")&&innerWidth>=900&&!dashPhoneL())dashPack();marquee($(".dash"))}
+// TV: 카드마다 실제 내용 높이를 재서 세로 3줄에 낮은 줄부터 쌓고, 넘치면 다음 페이지(P2·P3). 줄 맨 아래 카드는 남은 높이까지 늘림 → 빈 곳·잘림 없이
+function dashPack(){const M=$(".d-main");if(!M)return;const bm=M.querySelector(":scope>.dk-barnmap");if(bm)bm.remove();   // 배치도는 위쪽 버튼 하나로
+  const C=[...M.querySelectorAll(":scope>.d-card")];if(!C.length)return;
+  const cols=3,gap=parseFloat(getComputedStyle(M).rowGap)||12,W=M.clientWidth,H=M.clientHeight,cw=(W-gap*(cols-1))/cols;
+  M.style.position="relative";M.style.display="block";
+  C.forEach(c=>{c.style.cssText=`position:absolute;left:0;top:0;width:${cw}px;height:auto;visibility:hidden;display:flex`});
+  const P=[];let cur=null;C.forEach(c=>{const h=Math.min(H,c.offsetHeight);if(!cur){cur={u:Array(cols).fill(0),it:[]};P.push(cur)}
+    let col=cur.u.indexOf(Math.min(...cur.u));if(cur.u[col]+h>H+1&&cur.it.length){cur={u:Array(cols).fill(0),it:[]};P.push(cur);col=0}
+    cur.it.push({c,col,top:cur.u[col],h});cur.u[col]+=h+gap});
+  P.forEach(pg=>{for(let k=0;k<cols;k++){const L=pg.it.filter(x=>x.col===k);if(!L.length)continue;const used=L.reduce((s,x)=>s+x.h,0)+gap*(L.length-1),add=Math.max(0,H-used)/L.length;let y=0;L.forEach(x=>{x.top=y;x.h+=add;y+=x.h+gap})}});   // 남는 높이를 줄 안 카드에 고르게
+  ui.tvPage=Math.min(Math.max(1,ui.tvPage||1),P.length);
+  P.forEach((pg,i)=>pg.it.forEach(x=>{x.c.style.cssText=i+1===ui.tvPage?`position:absolute;left:${x.col*(cw+gap)}px;top:${x.top}px;width:${cw}px;height:${x.h}px;display:flex`:"display:none"}));
+  const ctl=$(".dash .d-ctl");if(ctl){ctl.querySelectorAll(".d-pg").forEach(b=>b.remove());if(dashCfg().on.barnmap)ctl.insertAdjacentHTML("afterbegin",`<button type="button" class="d-pg" data-a="dashBm" data-v="${esc(BM_BARNS()[0])}">🗺 ${t("배치도")}</button>`);if(P.length>1)ctl.insertAdjacentHTML("beforeend",P.map((_,i)=>`<button type="button" class="d-pg ${ui.tvPage===i+1?"on":""}" data-a="tvPg" data-v="${i+1}">P${i+1}</button>`).join(""))}}
 // 가로로 넘치는 글씨: 전광판처럼 옆으로 흘렀다 돌아옴
 function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,div,button").forEach(el=>{if(el.childElementCount||el.closest(".mq")||!el.textContent.trim())return;
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;

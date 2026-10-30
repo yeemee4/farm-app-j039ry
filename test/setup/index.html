@@ -1004,7 +1004,6 @@ body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:
 .d-swipe .d-bin svg{max-width:34px}.d-swipe .d-bin b,.d-swipe .d-bin span,.d-swipe .d-bin em{font-size:9px}
 .fcr2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}.fcr2>div{display:grid;gap:2px}.fcr2 small{color:var(--muted);font-size:12px}.fcr2 small i{font-style:normal;opacity:.8}.fcr2 b{font:900 32px/1 var(--display);font-variant-numeric:tabular-nums}.fcr2 span{color:var(--muted);font-size:12px}
 body.tv .d-card{overflow:hidden}
-body.tv .d-donut{min-height:0;height:100%;grid-template-columns:auto 1fr}body.tv .d-donut svg{height:100%;width:auto;max-width:100%;min-height:0;justify-self:center}
 .d-bm-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}.d-bm-btns .d-bmb{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface2,rgba(127,127,127,.08));color:inherit;font-size:15px;white-space:nowrap;min-width:0}.d-bm-btns .d-bmb b{overflow:hidden;text-overflow:clip}.d-bm-btns .d-bmb small{margin-left:auto;opacity:.75}
 body.tv .d-bm-btns .d-bmb{font-size:1.8vh;padding:1vh .8vw}
 .d-bm-btns .d-bmb b{font-size:inherit;font-weight:800}
@@ -1023,7 +1022,7 @@ body.tv .d-card{display:flex;flex-direction:column}
 :where(html[data-pc="on"]) #tvBackBtn{bottom:24px}
 
 .mq-on:hover .mq{animation-play-state:paused}
-.d-wk2{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0}.d-wk h4{margin:0 0 6px;font-size:14px;color:var(--muted)}.d-wk>div{display:flex;flex-direction:column;padding:4px 0;border-bottom:1px solid var(--line)}.d-wk>div.on b{color:var(--accent)}.d-wk b{font-size:14px}.d-wk span{font-size:13px;color:var(--muted)}
+.d-wk2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:4px 14px;min-height:0}.d-wk h4{margin:0 0 6px;font-size:14px;color:var(--muted)}.d-wk>div{display:flex;flex-direction:column;padding:4px 0;border-bottom:1px solid var(--line)}.d-wk>div.on b{color:var(--accent)}.d-wk b{font-size:14px}.d-wk span{font-size:13px;color:var(--muted)}
 body.tv .d-wk h4{font-size:1.7vh}body.tv .d-wk b{font-size:1.8vh}body.tv .d-wk span{font-size:1.6vh}
 .d-ctl .d-pg{min-width:3.2em}.d-ctl .d-pg.on{background:var(--accent);color:#fff}
 body.tv .d-bin svg{max-width:6vh}
@@ -1144,7 +1143,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 01:56";
+const BUILD_AT="10-31 02:00";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.5";
@@ -3215,14 +3214,12 @@ const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)"
 function vDash(){
   const d=dashCfg(),on=d.order.filter(k=>d.on[k]&&DASH_P[k]),main=on.filter(k=>!DASH_SIDE.includes(k)&&!DASH_STRIP.includes(k)),side=on.filter(k=>DASH_SIDE.includes(k)),strip=on.filter(k=>DASH_STRIP.includes(k));
   const tv=document.body.classList.contains("tv"),D=boardDate(),tmr=addDays(TODAY,1),now=new Date();
-  const per=6,pages=tv&&!dashPhoneL()?Math.max(1,Math.ceil(main.length/per)):1;ui.tvPage=Math.min(Math.max(1,ui.tvPage||1),pages);
-  if(pages>1)main.splice(0,main.length,...main.slice((ui.tvPage-1)*per,ui.tvPage*per));
   const cols=main.length<=2?Math.max(1,main.length):main.length===4?2:3,rows=Math.max(1,Math.ceil(main.length/cols));
   wxLoad();const wc=WX&&WX.current,wd=wxDay(D===TODAY?0:1),al=wxAlerts(D===TODAY?0:1);
   let h=`<div class="dash ${side.length?"has-side":""} ${strip.length?"has-strip":""}" style="--dc:${cols};--dr:${rows}">`;
   h+=`<header class="d-top"><div class="d-brand">${esc(FARM.name)} · ${t(D===TODAY?"오늘":"내일")}<small>${kDate(D)} · W${isoWeek(D).w}</small></div><div class="d-warns">${al.replace(/bd-al wx/g,"d-warn")}</div>`;
   h+=wc?`<div class="d-wx">${wxPic(D===TODAY?wc.weather_code:wd.code)}<b>${D===TODAY?Math.round(wc.temperature_2m)+"℃":""}</b><span>${FARM.place} · ${t(WXC(D===TODAY?wc.weather_code:wd.code))}<br>${wd.min} ~ ${wd.max}℃ · ${t("바람")} ${Math.round((D===TODAY?wc.wind_speed_10m:wd.wind)/3.6)}m/s</span></div>`:`<div class="d-wx"><span>${FARM.place} · ${t("날씨 불러오는 중")}</span></div>`;
-  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl">${pages>1?Array.from({length:pages},(_,i)=>`<button type="button" class="d-pg ${ui.tvPage===i+1?"on":""}" data-a="tvPg" data-v="${i+1}">P${i+1}</button>`).join(""):""}<button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
+  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
   if(dashPhoneL()){const all=[...side.filter(k=>k==="todo"),...main,...strip,...side.filter(k=>k!=="todo")],pg=Math.ceil(all.length/8);
     h+=`<div class="d-swipe" id="dSwipe">${all.map(dashCard).join("")}</div><div class="d-dots">${Array.from({length:pg},(_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`}
   else{h+=`<div class="d-main">${main.map(dashCard).join("")}</div>`;
@@ -4806,7 +4803,21 @@ binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,
   return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
 
 // ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
-function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))}
+function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));
+  if(document.body.classList.contains("tv")&&innerWidth>=900&&!dashPhoneL())dashPack();marquee($(".dash"))}
+// TV: 카드마다 실제 내용 높이를 재서 세로 3줄에 낮은 줄부터 쌓고, 넘치면 다음 페이지(P2·P3). 줄 맨 아래 카드는 남은 높이까지 늘림 → 빈 곳·잘림 없이
+function dashPack(){const M=$(".d-main");if(!M)return;const bm=M.querySelector(":scope>.dk-barnmap");if(bm)bm.remove();   // 배치도는 위쪽 버튼 하나로
+  const C=[...M.querySelectorAll(":scope>.d-card")];if(!C.length)return;
+  const cols=3,gap=parseFloat(getComputedStyle(M).rowGap)||12,W=M.clientWidth,H=M.clientHeight,cw=(W-gap*(cols-1))/cols;
+  M.style.position="relative";M.style.display="block";
+  C.forEach(c=>{c.style.cssText=`position:absolute;left:0;top:0;width:${cw}px;height:auto;visibility:hidden;display:flex`});
+  const P=[];let cur=null;C.forEach(c=>{const h=Math.min(H,c.offsetHeight);if(!cur){cur={u:Array(cols).fill(0),it:[]};P.push(cur)}
+    let col=cur.u.indexOf(Math.min(...cur.u));if(cur.u[col]+h>H+1&&cur.it.length){cur={u:Array(cols).fill(0),it:[]};P.push(cur);col=0}
+    cur.it.push({c,col,top:cur.u[col],h});cur.u[col]+=h+gap});
+  P.forEach(pg=>{for(let k=0;k<cols;k++){const L=pg.it.filter(x=>x.col===k);if(!L.length)continue;const used=L.reduce((s,x)=>s+x.h,0)+gap*(L.length-1),add=Math.max(0,H-used)/L.length;let y=0;L.forEach(x=>{x.top=y;x.h+=add;y+=x.h+gap})}});   // 남는 높이를 줄 안 카드에 고르게
+  ui.tvPage=Math.min(Math.max(1,ui.tvPage||1),P.length);
+  P.forEach((pg,i)=>pg.it.forEach(x=>{x.c.style.cssText=i+1===ui.tvPage?`position:absolute;left:${x.col*(cw+gap)}px;top:${x.top}px;width:${cw}px;height:${x.h}px;display:flex`:"display:none"}));
+  const ctl=$(".dash .d-ctl");if(ctl){ctl.querySelectorAll(".d-pg").forEach(b=>b.remove());if(dashCfg().on.barnmap)ctl.insertAdjacentHTML("afterbegin",`<button type="button" class="d-pg" data-a="dashBm" data-v="${esc(BM_BARNS()[0])}">🗺 ${t("배치도")}</button>`);if(P.length>1)ctl.insertAdjacentHTML("beforeend",P.map((_,i)=>`<button type="button" class="d-pg ${ui.tvPage===i+1?"on":""}" data-a="tvPg" data-v="${i+1}">P${i+1}</button>`).join(""))}}
 // 가로로 넘치는 글씨: 전광판처럼 옆으로 흘렀다 돌아옴
 function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,div,button").forEach(el=>{if(el.childElementCount||el.closest(".mq")||!el.textContent.trim())return;
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
