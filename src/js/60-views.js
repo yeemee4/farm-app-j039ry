@@ -14,7 +14,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet,barnmap:vBarnMap};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet,barnmap:vBarnMap,bcsmap:vBcsMap};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -87,6 +87,7 @@ function openTodo(k){
     if(!it.s)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.r.data.barn)}</b><span class="dd">D−${it.d}</span></div><div class="sow-meta">${esc(it.r.data.name)} · ~${kDate(it.r.data.withdraw)}</div>${ck}</div>`;
     let acts="";
     if(x.act==="check")acts=`<div class="acts"><button class="act pri" type="button" data-a="chk" data-v="임신" data-sow="${it.s.id}">${t("임신")}</button><button class="act warn" type="button" data-a="chk" data-v="재발" data-sow="${it.s.id}">${t("재발")}</button><button class="act bad" type="button" data-a="chk" data-v="공태" data-sow="${it.s.id}">${t("공태")}</button></div>`;
+    else if(x.act==="tab:bcsmap")acts=`<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="bcsmap">🗺 ${t("배치도로 BCS 입력")}</button></div>`;
     else if(x.act==="movein")acts=`<div class="acts"><button class="act pri" type="button" data-a="movein" data-v="${it.s.id}">${t("분만사로 이동 완료")}</button></div>`;
     else if(x.act==="cull")acts=can("cull")?`<div class="acts"><button class="act bad" type="button" data-a="sowd" data-v="${it.s.id}">도태 처리하러 가기</button></div>`:"";
     else if(it.lit)acts=litChips(it,tdKey(k,itemTarget(it)));

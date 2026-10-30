@@ -22,14 +22,18 @@ function saveLabel(){const I=ui.in,n=needMsg();if(n)return n;if(I.editId)return 
 function vInput(){
   const I=ui.in,F=FORMS[I.type],late=I.date<TODAY;
   let left=`<div class="pagehd"><button class="back" type="button" data-a="back">‹ ${t("뒤로")}</button><h2>${icon(I.type)}${esc(L(I.type))}</h2></div>`;
+  if(I.type==="BCS"&&!I.editId)left+=`<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="bcsmap">🗺 ${t("배치도로 입력")} ›</button><button class="act" type="button" data-a="tab" data-v="gfeed">${t("임신돈 급여표")} ›</button></div>`;
   if(I.editId)left+=`<div class="editbar"><span>${t("기록 수정 중")}</span><button class="sbtn" type="button" data-a="editCancel">${t("수정 취소")}</button></div>`;
   left+=`<div class="panel"><div class="f"><label for="in-date">${t("작업일")} ${late?`<span class="late-note">${t("지연 입력 · 해당 날짜 성적에 반영")}</span>`:""}</label><input type="date" id="in-date" value="${I.date}" max="${TODAY}"></div>`;
   const sowForCalc=I.sel[0]||null;
   if(F.sow&&!I.editId){
     const c=candidates(),leftN=Math.max(c.targetN-c.doneN,0);
     if(F.sow.target)left+=`<div class="target"><span class="big">${I.date===TODAY?t("오늘"):kDate(I.date)} ${t("대상")} ${c.targetN}${t("두")} · ${t("입력")} ${c.doneN} · ${t("남은")} <b class="${leftN?"":"ok"}">${leftN}</b></span></div><div class="prog-bar"><i style="width:${c.targetN?Math.min(100,c.doneN/c.targetN*100):0}%"></i></div>`;
+    const pm=(()=>{try{return localStorage.getItem("farm-pickmap")!=="0"}catch(e){return true}})();
+    left+=`<div class="chips"><button type="button" class="chip ${pm?"on":""}" data-a="pickView" data-v="1">🗺 ${t("배치도")}</button><button type="button" class="chip ${pm?"":"on"}" data-a="pickView" data-v="0">${t("목록")}</button>${I.sel.length?`<span class="sow-meta" style="align-self:center">${t("선택")} <b>${I.sel.join(", ")}</b></span>`:""}</div>`;
+    if(pm)left+=vPickMap();else{
     left+=`<div class="row2"><input type="search" id="in-q" inputmode="numeric" pattern="[0-9]*" placeholder="${t("번호 숫자만 (예: 8 → 6-008)")}" value="${esc(I.q)}" aria-label="${t("번호로 찾기 (대상 외 모돈 포함)")}"><button type="button" class="toggle ${I.all?"on":""}" data-a="toggleAll">${I.all?t("대상만"):t("전체 모돈")}</button></div>`;
-    left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;
+    left+=`<div class="f"><span class="lb">${t("모돈 선택")} ${F.sow.multi?`(${t("여러 두 선택 가능")})`:""} <span>${I.sel.length?`${t("선택")} ${I.sel.join(", ")}`:""}</span></span>${c.list.length?sowPickGroups(c):`<div class="empty">${I.q?t("번호에 맞는 모돈이 없습니다."):t("오늘 대상 모돈이 없습니다. ‘전체 모돈’을 눌러 찾을 수 있습니다.")}</div>`}</div>`;}
   }else if(F.sow&&I.editId){const s=state.sows.find(x=>x.id===I.sel[0]);left+=`<div class="f"><span class="lb">${t("모돈")}</span>${s?sowCard(s,{noLoc:true,noLink:true}):""}</div>`}
   const dock=F.sow&&!I.editId;   // 모돈 입력: 입력 칸·저장을 아래 고정 패널로
   if(dock)left+=`<div class="dock ${I.sel.length?"":"min"}"><div class="dock-hd">${I.sel.length?`${t("선택")} <b>${I.sel.join(", ")}</b>`:`<span class="sow-meta">${t("위에서 모돈을 고르세요")}</span>`}</div><div class="dock-bd">`;

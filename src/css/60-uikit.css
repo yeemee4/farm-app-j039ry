@@ -196,3 +196,10 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .bl-st b small.bl-cull{color:#D64545;font-size:13px}
 @media (max-width:420px){.bl-st{grid-template-columns:18px 1fr;grid-template-rows:auto auto auto}.bl-st span,.bl-st em{grid-column:2;grid-row:auto;font-size:11.5px;justify-self:start}}
 .bl-how{font-size:12px;margin:0 0 6px}.bl-info{margin-bottom:4px}
+/* BCS 배치도 */
+.bl-st.bcs-need{box-shadow:inset 0 0 0 2px #E07B24}.bl-st.bcs-need em{color:#C05A0E}.bl-st.bcs-done em{color:#12A150}
+.bcs-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}.bcs-b{font:900 22px var(--mono);padding:14px 0;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.bcs-b.b1,.bcs-b.b1_5,.bcs-b.b2{border-color:#D64545}.bcs-b.b2_5,.bcs-b.b3,.bcs-b.b3_5{border-color:#2fb36d}.bcs-b.b4,.bcs-b.b4_5,.bcs-b.b5{border-color:#E8A317}
+/* 기록 입력 배치도 선택 */
+.bl-st.pk-off{opacity:.42}.bl-st.pk-tg{box-shadow:inset 0 0 0 2px #2A78D6}.bl-st.pk-tg em{color:#2A78D6}.bl-st.pk-done{opacity:.7}.bl-st.pk-done em{color:#12A150}
+.bl-st.pk-sel{outline:3px solid var(--accent);outline-offset:-3px;opacity:1}.bl-st.pk-sel em{color:var(--accent);font-weight:900}

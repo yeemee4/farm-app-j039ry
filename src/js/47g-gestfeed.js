@@ -25,11 +25,11 @@ function gestToday(){const out=[];activeSows().forEach(s=>{const a=gestFeed(s,TO
 // 할 일: 오늘 급여량이 바뀐 모돈 (급이기 눈금 다시 맞추기)
 function gfTodos(){if(REF!==TODAY)return [{k:"gfchg",t:"임신돈 급여량 변경",items:[],act:null}];
   return [{k:"gfchg",t:"임신돈 급여량 변경",items:gestToday().filter(a=>a.chg).map(a=>({s:a.s,gf:a,label:`${t(a.s.loc)} · ${a.prev.toFixed(1)} → ${a.kg.toFixed(1)}kg${gfUnit(a.s.loc,a.kg)?" ("+gfUnit(a.s.loc,a.kg)+")":""} · ${esc(a.why[a.why.length-1])}`,sev:"warn"})),act:null},
-    {k:"bcsdue",t:"BCS 측정",items:bcsDue(),act:null}]}
+    {k:"bcsdue",t:"BCS 측정",items:bcsDue(),act:"tab:bcsmap"}]}
 // BCS 측정 시점: 교배 0~3일, 임신 28~32일, 83~87일, 이유 당일~3일 · 최근 7일 안에 측정 없으면
 function bcsDue(){const L=[];activeSows().forEach(s=>{const st=sowState(s.id);let when=null;if((st.stage==="교배"||st.stage==="임신")&&st.mate){const g=diff(st.mate,TODAY);when=g<=3?"교배 시":g>=28&&g<=32?"임신 30일":g>=83&&g<=87?"임신 85일":null}else if(st.stage==="이유"&&diff(st.since,TODAY)<=3)when="이유 시";
   if(!when)return;const b=lastBCS(s.id,TODAY);if(b&&diff(b.d,TODAY)<=7)return;L.push({s,label:`${t(when)} · ${t("최근 BCS")} ${b?b.score+" ("+kDate(b.d)+")":"-"}`,sev:"warn"})});return L}
-function vGestFeed(){const A=gestToday(),C=gCfg();let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="home">‹ ${t("홈")}</button><h2>${t("임신돈 급여표")}</h2></div>`;
+function vGestFeed(){const A=gestToday(),C=gCfg();let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="bcsmap">‹ BCS</button><h2>${t("임신돈 급여표")}</h2></div>`+bcsHub("gfeed");
   const ch=A.filter(a=>a.chg).length;h+=`<div class="banner ${ch?"warn-b":"info"}"><b>${ch?`${t("오늘 바뀜")} ${ch}${t("두")}`:t("어제와 같음")}</b><span>${t("임신 일수·BCS·산차·돈사 온도로 계산 · 바뀐 모돈만 급이기를 다시 맞추세요")}</span></div>`;
   GF_BARNS().forEach(barn=>{const L=A.filter(a=>a.s.loc===barn);if(!L.length)return;const B=C.barns[barn],G={};L.forEach(a=>(G[a.kg.toFixed(1)]=G[a.kg.toFixed(1)]||[]).push(a));
     h+=`<div class="sec-t">${esc(t(barn))} <span>${B.mode==="auto"?t("자동 급이기"):t("수동 급여")}${B.kgPer?"":` (${t(B.unit)} ${t("단위 설정 전")})`} · ${L.length}${t("두")} · ${t("합계")} ${L.reduce((x,a)=>x+a.kg,0).toFixed(0)}kg</span></div><div class="gf">`+
