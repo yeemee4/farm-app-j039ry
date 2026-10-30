@@ -4,7 +4,7 @@
          인터넷이 끊기면 보낼 목록에 쌓아 두었다가 다시 연결되면 보냄. 1분마다·화면을 다시 열 때 받아 옴.
          같은 기록을 두 곳에서 고치면 나중에 서버에 닿은 쪽이 남음. 아직 못 보낸 내 수정은 받아 온 값으로 덮지 않음.
    PIN 은 서버로 해시만 보냄. 서버 주소·토큰은 이 휴대폰에만 저장(저장소에 없음). */
-const SYNC_KEY="farm-sync",SYNC_SKIP=["v","user","accounts"],PIN_MASK="•",SUBK="§";
+const SYNC_KEY=ENV==="test"?"farm-test-sync":"farm-sync",SYNC_SKIP=["v","user","accounts"],PIN_MASK="•",SUBK="§";
 const syObj=v=>v&&typeof v==="object"&&!Array.isArray(v);
 let SY=(()=>{try{return JSON.parse(localStorage.getItem(SYNC_KEY)||"null")}catch(e){return null}})()||{};
 SY.snap=SY.snap||{rec:{},sow:{},key:{}};SY.out=SY.out||{};SY.ph=SY.ph||{};
@@ -153,3 +153,6 @@ vLogin=function(){const h=_vLogin0();if(ui.loginId)return h;
     :`<button class="act" type="button" data-a="syLogin" style="margin:14px auto 0;display:block">☁ ${SY.url?t("서버 연결됨"):t("서버 연결")}</button>`;
   return h+box};
 A.syLogin=()=>{ui.syLogin=true;render()};
+
+// 시험용 표시: 주황 띠 + 제목
+if(ENV==="test"){document.body.classList.add("env-test");const v=$("#hdVer");if(v)v.dataset.env="1"}

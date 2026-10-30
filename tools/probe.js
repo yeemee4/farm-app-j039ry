@@ -4,6 +4,6 @@ const ROOT = path.join(__dirname, ".."), GATE = fs.readFileSync(path.join(ROOT, 
 (async () => { const b = await chromium.launch(), p = await b.newPage(), errs = [];
   p.on("pageerror", e => errs.push(e.message));
   await p.addInitScript(g => { localStorage.clear(); localStorage.setItem("farm-gate", g) }, GATE);
-  await p.goto("file://" + ROOT + "/index.html"); await p.waitForTimeout(1200);
+  await p.goto("file://" + ROOT + "/" + (process.env.PAGE || "test/index.html")); await p.waitForTimeout(1200);
   for (const ex of process.argv.slice(2)) console.log(JSON.stringify(await p.evaluate(ex)));
   if (errs.length) console.log("ERR", errs); await b.close() })();

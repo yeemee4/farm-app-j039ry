@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""src/ 를 합쳐 index.html 한 파일로 만든다.  python3 tools/build.py [--no-tags]"""
+"""src/ 를 합쳐 한 파일로 만든다.
+   python3 tools/build.py          → test/index.html (시험용: 주황 ‘테스트’ 띠, 저장 공간 따로)
+   python3 tools/build.py --prod   → index.html (본서버 = 실제 사용 주소)   [--no-tags]"""
 import base64, glob, json, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = lambda *p: os.path.join(ROOT, 'src', *p)
@@ -7,6 +9,7 @@ read = lambda p: open(p, encoding='utf-8').read()
 # 입장 키 해시는 이미 배포된 index.html 에서 이어받는다(키 원문은 어디에도 두지 않음)
 GATE = re.search(r'const GATE="([0-9a-f]{64})"', read(os.path.join(ROOT, 'index.html'))).group(1)
 TAGS = '--no-tags' not in sys.argv          # 테스트 라벨(포스트잇) 기본 켜짐
+PROD = '--prod' in sys.argv              # 기본은 시험용(test/)
 
 icons = {os.path.basename(p)[:-4]: read(p).strip() for p in sorted(glob.glob(src('icons', '*.svg')))}
 # 그림 아이콘(.png)이 있으면 .svg 보다 우선
@@ -47,9 +50,15 @@ def pc_css(css):
 css = pc_css(''.join(read(p) for p in sorted(glob.glob(src('css', '*.css')))))
 js = ''.join(read(p) for p in sorted(glob.glob(src('js', '*.js'))))
 js = js.replace('%GATE%', GATE)
-pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false')
+pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\nconst ENV=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false', '"prod"' if PROD else '"test"')
 
 out = (read(src('head.html')) + read(src('meta.html')) + '<style>\n' + css + '</style>\n</head>\n<body>\n'
        + read(src('body.html')) + '<script>\n' + pre + js + '</script>\n</body>\n</html>\n')
-open(os.path.join(ROOT, 'index.html'), 'w', encoding='utf-8').write(out)
-print('built index.html', len(out), 'bytes,', len(icons), 'svg +', len(imgs), 'png icons, tags', TAGS)
+if not PROD:   # test/ 폴더에서 열리므로 아이콘·매니페스트 경로를 한 단계 위로, 제목에 (테스트)
+    for f in ('manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png', 'icon-512.png', 'logo.png'):
+        out = out.replace('href="%s"' % f, 'href="../%s"' % f).replace('src="%s"' % f, 'src="../%s"' % f)
+    out = re.sub(r'<title>(.*?)</title>', r'<title>\1 (테스트)</title>', out, count=1)
+    os.makedirs(os.path.join(ROOT, 'test'), exist_ok=True)
+dest = 'index.html' if PROD else os.path.join('test', 'index.html')
+open(os.path.join(ROOT, dest), 'w', encoding='utf-8').write(out)
+print('built', dest, len(out), 'bytes,', len(icons), 'svg +', len(imgs), 'png icons, tags', TAGS)

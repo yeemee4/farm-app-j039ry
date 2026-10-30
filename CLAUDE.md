@@ -18,7 +18,7 @@
   - 50 i18n(TR 사전) · **51 i18n-v04: 새 문구 번역은 여기에 추가** · 52 accounts(권한)
   - 60 views(render·홈) · 62 input · 64 login/settings · 66 guide · 68 아침 점검 · 70 seed(예시 데이터) · 80 actions(v0.3) · 98 gate · 99 start
 - `src/icons/poly/<종류>.svg` 폴리곤 아이콘(생성기 `tools/polyicons.py` — 돼지 얼굴·색을 고치면 15개 함께 바뀜) · `src/icons/<종류>.png` (그림) 또는 `.svg` — 입력 종류별 아이콘. **파일 하나 = 아이콘 하나**. 지금은 이미지 생성 AI 그림(128px PNG)을 씀. 파일 이름이 TYPES 키(폐사, 교배…)와 같아야 함. 없으면 글자 아이콘.
-- `index.html` — **빌드 결과물(직접 고치지 말 것)**. GitHub Pages가 이 파일을 배포.
+- `index.html` — **본서버 빌드 결과물(직접 고치지 말 것)**. `test/index.html` — 시험용 빌드. GitHub Pages가 둘 다 배포.
 - `tools/build.py` — src → index.html. 넓은 화면 규칙 `@media (min-width:≥700px)` 은 `pc_css` 가 html[data-pc] 설정으로도 켜고 끔(PC 전용 규칙은 그냥 min-width:1024px 안에 쓰면 됨). `--no-tags` 로 테스트 라벨 제거.
 - `tools/smoke.js` — `FARM_PIN=<대표PIN> node tools/smoke.js <폴더>` 전 탭·입력 화면 열어서 오류 점검 + 스크린샷.
 - `tools/probe.js` — `node tools/probe.js '<JS 식>'` 예시 데이터 상태에서 값 확인(화면 캡처 없이).
@@ -28,11 +28,14 @@
 ## 할 일 묶음 추가하는 법
 `extraTodos()`(40)의 반환 배열에 `{k,t,items,act}` 를 더한다. 항목 종류별로 `itemTarget`·`tdName`(20), `itemShort`·`openTodo` 그리기(60), 현황판 `ids`(46)에 한 줄씩. 날짜와 상관없이 한 번만 체크하는 묶음은 `tdKey`(20)의 목록에 k 추가.
 
-## 작업 순서
-1. `src/` 수정 → `python3 tools/build.py` → `node tools/smoke.js $SCRATCH` (오류 0 확인)
-2. 사용자가 "업로드해"라고 하면 커밋·푸시(main) → Pages 배포 확인:
-   `gh api repos/yeemee4/farm-app-j039ry/actions/runs --jq '.workflow_runs[0]|.status+" "+(.conclusion//"-")'`
-3. 화면 캡처는 배치가 크게 바뀔 때만.
+## 작업 순서 (시험용 → 본서버, 2026-10-30 결정)
+1. `src/` 수정 → `python3 tools/build.py` (= **test/index.html** 시험용) → `node tools/smoke.js $SCRATCH` (오류 0 확인)
+2. 사용자가 "업로드해" → 커밋·푸시(main). **시험용만 바뀜**: https://yeemee4.github.io/farm-app-j039ry/test/ (주황 ‘테스트’ 띠, 저장 공간 farm-test-*, 예시 데이터)
+3. 사용자가 "본서버에 올려" → `python3 tools/build.py --prod` (= 루트 **index.html**) → 커밋·푸시 → 실제 주소 https://yeemee4.github.io/farm-app-j039ry/
+   - 본서버 index.html 은 "본서버에 올려" 때만 바꾼다(그 전 작업 커밋에서는 건드리지 않음).
+4. Pages 배포 확인: `gh api repos/yeemee4/farm-app-j039ry/actions/runs --jq '.workflow_runs[0]|.status+" "+(.conclusion//"-")'`
+5. 서버(Apps Script)도 둘: ‘비담농장 서버 (테스트)’ 시트 ↔ 시험용 앱, ‘비담농장 서버’ 시트 ↔ 본서버 앱. Code.gs 가 바뀌면 테스트 시트에 먼저 붙여 확인 → 본 시트에 붙임(배포 관리 › 새 버전, URL 유지).
+6. 화면 캡처는 배치가 크게 바뀔 때만. tools/probe.js·smoke.js 는 기본 test/index.html (본서버는 PAGE=index.html).
 
 ## 테스트 라벨(포스트잇)
 화면 구역마다 노란 라벨(H3, P2, 탭1, 상단…)이 붙는다. 사용자가 "H7 고쳐줘"라고 하면
