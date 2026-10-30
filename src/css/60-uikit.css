@@ -255,3 +255,24 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 /* 시험용(test/) 표시 */
 body.env-test::before{content:"🧪 테스트 서버 · 실제 기록 아님";position:fixed;left:0;right:0;top:0;z-index:9999;background:#f08c00;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center;letter-spacing:.05em;pointer-events:none}
 body.env-test .app{padding-top:20px}body.env-test .hd{border-top:3px solid #f08c00}
+/* 초기 등록 (한 손 입력) */
+.su-step .su-n{width:30px;height:30px;border-radius:50%;background:var(--grid);display:flex;align-items:center;justify-content:center;font-weight:800}.su-step .su-n.ok{background:var(--accent);color:#fff}
+.su-here{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:8px;margin:10px 0}.su-here>div{text-align:center}.su-here small{display:block;color:var(--muted)}.su-here b{display:block;font-size:44px;line-height:1.1}.su-here em{font-style:normal;color:var(--muted);font-size:13px}
+.su-arrow{height:72px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);font-size:30px;color:var(--ink)}.su-arrow:disabled{opacity:.3}
+.su-q{font-size:20px;font-weight:800;text-align:center;margin-top:6px}.su-disp{font-size:34px;font-weight:800;text-align:center;min-height:52px;margin:6px 0;font-variant-numeric:tabular-nums}.su-disp.sm{font-size:20px;min-height:36px}
+.su-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.su-pad button{height:64px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:28px;font-weight:700}.su-pad button:active{background:var(--accent-soft)}.su-pad button.go{background:var(--accent);color:#fff;border-color:var(--accent);font-size:20px}
+.su-empty{width:100%;margin-top:4px}
+.su-got{background:var(--surface);border:1.5px solid var(--accent);border-radius:16px;padding:14px;margin:8px 0}.su-got b{font-size:24px}
+.su-strip{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}.su-strip button{min-width:42px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:12px}.su-strip button.on{border:2px solid var(--ink);color:var(--ink);font-weight:800}.su-strip button.ok{background:var(--accent);color:#fff;border-color:var(--accent)}.su-strip button.half{background:var(--amber);color:#fff}.su-strip button.skip{text-decoration:line-through;opacity:.5}
+.su-pars{overflow-x:auto;flex-wrap:nowrap}.su-pars .chip.has:not(.on){border-color:var(--accent);color:var(--accent);font-weight:700}
+.su-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.su-f{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;min-height:54px}.su-f span{font-size:12px;color:var(--muted)}.su-f b{font-size:18px}.su-f b small{font-size:11px;color:var(--muted);font-weight:500}.su-f.has{border-color:var(--accent-soft);background:var(--accent-soft)}.su-f.on{border:2.5px solid var(--accent);background:var(--surface)}
+.su-due{grid-column:1/-1;font-size:13px;color:var(--muted);text-align:right}
+.su-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.su-chips .chip{min-height:48px;font-size:16px}
+.su-end{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));background:var(--bg);padding:8px 0;z-index:5}.su-end .act{flex:1;min-height:52px}
+.su-top{margin-top:10px}.su-top summary{font-weight:700;padding:8px 0}
+.su-warn{display:flex;gap:8px;align-items:center;width:100%;text-align:left}.su-warn span{flex:1;color:var(--amber);font-size:13px}
+body.mode-setup .tabs,body.mode-setup #pcBtn{display:none!important}body.mode-setup main{padding-bottom:24px}body.mode-setup .su-end{bottom:0}
+.su-fields{grid-template-columns:repeat(3,1fr);gap:5px}.su-f{min-height:46px;padding:5px 7px}.su-f span{font-size:11px;line-height:1.15}.su-f b{font-size:16px}
+.su-dock{position:sticky;bottom:0;background:var(--bg);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));z-index:6;box-shadow:0 -6px 12px -8px rgba(0,0,0,.25)}
+.su-dock .su-pad{margin:4px 0}.su-dock .su-pad button{height:54px}.su-dock .su-end{position:static;padding:4px 0 0}.su-dock .su-disp.sm{margin:2px 0;min-height:28px;font-size:18px}
+body:not(.mode-setup) .su-dock{bottom:calc(64px + env(safe-area-inset-bottom,0px))}

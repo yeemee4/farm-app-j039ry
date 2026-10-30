@@ -14,6 +14,7 @@
   - 69 extra(2차 교배·복별 처치·실사) · 71 media(사진·말 입력) · 72 manage(내 할 일·인계 메모·도태 후보·주간 달력) · 73 pc(화면 배치 자동/휴대폰/PC) · 74 closeby(당일 기록 마감 21:00 · 기록 누락 할 일)
   - 81 sowcard(모돈 상세 [앱 보기]/[📋 현장 카드] — 부국사료 모돈현황판 종이 양식 그대로, 8산 한 장(1~4 파랑·5~8 보라 칸, 9산부터 다음 장), 교배·웅돈·재발 점선 2칸(위 첫 교배·아래 재발 후 교배), 포유개시 = 실산±양자, 생년월일·구입처·초교배예정일 s.birth·s.src·s.firstMate) · 임신돈 급여 설정은 FARM.gfeed(FARM.gest = 임신 일수 114)
   - 82 fieldfix(1월 시뮬레이션 개선: 저장 알림 가운데·연속 입력 시 짧게 · 할 일 ‘꼭 할 일/확인만’(state.todoMust, 퀘스트=꼭만) · 주말·휴일 전날 아침 점검 끝나면 사료 주문 팝업 · 날씨 경고(영하 진입 전날·37℃) · 도태 기준 CULL1 · 배치도 칸 상태말·이슈 아이콘(state.bmShow, 설정 ‘배치도 칸 정보’) · 성적/TV 항목 켜기·순서(state.stOrder, 설정 ‘성적 항목’, TV 첫 줄 끝 NPD) · 사료 빈 바닥(feedEmpty: 빈 3%·100kg 이하, 포대 0) = 학습 제외 + 입고 기록 때까지 매일 꼭 할 일 binempty)
+  - 83 setup(**별도 ‘초기 등록 앱’** = 같은 코드를 MODE="setup" 으로 빌드한 setup/index.html·test/setup/index.html, 같은 저장 공간이라 입력이 본 앱으로 이어짐, 메뉴 탭 없음. 휴대폰 한 손: 돈사 칸 순서로 걸으며 번호(큰 숫자 버튼) → 현장 카드 한 산차씩(날짜 ‘1023’ 네 자리, 연도는 산차 순서로 뒤에서부터 오늘 이전으로) → state.setup.cards → ‘기록 만들기’ = 교배·재발·임신확인(교배 25일 뒤)·분만(실산=총산−사산)·양자(포유개시 차이)·이유 + 모돈(위치·칸·baseParity), data.setup 로 다시 만들어도 안 겹침)
   - 90 sync(v0.6 구글 시트 서버: save() 감싸 1.2초 뒤 바뀐 것만(기록·모돈 한 건씩, 설정 객체는 안쪽 항목별 key§sub) 보낼 목록(SY.out, 오프라인 보관) → push, 1분마다·화면 열 때 pull(cursor), 보내기·받기는 한 줄 큐(syQ), 못 보낸 내 수정 우선, PIN 은 sha256(농장|계정|PIN) 해시만, 서버 주소·토큰은 localStorage farm-sync, 설정 ‘☁ 서버 연결’·로그인 화면 ‘서버 연결’, 디스코드 알림 문구는 앱이 만들어 보냄(state.notif)) · 서버 코드 `server/Code.gs`, 설치 `server/설치안내.md`, 시험 `node tools/gas-mock.js 8787`(Code.gs 를 가짜 구글 환경에서 그대로 실행)
   - 50 i18n(TR 사전) · **51 i18n-v04: 새 문구 번역은 여기에 추가** · 52 accounts(권한)
   - 60 views(render·홈) · 62 input · 64 login/settings · 66 guide · 68 아침 점검 · 70 seed(예시 데이터) · 80 actions(v0.3) · 98 gate · 99 start
@@ -31,7 +32,7 @@
 ## 작업 순서 (시험용 → 본서버, 2026-10-30 결정)
 1. `src/` 수정 → `python3 tools/build.py` (= **test/index.html** 시험용) → `node tools/smoke.js $SCRATCH` (오류 0 확인)
 2. 사용자가 "업로드해" → 커밋·푸시(main). **시험용만 바뀜**: https://yeemee4.github.io/farm-app-j039ry/test/ (주황 ‘테스트’ 띠, 저장 공간 farm-test-*, 예시 데이터)
-3. 사용자가 "본서버에 올려" → `python3 tools/build.py --prod` (= 루트 **index.html**) → 커밋·푸시 → 실제 주소 https://yeemee4.github.io/farm-app-j039ry/
+3. 사용자가 "본서버에 올려" → `python3 tools/build.py --prod` (= 루트 **index.html** + **setup/index.html** 초기 등록 앱) → 커밋·푸시 → 실제 주소 https://yeemee4.github.io/farm-app-j039ry/
    - 본서버 index.html 은 "본서버에 올려" 때만 바꾼다(그 전 작업 커밋에서는 건드리지 않음).
 4. Pages 배포 확인: `gh api repos/yeemee4/farm-app-j039ry/actions/runs --jq '.workflow_runs[0]|.status+" "+(.conclusion//"-")'`
 5. 서버(Apps Script)도 둘: ‘비담농장 서버 (테스트)’ 시트 ↔ 시험용 앱, ‘비담농장 서버’ 시트 ↔ 본서버 앱. Code.gs 가 바뀌면 테스트 시트에 먼저 붙여 확인 → 본 시트에 붙임(배포 관리 › 새 버전, URL 유지).

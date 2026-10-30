@@ -14,7 +14,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet,barnmap:vBarnMap,bcsmap:vBcsMap};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet,barnmap:vBarnMap,bcsmap:vBcsMap,setup:()=>suGuard(vSetup)(),suwalk:()=>suGuard(vSuWalk)(),sureview:()=>suGuard(vSuReview)()};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }

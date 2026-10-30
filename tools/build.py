@@ -54,11 +54,19 @@ pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_PO
 
 out = (read(src('head.html')) + read(src('meta.html')) + '<style>\n' + css + '</style>\n</head>\n<body>\n'
        + read(src('body.html')) + '<script>\n' + pre + js + '</script>\n</body>\n</html>\n')
-if not PROD:   # test/ 폴더에서 열리므로 아이콘·매니페스트 경로를 한 단계 위로, 제목에 (테스트)
+def write(dest, html, depth):
+    up = '../' * depth
     for f in ('manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png', 'icon-512.png', 'logo.png'):
-        out = out.replace('href="%s"' % f, 'href="../%s"' % f).replace('src="%s"' % f, 'src="../%s"' % f)
+        html = html.replace('href="%s"' % f, 'href="%s%s"' % (up, f)).replace('src="%s"' % f, 'src="%s%s"' % (up, f))
+    os.makedirs(os.path.dirname(os.path.join(ROOT, dest)) or ROOT, exist_ok=True)
+    open(os.path.join(ROOT, dest), 'w', encoding='utf-8').write(html)
+base = '' if PROD else 'test/'
+if not PROD:   # 시험용: 제목에 (테스트)
     out = re.sub(r'<title>(.*?)</title>', r'<title>\1 (테스트)</title>', out, count=1)
-    os.makedirs(os.path.join(ROOT, 'test'), exist_ok=True)
-dest = 'index.html' if PROD else os.path.join('test', 'index.html')
-open(os.path.join(ROOT, dest), 'w', encoding='utf-8').write(out)
-print('built', dest, len(out), 'bytes,', len(icons), 'svg +', len(imgs), 'png icons, tags', TAGS)
+dest = base + 'index.html'
+write(dest, out, 0 if PROD else 1)
+# 별도 ‘초기 등록 앱’: 같은 코드·같은 저장 공간, 첫 화면 = 초기 등록, 메뉴 탭 없음
+su = out.replace('const ENV=', 'const MODE="setup";\nconst ENV=', 1)
+su = re.sub(r'<title>비담농장', '<title>비담농장 초기 등록', su, count=1)
+write(base + 'setup/index.html', su, 1 if PROD else 2)
+print('built', dest, '+', base + 'setup/index.html', len(out), 'bytes,', len(icons), 'svg +', len(imgs), 'png icons, tags', TAGS)
