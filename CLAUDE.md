@@ -98,3 +98,17 @@
 2묶음 정확도: 7 포유자돈 폐사에 모돈 번호(선택) · 8 양자(위탁 포유) 기록 · 9 분만 상세(시작 시각·난산·옥시토신) · 10 1차 교배 → 다음 날 2차 교배 할 일 · 11 복별 처치 체크박스(철분·견치·단미·귀표) · 12 돈사별 재고두수 실사 · 13 아침 점검에 급수량
 3묶음 현장: 14 사진 첨부 · 15 말로 입력(메모 마이크)
 4묶음 관리: 18 내 할 일 · 19 교대 인계 메모(내일로) · 20 도태 후보 자동 목록(기준은 대표 설정) · 21 휴약 중 출하 경고 · 22 주간 달력
+
+## Agent skills
+
+### Issue tracker
+
+할 일은 저장소 안 `.scratch/<기능>/` 마크다운 파일로 적는다. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+기본 꼬리표 5개 그대로(needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+한 곳 구조(single-context): 루트 `GLOSSARY.md` + `docs/adr/`. See `docs/agents/domain.md`.
