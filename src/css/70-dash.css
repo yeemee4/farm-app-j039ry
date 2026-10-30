@@ -196,3 +196,8 @@ body.tv .d-card{display:flex;flex-direction:column}
 #tvBackBtn button{border:0;border-radius:999px;padding:10px 16px;font:700 15px var(--body,inherit);background:var(--accent);color:#fff}#tvBackBtn .x{background:transparent;color:var(--bg);padding:10px 12px}
 @media (min-width:1024px){#tvBackBtn{bottom:24px}}
 .mq-on:hover .mq{animation-play-state:paused}
+.d-wk2{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0}.d-wk h4{margin:0 0 6px;font-size:14px;color:var(--muted)}.d-wk>div{display:flex;flex-direction:column;padding:4px 0;border-bottom:1px solid var(--line)}.d-wk>div.on b{color:var(--accent)}.d-wk b{font-size:14px}.d-wk span{font-size:13px;color:var(--muted)}
+body.tv .d-wk h4{font-size:1.7vh}body.tv .d-wk b{font-size:1.8vh}body.tv .d-wk span{font-size:1.6vh}
+.d-ctl .d-pg{min-width:3.2em}.d-ctl .d-pg.on{background:var(--accent);color:#fff}
+body.tv .d-bin svg{max-width:6vh}
+.d-wk>div{flex-direction:row;align-items:baseline;gap:8px;padding:3px 0}.d-wk b{flex:none;min-width:5.2em}.d-wk span{white-space:nowrap;overflow:hidden;min-width:0}

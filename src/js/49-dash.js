@@ -1,9 +1,9 @@
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["feed","사료 잔량",1],["am","아침 점검",1],["dead","폐사 추이",1],["breed","이번 주 번식",1],["flow","돈군 흐름",1],["week2","이번 주 · 다음 주",1],["parity","산차 구성",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["memo","회의 메모",1],["kpi","지난달 성적",0],["npd","NPD 비생산일수",0]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
-function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
+function dashCfg(){const d=state.dash=state.dash||{};if(!d.v2){d.v2=1;d.order=DASH_LIST.map(x=>x[0]);d.on=Object.fromEntries(DASH_LIST.map(x=>[x[0],!!x[2]]))}d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
   d.on=d.on||{};DASH_LIST.forEach(x=>{if(!(x[0] in d.on))d.on[x[0]]=!!x[2]});d.goal={...DASH_GOAL0,...(d.goal||{})};return d}
 const DCOL=["#3987e5","#d95926","#199e70","#c98500","#d55181","#9085e9"];   // 검증한 색 순서 (어두운 배경)
 const DST={good:"#0ca30c",warn:"#fab219",crit:"#d03b3b"};
@@ -68,12 +68,14 @@ const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)"
 function vDash(){
   const d=dashCfg(),on=d.order.filter(k=>d.on[k]&&DASH_P[k]),main=on.filter(k=>!DASH_SIDE.includes(k)&&!DASH_STRIP.includes(k)),side=on.filter(k=>DASH_SIDE.includes(k)),strip=on.filter(k=>DASH_STRIP.includes(k));
   const tv=document.body.classList.contains("tv"),D=boardDate(),tmr=addDays(TODAY,1),now=new Date();
+  const per=6,pages=tv&&!dashPhoneL()?Math.max(1,Math.ceil(main.length/per)):1;ui.tvPage=Math.min(Math.max(1,ui.tvPage||1),pages);
+  if(pages>1)main.splice(0,main.length,...main.slice((ui.tvPage-1)*per,ui.tvPage*per));
   const cols=main.length<=2?Math.max(1,main.length):main.length===4?2:3,rows=Math.max(1,Math.ceil(main.length/cols));
   wxLoad();const wc=WX&&WX.current,wd=wxDay(D===TODAY?0:1),al=wxAlerts(D===TODAY?0:1);
   let h=`<div class="dash ${side.length?"has-side":""} ${strip.length?"has-strip":""}" style="--dc:${cols};--dr:${rows}">`;
   h+=`<header class="d-top"><div class="d-brand">${esc(FARM.name)} · ${t(D===TODAY?"오늘":"내일")}<small>${kDate(D)} · W${isoWeek(D).w}</small></div><div class="d-warns">${al.replace(/bd-al wx/g,"d-warn")}</div>`;
   h+=wc?`<div class="d-wx">${wxPic(D===TODAY?wc.weather_code:wd.code)}<b>${D===TODAY?Math.round(wc.temperature_2m)+"℃":""}</b><span>${FARM.place} · ${t(WXC(D===TODAY?wc.weather_code:wd.code))}<br>${wd.min} ~ ${wd.max}℃ · ${t("바람")} ${Math.round((D===TODAY?wc.wind_speed_10m:wd.wind)/3.6)}m/s</span></div>`:`<div class="d-wx"><span>${FARM.place} · ${t("날씨 불러오는 중")}</span></div>`;
-  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
+  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl">${pages>1?Array.from({length:pages},(_,i)=>`<button type="button" class="d-pg ${ui.tvPage===i+1?"on":""}" data-a="tvPg" data-v="${i+1}">P${i+1}</button>`).join(""):""}<button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
   if(dashPhoneL()){const all=[...side.filter(k=>k==="todo"),...main,...strip,...side.filter(k=>k!=="todo")],pg=Math.ceil(all.length/8);
     h+=`<div class="d-swipe" id="dSwipe">${all.map(dashCard).join("")}</div><div class="d-dots">${Array.from({length:pg},(_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`}
   else{h+=`<div class="d-main">${main.map(dashCard).join("")}</div>`;

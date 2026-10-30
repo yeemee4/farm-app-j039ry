@@ -1023,6 +1023,11 @@ body.tv .d-card{display:flex;flex-direction:column}
 :where(html[data-pc="on"]) #tvBackBtn{bottom:24px}
 
 .mq-on:hover .mq{animation-play-state:paused}
+.d-wk2{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-height:0}.d-wk h4{margin:0 0 6px;font-size:14px;color:var(--muted)}.d-wk>div{display:flex;flex-direction:column;padding:4px 0;border-bottom:1px solid var(--line)}.d-wk>div.on b{color:var(--accent)}.d-wk b{font-size:14px}.d-wk span{font-size:13px;color:var(--muted)}
+body.tv .d-wk h4{font-size:1.7vh}body.tv .d-wk b{font-size:1.8vh}body.tv .d-wk span{font-size:1.6vh}
+.d-ctl .d-pg{min-width:3.2em}.d-ctl .d-pg.on{background:var(--accent);color:#fff}
+body.tv .d-bin svg{max-width:6vh}
+.d-wk>div{flex-direction:row;align-items:baseline;gap:8px;padding:3px 0}.d-wk b{flex:none;min-width:5.2em}.d-wk span{white-space:nowrap;overflow:hidden;min-width:0}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1139,7 +1144,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 00:02";
+const BUILD_AT="10-31 01:56";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.5";
@@ -3142,10 +3147,10 @@ Object.assign(A,{
 
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["breed","이번 주 번식",1],["dead","폐사 추이",1],["flow","돈군 흐름",1],["feed","사료 잔량",1],["am","아침 점검",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["kpi","지난달 성적",1],["parity","산차 구성",1],["npd","NPD 비생산일수",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["memo","회의 메모",1]];
+const DASH_LIST=[["sows","모돈 상태",1],["feed","사료 잔량",1],["am","아침 점검",1],["dead","폐사 추이",1],["breed","이번 주 번식",1],["flow","돈군 흐름",1],["week2","이번 주 · 다음 주",1],["parity","산차 구성",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["memo","회의 메모",1],["kpi","지난달 성적",0],["npd","NPD 비생산일수",0]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
-function dashCfg(){const d=state.dash=state.dash||{};d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
+function dashCfg(){const d=state.dash=state.dash||{};if(!d.v2){d.v2=1;d.order=DASH_LIST.map(x=>x[0]);d.on=Object.fromEntries(DASH_LIST.map(x=>[x[0],!!x[2]]))}d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
   d.on=d.on||{};DASH_LIST.forEach(x=>{if(!(x[0] in d.on))d.on[x[0]]=!!x[2]});d.goal={...DASH_GOAL0,...(d.goal||{})};return d}
 const DCOL=["#3987e5","#d95926","#199e70","#c98500","#d55181","#9085e9"];   // 검증한 색 순서 (어두운 배경)
 const DST={good:"#0ca30c",warn:"#fab219",crit:"#d03b3b"};
@@ -3210,12 +3215,14 @@ const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)"
 function vDash(){
   const d=dashCfg(),on=d.order.filter(k=>d.on[k]&&DASH_P[k]),main=on.filter(k=>!DASH_SIDE.includes(k)&&!DASH_STRIP.includes(k)),side=on.filter(k=>DASH_SIDE.includes(k)),strip=on.filter(k=>DASH_STRIP.includes(k));
   const tv=document.body.classList.contains("tv"),D=boardDate(),tmr=addDays(TODAY,1),now=new Date();
+  const per=6,pages=tv&&!dashPhoneL()?Math.max(1,Math.ceil(main.length/per)):1;ui.tvPage=Math.min(Math.max(1,ui.tvPage||1),pages);
+  if(pages>1)main.splice(0,main.length,...main.slice((ui.tvPage-1)*per,ui.tvPage*per));
   const cols=main.length<=2?Math.max(1,main.length):main.length===4?2:3,rows=Math.max(1,Math.ceil(main.length/cols));
   wxLoad();const wc=WX&&WX.current,wd=wxDay(D===TODAY?0:1),al=wxAlerts(D===TODAY?0:1);
   let h=`<div class="dash ${side.length?"has-side":""} ${strip.length?"has-strip":""}" style="--dc:${cols};--dr:${rows}">`;
   h+=`<header class="d-top"><div class="d-brand">${esc(FARM.name)} · ${t(D===TODAY?"오늘":"내일")}<small>${kDate(D)} · W${isoWeek(D).w}</small></div><div class="d-warns">${al.replace(/bd-al wx/g,"d-warn")}</div>`;
   h+=wc?`<div class="d-wx">${wxPic(D===TODAY?wc.weather_code:wd.code)}<b>${D===TODAY?Math.round(wc.temperature_2m)+"℃":""}</b><span>${FARM.place} · ${t(WXC(D===TODAY?wc.weather_code:wd.code))}<br>${wd.min} ~ ${wd.max}℃ · ${t("바람")} ${Math.round((D===TODAY?wc.wind_speed_10m:wd.wind)/3.6)}m/s</span></div>`:`<div class="d-wx"><span>${FARM.place} · ${t("날씨 불러오는 중")}</span></div>`;
-  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl"><button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
+  h+=`<div class="d-right"><div class="d-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</div><div class="d-ctl">${pages>1?Array.from({length:pages},(_,i)=>`<button type="button" class="d-pg ${ui.tvPage===i+1?"on":""}" data-a="tvPg" data-v="${i+1}">P${i+1}</button>`).join(""):""}<button type="button" class="${D===TODAY?"on":""}" data-a="bDay" data-v="today">${t("오늘")}</button><button type="button" class="${D===tmr?"on":""}" data-a="bDay" data-v="tmr">${t("내일")}</button><button type="button" data-a="tvMode">${tv?t("TV 끄기"):t("TV 전체 화면")}</button></div></div></header>`;
   if(dashPhoneL()){const all=[...side.filter(k=>k==="todo"),...main,...strip,...side.filter(k=>k!=="todo")],pg=Math.ceil(all.length/8);
     h+=`<div class="d-swipe" id="dSwipe">${all.map(dashCard).join("")}</div><div class="d-dots">${Array.from({length:pg},(_,i)=>`<i class="${i?"":"on"}"></i>`).join("")}</div>`}
   else{h+=`<div class="d-main">${main.map(dashCard).join("")}</div>`;
@@ -4799,26 +4806,7 @@ binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,
   return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
 
 // ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
-function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")return;if(innerWidth<900){document.querySelectorAll(".d-main>.d-card").forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});return}const M=$(".d-main");if(!M)return;const C=[...M.querySelectorAll(":scope>.d-card")];if(!C.length)return;
-  C.forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});
-  const D=$(".dash"),cols=+getComputedStyle(D).getPropertyValue("--dc")||3,rows=+getComputedStyle(D).getPropertyValue("--dr")||Math.ceil(C.length/cols);let free=cols*rows-C.length;
-  const big=new Set(free>0?C.map(c=>[c,c.scrollHeight/c.clientHeight]).filter(x=>x[1]>1.05).sort((a,b)=>b[1]-a[1]).slice(0,free).map(x=>x[0]):[]);
-  // 세로 줄마다 위에서부터 차곡차곡 (두 칸 카드 포함) → 빈칸 없이
-  const used=Array(cols).fill(0);C.forEach(c=>{let sp=big.has(c)?2:1,col=used.findIndex(u=>u+sp<=rows);if(col<0&&sp===2){sp=1;col=used.findIndex(u=>u+1<=rows)}if(col<0)return;
-    c.style.gridColumn=String(col+1);c.style.gridRow=`${used[col]+1} / span ${sp}`;used[col]+=sp});
-  // 세로로 넘치는 카드: 줄이지 않고 천천히 위아래로 (위·아래에서 잠깐 멈춤)
-  requestAnimationFrame(()=>{C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const h3=c.querySelector(":scope>h3"),kids=[...c.children].filter(x=>x!==h3&&!x.classList.contains("d-roll"));if(!kids.length)return;
-    const w=document.createElement("div");w.className="d-roll";kids.forEach(k=>w.appendChild(k));c.appendChild(w);const box=document.createElement("div");box.className="d-rollbox";c.insertBefore(box,w);box.appendChild(w);
-    box.classList.add("ascroll")});document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))})}
-// 넘치는 칸: 손가락·마우스로 끌어 보기
-// (자동 오르내림은 없앰 — 대표: 세로로 저절로 움직이면 읽기 힘듦. 끌기·휠 스크롤만)
-function ascFade(el){const more=el.scrollHeight-el.clientHeight-el.scrollTop>4;el.classList.toggle("more-dn",more)}
-document.addEventListener("scroll",e=>{const el=e.target;if(el&&el.classList&&el.classList.contains("ascroll"))ascFade(el)},true);
-setInterval(()=>document.querySelectorAll(".ascroll").forEach(ascFade),1000);
-let DRG=null;
-document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);
-document.addEventListener("pointermove",e=>{if(!DRG)return;const d=e.clientY-DRG.y;if(Math.abs(d)>4)DRG.moved=true;if(DRG.moved){DRG.el.scrollTop=DRG.top-d;e.preventDefault()}},true);
-document.addEventListener("pointerup",e=>{if(DRG&&DRG.moved){const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener("click",stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener("click",stop,true),50)}DRG=null},true);
+function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))}
 // 가로로 넘치는 글씨: 전광판처럼 옆으로 흘렀다 돌아옴
 function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,div,button").forEach(el=>{if(el.childElementCount||el.closest(".mq")||!el.textContent.trim())return;
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
@@ -4850,6 +4838,13 @@ const _render5=render;render=function(){const r=_render5.apply(this,arguments);l
   if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
   if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
 Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
+
+// 현황판 ‘이번 주 · 다음 주’: 날마다 할 일 종류별 건수 (주간 달력 요약, 누르면 주간 달력)
+Object.assign(DASH_P,{week2:()=>{const {ev,w0}=calEvents(),col=(a,ti)=>{let h="";for(let k=0;k<7;k++){const d=addDays(a,k),E=ev[d]||[];if(!E.length||d<TODAY)continue;const c={};E.forEach(([x])=>c[x]=(c[x]||0)+1);
+    h+=`<div class="${d===TODAY?"on":""}"><b>${kDate(d)}</b><span>${Object.entries(c).map(([x,n])=>`${t(L(x))} ${n}`).join(" · ")}</span></div>`}return `<div class="d-wk"><h4>${t(ti)}</h4>${h||`<div class="sow-meta">${t("없음")}</div>`}</div>`};
+  return [t("이번 주 · 다음 주"),t("주간 달력 요약"),`<div class="d-wk2">${col(w0,"이번 주")}${col(addDays(w0,7),"다음 주")}</div>`]}});
+DASH_GO.week2="cal";
+Object.assign(A,{tvPg:v=>{ui.tvPage=+v;render()}});
 /* ================= v0.6 · 초기 등록 (본서버 첫 실제 자료) =================
    휴대폰 하나 들고 돈사를 돌며: 칸 → 모돈 번호 → 현장 카드(모돈현황판) 그대로 한 산차씩 → 저장 → 다음 칸.
    큰 숫자 버튼(한 손), 날짜는 카드처럼 ‘1023’ 네 자리(연도는 산차 순서로 자동), 입력한 만큼 바로 저장(state.setup).

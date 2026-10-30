@@ -164,26 +164,7 @@ binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,
   return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
 
 // ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
-function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")return;if(innerWidth<900){document.querySelectorAll(".d-main>.d-card").forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});return}const M=$(".d-main");if(!M)return;const C=[...M.querySelectorAll(":scope>.d-card")];if(!C.length)return;
-  C.forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});
-  const D=$(".dash"),cols=+getComputedStyle(D).getPropertyValue("--dc")||3,rows=+getComputedStyle(D).getPropertyValue("--dr")||Math.ceil(C.length/cols);let free=cols*rows-C.length;
-  const big=new Set(free>0?C.map(c=>[c,c.scrollHeight/c.clientHeight]).filter(x=>x[1]>1.05).sort((a,b)=>b[1]-a[1]).slice(0,free).map(x=>x[0]):[]);
-  // 세로 줄마다 위에서부터 차곡차곡 (두 칸 카드 포함) → 빈칸 없이
-  const used=Array(cols).fill(0);C.forEach(c=>{let sp=big.has(c)?2:1,col=used.findIndex(u=>u+sp<=rows);if(col<0&&sp===2){sp=1;col=used.findIndex(u=>u+1<=rows)}if(col<0)return;
-    c.style.gridColumn=String(col+1);c.style.gridRow=`${used[col]+1} / span ${sp}`;used[col]+=sp});
-  // 세로로 넘치는 카드: 줄이지 않고 천천히 위아래로 (위·아래에서 잠깐 멈춤)
-  requestAnimationFrame(()=>{C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const h3=c.querySelector(":scope>h3"),kids=[...c.children].filter(x=>x!==h3&&!x.classList.contains("d-roll"));if(!kids.length)return;
-    const w=document.createElement("div");w.className="d-roll";kids.forEach(k=>w.appendChild(k));c.appendChild(w);const box=document.createElement("div");box.className="d-rollbox";c.insertBefore(box,w);box.appendChild(w);
-    box.classList.add("ascroll")});document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))})}
-// 넘치는 칸: 손가락·마우스로 끌어 보기
-// (자동 오르내림은 없앰 — 대표: 세로로 저절로 움직이면 읽기 힘듦. 끌기·휠 스크롤만)
-function ascFade(el){const more=el.scrollHeight-el.clientHeight-el.scrollTop>4;el.classList.toggle("more-dn",more)}
-document.addEventListener("scroll",e=>{const el=e.target;if(el&&el.classList&&el.classList.contains("ascroll"))ascFade(el)},true);
-setInterval(()=>document.querySelectorAll(".ascroll").forEach(ascFade),1000);
-let DRG=null;
-document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);
-document.addEventListener("pointermove",e=>{if(!DRG)return;const d=e.clientY-DRG.y;if(Math.abs(d)>4)DRG.moved=true;if(DRG.moved){DRG.el.scrollTop=DRG.top-d;e.preventDefault()}},true);
-document.addEventListener("pointerup",e=>{if(DRG&&DRG.moved){const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener("click",stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener("click",stop,true),50)}DRG=null},true);
+function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))}
 // 가로로 넘치는 글씨: 전광판처럼 옆으로 흘렀다 돌아옴
 function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,div,button").forEach(el=>{if(el.childElementCount||el.closest(".mq")||!el.textContent.trim())return;
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
@@ -215,3 +196,10 @@ const _render5=render;render=function(){const r=_render5.apply(this,arguments);l
   if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
   if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
 Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
+
+// 현황판 ‘이번 주 · 다음 주’: 날마다 할 일 종류별 건수 (주간 달력 요약, 누르면 주간 달력)
+Object.assign(DASH_P,{week2:()=>{const {ev,w0}=calEvents(),col=(a,ti)=>{let h="";for(let k=0;k<7;k++){const d=addDays(a,k),E=ev[d]||[];if(!E.length||d<TODAY)continue;const c={};E.forEach(([x])=>c[x]=(c[x]||0)+1);
+    h+=`<div class="${d===TODAY?"on":""}"><b>${kDate(d)}</b><span>${Object.entries(c).map(([x,n])=>`${t(L(x))} ${n}`).join(" · ")}</span></div>`}return `<div class="d-wk"><h4>${t(ti)}</h4>${h||`<div class="sow-meta">${t("없음")}</div>`}</div>`};
+  return [t("이번 주 · 다음 주"),t("주간 달력 요약"),`<div class="d-wk2">${col(w0,"이번 주")}${col(addDays(w0,7),"다음 주")}</div>`]}});
+DASH_GO.week2="cal";
+Object.assign(A,{tvPg:v=>{ui.tvPage=+v;render()}});
