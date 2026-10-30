@@ -4762,6 +4762,13 @@ function isDys(r){return (r.data.ease&&r.data.ease!=="정상")||(+r.data.still||
 A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=prompt(`${a.name} — ${t("새 PIN (숫자 4~6자리)")}`,"");if(p===null)return;const n=p.trim();
   if(!/^\d{4,6}$/.test(n)){toast(t("PIN은 숫자 4~6자리입니다"));return}if(["0000","1111","1234","2222","3333","4444","9368"].includes(n)){toast(t("너무 쉬운 PIN입니다. 다른 숫자로 해 주세요"));return}
   a.pin=n;save();render();toast(`${a.name} PIN ${t("을 바꿨습니다")}`)};
+
+// 예시 데이터: 빈 잔량 기록에 양쪽 게이지(기울기)도 넣기 → 현황판·사료 화면 빈이 기울어진 면으로 보임
+const _seedFarmPost0=seedFarmPost;
+seedFarmPost=function(){_seedFarmPost0();try{const R=state.records.filter(r=>r.type==="사료"&&r.data.mode==="빈 잔량"&&r.data.lL==null);
+  FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
+    const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
+    r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()};
 /* ================= v0.6 · 초기 등록 (본서버 첫 실제 자료) =================
    휴대폰 하나 들고 돈사를 돌며: 칸 → 모돈 번호 → 현장 카드(모돈현황판) 그대로 한 산차씩 → 저장 → 다음 칸.
    큰 숫자 버튼(한 손), 날짜는 카드처럼 ‘1023’ 네 자리(연도는 산차 순서로 자동), 입력한 만큼 바로 저장(state.setup).
