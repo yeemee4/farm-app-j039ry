@@ -40,7 +40,7 @@ function vHome(){
   h+=`<div class="note">${t("빨간 테두리: 오늘 아직 입력하지 않은 매일 기록 · 파란 0: ‘오늘 없음’으로 확인함")}</div>`;
   h+=`</div><div>`;
   const todos=buildTodos().filter(x=>x.k!=="am"),st=stalls();
-  const leftN=todos.reduce((s,x)=>s+leftOf(x),0);
+  const leftN=todos.reduce((s,x)=>s+(typeof bLeft==="function"?bLeft(x):leftOf(x)),0);   // 일 묶음 수
   h+=`<div class="sec-t">${t("오늘 할 일")} <button type="button" data-a="tab" data-v="todo">${t("남은")} ${leftN} · ${t("전체 보기")} ›</button></div>`;
   const todosS=sortTodos(todos);
   h+=todosS.length?todosS.slice(0,6).map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;

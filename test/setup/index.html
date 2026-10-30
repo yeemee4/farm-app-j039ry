@@ -1016,6 +1016,12 @@ body.tv .d-bm-btns .d-bmb{font-size:1.8vh;padding:1vh .8vw}
 @media (prefers-reduced-motion:reduce){.mq{animation:none}}
 body.tv .d-card{display:flex;flex-direction:column}
 .ascroll{overflow-y:auto!important;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;cursor:grab}.ascroll::-webkit-scrollbar{display:none}.d-rollbox{overflow-y:auto}
+#tvBackBtn{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;gap:4px;box-shadow:0 6px 20px rgba(0,0,0,.3);border-radius:999px;background:var(--ink);padding:4px}
+#tvBackBtn button{border:0;border-radius:999px;padding:10px 16px;font:700 15px var(--body,inherit);background:var(--accent);color:#fff}#tvBackBtn .x{background:transparent;color:var(--bg);padding:10px 12px}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) #tvBackBtn{bottom:24px}}
+:where(html[data-pc="on"]) #tvBackBtn{bottom:24px}
+
+.mq-on:hover .mq{animation-play-state:paused}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1132,7 +1138,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-30 23:00";
+const BUILD_AT="10-30 23:12";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.5";
@@ -3186,7 +3192,7 @@ const DASH_P={
     const rows=[...SOW_LOCS.filter(x=>x!=="분만사").map(x=>[x,sl[x]||0,"–","–"]),...state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return [n,i===0?(sl["분만사"]||0):"–",inS.length,inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0).toLocaleString()]})];
     return [t("돈사 현황"),"",`<table class="d-tbl"><thead><tr><th></th><th>${t("모돈")}</th><th>${t("돈군")}</th><th>${t("두수")}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${t(r[0])}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table>`]},
   todo:()=>{const D=boardDate();REF=D;const g=buildTodos().filter(x=>!["pending"].includes(x.k));REF=TODAY;g.splice(0,g.length,...sortTodos(g));
-    const left=g.reduce((s,x)=>s+leftOf(x),0);
+    const left=g.reduce((s,x)=>s+(typeof bLeft==="function"?bLeft(x):leftOf(x)),0);   // 일 묶음 수
     return [t(D===TODAY?"오늘 할 일":"내일 할 일"),`${t("남은")} ${left}`,`<div class="d-todo">${g.map(x=>{const who=(state.assign||{})[`${D}|${x.k}`];return `<button type="button" data-a="todo" data-v="${x.k}"><i style="background:${x.sev==="bad"?DST.crit:x.sev==="warn"?DST.warn:"#6BB892"}"></i><span>${esc(t(x.t).replace(/ \(.*\)/,""))}<small>${who?t("담당")+" "+esc(who)+" · ":""}${esc(x.items.map(itemShort).slice(0,3).join(" · "))}</small></span><b>${x.items.length}</b></button>`}).join("")||`<div class="d-mu">${t("오늘 할 일이 없습니다.")}</div>`}</div>`]},
   kpi:()=>{const y=+TODAY.slice(0,4),m=+TODAY.slice(5,7),pm=m===1?[y-1,12]:[y,m-1],ppm=pm[1]===1?[pm[0]-1,12]:[pm[0],pm[1]-1];
     const A=rangeMetrics(...monthRange(...pm)),B=rangeMetrics(...monthRange(...ppm));
@@ -3642,6 +3648,7 @@ Object.assign(TR,{"선택됨":["Đã chọn","छानियो","បានជ�
 Object.assign(TR,{"앱 보기":["Xem app","एप दृश्य","មើលកម្មវិធី","มุมมองแอป"],"현장 카드":["Thẻ chuồng","फार्म कार्ड","កាតកសិដ្ឋាន","การ์ดหน้าคอก"],"모돈현황판":["Thẻ heo nái","माउ कार्ड","កាតមេជ្រូក","การ์ดแม่สุกร"],"앱 이전":["Trước app","एप अघि","មុនកម្មវិធី","ก่อนแอป"],"지금":["Hiện tại","अहिले","ឥឡូវ","ตอนนี้"],"카드 정보 수정":["Sửa thông tin thẻ","कार्ड सम्पादन","កែកាត","แก้ไขการ์ด"],"교배일자":["Ngày phối","मिलन मिति","ថ្ងៃបង្កាត់","วันผสม"],"웅돈번호":["Số đực","भाले नम्बर","លេខជ្រូកឈ្មោល","เบอร์พ่อพันธุ์"],"재발":["Lên giống lại","फेरि बाली","ចេញកំដៅម្តងទៀត","กลับสัด"],"분만예정일":["Ngày đẻ dự kiến","ब्याउने अनुमानित","ថ្ងៃកើតរំពឹង","วันคลอดกำหนด"],"분만일":["Ngày đẻ","ब्याएको मिति","ថ្ងៃកើត","วันคลอด"],"총산자수":["Tổng sơ sinh","जम्मा जन्म","សរុបកើត","ลูกเกิดรวม"],"포유개시두수":["Số con bắt đầu bú","दूध सुरु संख्या","ចំនួនចាប់ផ្តើមបៅ","ลูกเริ่มดูดนม"],"이유일자":["Ngày cai sữa","छुटाउने मिति","ថ្ងៃផ្តាច់","วันหย่านม"],"이유두수":["Số cai sữa","छुटाएको संख्या","ចំនួនផ្តាច់","จำนวนหย่านม"],"특이사항":["Ghi chú","विशेष","កំណត់សម្គាល់","หมายเหตุ"],"생년월일":["Ngày sinh","जन्म मिति","ថ្ងៃកំណើត","วันเกิด"],"구입일":["Ngày mua","किनेको मिति","ថ្ងៃទិញ","วันซื้อ"],"구입처":["Nơi mua","किनेको ठाउँ","កន្លែងទិញ","ซื้อจาก"],"초교배예정일":["Ngày phối đầu dự kiến","पहिलो मिलन अनुमान","ថ្ងៃបង្កាត់ដំបូង","วันผสมแรกกำหนด"],"모돈번호":["Số nái","माउ नम्बर","លេខមេ","เบอร์แม่"],"항목":["Mục","विषय","ធាតុ","รายการ"]});
 Object.assign(TR,{"꼭 할 일":["Việc phải làm","गर्नैपर्ने काम","ការងារត្រូវធ្វើ","งานที่ต้องทำ"],"확인만":["Chỉ kiểm tra","हेर्ने मात्र","ពិនិត្យតែប៉ុណ្ណោះ","ตรวจดูเท่านั้น"],"퀘스트에 넣지 않음":["Không tính vào nhiệm vụ","क्वेस्टमा नगन्ने","មិនរាប់ក្នុងបេសកកម្ម","ไม่นับในภารกิจ"],"일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.":["Nái lâu không có ghi chép mới. Hãy kiểm tra xem có sót không.","लामो समयदेखि रेकर्ड नभएका माउ। छुटेको छ कि हेर्नुहोस्।","មេជ្រូកគ្មានកំណត់ត្រាយូរ។ សូមពិនិត្យ។","แม่สุกรที่ไม่มีบันทึกนาน กรุณาตรวจสอบ"],"기록이 멈춘 개체가 없습니다.":["Không có con nào bị dừng ghi chép.","रेकर्ड रोकिएको कुनै छैन।","គ្មានទេ។","ไม่มี"],"복":["ổ","ब्याँत","ក្រុម","ครอก"],"평균":["TB","औसत","មធ្យម","เฉลี่ย"],"진단 대기":["Chờ khám thai","जाँच पर्खँदै","រង់ចាំពិនិត្យ","รอตรวจท้อง"],"교배 대기":["Chờ phối","मिलन पर्खँदै","រង់ចាំបង្កាត់","รอผสม"],"재교배 대기":["Chờ phối lại","फेरि मिलन पर्खँदै","រង់ចាំបង្កាត់ម្តងទៀត","รอผสมซ้ำ"]});
 Object.assign(TR,{"난산 판정 (자동)":["Đẻ khó (tự động)","कठिन ब्याँत (स्वतः)","ពិបាកកើត (ស្វ័យប្រវត្តិ)","คลอดยาก (อัตโนมัติ)"],"난산으로 기록":["ghi là đẻ khó","कठिन ब्याँत भनेर","កត់ថាពិបាកកើត","บันทึกเป็นคลอดยาก"],"두 이상이면 난산":["con trở lên = đẻ khó","वा बढी = कठिन ब्याँत","ឡើង = ពិបាកកើត","ตัวขึ้นไป = คลอดยาก"]});
+Object.assign(TR,{"묶음":["việc","समूह","ក្រុម","กลุ่ม"],"TV로 돌아가기":["Về màn hình TV","TV मा फर्कनुहोस्","ត្រឡប់ទៅ TV","กลับไปหน้าจอ TV"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -3760,7 +3767,7 @@ function vHome(){
   h+=`<div class="note">${t("빨간 테두리: 오늘 아직 입력하지 않은 매일 기록 · 파란 0: ‘오늘 없음’으로 확인함")}</div>`;
   h+=`</div><div>`;
   const todos=buildTodos().filter(x=>x.k!=="am"),st=stalls();
-  const leftN=todos.reduce((s,x)=>s+leftOf(x),0);
+  const leftN=todos.reduce((s,x)=>s+(typeof bLeft==="function"?bLeft(x):leftOf(x)),0);   // 일 묶음 수
   h+=`<div class="sec-t">${t("오늘 할 일")} <button type="button" data-a="tab" data-v="todo">${t("남은")} ${leftN} · ${t("전체 보기")} ›</button></div>`;
   const todosS=sortTodos(todos);
   h+=todosS.length?todosS.slice(0,6).map(todoBtn).join(""):`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
@@ -4642,7 +4649,7 @@ vTodo=function(){
   const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls(),must=todos.filter(x=>!todoIsCheck(x.k)),chk=todos.filter(x=>todoIsCheck(x.k));
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
   h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
-  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+leftOf(x),0)}</span></div>`;
+  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
   h+=must.length?`<div class="todolist">${must.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   if(chk.length)h+=`<div class="sec-t">${t("확인만")} <span>${t("퀘스트에 넣지 않음")}</span></div><div class="todolist tl-chk">${chk.map(todoBtn).join("")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
@@ -4821,6 +4828,32 @@ function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,
 const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0);return r};
 addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
 document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));
+
+// ---- 할 일 숫자 = ‘일 묶음’ 수 (같은 성격은 하나로, 다르면 나눔) · 탭 배지·현황판·홈·퀘스트 ----
+function bundleKey(k,it){
+  if(k==="svax")return it.vx?it.vx.name.replace(/\s*\d+차.*$/,""):"1";   // 백신 종류별
+  if(k==="bvax")return it.v&&it.v.p?it.v.p.name.replace(/\s*\d+차.*$/,""):"1";   // 돈군 백신 종류별(1차·2차는 같은 일)
+  if(k==="lit")return it.name||"1";                           // 1일·3일 처치별
+  if(k==="annual")return it.ann?it.ann.name:"1";
+  if(k==="feedord")return it.feed&&it.feed.bin?"bulk":"bag";  // 벌크 / 포대
+  if(k==="feedchg")return it.fc?it.fc.p.feed:"1";
+  if(k==="task")return (it.t&&(it.t.barn||it.t.title))||"1";  // 돈사별 조치
+  if(k==="closemiss")return it.cm?it.cm.day:"1";              // 날짜별
+  return "1"}                                                // 나머지는 묶음 하나
+function bLeft(x){if(x.k==="pending")return x.items.length?1:0;const s=new Set();x.items.forEach(it=>{if(!tdLog(tdKey(x.k,itemTarget(it))))s.add(bundleKey(x.k,it))});return s.size}
+function bTot(x){return new Set(x.items.map(it=>bundleKey(x.k,it))).size}
+navBadge=(nb=>function(k){if(k==="todo")return buildTodos().reduce((s,x)=>s+bLeft(x),0)+(stalls().length?1:0);return nb(k)})(navBadge);
+questStat=function(todos){const tot=todos.reduce((s,x)=>s+bTot(x),0),left=todos.reduce((s,x)=>s+bLeft(x),0);return {tot,done:tot-left,pct:tot?Math.round((tot-left)/tot*100):100}};
+
+// ---- TV 에서 카드를 눌러 다른 화면으로 가면: 구석에 ‘📺 TV로 돌아가기’ (누르면 그 TV 화면으로 바로) ----
+dashLeave=(f=>function(){if(document.body.classList.contains("tv"))ui.tvBack=tab;return f()})(dashLeave);
+const _render5=render;render=function(){const r=_render5.apply(this,arguments);let b=$("#tvBackBtn");const show=ui.tvBack&&!document.body.classList.contains("tv")&&me();
+  if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
+  if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
+Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
+// 마우스를 올려 두면 저절로 움직이던 칸·글씨가 멈춤 (정확히 누르기)
+document.addEventListener("pointerover",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el&&e.pointerType==="mouse")ascHold(el)},true);
+document.addEventListener("pointerout",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el&&e.pointerType==="mouse"&&!el.contains(e.relatedTarget))ascFree(el)},true);
 /* ================= v0.6 · 초기 등록 (본서버 첫 실제 자료) =================
    휴대폰 하나 들고 돈사를 돌며: 칸 → 모돈 번호 → 현장 카드(모돈현황판) 그대로 한 산차씩 → 저장 → 다음 칸.
    큰 숫자 버튼(한 손), 날짜는 카드처럼 ‘1023’ 네 자리(연도는 산차 순서로 자동), 입력한 만큼 바로 저장(state.setup).

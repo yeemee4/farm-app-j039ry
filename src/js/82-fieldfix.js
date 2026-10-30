@@ -15,7 +15,7 @@ vTodo=function(){
   const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls(),must=todos.filter(x=>!todoIsCheck(x.k)),chk=todos.filter(x=>todoIsCheck(x.k));
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
   h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
-  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+leftOf(x),0)}</span></div>`;
+  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
   h+=must.length?`<div class="todolist">${must.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
   if(chk.length)h+=`<div class="sec-t">${t("확인만")} <span>${t("퀘스트에 넣지 않음")}</span></div><div class="todolist tl-chk">${chk.map(todoBtn).join("")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
@@ -194,3 +194,29 @@ function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,
 const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0);return r};
 addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
 document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));
+
+// ---- 할 일 숫자 = ‘일 묶음’ 수 (같은 성격은 하나로, 다르면 나눔) · 탭 배지·현황판·홈·퀘스트 ----
+function bundleKey(k,it){
+  if(k==="svax")return it.vx?it.vx.name.replace(/\s*\d+차.*$/,""):"1";   // 백신 종류별
+  if(k==="bvax")return it.v&&it.v.p?it.v.p.name.replace(/\s*\d+차.*$/,""):"1";   // 돈군 백신 종류별(1차·2차는 같은 일)
+  if(k==="lit")return it.name||"1";                           // 1일·3일 처치별
+  if(k==="annual")return it.ann?it.ann.name:"1";
+  if(k==="feedord")return it.feed&&it.feed.bin?"bulk":"bag";  // 벌크 / 포대
+  if(k==="feedchg")return it.fc?it.fc.p.feed:"1";
+  if(k==="task")return (it.t&&(it.t.barn||it.t.title))||"1";  // 돈사별 조치
+  if(k==="closemiss")return it.cm?it.cm.day:"1";              // 날짜별
+  return "1"}                                                // 나머지는 묶음 하나
+function bLeft(x){if(x.k==="pending")return x.items.length?1:0;const s=new Set();x.items.forEach(it=>{if(!tdLog(tdKey(x.k,itemTarget(it))))s.add(bundleKey(x.k,it))});return s.size}
+function bTot(x){return new Set(x.items.map(it=>bundleKey(x.k,it))).size}
+navBadge=(nb=>function(k){if(k==="todo")return buildTodos().reduce((s,x)=>s+bLeft(x),0)+(stalls().length?1:0);return nb(k)})(navBadge);
+questStat=function(todos){const tot=todos.reduce((s,x)=>s+bTot(x),0),left=todos.reduce((s,x)=>s+bLeft(x),0);return {tot,done:tot-left,pct:tot?Math.round((tot-left)/tot*100):100}};
+
+// ---- TV 에서 카드를 눌러 다른 화면으로 가면: 구석에 ‘📺 TV로 돌아가기’ (누르면 그 TV 화면으로 바로) ----
+dashLeave=(f=>function(){if(document.body.classList.contains("tv"))ui.tvBack=tab;return f()})(dashLeave);
+const _render5=render;render=function(){const r=_render5.apply(this,arguments);let b=$("#tvBackBtn");const show=ui.tvBack&&!document.body.classList.contains("tv")&&me();
+  if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
+  if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
+Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
+// 마우스를 올려 두면 저절로 움직이던 칸·글씨가 멈춤 (정확히 누르기)
+document.addEventListener("pointerover",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el&&e.pointerType==="mouse")ascHold(el)},true);
+document.addEventListener("pointerout",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el&&e.pointerType==="mouse"&&!el.contains(e.relatedTarget))ascFree(el)},true);
