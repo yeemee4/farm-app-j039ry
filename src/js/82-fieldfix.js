@@ -48,14 +48,13 @@ wxAlerts=function(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d
   return a.map(x=>`<div class="bd-al wx">${x}</div>`).join("")};
 
 // 도태 후보 기준 (대표 결정 2026-10-30): 최근 2산 총산 ≤9 · 난산 비율 ≥30% · 사산이 모돈군 평균보다 20%↑ · 무발정·장기 NPD · 반복 재발(난임) · 고산차
-const CULL1={low:9,dys:30,still:20,anest:21,open:60,returns:2,parity:9};
+const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
 cullRule=function(){const r={...CULL1,...(state.cullRule||{})};return r};
 let CSX=null;function herdStill(){const k=state.records.length;if(CSX&&CSX.k===k)return CSX.v;const F=state.records.filter(r=>r.type==="분만");const v=F.length?F.reduce((s,r)=>s+(+r.data.still||0),0)/F.length:0;CSX={k,v};return v}
 cullWhy=function(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
   const F=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
   if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
-  if(F.length>=2){const dy=F.filter(r=>r.data.ease&&r.data.ease!=="정상").length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
-  if(F.length>=3){const av=F.reduce((x,r)=>x+(+r.data.still||0),0)/F.length,h=herdStill();if(h>0&&av>=h*(1+R.still/100)&&av>=1)w.push(`${t("사산")} ${av.toFixed(1)}/${t("복")} (${t("평균")} ${h.toFixed(1)})`)}
+  if(F.length>=2){const dy=F.filter(r=>isDys(r)).length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
   if(st.stage==="이유"&&diff(st.since,TODAY)>=R.anest)w.push(`${t("무발정")} ${diff(st.since,TODAY)}${t("일")}`);
   if((st.stage==="재교배"||st.stage==="이유")&&st.since&&diff(st.since,TODAY)>=R.open)w.push(`${t("비생산")} ${diff(st.since,TODAY)}${t("일")}`);
   if(st.returns>=R.returns)w.push(`${t("재발·공태")} ${st.returns}${t("회")}`);
@@ -64,9 +63,9 @@ cullWhy=function(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return nu
   return w.length?[...new Set(w)].join(" · "):null};
 cullRuleSet=function(){const R=cullRule(),row=(k,l,u)=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`;
   return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터 · 배치도 ⚠")}</span></div><div class="panel">
-    ${row("low","최근 2산 총산 이하 (두)")}${row("dys","난산 비율 이상 (%)")}${row("still","사산이 모돈군 평균보다 많음 (%↑)")}${row("anest","무발정: 이유 후 교배 없이 (일 이상)")}${row("open","비생산(이유·재발 후) 기간 (일 이상)")}${row("returns","재발·공태 횟수 이상 (난임)")}${row("parity","산차 이상 (0 = 안 봄)")}
+    ${row("low","최근 2산 총산 이하 (두)")}${row("dys","난산 비율 이상 (%)")}${row("still","사산 몇 두 이상이면 난산 (분만 입력 때 자동)")}${row("anest","무발정: 이유 후 교배 없이 (일 이상)")}${row("open","비생산(이유·재발 후) 기간 (일 이상)")}${row("returns","재발·공태 횟수 이상 (난임)")}${row("parity","산차 이상 (0 = 안 봄)")}
     <div class="note">${t("지제(다리)·외상 같은 문제는 모돈 상세 › 도태 계획 세우기에서 사유를 골라 표시합니다.")}</div></div>`};
-Object.assign(A,{cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};const step=v==="dys"||v==="still"?5*Number(el.dataset.k):Number(el.dataset.k);r[v]=Math.max(0,cullRule()[v]+step);save();render()}});
+Object.assign(A,{cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};const step=v==="dys"?5*Number(el.dataset.k):Number(el.dataset.k);r[v]=Math.max(0,cullRule()[v]+step);save();render()}});
 
 // ---- 배치도 칸: 현장 말 상태 + 이슈(할 일) 아이콘 · 대표 설정 › 배치도 칸 정보 ----
 const BM_ISS=[["svax","💉","백신"],["lit","💉","복별 처치"],["ret","🔍","임신 진단"],["mate","❤","교배"],["mate2","❤","2차 교배"],["remate","❤","재교배"],["movein","🚚","분만사 이동"],["farrow","🐣","분만 예정"],["wean","🍼","이유"],["gfchg","🥣","급여량 변경"],["bcsdue","📏","BCS 측정"],["withdraw","💊","휴약 중"],["heat","🔥","발정 관찰"]];
@@ -140,3 +139,10 @@ const _extraTodos0=extraTodos;
 extraTodos=function(){const a=_extraTodos0();let e=[];try{e=emptyFeeds()}catch(x){}return [...a,{k:"binempty",t:"사료 빈 비었음 · 입고 확인",items:e,act:null}]};
 if(!TODO_KINDS.some(x=>x[0]==="binempty"))TODO_KINDS.splice(3,0,["binempty","사료 빈 비었음 · 입고 확인"]);
 Object.assign(A,{empIn:v=>{closeSheet();openInput("사료",{fv:{kind:v,mode:"입고"}})}});
+
+// 분만: 사산이 기준 두수(기본 4) 이상이면 난산으로 자동 기록 (새벽 분만 1~2두 사산은 사고로 봄)
+const stillDys=()=>cullRule().still;
+function isDys(r){return (r.data.ease&&r.data.ease!=="정상")||(+r.data.still||0)>=stillDys()}
+(()=>{const F=FORMS["분만"];if(!F||F.f.some(f=>f.k==="_dys"))return;const i=F.f.findIndex(f=>f.k==="_t");
+  F.f.splice(i+1,0,{k:"_dys",t:"calc",l:"난산 판정 (자동)",calc:d=>(+d.still||0)>=stillDys()?`⚠ ${t("사산")} ${d.still}${t("두")} → ${t("난산으로 기록")}`:`${t("사산")} ${stillDys()}${t("두 이상이면 난산")}`});
+  const p0=F.pre;F.pre=(d,wd,s)=>{if(p0)p0(d,wd,s);if((+d.still||0)>=stillDys()&&(!d.ease||d.ease==="정상")){d.ease="난산";d.dysAuto=true}}})();
