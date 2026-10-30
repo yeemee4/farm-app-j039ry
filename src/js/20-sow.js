@@ -44,8 +44,8 @@ function stalls(){
 /* ================= 할 일 ================= */
 const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k==="handover"||k==="bcsdue"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
 const tdLog=key=>(state.todoLog||{})[key];
-function itemTarget(it){return it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
-function tdName(it){return it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
+function itemTarget(it){return it.emp?"emp|"+it.emp.f:it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
+function tdName(it){return it.emp?it.emp.name+" 입고 확인":it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
 function buildTodos(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{

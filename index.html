@@ -1443,8 +1443,8 @@ function stalls(){
 /* ================= 할 일 ================= */
 const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k==="handover"||k==="bcsdue"?`${k}|${target}`:`${TODAY}|${k}|${target}`;
 const tdLog=key=>(state.todoLog||{})[key];
-function itemTarget(it){return it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
-function tdName(it){return it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
+function itemTarget(it){return it.emp?"emp|"+it.emp.f:it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
+function tdName(it){return it.emp?it.emp.name+" 입고 확인":it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
 function buildTodos(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{
@@ -2892,7 +2892,8 @@ function feedObs(f){rawPast();if(FLX.obs[f])return FLX.obs[f];const M=FLX.m,from
   for(let i=1;i<rd.length;i++){const a=rd[i-1],b=rd[i],g=diff(a.workDate,b.workDate);if(g<1||g>14)continue;
     const inn=R.filter(r=>r.data.mode==="입고"&&r.createdAt>a.createdAt&&r.createdAt<=b.createdAt).reduce((s,r)=>s+r.data.kg,0),act=a.data.kg+inn-b.data.kg;
     let pred=0,ok=true;for(let d=a.workDate;d<b.workDate;d=addDays(d,1)){if(!M[d]){ok=false;break}pred+=M[d][f]||0}
-    if(!ok||pred<=0||act<=0)continue;const r=act/pred;if(r<.4||r>2.5)continue;out.push({d1:a.workDate,d2:b.workDate,act,pred,r})}
+    if(!ok||pred<=0||act<=0||(typeof feedEmpty==='function'&&feedEmpty(f,b.data.kg)))continue;   // 뒤 잔량이 바닥이면 실제 사용량을 알 수 없음 → 배우지 않음
+    const r=act/pred;if(r<.4||r>2.5)continue;out.push({d1:a.workDate,d2:b.workDate,act,pred,r})}
   return FLX.obs[f]=out}
 function fitFactor(O){if(O.length<3)return null;let n=0,d=0;O.forEach((o,i)=>{const w=Math.pow(.88,O.length-1-i);n+=w*o.act;d+=w*o.pred});return Math.max(.5,Math.min(2,n/d))}
 // 예측 오차는 주 단위(약 7일 묶음)로: 그 시점까지 배운 보정값으로 다음 한 주를 맞혀 본 결과
@@ -3725,7 +3726,7 @@ function vHome(){
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.fdv?it.fdv.f:it.fc2?(it.fc2.bin?it.fc2.bin.name.replace(" 빈",""):it.fc2.k):it.cm?kDate(it.cm.day).replace(/\s*\(.*\)/,"")+" "+L(it.cm.type):it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){return it.emp?it.emp.name.replace(" 빈",""):it.fdv?it.fdv.f:it.fc2?(it.fc2.bin?it.fc2.bin.name.replace(" 빈",""):it.fc2.k):it.cm?kDate(it.cm.day).replace(/\s*\(.*\)/,"")+" "+L(it.cm.type):it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
@@ -3749,6 +3750,7 @@ function openTodo(k){
     const ck=x.k==="pending"?"":`<div class="tdck"><label class="ckbox"><input type="checkbox" data-tdk="${key}" data-tdt="${esc(x.t)}" data-tdtarget="${esc(tdName(it))}" ${it.s?`data-tdsow="${it.s.id}"`:""} ${log?"checked":""}><span>${log?`${t("완료")} · ${esc(log.user)} ${kTime(log.at)}`:t("조치 완료 체크")}</span></label><input type="text" data-tdm="${key}" placeholder="${t("조치 내용 (예: 재발 없음, 수의사 확인)")}" value="${esc(log?log.memo:(ui.memo[key]||""))}" aria-label="${t("내용")}"></div>`;
     if(it.b)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.b.k)} · ${it.v.p.name}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${VST[it.v.st][1]}</span></div><div class="sow-meta">${bAge(it.b)}w · ${t(stagePlan(bAge(it.b)))} · ${it.v.done}/${it.v.need}${t("두")}</div><div class="prog-bar"><i style="width:${Math.min(100,it.v.done/it.v.need*100)}%"></i></div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="돈군백신" data-batch="${it.b.k}" data-vax="${it.v.p.name}">${t("접종 기록")}</button></div>${ck}</div>`;
     if(it.item)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.item.name)}</b><span class="dstate ds-wait">${t("재고 부족")}</span></div><div class="sow-meta">${t(it.item.cat)} · ${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="재고" data-item="${it.item.id}">${t("입고 기록")}</button></div>${ck}</div>`;
+    if(it.emp)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.emp.name)}</b><span class="dd" style="color:var(--red)">${t("비었음")} ${it.emp.days}${t("일째")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="empIn" data-v="${esc(it.emp.f)}">${t("입고 기록")}</button><button class="act" type="button" data-a="tab" data-v="feedchk">${t("잔량 다시 보기")}</button></div>${ck}</div>`;
     if(it.feed)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${esc(it.feed.f)}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${it.feed.days}${t("일분")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="input" data-v="사료">${t("입고 기록")}</button></div>${ck}</div>`;
     if(it.fc)return `<div class="sow ${log?"done":""}"><div class="sow-top"><b>${bName(it.fc.b.k)} → ${esc(it.fc.p.feed)}</b><span class="dd">${t(stagePlan(bAge(it.fc.b)))}</span></div><div class="sow-meta">${it.label}</div>${ck}</div>`;
     if(it.am)return `<div class="sow"><div class="sow-top"><b>${esc(t(it.am.barn))}</b><span class="dd" style="color:${it.sev==="bad"?"var(--red)":it.sev==="warn"?"var(--amber)":"var(--muted)"}">${it.issue?t("이상"):t("미점검")}</span></div><div class="sow-meta">${it.label}</div><div class="acts"><button class="act pri" type="button" data-a="tab" data-v="morning">${t("아침 점검")}</button></div></div>`;
@@ -4711,6 +4713,18 @@ vSettings=function(){const P=ui.setPage||"main",back=`<div class="pagehd"><butto
   const mi=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${t(ti)}</b><small>${t(d)}</small></span><span>›</span></button>`;
   return h.replace(/<button class="mitem" type="button" data-a="setPage" data-v="labels">/,mi("statset","성적 항목","성적 탭·성적 TV 숫자와 그래프 켜기·끄기, 순서 (NPD 등)")+mi("bmshow","배치도 칸 정보","칸에 보일 상태·이슈 아이콘·셋째 줄 정보")+'<button class="mitem" type="button" data-a="setPage" data-v="labels">')};
 const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(todos.filter(x=>!todoIsCheck(x.k)))};
+
+// ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
+function feedEmpty(f,kg){if(kg==null)return false;const b=feedBin(f);return b?kg<=Math.max(100,binCap(b)*.03):kg<=0}
+function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+  const rd=R.filter(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량"),last=rd[rd.length-1];if(!last||!feedEmpty(f,last.data.kg))return;
+  if(R.some(r=>r.data.mode==="입고"&&r.createdAt>last.createdAt))return;
+  let i=rd.length-1;while(i>0&&feedEmpty(f,rd[i-1].data.kg))i--;const since=rd[i].workDate,b=feedBin(f);
+  out.push({emp:{f,name:b?b.name:`${f} ${t("포대")}`,since,days:diff(since,TODAY)+1},label:`${kDate(since)}${t("부터 비어 있음")} · ${t("입고됐는지 확인하고 입고를 기록하세요")}${diff(since,TODAY)>=1?" · "+t("사용량 학습에서 빠짐"):""}`,sev:"bad"})});return out}
+const _extraTodos0=extraTodos;
+extraTodos=function(){const a=_extraTodos0();let e=[];try{e=emptyFeeds()}catch(x){}return [...a,{k:"binempty",t:"사료 빈 비었음 · 입고 확인",items:e,act:null}]};
+if(!TODO_KINDS.some(x=>x[0]==="binempty"))TODO_KINDS.splice(3,0,["binempty","사료 빈 비었음 · 입고 확인"]);
+Object.assign(A,{empIn:v=>{closeSheet();openInput("사료",{fv:{kind:v,mode:"입고"}})}});
 /* ================= 입장 키 (링크를 받은 사람만) ================= */
 const GATE="cbfad02f9ed2a8d1e08d8f74f5303e9eb93637d47f82ab6f1c15871cf8dd0481";
 async function sha(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}

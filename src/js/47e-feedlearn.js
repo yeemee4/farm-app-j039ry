@@ -8,7 +8,8 @@ function feedObs(f){rawPast();if(FLX.obs[f])return FLX.obs[f];const M=FLX.m,from
   for(let i=1;i<rd.length;i++){const a=rd[i-1],b=rd[i],g=diff(a.workDate,b.workDate);if(g<1||g>14)continue;
     const inn=R.filter(r=>r.data.mode==="입고"&&r.createdAt>a.createdAt&&r.createdAt<=b.createdAt).reduce((s,r)=>s+r.data.kg,0),act=a.data.kg+inn-b.data.kg;
     let pred=0,ok=true;for(let d=a.workDate;d<b.workDate;d=addDays(d,1)){if(!M[d]){ok=false;break}pred+=M[d][f]||0}
-    if(!ok||pred<=0||act<=0)continue;const r=act/pred;if(r<.4||r>2.5)continue;out.push({d1:a.workDate,d2:b.workDate,act,pred,r})}
+    if(!ok||pred<=0||act<=0||(typeof feedEmpty==='function'&&feedEmpty(f,b.data.kg)))continue;   // 뒤 잔량이 바닥이면 실제 사용량을 알 수 없음 → 배우지 않음
+    const r=act/pred;if(r<.4||r>2.5)continue;out.push({d1:a.workDate,d2:b.workDate,act,pred,r})}
   return FLX.obs[f]=out}
 function fitFactor(O){if(O.length<3)return null;let n=0,d=0;O.forEach((o,i)=>{const w=Math.pow(.88,O.length-1-i);n+=w*o.act;d+=w*o.pred});return Math.max(.5,Math.min(2,n/d))}
 // 예측 오차는 주 단위(약 7일 묶음)로: 그 시점까지 배운 보정값으로 다음 한 주를 맞혀 본 결과

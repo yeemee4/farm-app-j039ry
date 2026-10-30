@@ -128,3 +128,15 @@ vSettings=function(){const P=ui.setPage||"main",back=`<div class="pagehd"><butto
   const mi=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${t(ti)}</b><small>${t(d)}</small></span><span>›</span></button>`;
   return h.replace(/<button class="mitem" type="button" data-a="setPage" data-v="labels">/,mi("statset","성적 항목","성적 탭·성적 TV 숫자와 그래프 켜기·끄기, 순서 (NPD 등)")+mi("bmshow","배치도 칸 정보","칸에 보일 상태·이슈 아이콘·셋째 줄 정보")+'<button class="mitem" type="button" data-a="setPage" data-v="labels">')};
 const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(todos.filter(x=>!todoIsCheck(x.k)))};
+
+// ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
+function feedEmpty(f,kg){if(kg==null)return false;const b=feedBin(f);return b?kg<=Math.max(100,binCap(b)*.03):kg<=0}
+function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+  const rd=R.filter(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량"),last=rd[rd.length-1];if(!last||!feedEmpty(f,last.data.kg))return;
+  if(R.some(r=>r.data.mode==="입고"&&r.createdAt>last.createdAt))return;
+  let i=rd.length-1;while(i>0&&feedEmpty(f,rd[i-1].data.kg))i--;const since=rd[i].workDate,b=feedBin(f);
+  out.push({emp:{f,name:b?b.name:`${f} ${t("포대")}`,since,days:diff(since,TODAY)+1},label:`${kDate(since)}${t("부터 비어 있음")} · ${t("입고됐는지 확인하고 입고를 기록하세요")}${diff(since,TODAY)>=1?" · "+t("사용량 학습에서 빠짐"):""}`,sev:"bad"})});return out}
+const _extraTodos0=extraTodos;
+extraTodos=function(){const a=_extraTodos0();let e=[];try{e=emptyFeeds()}catch(x){}return [...a,{k:"binempty",t:"사료 빈 비었음 · 입고 확인",items:e,act:null}]};
+if(!TODO_KINDS.some(x=>x[0]==="binempty"))TODO_KINDS.splice(3,0,["binempty","사료 빈 비었음 · 입고 확인"]);
+Object.assign(A,{empIn:v=>{closeSheet();openInput("사료",{fv:{kind:v,mode:"입고"}})}});
