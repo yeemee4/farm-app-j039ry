@@ -64,7 +64,8 @@ async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
     if(SY.replace){SY.replace=false;state.records=[];state.sows=[];SY.snap={rec:{},sow:{},key:{}}}
     const S=SY.snap,idx={rec:{},sow:{}};(state.records||[]).forEach((x,i)=>idx.rec[x.id]=i);(state.sows||[]).forEach((x,i)=>idx.sow[x.id]=i);
     const kill={rec:new Set(),sow:new Set()};
-    r.rows.forEach(w=>{if(SY.out[w.k+"|"+w.id])return;   // 아직 못 보낸 내 수정이 우선
+    r.rows.forEach(w=>{w.id=String(w.id);if(!w.del&&typeof w.j!=="string")w.j=JSON.stringify(w.j);   // 시트가 3·true 같은 값을 숫자·참거짓으로 돌려줌 → 다시 글자로
+      if(SY.out[w.k+"|"+w.id])return;   // 아직 못 보낸 내 수정이 우선
       const h=w.del?null:fnv(w.j);
       if(w.k==="key"){const [k,sub]=w.id.split(SUBK);if(SYNC_SKIP.includes(k)||S.key[w.id]===h)return;changed=true;
         if(sub===undefined){if(w.del)delete state[k];else state[k]=JSON.parse(w.j)}else{if(!syObj(state[k]))state[k]={};if(w.del)delete state[k][sub];else state[k][sub]=JSON.parse(w.j)}
@@ -123,7 +124,7 @@ Object.assign(A,{
     const A2=state.accounts.filter(x=>x.pin&&!x.pin.includes(PIN_MASK)).map(x=>({id:x.id,name:x.name,role:x.role,farm:syFarm(),lang:x.lang,active:x.active!==false,ph:pinHash(x.id,x.pin),pinLen:x.pin.length}));
     try{let r=await syCall({a:"init",farm:syFarm(),accounts:A2});if(!r.ok)throw new Error(r.err);r=await syCall({a:"login",acc:a.id,ph:pinHash(a.id,a.pin),farm:syFarm()});if(!r.ok)throw new Error(r.err);
       SY.token=r.token;SY.acc=a.id;SY.farm=syFarm();SY.snap={rec:{},sow:{},key:{},acc:fnv(JSON.stringify(state.accounts))};SY.out={};SY.fresh=true;SY.cursor=0;sySave();ui.syHello=null;ui.syMsg={t:t("서버를 시작했습니다. 기록을 올리는 중…")};render();
-      syDiff();setTimeout(()=>{ui.syMsg={t:t("올리기 완료")+" · "+(state.records||[]).length+t("건")};render()},4000)}catch(e){ui.syMsg={t:t("실패")+": "+e.message,bad:1};render()}},
+      syDiff();syQ(()=>{}).then(()=>{ui.syMsg=syPending()?{t:`${t("아직 보낼 기록")} ${syPending()}${t("건")} · ${t("인터넷 연결 뒤 자동으로 이어서 보냅니다")}`,bad:1}:{t:t("올리기 완료")+" · "+(state.records||[]).length+t("건")};render()})}catch(e){ui.syMsg={t:t("실패")+": "+e.message,bad:1};render()}},
   syJoin:async()=>{if(!confirm(t("서버 기록으로 이 휴대폰 기록을 바꿀까요?")))return;
     try{const r=await syCall({a:"accounts"});if(!r.ok)throw new Error(r.err);state.accounts=r.accounts.map(a=>({...a,pin:PIN_MASK.repeat(a.pinLen||4)}));SY.farm=syFarm();SY.cursor=0;SY.snap={rec:{},sow:{},key:{}};SY.out={};SY.token=null;SY.join=true;sySave();
       ME=null;try{localStorage.removeItem(SKEY)}catch(e){}SYNC_MUTE=true;save();SYNC_MUTE=false;ui.syHello=null;tab="home";render();toast(t("내 계정을 고르고 PIN 을 넣으면 기록을 받아 옵니다"))}catch(e){ui.syMsg={t:t("실패")+": "+e.message,bad:1};render()}},
