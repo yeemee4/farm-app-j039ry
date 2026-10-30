@@ -158,3 +158,8 @@ seedFarmPost=function(){_seedFarmPost0();try{const R=state.records.filter(r=>r.t
   FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
     const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
     r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()};
+// 빈 그림 왼쪽 아래 ‘정면 ↗’: 게이지 왼쪽·오른쪽 = 정면에서 볼 때 기준
+const _binSvg0=binSvg;
+binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=10*k,x0=Math.max(1,P.x0-10),y0=P.B+2,x1=x0+4*k,y1=y0-fs-3*k,L=8*k,ax=x1+L,ay=y1-L,ux=Math.SQRT1_2,uy=-Math.SQRT1_2,h=5*k,w=3.5*k;
+  const tip=`${ax},${ay} ${ax-ux*h-uy*w},${ay-uy*h+ux*w} ${ax-ux*h+uy*w},${ay-uy*h-ux*w}`;
+  return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
