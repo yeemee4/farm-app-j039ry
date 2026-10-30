@@ -233,3 +233,16 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 .sc-foot{font-size:11px;color:var(--sc);text-align:center;margin-top:6px;font-weight:600}
 .sc-nav{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 @media (min-width:1024px){.sowcard{max-width:900px}.sc-tb{font-size:14px}.sc-tb th,.sc-tb td{height:38px}.sc-tb .sc-l{width:110px}.sc-info{grid-template-columns:repeat(6,minmax(0,1fr))}}
+/* 현장 카드 8산 한 줄 */
+.sowcard{--sv:#8e4f9e;--sv2:#e6d4ea}
+.sc-tb{min-width:0;font-size:11px;letter-spacing:-.3px}
+.sc-tb .sc-l{width:56px;font-size:10.5px;letter-spacing:-.4px;line-height:1.15;padding:2px 1px}
+.sc-tb thead th{font-size:12px}
+.sc-tb thead th.vi,.sc-tb td.vi.sc-l{background:var(--sv2)}
+.sc-tb td.vi:not(.cur){background:#faf6fb}
+.sc-tb td.vi.pre{background:repeating-linear-gradient(135deg,#efe8f1 0 6px,#fff 6px 12px)}
+.sc-tb td b{font-size:12.5px}
+.sc-tb td small,.sc-tb thead th small{font-size:9px}
+.sc-tb th,.sc-tb td{padding:2px 1px;height:28px}
+.sc-h>span{font-size:10.5px}
+@media (min-width:1024px){.sowcard{max-width:1100px}.sc-tb{font-size:14px;letter-spacing:0}.sc-tb .sc-l{width:110px;font-size:13px}.sc-tb td b{font-size:15px}.sc-h>span{font-size:13px}.sc-tb th,.sc-tb td{height:38px}}

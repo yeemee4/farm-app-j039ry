@@ -767,6 +767,31 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 :where(html[data-pc="on"]) .sc-tb .sc-l{width:110px}
 :where(html[data-pc="on"]) .sc-info{grid-template-columns:repeat(6,minmax(0,1fr))}
 
+/* 현장 카드 8산 한 줄 */
+.sowcard{--sv:#8e4f9e;--sv2:#e6d4ea}
+.sc-tb{min-width:0;font-size:11px;letter-spacing:-.3px}
+.sc-tb .sc-l{width:56px;font-size:10.5px;letter-spacing:-.4px;line-height:1.15;padding:2px 1px}
+.sc-tb thead th{font-size:12px}
+.sc-tb thead th.vi,.sc-tb td.vi.sc-l{background:var(--sv2)}
+.sc-tb td.vi:not(.cur){background:#faf6fb}
+.sc-tb td.vi.pre{background:repeating-linear-gradient(135deg,#efe8f1 0 6px,#fff 6px 12px)}
+.sc-tb td b{font-size:12.5px}
+.sc-tb td small,.sc-tb thead th small{font-size:9px}
+.sc-tb th,.sc-tb td{padding:2px 1px;height:28px}
+.sc-h>span{font-size:10.5px}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .sowcard{max-width:1100px}
+:where(html:not([data-pc="off"])) .sc-tb{font-size:14px;letter-spacing:0}
+:where(html:not([data-pc="off"])) .sc-tb .sc-l{width:110px;font-size:13px}
+:where(html:not([data-pc="off"])) .sc-tb td b{font-size:15px}
+:where(html:not([data-pc="off"])) .sc-h>span{font-size:13px}
+:where(html:not([data-pc="off"])) .sc-tb th,:where(html:not([data-pc="off"])) .sc-tb td{height:38px}}
+:where(html[data-pc="on"]) .sowcard{max-width:1100px}
+:where(html[data-pc="on"]) .sc-tb{font-size:14px;letter-spacing:0}
+:where(html[data-pc="on"]) .sc-tb .sc-l{width:110px;font-size:13px}
+:where(html[data-pc="on"]) .sc-tb td b{font-size:15px}
+:where(html[data-pc="on"]) .sc-h>span{font-size:13px}
+:where(html[data-pc="on"]) .sc-tb th,:where(html[data-pc="on"]) .sc-tb td{height:38px}
+
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -4469,7 +4494,7 @@ Object.assign(A,{
 });
 
 /* ================= v0.5 · 현장 카드(모돈현황판 종이 양식) =================
-   카드 한 장 = 4산(1~4산 파랑, 5~8산 보라, 9~12산 파랑…). 줄: 교배일자·웅돈번호·재발(점선으로 2칸) · 분만예정일 · 분만일 · 총산자수 · 포유개시두수 · 이유일자 · 이유두수 · 특이사항 */
+   카드 한 장 = 8산(1~4산 파랑, 5~8산 보라 칸). 줄: 교배일자·웅돈번호·재발(점선으로 2칸) · 분만예정일 · 분만일 · 총산자수 · 포유개시두수 · 이유일자 · 이유두수 · 특이사항 */
 const md=d=>{if(!d)return "";const [,m,dd]=d.split("-");return `${+m}/${+dd}`};
 function cardCols(s){
   const ev=state.records.filter(r=>r.data&&(r.data.sow===s.id||(r.type==="양자"&&r.data.to===s.id))).sort((a,b)=>a.workDate.localeCompare(b.workDate)||a.createdAt.localeCompare(b.createdAt));
@@ -4490,9 +4515,9 @@ function cardCols(s){
 const SC_SHORT={"듀록 정액":"듀록"};
 function vSowCard(s){
   const C=cardCols(s),i=statusOf(s),base=s.baseParity||0,cur=Math.max(1,i.gilt?1:i.parity+(["교배","임신","재교배"].includes(i.stage)||i.key==="발정대기"||i.key==="재발공태"?1:0));
-  const last=Math.max(cur,...Object.keys(C).map(Number),1),pages=Math.ceil(last/4);
-  let pg=ui.scPg&&ui.scPg.id===s.id?ui.scPg.p:Math.ceil(cur/4);pg=Math.min(Math.max(1,pg),pages);
-  const ps=[1,2,3,4].map(k=>(pg-1)*4+k);
+  const last=Math.max(cur,...Object.keys(C).map(Number),1),pages=Math.ceil(last/8);
+  let pg=ui.scPg&&ui.scPg.id===s.id?ui.scPg.p:Math.ceil(cur/8);pg=Math.min(Math.max(1,pg),pages);
+  const ps=[1,2,3,4,5,6,7,8].map(k=>(pg-1)*8+k),gc=p=>((p-1)>>2)%2?" vi":"";
   const cell=(c,f)=>{if(!c)return "";return f(c)||""};
   const half=(a,b)=>`<div class="sc-h"><span>${a||""}</span><span>${b||""}</span></div>`;
   const R=[
@@ -4506,7 +4531,7 @@ function vSowCard(s){
     ["이유일자",c=>c.wean?md(c.wean.workDate):""],
     ["이유두수",c=>c.wean?`<b>${c.wean.data.n}</b>`:""],
     ["특이사항",c=>c.note.length?`<small>${esc([...new Set(c.note)].join(" · "))}</small>`:""]];
-  const colH=p=>{const pre=p<=base;return `<th class="${p===cur?"cur":""}">${p}산${pre?`<small>${t("앱 이전")}</small>`:p===cur?`<small>${t("지금")}</small>`:""}</th>`};
+  const colH=p=>{const pre=p<=base;return `<th class="${p===cur?"cur":""}${gc(p)}">${p}산${pre?`<small>${t("이전")}</small>`:p===cur?`<small>${t("지금")}</small>`:""}</th>`};
   const hd=`<div class="sc-hd">
     <div class="sc-t">${t("모돈현황판")}</div>
     <div class="sc-info">
@@ -4514,9 +4539,9 @@ function vSowCard(s){
       <div><small>${t("생년월일")}</small><b>${s.birth?esc(s.birth.slice(2).replace(/-/g,".")):""}</b></div><div><small>${t("구입일")}</small><b>${s.intro?esc(s.intro.slice(2).replace(/-/g,".")):""}</b></div>
       <div><small>${t("구입처")}</small><b>${esc(s.src||"")}</b></div><div><small>${t("초교배예정일")}</small><b>${s.firstMate?esc(s.firstMate.slice(2).replace(/-/g,".")):""}</b></div>
     </div></div>`;
-  const tb=`<table class="sc-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(colH).join("")}</tr></thead><tbody>${R.map(([l,f])=>`<tr><th class="sc-l">${t(l.replace(/ /g,""))}</th>${ps.map(p=>`<td class="${p===cur?"cur":""}${p<=base&&!C[p]?" pre":""}">${cell(C[p],f)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-  const nav=pages>1||pg>1?`<div class="sc-nav">${Array.from({length:Math.max(pages,pg)},(_,k)=>`<button type="button" class="chip ${k+1===pg?"on":""}" data-a="scPg" data-v="${s.id}|${k+1}">${k*4+1}~${k*4+4}${t("산")}</button>`).join("")}</div>`:"";
-  return `<div class="sowcard ${pg%2?"blue":"violet"}">${hd}${tb}<div class="sc-foot">${t("점선 위 = 첫 교배, 아래 = 재발 후 마지막 교배 · ×2 = 같은 발정에 2번 교배 · 주황 날짜 = 아직 분만 전 예정")}</div></div>${nav}`;
+  const tb=`<table class="sc-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(colH).join("")}</tr></thead><tbody>${R.map(([l,f])=>`<tr><th class="sc-l">${t(l.replace(/ /g,""))}</th>${ps.map(p=>`<td class="${p===cur?"cur":""}${gc(p)}${p<=base&&!C[p]?" pre":""}">${cell(C[p],f)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const nav=pages>1||pg>1?`<div class="sc-nav">${Array.from({length:Math.max(pages,pg)},(_,k)=>`<button type="button" class="chip ${k+1===pg?"on":""}" data-a="scPg" data-v="${s.id}|${k+1}">${k*8+1}~${k*8+8}${t("산")}</button>`).join("")}</div>`:"";
+  return `<div class="sowcard">${hd}${tb}<div class="sc-foot">${t("점선 위 = 첫 교배, 아래 = 재발 후 마지막 교배 · ×2 = 같은 발정에 2번 교배 · 주황 날짜 = 아직 분만 전 예정")}</div></div>${nav}`;
 }
 function sowViewMode(){try{return localStorage.getItem("farm-sowcard")||"app"}catch(e){return "app"}}
 const _vSowApp=vSow;

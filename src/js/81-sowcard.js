@@ -1,5 +1,5 @@
 /* ================= v0.5 · 현장 카드(모돈현황판 종이 양식) =================
-   카드 한 장 = 4산(1~4산 파랑, 5~8산 보라, 9~12산 파랑…). 줄: 교배일자·웅돈번호·재발(점선으로 2칸) · 분만예정일 · 분만일 · 총산자수 · 포유개시두수 · 이유일자 · 이유두수 · 특이사항 */
+   카드 한 장 = 8산(1~4산 파랑, 5~8산 보라 칸). 줄: 교배일자·웅돈번호·재발(점선으로 2칸) · 분만예정일 · 분만일 · 총산자수 · 포유개시두수 · 이유일자 · 이유두수 · 특이사항 */
 const md=d=>{if(!d)return "";const [,m,dd]=d.split("-");return `${+m}/${+dd}`};
 function cardCols(s){
   const ev=state.records.filter(r=>r.data&&(r.data.sow===s.id||(r.type==="양자"&&r.data.to===s.id))).sort((a,b)=>a.workDate.localeCompare(b.workDate)||a.createdAt.localeCompare(b.createdAt));
@@ -20,9 +20,9 @@ function cardCols(s){
 const SC_SHORT={"듀록 정액":"듀록"};
 function vSowCard(s){
   const C=cardCols(s),i=statusOf(s),base=s.baseParity||0,cur=Math.max(1,i.gilt?1:i.parity+(["교배","임신","재교배"].includes(i.stage)||i.key==="발정대기"||i.key==="재발공태"?1:0));
-  const last=Math.max(cur,...Object.keys(C).map(Number),1),pages=Math.ceil(last/4);
-  let pg=ui.scPg&&ui.scPg.id===s.id?ui.scPg.p:Math.ceil(cur/4);pg=Math.min(Math.max(1,pg),pages);
-  const ps=[1,2,3,4].map(k=>(pg-1)*4+k);
+  const last=Math.max(cur,...Object.keys(C).map(Number),1),pages=Math.ceil(last/8);
+  let pg=ui.scPg&&ui.scPg.id===s.id?ui.scPg.p:Math.ceil(cur/8);pg=Math.min(Math.max(1,pg),pages);
+  const ps=[1,2,3,4,5,6,7,8].map(k=>(pg-1)*8+k),gc=p=>((p-1)>>2)%2?" vi":"";
   const cell=(c,f)=>{if(!c)return "";return f(c)||""};
   const half=(a,b)=>`<div class="sc-h"><span>${a||""}</span><span>${b||""}</span></div>`;
   const R=[
@@ -36,7 +36,7 @@ function vSowCard(s){
     ["이유일자",c=>c.wean?md(c.wean.workDate):""],
     ["이유두수",c=>c.wean?`<b>${c.wean.data.n}</b>`:""],
     ["특이사항",c=>c.note.length?`<small>${esc([...new Set(c.note)].join(" · "))}</small>`:""]];
-  const colH=p=>{const pre=p<=base;return `<th class="${p===cur?"cur":""}">${p}산${pre?`<small>${t("앱 이전")}</small>`:p===cur?`<small>${t("지금")}</small>`:""}</th>`};
+  const colH=p=>{const pre=p<=base;return `<th class="${p===cur?"cur":""}${gc(p)}">${p}산${pre?`<small>${t("이전")}</small>`:p===cur?`<small>${t("지금")}</small>`:""}</th>`};
   const hd=`<div class="sc-hd">
     <div class="sc-t">${t("모돈현황판")}</div>
     <div class="sc-info">
@@ -44,9 +44,9 @@ function vSowCard(s){
       <div><small>${t("생년월일")}</small><b>${s.birth?esc(s.birth.slice(2).replace(/-/g,".")):""}</b></div><div><small>${t("구입일")}</small><b>${s.intro?esc(s.intro.slice(2).replace(/-/g,".")):""}</b></div>
       <div><small>${t("구입처")}</small><b>${esc(s.src||"")}</b></div><div><small>${t("초교배예정일")}</small><b>${s.firstMate?esc(s.firstMate.slice(2).replace(/-/g,".")):""}</b></div>
     </div></div>`;
-  const tb=`<table class="sc-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(colH).join("")}</tr></thead><tbody>${R.map(([l,f])=>`<tr><th class="sc-l">${t(l.replace(/ /g,""))}</th>${ps.map(p=>`<td class="${p===cur?"cur":""}${p<=base&&!C[p]?" pre":""}">${cell(C[p],f)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
-  const nav=pages>1||pg>1?`<div class="sc-nav">${Array.from({length:Math.max(pages,pg)},(_,k)=>`<button type="button" class="chip ${k+1===pg?"on":""}" data-a="scPg" data-v="${s.id}|${k+1}">${k*4+1}~${k*4+4}${t("산")}</button>`).join("")}</div>`:"";
-  return `<div class="sowcard ${pg%2?"blue":"violet"}">${hd}${tb}<div class="sc-foot">${t("점선 위 = 첫 교배, 아래 = 재발 후 마지막 교배 · ×2 = 같은 발정에 2번 교배 · 주황 날짜 = 아직 분만 전 예정")}</div></div>${nav}`;
+  const tb=`<table class="sc-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(colH).join("")}</tr></thead><tbody>${R.map(([l,f])=>`<tr><th class="sc-l">${t(l.replace(/ /g,""))}</th>${ps.map(p=>`<td class="${p===cur?"cur":""}${gc(p)}${p<=base&&!C[p]?" pre":""}">${cell(C[p],f)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const nav=pages>1||pg>1?`<div class="sc-nav">${Array.from({length:Math.max(pages,pg)},(_,k)=>`<button type="button" class="chip ${k+1===pg?"on":""}" data-a="scPg" data-v="${s.id}|${k+1}">${k*8+1}~${k*8+8}${t("산")}</button>`).join("")}</div>`:"";
+  return `<div class="sowcard">${hd}${tb}<div class="sc-foot">${t("점선 위 = 첫 교배, 아래 = 재발 후 마지막 교배 · ×2 = 같은 발정에 2번 교배 · 주황 날짜 = 아직 분만 전 예정")}</div></div>${nav}`;
 }
 function sowViewMode(){try{return localStorage.getItem("farm-sowcard")||"app"}catch(e){return "app"}}
 const _vSowApp=vSow;
