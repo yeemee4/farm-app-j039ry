@@ -39,7 +39,7 @@ const KEY="farm-proto-v3";
 let state,storageOK=true;
 function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){storageOK=false}return null}
 function save(){SIDX=null;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOK=false}}
-let uid=Date.now();const newId=()=>(uid++).toString(36);
+let uid=Date.now();const DEVID=(()=>{try{let d=localStorage.getItem("farm-dev");if(!d){d=Math.random().toString(36).slice(2,5);localStorage.setItem("farm-dev",d)}return d}catch(e){return Math.random().toString(36).slice(2,5)}})();const newId=()=>(uid++).toString(36)+DEVID;   // 기기 표시를 붙여 여러 휴대폰에서 겹치지 않게
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
