@@ -50,7 +50,6 @@ wxAlerts=function(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d
 // 도태 후보 기준 (대표 결정 2026-10-30): 최근 2산 총산 ≤9 · 난산 비율 ≥30% · 사산이 모돈군 평균보다 20%↑ · 무발정·장기 NPD · 반복 재발(난임) · 고산차
 const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
 cullRule=function(){const r={...CULL1,...(state.cullRule||{})};return r};
-let CSX=null;function herdStill(){const k=state.records.length;if(CSX&&CSX.k===k)return CSX.v;const F=state.records.filter(r=>r.type==="분만");const v=F.length?F.reduce((s,r)=>s+(+r.data.still||0),0)/F.length:0;CSX={k,v};return v}
 cullWhy=function(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
   const F=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
   if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
@@ -176,18 +175,15 @@ function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")ret
   requestAnimationFrame(()=>{C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const h3=c.querySelector(":scope>h3"),kids=[...c.children].filter(x=>x!==h3&&!x.classList.contains("d-roll"));if(!kids.length)return;
     const w=document.createElement("div");w.className="d-roll";kids.forEach(k=>w.appendChild(k));c.appendChild(w);const box=document.createElement("div");box.className="d-rollbox";c.insertBefore(box,w);box.appendChild(w);
     box.classList.add("ascroll")});document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))})}
-// 넘치는 칸: 저절로 천천히 오르내림 + 손가락·마우스로 끌어 보기(끄는 동안·놓고 6초는 멈춤)
-const ASC=new WeakMap();
+// 넘치는 칸: 손가락·마우스로 끌어 보기
 // (자동 오르내림은 없앰 — 대표: 세로로 저절로 움직이면 읽기 힘듦. 끌기·휠 스크롤만)
 function ascFade(el){const more=el.scrollHeight-el.clientHeight-el.scrollTop>4;el.classList.toggle("more-dn",more)}
 document.addEventListener("scroll",e=>{const el=e.target;if(el&&el.classList&&el.classList.contains("ascroll"))ascFade(el)},true);
 setInterval(()=>document.querySelectorAll(".ascroll").forEach(ascFade),1000);
-const ascHold=el=>{const o=ASC.get(el)||{dir:1,pos:el.scrollTop};o.hold=1;ASC.set(el,o)},ascFree=el=>{const o=ASC.get(el);if(o){o.hold=0;o.wait=Date.now()+6000;o.pos=el.scrollTop}};
 let DRG=null;
-document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;ascHold(el);if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);
+document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);
 document.addEventListener("pointermove",e=>{if(!DRG)return;const d=e.clientY-DRG.y;if(Math.abs(d)>4)DRG.moved=true;if(DRG.moved){DRG.el.scrollTop=DRG.top-d;e.preventDefault()}},true);
-document.addEventListener("pointerup",e=>{document.querySelectorAll(".ascroll").forEach(ascFree);if(DRG&&DRG.moved){const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener("click",stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener("click",stop,true),50)}DRG=null},true);
-document.addEventListener("wheel",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el){ascHold(el);clearTimeout(el.__wt);el.__wt=setTimeout(()=>ascFree(el),300)}},{passive:true,capture:true});
+document.addEventListener("pointerup",e=>{if(DRG&&DRG.moved){const stop=ev=>{ev.stopPropagation();ev.preventDefault()};document.addEventListener("click",stop,{capture:true,once:true});setTimeout(()=>document.removeEventListener("click",stop,true),50)}DRG=null},true);
 // 가로로 넘치는 글씨: 전광판처럼 옆으로 흘렀다 돌아옴
 function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,div,button").forEach(el=>{if(el.childElementCount||el.closest(".mq")||!el.textContent.trim())return;
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
@@ -219,6 +215,3 @@ const _render5=render;render=function(){const r=_render5.apply(this,arguments);l
   if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
   if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
 Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
-// 마우스를 올려 두면 저절로 움직이던 칸·글씨가 멈춤 (정확히 누르기)
-document.addEventListener("pointerover",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el&&e.pointerType==="mouse")ascHold(el)},true);
-document.addEventListener("pointerout",e=>{const el=e.target.closest&&e.target.closest(".ascroll");if(el&&e.pointerType==="mouse"&&!el.contains(e.relatedTarget))ascFree(el)},true);

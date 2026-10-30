@@ -69,7 +69,6 @@ function vSuCard(){const W=ui.su,c=suCard(W.card),p=W.p||1,o=c.cols[p]||{},D=suD
   h+=`<details class="su-top"><summary>${t("카드 위 칸")} (${t("품종·생년월일·구입일·구입처")})</summary><div class="chipwrap">${["LY","LYD","YL","기타"].map(b=>`<button type="button" class="chip wrap ${c.breed===b?"on":""}" data-a="suBreed" data-v="${b}">${b}</button>`).join("")}</div>
     <div class="f"><label for="suBirth">${t("생년월일")}</label><input type="date" id="suBirth" value="${esc(c.birth||"")}" data-su="birth"></div><div class="f"><label for="suIntro">${t("구입일")}</label><input type="date" id="suIntro" value="${esc(c.intro||"")}" data-su="intro"></div><div class="f"><label for="suSrc">${t("구입처")}</label><input type="text" id="suSrc" value="${esc(c.src||"")}" data-su="src"></div></details>`;
   return h}
-const SU_ORDER=k=>SU_F.map(x=>x[0]);
 function suNextField(c,p,k){const o=c.cols[p]||{},L=SU_F.map(x=>x[0]).filter(x=>!((x==="m2"||x==="s2"||x==="r2")&&!o.r1));const i=L.indexOf(k);return L[i+1]||null}
 function suPut(v){const W=ui.su,c=suCard(W.card),p=W.p||1,o=c.cols[p]=c.cols[p]||{},k=W.f||"m1";if(v===""||v==null)delete o[k];else o[k]=v;c.done=false;W.buf="";const n=suNextField(c,p,k);if(n)W.f=n;else{W.p=p+1;W.f="m1"}save()}
 Object.assign(A,{
