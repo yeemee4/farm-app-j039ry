@@ -12,7 +12,7 @@ const syOn=()=>!!(SY.url&&SY.token);
 function sySave(){try{localStorage.setItem(SYNC_KEY,JSON.stringify(SY))}catch(e){}}
 const syFarm=()=>SY.farm||FARM.id||"bidam";
 // 짧은 해시(변경 감지용) · PIN 해시(SHA-256)
-function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+s.length.toString(36)}
+function fnv(s){if(typeof s!=="string")s=s==null?"":String(JSON.stringify(s));let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+s.length.toString(36)}
 function sha256(str){const K=[],H=[];let p=2;const isP=n=>{for(let i=2;i*i<=n;i++)if(n%i===0)return false;return true},fr=x=>((x-Math.floor(x))*4294967296)|0;
   for(let n=0;n<64;p++)if(isP(p)){if(n<8)H[n]=fr(Math.pow(p,1/2));K[n++]=fr(Math.pow(p,1/3))}
   const b=unescape(encodeURIComponent(str)),l=b.length,w=[];for(let i=0;i<l;i++)w[i>>2]|=b.charCodeAt(i)<<(24-(i%4)*8);w[l>>2]|=0x80<<(24-(l%4)*8);w[((l+8>>6)<<4)+15]=l*8;
@@ -54,17 +54,17 @@ async function syFlush1(){if(!syOn())return;SYST.busy=true;
   try{if(SY.accDirty){const A=(state.accounts||[]).map(a=>{const o={id:a.id,name:a.name,role:a.role,farm:a.farm||syFarm(),lang:a.lang,active:a.active!==false};if(a.pin&&!a.pin.includes(PIN_MASK)){o.ph=pinHash(a.id,a.pin);o.pinLen=a.pin.length}return o});
       const r=await syCall({a:"saveAccounts",token:SY.token,farm:syFarm(),accounts:A});if(r.ok)SY.accDirty=false;else if(r.err==="auth")return syAuthLost()}
     const keys=Object.keys(SY.out);for(let i=0;i<keys.length;i+=400){const part=keys.slice(i,i+400),rows=part.map(k=>SY.out[k]);
-      const r=await syCall({a:"push",token:SY.token,rows});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error(r.err)}
+      const r=await syCall({a:"push",token:SY.token,rows});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
       part.forEach(k=>{if(SY.out[k]===rows[part.indexOf(k)])delete SY.out[k]})}
     SYST.err=null;SYST.last=nowHM();SY.last=SYST.last}
-  catch(e){SYST.err=String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
+  catch(e){SYST.err=t("보내기")+" · "+String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
 function syPull(full){return syQ(()=>syPull1(full))}
 async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
-  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0)});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error(r.err)}
+  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0)});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
     if(SY.replace){SY.replace=false;state.records=[];state.sows=[];SY.snap={rec:{},sow:{},key:{}}}
     const S=SY.snap,idx={rec:{},sow:{}};(state.records||[]).forEach((x,i)=>idx.rec[x.id]=i);(state.sows||[]).forEach((x,i)=>idx.sow[x.id]=i);
     const kill={rec:new Set(),sow:new Set()};
-    r.rows.forEach(w=>{w.id=String(w.id);if(!w.del&&typeof w.j!=="string")w.j=JSON.stringify(w.j);   // 시트가 3·true 같은 값을 숫자·참거짓으로 돌려줌 → 다시 글자로
+    r.rows.forEach(w=>{w.id=String(w.id);if(!w.del&&typeof w.j!=="string")w.j=w.j==null||w.j===""?"null":JSON.stringify(w.j);   // 시트가 3·true 같은 값을 숫자·참거짓으로 돌려줌 → 다시 글자로
       if(SY.out[w.k+"|"+w.id])return;   // 아직 못 보낸 내 수정이 우선
       const h=w.del?null:fnv(w.j);
       if(w.k==="key"){const [k,sub]=w.id.split(SUBK);if(SYNC_SKIP.includes(k)||S.key[w.id]===h)return;changed=true;
@@ -76,7 +76,7 @@ async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
     {const seen=new Set();for(let i=state.records.length-1;i>=0;i--){const id=state.records[i].id;if(seen.has(id)||kill.rec.has(id))state.records.splice(i,1);else seen.add(id)}}if(kill.sow.size)state.sows=state.sows.filter(x=>!kill.sow.has(x.id));
     if(r.accounts&&r.accounts.length){const loc={};(state.accounts||[]).forEach(a=>loc[a.id]=a);state.accounts=r.accounts.map(a=>{const l=loc[a.id];const keep=l&&l.pin&&!l.pin.includes(PIN_MASK)&&l.pin.length===a.pinLen;return {...a,pin:keep?l.pin:PIN_MASK.repeat(a.pinLen||4)}});S.acc=fnv(JSON.stringify(state.accounts));changed=true}
     SY.cursor=r.cursor;SY.discord=r.discord;SYST.err=null;SYST.last=nowHM();SY.last=SYST.last}
-  catch(e){SYST.err=String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}
+  catch(e){SYST.err=t("받기")+" · "+String(e.message||e)+(e.stack&&!String(e.message).startsWith("서버")?" @"+String(e.stack).split("\n")[1].trim().slice(0,60):"")}finally{SYST.busy=false;sySave();syBadge()}
   if(changed){SYNC_MUTE=true;save();SYNC_MUTE=false;if(!document.querySelector(".sheet")&&!(ui.in&&tab==="input"))render()}
   return changed}
 function syAuthLost(){SY.token=null;sySave();SYST.busy=false;syBadge();toast(t("서버 로그인이 끝났습니다. 다시 로그인해 주세요."))}
@@ -110,7 +110,7 @@ function vSyncSet(){const n=syPending(),me0=me();
     if(can("admin")){h+=`<div class="sec-t">${t("디스코드 알림")} <span>${SY.discord?t("연결됨"):t("안 됨")}</span></div><div class="panel"><div class="f"><label for="syDc">${t("디스코드 웹훅 주소 (서버에만 저장)")}</label><input type="url" id="syDc" placeholder="https://discord.com/api/webhooks/…"></div><div class="acts"><button class="act pri" type="button" data-a="syDc">${t("저장·시험 메시지")}</button>${SY.discord?`<button class="act" type="button" data-a="syDcOff">${t("알림 끄기")}</button>`:""}</div></div>`;
       const T=[...new Set([...NOTIF_ON,"양자","특이사항","사료","재고","도입"])];
       h+=`<div class="sec-t">${t("알림 보낼 기록")}</div><div class="panel">${T.map(k=>{const on=notifOn(k,{mode:"빈 잔량"});return `<div class="setrow"><span>${esc(L(k))}${k==="사료"?` <small class="sow-meta">(${t("잔량만, 입고는 안 보냄")})</small>`:""}</span><button class="sbtn ${on?"on":""}" type="button" data-a="syNotif" data-v="${k}">${on?t("보냄"):t("안 보냄")}</button></div>`}).join("")}</div>`}}
-  h+=`<div class="note">${t("설치 방법은 저장소의 server/설치안내 를 보세요. 서버 주소와 PIN 은 저장소에 올라가지 않습니다.")}</div>`;
+  h+=`<div class="note">${t("앱 빌드")} ${esc(ENV)} · ${esc(typeof BUILD_AT!=="undefined"?BUILD_AT:"-")} · ${t("설치 방법은 저장소의 server/설치안내 를 보세요. 서버 주소와 PIN 은 저장소에 올라가지 않습니다.")}</div>`;
   return h}
 Object.assign(A,{
   syHello:async()=>{const u=($("#syUrl").value||"").trim();if(!/^(https:\/\/script\.google(usercontent)?\.com\/|http:\/\/localhost:)/.test(u)){ui.syMsg={t:t("Apps Script 웹 앱 주소(https://script.google.com/…/exec)를 넣어 주세요."),bad:1};render();return}

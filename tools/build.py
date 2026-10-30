@@ -50,7 +50,7 @@ def pc_css(css):
 css = pc_css(''.join(read(p) for p in sorted(glob.glob(src('css', '*.css')))))
 js = ''.join(read(p) for p in sorted(glob.glob(src('js', '*.js'))))
 js = js.replace('%GATE%', GATE)
-pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\nconst ENV=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false', '"prod"' if PROD else '"test"')
+pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\nconst ENV=%s;\nconst BUILD_AT=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false', '"prod"' if PROD else '"test"', json.dumps(__import__('datetime').datetime.now(__import__('datetime').timezone(__import__('datetime').timedelta(hours=9))).strftime('%m-%d %H:%M')))
 
 out = (read(src('head.html')) + read(src('meta.html')) + '<style>\n' + css + '</style>\n</head>\n<body>\n'
        + read(src('body.html')) + '<script>\n' + pre + js + '</script>\n</body>\n</html>\n')
