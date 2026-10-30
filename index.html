@@ -727,6 +727,46 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 /* 기록 입력 배치도 선택 */
 .bl-st.pk-off{opacity:.42}.bl-st.pk-tg{box-shadow:inset 0 0 0 2px #2A78D6}.bl-st.pk-tg em{color:#2A78D6}.bl-st.pk-done{opacity:.7}.bl-st.pk-done em{color:#12A150}
 .bl-st.pk-sel{outline:3px solid var(--accent);outline-offset:-3px;opacity:1}.bl-st.pk-sel em{color:var(--accent);font-weight:900}
+/* 현장 카드(모돈현황판) */
+.sc-seg{margin:0 0 10px}
+.sc-now{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;margin:0 0 8px;color:var(--muted)}
+.sowcard{--sc:#3f7fd8;--sc2:#cfe0f7;border:3px solid var(--sc);border-radius:14px;background:#fff;color:#1b2430;padding:8px;overflow-x:auto}
+.sowcard.violet{--sc:#8e4f9e;--sc2:#e6d4ea}
+.sc-hd{display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:6px}
+.sc-t{font-size:22px;font-weight:800;text-align:center;letter-spacing:.3em}
+.sc-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1.5px solid #1b2430}
+.sc-info>div{display:grid;grid-template-columns:auto 1fr;border:.5px solid #1b2430;min-height:30px}
+.sc-info small{background:var(--sc2);font-size:11px;font-weight:700;padding:4px;display:flex;align-items:center;justify-content:center;text-align:center;width:52px;line-height:1.15}
+.sc-info b{font-size:13px;padding:4px 6px;display:flex;align-items:center;word-break:break-all}
+.sc-tb{width:100%;border-collapse:collapse;table-layout:fixed;min-width:320px;font-size:12.5px}
+.sc-tb th,.sc-tb td{border:1px solid #1b2430;padding:3px 2px;text-align:center;vertical-align:middle;height:30px}
+.sc-tb .sc-l{width:76px;background:var(--sc2);font-weight:700;font-size:12px;letter-spacing:.05em}
+.sc-tb thead th{background:var(--sc2);font-weight:800}
+.sc-tb thead th small{display:block;font-size:10px;font-weight:600;opacity:.75}
+.sc-tb th.cur,.sc-tb td.cur{background:#fffbe0}
+.sc-tb thead th.cur{background:#ffe98a}
+.sc-tb td.pre{background:repeating-linear-gradient(135deg,#f2f2f2 0 6px,#fff 6px 12px)}
+.sc-tb td b{font-size:14px}
+.sc-tb td small{display:block;font-size:10px;color:#5b6573;line-height:1.2}
+.sc-tb td sup{font-size:9px;color:var(--sc)}
+.sc-h{display:grid;grid-template-rows:1fr 1fr;min-height:34px}
+.sc-h>span{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;line-height:1.1}
+.sc-h>span:first-child{border-bottom:1px dashed #1b2430}
+.sc-r{color:#c0392b}
+.sc-due{color:#d9822b}
+.sc-foot{font-size:11px;color:var(--sc);text-align:center;margin-top:6px;font-weight:600}
+.sc-nav{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+@media (min-width:1024px){:where(html:not([data-pc="off"])) .sowcard{max-width:900px}
+:where(html:not([data-pc="off"])) .sc-tb{font-size:14px}
+:where(html:not([data-pc="off"])) .sc-tb th,:where(html:not([data-pc="off"])) .sc-tb td{height:38px}
+:where(html:not([data-pc="off"])) .sc-tb .sc-l{width:110px}
+:where(html:not([data-pc="off"])) .sc-info{grid-template-columns:repeat(6,minmax(0,1fr))}}
+:where(html[data-pc="on"]) .sowcard{max-width:900px}
+:where(html[data-pc="on"]) .sc-tb{font-size:14px}
+:where(html[data-pc="on"]) .sc-tb th,:where(html[data-pc="on"]) .sc-tb td{height:38px}
+:where(html[data-pc="on"]) .sc-tb .sc-l{width:110px}
+:where(html[data-pc="on"]) .sc-info{grid-template-columns:repeat(6,minmax(0,1fr))}
+
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1149,7 +1189,7 @@ FARM.items.push(["주사침(모돈용)","비품","개",50,0],["주사침(자돈�
 // 성적 목표 (대표 설정)
 FARM.goal={psy:25,msy:22,npd:40,fcr:3.0,fcrB:2.7};   // fcr = 농장 전체(모돈 사료 포함), fcrB = 돈군(태어나서 출하까지)
 // 임신돈 급여 기준 (일반 범위의 기본값 · 사료회사·수의사 기준으로 대표 설정에서 고침)
-FARM.gest={
+FARM.gfeed={
   phases:[{to:3,kg:1.9,l:"교배 직후"},{to:84,kg:2.3,l:"임신 초·중기"},{to:110,kg:3.0,l:"임신 후기 증량"},{to:999,kg:2.3,l:"분만 전 감량"}],
   flush:3.2,       // 이유 후 교배 전 (체력 회복)
   gilt:2.6,        // 후보돈
@@ -2863,7 +2903,7 @@ function devDetail(f){const e=devEnd(f),W=[5,4,3,2,1,0].map(i=>{const b=addDays(
 /* ===== 임신돈 급여 가이드: 모돈마다 오늘 권장 급여량 = 임신 일수 단계 + BCS + 산차 + 돈사 온도 =====
    임신사 1·2동 = 자동 급이기(눈금), 교배사 = 수동(바가지). 단위 환산(1눈금·1바가지 = kg)은 대표 설정.
    어제와 달라진 모돈은 할 일 '급여량 변경'으로. 매주 조절 제안(대표). 기준값은 일반 범위의 기본값 */
-function gCfg(){const G=FARM.gest,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
+function gCfg(){const G=FARM.gfeed,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
 const GF_BARNS=()=>Object.keys(gCfg().barns);
 function lastBCS(id,before){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===id&&x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
 function barnTemp(barn,d){const a=(state.am||{})[d];const v=a&&a[barn]&&parseFloat(a[barn].temp);if(!isNaN(v))return v;if(d===TODAY&&typeof wxDay==="function"){const w=wxDay(0);if(w)return null}return null}
@@ -3527,6 +3567,7 @@ Object.assign(TR,{"셋째 줄 = 위에서 고른 정보":["Dòng 3 = thông tin 
 Object.assign(TR,{"칸을 누르고 점수를 고르면 바로 저장됩니다. 측정 시점은 모돈 상태로 자동.":["Bấm ô rồi chọn điểm để lưu ngay. Thời điểm đo tự động.","कोठा थिचेर अंक छान्दा सेभ हुन्छ।","ចុចក្រឡា ជ្រើសពិន្ទុ រក្សាទុកភ្លាម។","กดช่องแล้วเลือกคะแนนเพื่อบันทึกทันที"],"BCS 없음":["Chưa có BCS","BCS छैन","គ្មាន BCS","ไม่มี BCS"],"측정 필요":["Cần đo","नाप्नुपर्छ","ត្រូវវាស់","ต้องวัด"],"목록 입력":["Nhập danh sách","सूची प्रविष्टि","បញ្ចូលបញ្ជី","ป้อนแบบรายการ"],"배치도":["Sơ đồ","नक्सा","ផែនទី","ผัง"],"오늘 측정":["Đo hôm nay","आज नापिएको","វាស់ថ្ងៃនេះ","วัดวันนี้"],"측정 시점":["Thời điểm đo","नाप्ने समय","ពេលវាស់","เวลาวัด"],"2 이하 마름 · 3 적정 · 4 이상 살찜":["≤2 gầy · 3 chuẩn · ≥4 béo","≤२ दुब्लो · ३ ठीक · ≥४ मोटो","≤2 ស្គម · 3 ល្អ · ≥4 ធាត់","≤2 ผอม · 3 พอดี · ≥4 อ้วน"],"배치도로 입력":["Nhập theo sơ đồ","नक्साबाट प्रविष्टि","បញ្ចូលតាមផែនទី","ป้อนจากผัง"],"배치도로 BCS 입력":["Nhập BCS theo sơ đồ","नक्साबाट BCS","បញ្ចូល BCS តាមផែនទី","ป้อน BCS จากผัง"],"분만 시":["Khi đẻ","ब्याँत बेला","ពេលកើត","ตอนคลอด"],"임신 중":["Đang mang thai","गर्भमा","កំពុងពពោះ","ระหว่างอุ้มท้อง"]});
 Object.assign(TR,{"🗺 BCS 배치도":["🗺 Sơ đồ BCS","🗺 BCS नक्सा","🗺 ផែនទី BCS","🗺 ผัง BCS"]});
 Object.assign(TR,{"선택됨":["Đã chọn","छानियो","បានជ្រើស","เลือกแล้ว"],"입력함":["Đã nhập","प्रविष्ट","បានបញ្ចូល","ป้อนแล้ว"],"대상":["Đối tượng","लक्षित","គោលដៅ","เป้าหมาย"],"진한 칸 = 이 기록 대상 · ✓ 입력함 · 흐린 칸도 누를 수 있음":["Ô đậm = đối tượng · ✓ đã nhập · ô mờ vẫn bấm được","गाढा = लक्षित · ✓ प्रविष्ट","ក្រឡាដិត = គោលដៅ · ✓ បានបញ្ចូល","ช่องเข้ม = เป้าหมาย · ✓ ป้อนแล้ว · ช่องจางกดได้"],"목록":["Danh sách","सूची","បញ្ជី","รายการ"]});
+Object.assign(TR,{"앱 보기":["Xem app","एप दृश्य","មើលកម្មវិធី","มุมมองแอป"],"현장 카드":["Thẻ chuồng","फार्म कार्ड","កាតកសិដ្ឋាន","การ์ดหน้าคอก"],"모돈현황판":["Thẻ heo nái","माउ कार्ड","កាតមេជ្រូក","การ์ดแม่สุกร"],"앱 이전":["Trước app","एप अघि","មុនកម្មវិធី","ก่อนแอป"],"지금":["Hiện tại","अहिले","ឥឡូវ","ตอนนี้"],"카드 정보 수정":["Sửa thông tin thẻ","कार्ड सम्पादन","កែកាត","แก้ไขการ์ด"],"교배일자":["Ngày phối","मिलन मिति","ថ្ងៃបង្កាត់","วันผสม"],"웅돈번호":["Số đực","भाले नम्बर","លេខជ្រូកឈ្មោល","เบอร์พ่อพันธุ์"],"재발":["Lên giống lại","फेरि बाली","ចេញកំដៅម្តងទៀត","กลับสัด"],"분만예정일":["Ngày đẻ dự kiến","ब्याउने अनुमानित","ថ្ងៃកើតរំពឹង","วันคลอดกำหนด"],"분만일":["Ngày đẻ","ब्याएको मिति","ថ្ងៃកើត","วันคลอด"],"총산자수":["Tổng sơ sinh","जम्मा जन्म","សរុបកើត","ลูกเกิดรวม"],"포유개시두수":["Số con bắt đầu bú","दूध सुरु संख्या","ចំនួនចាប់ផ្តើមបៅ","ลูกเริ่มดูดนม"],"이유일자":["Ngày cai sữa","छुटाउने मिति","ថ្ងៃផ្តាច់","วันหย่านม"],"이유두수":["Số cai sữa","छुटाएको संख्या","ចំនួនផ្តាច់","จำนวนหย่านม"],"특이사항":["Ghi chú","विशेष","កំណត់សម្គាល់","หมายเหตุ"],"생년월일":["Ngày sinh","जन्म मिति","ថ្ងៃកំណើត","วันเกิด"],"구입일":["Ngày mua","किनेको मिति","ថ្ងៃទិញ","วันซื้อ"],"구입처":["Nơi mua","किनेको ठाउँ","កន្លែងទិញ","ซื้อจาก"],"초교배예정일":["Ngày phối đầu dự kiến","पहिलो मिलन अनुमान","ថ្ងៃបង្កាត់ដំបូង","วันผสมแรกกำหนด"],"모돈번호":["Số nái","माउ नम्बर","លេខមេ","เบอร์แม่"],"항목":["Mục","विषय","ធាតុ","รายการ"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -4427,6 +4468,88 @@ Object.assign(A,{
     s.breed=ui.pe.breed;s.baseParity=ui.pe.bp;if(ui.pe.intro)s.intro=ui.pe.intro;s.memo=(ui.pe.memo||"").trim();ui.pe=null;save();render();toast("기본 정보를 저장했습니다")}
 });
 
+/* ================= v0.5 · 현장 카드(모돈현황판 종이 양식) =================
+   카드 한 장 = 4산(1~4산 파랑, 5~8산 보라, 9~12산 파랑…). 줄: 교배일자·웅돈번호·재발(점선으로 2칸) · 분만예정일 · 분만일 · 총산자수 · 포유개시두수 · 이유일자 · 이유두수 · 특이사항 */
+const md=d=>{if(!d)return "";const [,m,dd]=d.split("-");return `${+m}/${+dd}`};
+function cardCols(s){
+  const ev=state.records.filter(r=>r.data&&(r.data.sow===s.id||(r.type==="양자"&&r.data.to===s.id))).sort((a,b)=>a.workDate.localeCompare(b.workDate)||a.createdAt.localeCompare(b.createdAt));
+  const base=s.baseParity||0,C={};let far=0;
+  const col=p=>C[p]||(C[p]={p,heats:[],ret:[],far:null,fo:0,wean:null,note:[]});
+  ev.forEach(r=>{const d=r.data||{};
+    if(r.type==="교배"){const c=col(base+far+1),h=c.heats[c.heats.length-1];
+      if(h&&diff(h.d,r.workDate)<=3){h.n++;if(d.semen&&!h.sm.includes(d.semen))h.sm.push(d.semen)}else c.heats.push({d:r.workDate,n:1,sm:d.semen?[d.semen]:[]})}
+    else if(r.type==="임신확인"&&d.result!=="임신")col(base+far+1).ret.push({d:r.workDate,k:d.result});
+    else if(r.type==="분만"){far++;const c=col(base+far);c.far=r;if(d.ease&&d.ease!=="정상")c.note.push(d.ease);if(d.oxy==="씀")c.note.push("옥시토신")}
+    else if(r.type==="양자"&&far){const c=col(base+far),n=+d.n||0,inn=d.to===s.id;if(!c.wean){c.fo+=inn?n:-n;c.note.push(`양자 ${inn?"+":"−"}${n}`)}}
+    else if(r.type==="이유"&&far){const c=col(base+far);if(!c.wean)c.wean=r}
+    else if(r.type==="도태")col(far&&!(C[base+far]||{}).wean?base+far:base+far+1).note.push("도태");
+    if(d.memo&&["교배","분만","이유","임신확인"].includes(r.type))col(r.type==="교배"||r.type==="임신확인"?base+far+1:base+far).note.push(d.memo);
+  });
+  return C;
+}
+const SC_SHORT={"듀록 정액":"듀록"};
+function vSowCard(s){
+  const C=cardCols(s),i=statusOf(s),base=s.baseParity||0,cur=Math.max(1,i.gilt?1:i.parity+(["교배","임신","재교배"].includes(i.stage)||i.key==="발정대기"||i.key==="재발공태"?1:0));
+  const last=Math.max(cur,...Object.keys(C).map(Number),1),pages=Math.ceil(last/4);
+  let pg=ui.scPg&&ui.scPg.id===s.id?ui.scPg.p:Math.ceil(cur/4);pg=Math.min(Math.max(1,pg),pages);
+  const ps=[1,2,3,4].map(k=>(pg-1)*4+k);
+  const cell=(c,f)=>{if(!c)return "";return f(c)||""};
+  const half=(a,b)=>`<div class="sc-h"><span>${a||""}</span><span>${b||""}</span></div>`;
+  const R=[
+    ["교배일자",c=>{const h=c.heats;if(!h.length)return "";const f=x=>md(x.d)+(x.n>1?`<sup>×${x.n}</sup>`:"");return half(f(h[0]),h.length>1?f(h[h.length-1]):"")}],
+    ["웅돈번호",c=>{const h=c.heats;if(!h.length)return "";const f=x=>x.sm.map(v=>esc(SC_SHORT[v]||v)).join(",");return half(f(h[0]),h.length>1?f(h[h.length-1]):"")}],
+    ["재 발",c=>c.ret.length?half(...c.ret.slice(0,2).map(x=>`<b class="sc-r">${md(x.d)}</b>${x.k!=="재발"?`<small>${x.k}</small>`:""}`)):""],
+    ["분만예정일",c=>{const h=c.heats[c.heats.length-1];if(!h)return "";const d=addDays(h.d,CFG.gest);return c.far?md(d):`<b class="sc-due">${md(d)}</b>`}],
+    ["분 만 일",c=>c.far?md(c.far.workDate):""],
+    ["총산자수",c=>{if(!c.far)return "";const d=c.far.data,t=(+d.live||0)+(+d.still||0)+(+d.mum||0);return `<b>${t}</b>${t!==+d.live?`<small>실${d.live}</small>`:""}`}],
+    ["포유개시두수",c=>c.far?`<b>${(+c.far.data.live||0)+c.fo}</b>`:""],
+    ["이유일자",c=>c.wean?md(c.wean.workDate):""],
+    ["이유두수",c=>c.wean?`<b>${c.wean.data.n}</b>`:""],
+    ["특이사항",c=>c.note.length?`<small>${esc([...new Set(c.note)].join(" · "))}</small>`:""]];
+  const colH=p=>{const pre=p<=base;return `<th class="${p===cur?"cur":""}">${p}산${pre?`<small>${t("앱 이전")}</small>`:p===cur?`<small>${t("지금")}</small>`:""}</th>`};
+  const hd=`<div class="sc-hd">
+    <div class="sc-t">${t("모돈현황판")}</div>
+    <div class="sc-info">
+      <div><small>${t("모돈번호")}</small><b>${esc(s.id)}</b></div><div><small>${t("품종")}</small><b>${esc(s.breed||"")}</b></div>
+      <div><small>${t("생년월일")}</small><b>${s.birth?esc(s.birth.slice(2).replace(/-/g,".")):""}</b></div><div><small>${t("구입일")}</small><b>${s.intro?esc(s.intro.slice(2).replace(/-/g,".")):""}</b></div>
+      <div><small>${t("구입처")}</small><b>${esc(s.src||"")}</b></div><div><small>${t("초교배예정일")}</small><b>${s.firstMate?esc(s.firstMate.slice(2).replace(/-/g,".")):""}</b></div>
+    </div></div>`;
+  const tb=`<table class="sc-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(colH).join("")}</tr></thead><tbody>${R.map(([l,f])=>`<tr><th class="sc-l">${t(l.replace(/ /g,""))}</th>${ps.map(p=>`<td class="${p===cur?"cur":""}${p<=base&&!C[p]?" pre":""}">${cell(C[p],f)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const nav=pages>1||pg>1?`<div class="sc-nav">${Array.from({length:Math.max(pages,pg)},(_,k)=>`<button type="button" class="chip ${k+1===pg?"on":""}" data-a="scPg" data-v="${s.id}|${k+1}">${k*4+1}~${k*4+4}${t("산")}</button>`).join("")}</div>`:"";
+  return `<div class="sowcard ${pg%2?"blue":"violet"}">${hd}${tb}<div class="sc-foot">${t("점선 위 = 첫 교배, 아래 = 재발 후 마지막 교배 · ×2 = 같은 발정에 2번 교배 · 주황 날짜 = 아직 분만 전 예정")}</div></div>${nav}`;
+}
+function sowViewMode(){try{return localStorage.getItem("farm-sowcard")||"app"}catch(e){return "app"}}
+const _vSowApp=vSow;
+vSow=function(){
+  const s=state.sows.find(x=>x.id===ui.sowId),html=_vSowApp();
+  if(!s)return html;
+  const m=sowViewMode(),seg=`<div class="seg sc-seg" role="group" aria-label="${t("보기")}"><button type="button" class="${m==="app"?"on":""}" data-a="sowView" data-v="app">${t("앱 보기")}</button><button type="button" class="${m==="card"?"on":""}" data-a="sowView" data-v="card">📋 ${t("현장 카드")}</button></div>`;
+  const cut=html.indexOf('<div class="inputgrid">');
+  if(cut<0)return html;
+  const head=html.slice(0,cut);
+  if(m!=="card")return head+seg+html.slice(cut);
+  const i=statusOf(s),loc=`<div class="sc-now"><span class="stage ${i.cls}">${i.label}</span><span>${esc(i.sub||"")}</span><span>· ${esc(s.loc||"")}${s.stall?" "+esc(s.stall):""}</span></div>`;
+  const ed=ui.pe?"":`<button class="act" type="button" data-a="scEdit">${t("카드 정보 수정")}</button>`;
+  const form=ui.pe?`<div class="cullbox"><h4>${t("카드 정보 수정")}</h4>
+    <div class="f"><label for="peBirth">${t("생년월일")}</label><input type="date" id="peBirth" value="${esc(ui.pe.birth||"")}"></div>
+    <div class="f"><label for="peIntro">${t("구입일")}</label><input type="date" id="peIntro" value="${esc(ui.pe.intro||"")}"></div>
+    <div class="f"><label for="peSrc">${t("구입처")}</label><input type="text" id="peSrc" value="${esc(ui.pe.src||"")}" placeholder="${t("예: ○○종돈")}"></div>
+    <div class="f"><label for="peFm">${t("초교배예정일")}</label><input type="date" id="peFm" value="${esc(ui.pe.fm||"")}"></div>
+    <div class="acts"><button class="act pri" type="button" data-a="peSave">${t("저장")}</button><button class="act" type="button" data-a="peCancel">${t("취소")}</button></div></div>`:"";
+  return head+seg+loc+vSowCard(s)+`<div class="acts">${ed}</div>`+form;
+};
+/* 기본 정보에 생년월일·구입처·초교배예정일 추가 */
+const _peKeep0=peKeep;
+peKeep=function(){_peKeep0();const g=k=>{const e=$("#"+k);return e?e.value.trim():undefined},b=g("peBirth"),c=g("peSrc"),f=g("peFm");if(b!==undefined)ui.pe.birth=b;if(c!==undefined)ui.pe.src=c;if(f!==undefined)ui.pe.fm=f};
+const _peOpen0=A.peOpen,_peSave0=A.peSave;
+Object.assign(A,{
+  sowView:v=>{try{localStorage.setItem("farm-sowcard",v)}catch(e){}ui.pe=null;render()},
+  scPg:v=>{const [id,p]=v.split("|");ui.scPg={id,p:+p};render()},
+  peOpen:()=>{_peOpen0();const s=state.sows.find(x=>x.id===ui.sowId);Object.assign(ui.pe,{birth:s.birth||"",src:s.src||"",fm:s.firstMate||""});render()},
+  scEdit:()=>A.peOpen(),
+  peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId),p=ui.pe;if(!s||!p)return;
+    const set=(k,v)=>{if(v)s[k]=v;else delete s[k]};set("birth",p.birth);set("src",p.src);set("firstMate",p.fm);_peSave0()}
+});
 /* ================= 입장 키 (링크를 받은 사람만) ================= */
 const GATE="cbfad02f9ed2a8d1e08d8f74f5303e9eb93637d47f82ab6f1c15871cf8dd0481";
 async function sha(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}

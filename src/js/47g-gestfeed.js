@@ -1,7 +1,7 @@
 /* ===== 임신돈 급여 가이드: 모돈마다 오늘 권장 급여량 = 임신 일수 단계 + BCS + 산차 + 돈사 온도 =====
    임신사 1·2동 = 자동 급이기(눈금), 교배사 = 수동(바가지). 단위 환산(1눈금·1바가지 = kg)은 대표 설정.
    어제와 달라진 모돈은 할 일 '급여량 변경'으로. 매주 조절 제안(대표). 기준값은 일반 범위의 기본값 */
-function gCfg(){const G=FARM.gest,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
+function gCfg(){const G=FARM.gfeed,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
 const GF_BARNS=()=>Object.keys(gCfg().barns);
 function lastBCS(id,before){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===id&&x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
 function barnTemp(barn,d){const a=(state.am||{})[d];const v=a&&a[barn]&&parseFloat(a[barn].temp);if(!isNaN(v))return v;if(d===TODAY&&typeof wxDay==="function"){const w=wxDay(0);if(w)return null}return null}

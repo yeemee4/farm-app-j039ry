@@ -203,3 +203,33 @@ svg.chart{width:100%;height:auto;overflow:visible}svg.chart text{font-size:10px;
 /* 기록 입력 배치도 선택 */
 .bl-st.pk-off{opacity:.42}.bl-st.pk-tg{box-shadow:inset 0 0 0 2px #2A78D6}.bl-st.pk-tg em{color:#2A78D6}.bl-st.pk-done{opacity:.7}.bl-st.pk-done em{color:#12A150}
 .bl-st.pk-sel{outline:3px solid var(--accent);outline-offset:-3px;opacity:1}.bl-st.pk-sel em{color:var(--accent);font-weight:900}
+/* 현장 카드(모돈현황판) */
+.sc-seg{margin:0 0 10px}
+.sc-now{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;margin:0 0 8px;color:var(--muted)}
+.sowcard{--sc:#3f7fd8;--sc2:#cfe0f7;border:3px solid var(--sc);border-radius:14px;background:#fff;color:#1b2430;padding:8px;overflow-x:auto}
+.sowcard.violet{--sc:#8e4f9e;--sc2:#e6d4ea}
+.sc-hd{display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:6px}
+.sc-t{font-size:22px;font-weight:800;text-align:center;letter-spacing:.3em}
+.sc-info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1.5px solid #1b2430}
+.sc-info>div{display:grid;grid-template-columns:auto 1fr;border:.5px solid #1b2430;min-height:30px}
+.sc-info small{background:var(--sc2);font-size:11px;font-weight:700;padding:4px;display:flex;align-items:center;justify-content:center;text-align:center;width:52px;line-height:1.15}
+.sc-info b{font-size:13px;padding:4px 6px;display:flex;align-items:center;word-break:break-all}
+.sc-tb{width:100%;border-collapse:collapse;table-layout:fixed;min-width:320px;font-size:12.5px}
+.sc-tb th,.sc-tb td{border:1px solid #1b2430;padding:3px 2px;text-align:center;vertical-align:middle;height:30px}
+.sc-tb .sc-l{width:76px;background:var(--sc2);font-weight:700;font-size:12px;letter-spacing:.05em}
+.sc-tb thead th{background:var(--sc2);font-weight:800}
+.sc-tb thead th small{display:block;font-size:10px;font-weight:600;opacity:.75}
+.sc-tb th.cur,.sc-tb td.cur{background:#fffbe0}
+.sc-tb thead th.cur{background:#ffe98a}
+.sc-tb td.pre{background:repeating-linear-gradient(135deg,#f2f2f2 0 6px,#fff 6px 12px)}
+.sc-tb td b{font-size:14px}
+.sc-tb td small{display:block;font-size:10px;color:#5b6573;line-height:1.2}
+.sc-tb td sup{font-size:9px;color:var(--sc)}
+.sc-h{display:grid;grid-template-rows:1fr 1fr;min-height:34px}
+.sc-h>span{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;line-height:1.1}
+.sc-h>span:first-child{border-bottom:1px dashed #1b2430}
+.sc-r{color:#c0392b}
+.sc-due{color:#d9822b}
+.sc-foot{font-size:11px;color:var(--sc);text-align:center;margin-top:6px;font-weight:600}
+.sc-nav{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+@media (min-width:1024px){.sowcard{max-width:900px}.sc-tb{font-size:14px}.sc-tb th,.sc-tb td{height:38px}.sc-tb .sc-l{width:110px}.sc-info{grid-template-columns:repeat(6,minmax(0,1fr))}}
