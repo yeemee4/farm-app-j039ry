@@ -1003,6 +1003,8 @@ body.tv .d-hero b{font-size:5vh}body.tv .d-hero span{font-size:1.7vh}
 body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:1.4vh}body.tv .d-bin em{font-size:1.6vh}
 .d-swipe .d-bin svg{max-width:34px}.d-swipe .d-bin b,.d-swipe .d-bin span,.d-swipe .d-bin em{font-size:9px}
 .fcr2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}.fcr2>div{display:grid;gap:2px}.fcr2 small{color:var(--muted);font-size:12px}.fcr2 small i{font-style:normal;opacity:.8}.fcr2 b{font:900 32px/1 var(--display);font-variant-numeric:tabular-nums}.fcr2 span{color:var(--muted);font-size:12px}
+body.tv .d-card{overflow:hidden}
+body.tv .d-donut{min-height:0;height:100%;grid-template-columns:auto 1fr}body.tv .d-donut svg{height:100%;width:auto;max-width:100%;min-height:0;justify-self:center}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1119,7 +1121,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-30 22:47";
+const BUILD_AT="10-30 22:54";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.5";
@@ -4777,6 +4779,20 @@ const _binSvg0=binSvg;
 binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,x0=Math.max(1,P.x0-10),y0=P.B+2,x1=x0+4*k,y1=y0-fs-3*k,L=8*k,ax=x1+L,ay=y1-L,ux=Math.SQRT1_2,uy=-Math.SQRT1_2,h=5*k,w=3.5*k;
   const tip=`${ax},${ay} ${ax-ux*h-uy*w},${ay-uy*h+ux*w} ${ax-ux*h+uy*w},${ay-uy*h-ux*w}`;
   return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
+
+// ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
+function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")return;if(innerWidth<900){document.querySelectorAll(".d-main>.d-card").forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});return}const M=$(".d-main");if(!M)return;const C=[...M.querySelectorAll(":scope>.d-card")];if(!C.length)return;
+  C.forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});
+  const D=$(".dash"),cols=+getComputedStyle(D).getPropertyValue("--dc")||3,rows=+getComputedStyle(D).getPropertyValue("--dr")||Math.ceil(C.length/cols);let free=cols*rows-C.length;
+  const big=new Set(free>0?C.map(c=>[c,c.scrollHeight/c.clientHeight]).filter(x=>x[1]>1.05).sort((a,b)=>b[1]-a[1]).slice(0,free).map(x=>x[0]):[]);
+  // 세로 줄마다 위에서부터 차곡차곡 (두 칸 카드 포함) → 빈칸 없이
+  const used=Array(cols).fill(0);C.forEach(c=>{let sp=big.has(c)?2:1,col=used.findIndex(u=>u+sp<=rows);if(col<0&&sp===2){sp=1;col=used.findIndex(u=>u+1<=rows)}if(col<0)return;
+    c.style.gridColumn=String(col+1);c.style.gridRow=`${used[col]+1} / span ${sp}`;used[col]+=sp});
+  requestAnimationFrame(()=>C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const cs=getComputedStyle(c),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),h3=c.querySelector(":scope>h3"),hh=h3?h3.offsetHeight+parseFloat(getComputedStyle(h3).marginBottom||0):0;
+    const avail=c.clientHeight-pad-hh,need=c.scrollHeight-pad-hh;if(need<=0)return;const f=Math.max(.45,Math.min(1,avail/need));[...c.children].forEach(x=>{if(x!==h3)x.style.zoom=f})}))}
+const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(dashFit,0);return r};
+addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
+document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));
 /* ================= v0.6 · 초기 등록 (본서버 첫 실제 자료) =================
    휴대폰 하나 들고 돈사를 돌며: 칸 → 모돈 번호 → 현장 카드(모돈현황판) 그대로 한 산차씩 → 저장 → 다음 칸.
    큰 숫자 버튼(한 손), 날짜는 카드처럼 ‘1023’ 네 자리(연도는 산차 순서로 자동), 입력한 만큼 바로 저장(state.setup).

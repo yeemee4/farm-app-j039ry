@@ -163,3 +163,17 @@ const _binSvg0=binSvg;
 binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,x0=Math.max(1,P.x0-10),y0=P.B+2,x1=x0+4*k,y1=y0-fs-3*k,L=8*k,ax=x1+L,ay=y1-L,ux=Math.SQRT1_2,uy=-Math.SQRT1_2,h=5*k,w=3.5*k;
   const tip=`${ax},${ay} ${ax-ux*h-uy*w},${ay-uy*h+ux*w} ${ax-ux*h+uy*w},${ay-uy*h-ux*w}`;
   return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
+
+// ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
+function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")return;if(innerWidth<900){document.querySelectorAll(".d-main>.d-card").forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});return}const M=$(".d-main");if(!M)return;const C=[...M.querySelectorAll(":scope>.d-card")];if(!C.length)return;
+  C.forEach(c=>{c.style.gridRow="";c.style.gridColumn="";[...c.children].forEach(x=>x.style.zoom="")});
+  const D=$(".dash"),cols=+getComputedStyle(D).getPropertyValue("--dc")||3,rows=+getComputedStyle(D).getPropertyValue("--dr")||Math.ceil(C.length/cols);let free=cols*rows-C.length;
+  const big=new Set(free>0?C.map(c=>[c,c.scrollHeight/c.clientHeight]).filter(x=>x[1]>1.05).sort((a,b)=>b[1]-a[1]).slice(0,free).map(x=>x[0]):[]);
+  // 세로 줄마다 위에서부터 차곡차곡 (두 칸 카드 포함) → 빈칸 없이
+  const used=Array(cols).fill(0);C.forEach(c=>{let sp=big.has(c)?2:1,col=used.findIndex(u=>u+sp<=rows);if(col<0&&sp===2){sp=1;col=used.findIndex(u=>u+1<=rows)}if(col<0)return;
+    c.style.gridColumn=String(col+1);c.style.gridRow=`${used[col]+1} / span ${sp}`;used[col]+=sp});
+  requestAnimationFrame(()=>C.forEach(c=>{if(c.scrollHeight<=c.clientHeight+1)return;const cs=getComputedStyle(c),pad=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),h3=c.querySelector(":scope>h3"),hh=h3?h3.offsetHeight+parseFloat(getComputedStyle(h3).marginBottom||0):0;
+    const avail=c.clientHeight-pad-hh,need=c.scrollHeight-pad-hh;if(need<=0)return;const f=Math.max(.45,Math.min(1,avail/need));[...c.children].forEach(x=>{if(x!==h3)x.style.zoom=f})}))}
+const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(dashFit,0);return r};
+addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
+document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));

@@ -178,3 +178,5 @@ body.tv .d-hero b{font-size:5vh}body.tv .d-hero span{font-size:1.7vh}
 body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:1.4vh}body.tv .d-bin em{font-size:1.6vh}
 .d-swipe .d-bin svg{max-width:34px}.d-swipe .d-bin b,.d-swipe .d-bin span,.d-swipe .d-bin em{font-size:9px}
 .fcr2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}.fcr2>div{display:grid;gap:2px}.fcr2 small{color:var(--muted);font-size:12px}.fcr2 small i{font-style:normal;opacity:.8}.fcr2 b{font:900 32px/1 var(--display);font-variant-numeric:tabular-nums}.fcr2 span{color:var(--muted);font-size:12px}
+body.tv .d-card{overflow:hidden}
+body.tv .d-donut{min-height:0;height:100%;grid-template-columns:auto 1fr}body.tv .d-donut svg{height:100%;width:auto;max-width:100%;min-height:0;justify-self:center}
