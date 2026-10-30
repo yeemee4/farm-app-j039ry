@@ -1005,6 +1005,9 @@ body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:
 .fcr2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}.fcr2>div{display:grid;gap:2px}.fcr2 small{color:var(--muted);font-size:12px}.fcr2 small i{font-style:normal;opacity:.8}.fcr2 b{font:900 32px/1 var(--display);font-variant-numeric:tabular-nums}.fcr2 span{color:var(--muted);font-size:12px}
 body.tv .d-card{overflow:hidden}
 body.tv .d-donut{min-height:0;height:100%;grid-template-columns:auto 1fr}body.tv .d-donut svg{height:100%;width:auto;max-width:100%;min-height:0;justify-self:center}
+.d-bm-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}.d-bm-btns .d-bmb{display:flex;align-items:center;gap:6px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface2,rgba(127,127,127,.08));color:inherit;font-size:15px;white-space:nowrap;min-width:0}.d-bm-btns .d-bmb b{overflow:hidden;text-overflow:clip}.d-bm-btns .d-bmb small{margin-left:auto;opacity:.75}
+body.tv .d-bm-btns .d-bmb{font-size:1.8vh;padding:1vh .8vw}
+.d-bm-btns .d-bmb b{font-size:inherit;font-weight:800}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1121,7 +1124,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-30 22:54";
+const BUILD_AT="10-30 22:58";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.5";
@@ -3154,7 +3157,7 @@ const DASH_P={
   breed:()=>{const w=dWeek(),G=dashCfg().goal,R=k=>state.records.filter(r=>r.type===k&&r.workDate>=w&&r.workDate<=TODAY);
     const rows=[["교배",R("교배").filter(r=>r.data.round==="1차").length,DCOL[0]],["분만",R("분만").length,DCOL[2]],["이유",R("이유").length,DCOL[3]],["임신확인",R("임신확인").filter(r=>r.data.result==="임신").length,DCOL[5]]];
     return [t("이번 주 번식"),t("목표 대비 · 흰 선 = 목표"),`<div class="d-bars">${rows.map(([k,n,c])=>{const g=G[k]||1,mx=Math.max(g,n);return `<div class="d-bar"><span>${t(LABEL[k]||k)}</span><div class="d-track"><div class="d-fill" style="width:${n/mx*100}%;background:${c}"></div><div class="d-tick" style="left:calc(${g/mx*100}% - 3px)"></div></div><span class="d-v"><b>${n}</b> / ${g}</span></div>`}).join("")}</div>`]},
-  barnmap:()=>{const B=BM_BARNS();return [t("돈사 배치도"),`${t("누르면 크게 · 칸마다 모돈 상태")}`,`<div class="d-bm">${B.map(b=>{const c=barnOcc(b);return `<button type="button" class="d-bmb" data-a="dashBm" data-v="${esc(b)}"><b>${esc(t(b))} <small>${Object.keys(c.occ).length}/${c.S.length}</small></b>${vBarnSvg(b,10,1)}</button>`}).join("")}</div>`]},
+  barnmap:()=>{const B=BM_BARNS();return [t("돈사 배치도"),`${t("눌러서 보기")}`,`<div class="d-bm d-bm-btns">${B.map(b=>{const c=barnOcc(b);return `<button type="button" class="d-bmb" data-a="dashBm" data-v="${esc(b)}">🗺 <b>${esc(t(b))}</b> <small>${Object.keys(c.occ).length}/${c.S.length}</small></button>`}).join("")}</div>`]},
   fcr:()=>{const t2=TODAY,F=farmFCR(addDays(t2,-89),t2),B=batchFCR().filter(x=>x.fcr).slice(0,3),g=sGoal(),c=v=>v<=g.fcr?DCOL[2]:v<=g.fcr*1.08?DCOL[3]:"#ff6b6b";
     return [t("사료효율 (FCR)"),`${t("최근 90일")} · ${t("목표")} ${g.fcr}`,`<div class="d-hero"><b style="color:${F?c(F.fcr):"var(--mu)"}">${F?F.fcr.toFixed(2):"—"}</b><span>${t("농장 전체")}</span></div><div class="d-bars">${B.map(x=>`<div class="d-bar"><span>${esc(bName(x.k).replace(" 돈군",""))}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,x.fcr/4*100)}%;background:${x.fcr<=g.fcrB?DCOL[2]:DCOL[3]}"></div></div><span class="d-v"><b>${x.fcr.toFixed(2)}</b></span></div>`).join("")}</div>`]},
   npd:()=>{const f=addDays(TODAY,-89),S=npdStat(f,TODAY),C=npdStat(addDays(f,-90),addDays(f,-1)),g=sGoal().npd;if(!S)return [t("NPD 비생산일수"),t("최근 90일"),`<div class="empty">-</div>`];const d=C?S.npd-C.npd:null,col=S.npd<=g?DCOL[2]:S.npd<=g*1.25?DCOL[3]:"#ff6b6b";
