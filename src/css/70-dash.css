@@ -190,7 +190,8 @@ body.tv .d-bm-btns .d-bmb{font-size:1.8vh;padding:1vh .8vw}
 .d-rollbox{flex:1;min-height:0;overflow:hidden;position:relative}
 @media (prefers-reduced-motion:reduce){.mq{animation:none}}
 body.tv .d-card{display:flex;flex-direction:column}
-.ascroll{overflow-y:auto!important;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;cursor:grab}.ascroll::-webkit-scrollbar{display:none}.d-rollbox{overflow-y:auto}
+.ascroll{overflow-y:auto!important;scrollbar-width:thin;scrollbar-color:rgba(127,127,127,.5) transparent;overscroll-behavior:contain;touch-action:pan-y;cursor:grab}.ascroll::-webkit-scrollbar{width:6px}.ascroll::-webkit-scrollbar-thumb{background:rgba(127,127,127,.5);border-radius:3px}
+.ascroll.more-dn{-webkit-mask-image:linear-gradient(to bottom,#000 82%,transparent);mask-image:linear-gradient(to bottom,#000 82%,transparent)}.d-rollbox{overflow-y:auto}
 #tvBackBtn{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;gap:4px;box-shadow:0 6px 20px rgba(0,0,0,.3);border-radius:999px;background:var(--ink);padding:4px}
 #tvBackBtn button{border:0;border-radius:999px;padding:10px 16px;font:700 15px var(--body,inherit);background:var(--accent);color:#fff}#tvBackBtn .x{background:transparent;color:var(--bg);padding:10px 12px}
 @media (min-width:1024px){#tvBackBtn{bottom:24px}}

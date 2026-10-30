@@ -1015,7 +1015,8 @@ body.tv .d-bm-btns .d-bmb{font-size:1.8vh;padding:1vh .8vw}
 .d-rollbox{flex:1;min-height:0;overflow:hidden;position:relative}
 @media (prefers-reduced-motion:reduce){.mq{animation:none}}
 body.tv .d-card{display:flex;flex-direction:column}
-.ascroll{overflow-y:auto!important;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y;cursor:grab}.ascroll::-webkit-scrollbar{display:none}.d-rollbox{overflow-y:auto}
+.ascroll{overflow-y:auto!important;scrollbar-width:thin;scrollbar-color:rgba(127,127,127,.5) transparent;overscroll-behavior:contain;touch-action:pan-y;cursor:grab}.ascroll::-webkit-scrollbar{width:6px}.ascroll::-webkit-scrollbar-thumb{background:rgba(127,127,127,.5);border-radius:3px}
+.ascroll.more-dn{-webkit-mask-image:linear-gradient(to bottom,#000 82%,transparent);mask-image:linear-gradient(to bottom,#000 82%,transparent)}.d-rollbox{overflow-y:auto}
 #tvBackBtn{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;gap:4px;box-shadow:0 6px 20px rgba(0,0,0,.3);border-radius:999px;background:var(--ink);padding:4px}
 #tvBackBtn button{border:0;border-radius:999px;padding:10px 16px;font:700 15px var(--body,inherit);background:var(--accent);color:#fff}#tvBackBtn .x{background:transparent;color:var(--bg);padding:10px 12px}
 @media (min-width:1024px){:where(html:not([data-pc="off"])) #tvBackBtn{bottom:24px}}
@@ -1138,7 +1139,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-30 23:12";
+const BUILD_AT="10-30 23:20";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.5";
@@ -4812,8 +4813,10 @@ function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")ret
     box.classList.add("ascroll")});document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))})}
 // 넘치는 칸: 저절로 천천히 오르내림 + 손가락·마우스로 끌어 보기(끄는 동안·놓고 6초는 멈춤)
 const ASC=new WeakMap();
-setInterval(()=>{document.querySelectorAll(".ascroll").forEach(el=>{const max=el.scrollHeight-el.clientHeight;if(max<=2)return;let o=ASC.get(el);if(!o){o={dir:1,wait:Date.now()+2500,hold:0,pos:el.scrollTop};ASC.set(el,o)}
-  const now=Date.now();if(o.hold||now<o.wait)return;if(Math.abs(el.scrollTop-o.pos)>2)o.pos=el.scrollTop;o.pos+=o.dir*0.6;if(o.pos>=max){o.pos=max;o.dir=-1;o.wait=now+2500}else if(o.pos<=0){o.pos=0;o.dir=1;o.wait=now+2500}el.scrollTop=o.pos})},40);
+// (자동 오르내림은 없앰 — 대표: 세로로 저절로 움직이면 읽기 힘듦. 끌기·휠 스크롤만)
+function ascFade(el){const more=el.scrollHeight-el.clientHeight-el.scrollTop>4;el.classList.toggle("more-dn",more)}
+document.addEventListener("scroll",e=>{const el=e.target;if(el&&el.classList&&el.classList.contains("ascroll"))ascFade(el)},true);
+setInterval(()=>document.querySelectorAll(".ascroll").forEach(ascFade),1000);
 const ascHold=el=>{const o=ASC.get(el)||{dir:1,pos:el.scrollTop};o.hold=1;ASC.set(el,o)},ascFree=el=>{const o=ASC.get(el);if(o){o.hold=0;o.wait=Date.now()+6000;o.pos=el.scrollTop}};
 let DRG=null;
 document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;ascHold(el);if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);

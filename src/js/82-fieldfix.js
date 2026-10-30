@@ -178,8 +178,10 @@ function dashFit(){if(!document.body.classList.contains("tv")||tab!=="board")ret
     box.classList.add("ascroll")});document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));marquee($(".dash"))})}
 // 넘치는 칸: 저절로 천천히 오르내림 + 손가락·마우스로 끌어 보기(끄는 동안·놓고 6초는 멈춤)
 const ASC=new WeakMap();
-setInterval(()=>{document.querySelectorAll(".ascroll").forEach(el=>{const max=el.scrollHeight-el.clientHeight;if(max<=2)return;let o=ASC.get(el);if(!o){o={dir:1,wait:Date.now()+2500,hold:0,pos:el.scrollTop};ASC.set(el,o)}
-  const now=Date.now();if(o.hold||now<o.wait)return;if(Math.abs(el.scrollTop-o.pos)>2)o.pos=el.scrollTop;o.pos+=o.dir*0.6;if(o.pos>=max){o.pos=max;o.dir=-1;o.wait=now+2500}else if(o.pos<=0){o.pos=0;o.dir=1;o.wait=now+2500}el.scrollTop=o.pos})},40);
+// (자동 오르내림은 없앰 — 대표: 세로로 저절로 움직이면 읽기 힘듦. 끌기·휠 스크롤만)
+function ascFade(el){const more=el.scrollHeight-el.clientHeight-el.scrollTop>4;el.classList.toggle("more-dn",more)}
+document.addEventListener("scroll",e=>{const el=e.target;if(el&&el.classList&&el.classList.contains("ascroll"))ascFade(el)},true);
+setInterval(()=>document.querySelectorAll(".ascroll").forEach(ascFade),1000);
 const ascHold=el=>{const o=ASC.get(el)||{dir:1,pos:el.scrollTop};o.hold=1;ASC.set(el,o)},ascFree=el=>{const o=ASC.get(el);if(o){o.hold=0;o.wait=Date.now()+6000;o.pos=el.scrollTop}};
 let DRG=null;
 document.addEventListener("pointerdown",e=>{const el=e.target.closest(".ascroll");if(!el)return;ascHold(el);if(e.pointerType==="mouse")DRG={el,y:e.clientY,top:el.scrollTop,moved:false}},true);
