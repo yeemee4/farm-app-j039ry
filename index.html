@@ -4007,7 +4007,7 @@ function vAccounts(){
   const N=ui.newAcc;
   let h=`<h2>계정 관리</h2><div class="note">작업자는 기록 입력과 자기 기록 수정, 할 일 체크만 할 수 있습니다. 팀장은 삭제, 담당 지정, 도태까지 할 수 있습니다. 설정은 대표만 바꿉니다. 퇴사자는 정지하면 로그인만 막히고 기록은 남습니다.</div>`;
   h+=state.accounts.map(a=>`<div class="setrow" style="flex-wrap:wrap;${a.active?"":"opacity:.55"}"><span><b>${esc(a.name)}</b> <span class="sow-meta">${ROLE[a.role]} · ${(LANGS.find(l=>l[0]===a.lang)||["",""])[1]} · PIN ${"•".repeat(a.pin.length)}</span></span>
-    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 초기화</button>${a.id===ME?"":`<button class="sbtn ${a.active?"bad":""}" type="button" data-a="accActive" data-v="${a.id}">${a.active?"정지":"다시 사용"}</button>`}</span></div>`).join("");
+    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id===ME?"":`<button class="sbtn ${a.active?"bad":""}" type="button" data-a="accActive" data-v="${a.id}">${a.active?"정지":"다시 사용"}</button>`}</span></div>`).join("");
   h+=N?`<div class="panel"><h3 style="margin:0">직원 추가</h3><div class="f"><label for="naName">이름</label><input type="text" id="naName" value="${esc(N.name||"")}" placeholder="예: Tran Van B"></div>
     <div class="f"><span class="lb">권한</span><div class="chipwrap">${Object.entries(ROLE).map(([k,v])=>`<button type="button" class="chip wrap ${N.role===k?"on":""}" data-a="naRole" data-v="${k}">${v}</button>`).join("")}</div></div>
     <div class="f"><span class="lb">언어</span><div class="chipwrap">${LANGS.map(([c,n])=>`<button type="button" class="chip wrap ${N.lang===c?"on":""}" data-a="naLang" data-v="${c}">${n}</button>`).join("")}</div></div>
@@ -4732,6 +4732,11 @@ function isDys(r){return (r.data.ease&&r.data.ease!=="정상")||(+r.data.still||
 (()=>{const F=FORMS["분만"];if(!F||F.f.some(f=>f.k==="_dys"))return;const i=F.f.findIndex(f=>f.k==="_t");
   F.f.splice(i+1,0,{k:"_dys",t:"calc",l:"난산 판정 (자동)",calc:d=>(+d.still||0)>=stillDys()?`⚠ ${t("사산")} ${d.still}${t("두")} → ${t("난산으로 기록")}`:`${t("사산")} ${stillDys()}${t("두 이상이면 난산")}`});
   const p0=F.pre;F.pre=(d,wd,s)=>{if(p0)p0(d,wd,s);if((+d.still||0)>=stillDys()&&(!d.ease||d.ease==="정상")){d.ease="난산";d.dysAuto=true}}})();
+
+// 대표: 계정마다 PIN 바로 바꾸기 (예전: 0000 으로 초기화만)
+A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=prompt(`${a.name} — ${t("새 PIN (숫자 4~6자리)")}`,"");if(p===null)return;const n=p.trim();
+  if(!/^\d{4,6}$/.test(n)){toast(t("PIN은 숫자 4~6자리입니다"));return}if(["0000","1111","1234","2222","3333","4444","9368"].includes(n)){toast(t("너무 쉬운 PIN입니다. 다른 숫자로 해 주세요"));return}
+  a.pin=n;save();render();toast(`${a.name} PIN ${t("을 바꿨습니다")}`)};
 /* ================= v0.6 · 구글 시트 서버 동기화 =================
    켜는 곳: 설정 › 서버 연결 (대표). 서버 = server/Code.gs (Apps Script 웹 앱).
    방식: save() 할 때마다 1.2초 뒤 '바뀐 것만' 골라(기록·모돈은 한 건씩, 나머지 설정은 키별) 보낼 목록에 넣고 보냄.

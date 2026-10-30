@@ -146,3 +146,8 @@ function isDys(r){return (r.data.ease&&r.data.ease!=="정상")||(+r.data.still||
 (()=>{const F=FORMS["분만"];if(!F||F.f.some(f=>f.k==="_dys"))return;const i=F.f.findIndex(f=>f.k==="_t");
   F.f.splice(i+1,0,{k:"_dys",t:"calc",l:"난산 판정 (자동)",calc:d=>(+d.still||0)>=stillDys()?`⚠ ${t("사산")} ${d.still}${t("두")} → ${t("난산으로 기록")}`:`${t("사산")} ${stillDys()}${t("두 이상이면 난산")}`});
   const p0=F.pre;F.pre=(d,wd,s)=>{if(p0)p0(d,wd,s);if((+d.still||0)>=stillDys()&&(!d.ease||d.ease==="정상")){d.ease="난산";d.dysAuto=true}}})();
+
+// 대표: 계정마다 PIN 바로 바꾸기 (예전: 0000 으로 초기화만)
+A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=prompt(`${a.name} — ${t("새 PIN (숫자 4~6자리)")}`,"");if(p===null)return;const n=p.trim();
+  if(!/^\d{4,6}$/.test(n)){toast(t("PIN은 숫자 4~6자리입니다"));return}if(["0000","1111","1234","2222","3333","4444","9368"].includes(n)){toast(t("너무 쉬운 PIN입니다. 다른 숫자로 해 주세요"));return}
+  a.pin=n;save();render();toast(`${a.name} PIN ${t("을 바꿨습니다")}`)};
