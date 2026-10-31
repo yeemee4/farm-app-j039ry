@@ -14,8 +14,18 @@ PROD = '--prod' in sys.argv              # 기본은 시험용(test/)
 icons = {os.path.basename(p)[:-4]: read(p).strip() for p in sorted(glob.glob(src('icons', '*.svg')))}
 # 그림 아이콘(.png)이 있으면 .svg 보다 우선
 polys = {os.path.basename(p)[:-4]: read(p).strip() for p in sorted(glob.glob(src('icons', 'poly', '*.svg')))}
-cuts = {os.path.basename(p)[:-4]: 'data:image/png;base64,' + base64.b64encode(open(p, 'rb').read()).decode() for p in sorted(glob.glob(src('icons', 'cut', '*.png')))}
-imgs = {os.path.basename(p)[:-4]: 'data:image/png;base64,' + base64.b64encode(open(p, 'rb').read()).decode() for p in sorted(glob.glob(src('icons', '*.png')))}
+# 저사양 기기용: 그림 아이콘은 빌드할 때 압축(원본 PNG 는 그대로) — 그림 타일 WebP, 오려낸 그림 64색 PNG. PIL 이 없으면 원본
+def pic(p, webp):
+    try:
+        import io
+        from PIL import Image
+        im, b = Image.open(p).convert('RGBA'), io.BytesIO()
+        if webp: im.save(b, 'WEBP', quality=80, method=6); return 'data:image/webp;base64,' + base64.b64encode(b.getvalue()).decode()
+        im.quantize(64, method=Image.Quantize.FASTOCTREE).save(b, 'PNG', optimize=True); return 'data:image/png;base64,' + base64.b64encode(b.getvalue()).decode()
+    except ImportError:
+        return 'data:image/png;base64,' + base64.b64encode(open(p, 'rb').read()).decode()
+cuts = {os.path.basename(p)[:-4]: pic(p, False) for p in sorted(glob.glob(src('icons', 'cut', '*.png')))}
+imgs = {os.path.basename(p)[:-4]: pic(p, True) for p in sorted(glob.glob(src('icons', '*.png')))}
 
 # PC 화면 설정(설정 › 화면 배치): 넓은 화면 규칙(@media min-width ≥700)을
 #   자동 = 그대로 · 휴대폰(data-pc=off) = 끔 · PC(data-pc=on) = 창이 좁아도 켬

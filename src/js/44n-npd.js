@@ -17,7 +17,9 @@ function npdSegs(){const key=state.records.length+"|"+state.sows.length+"|"+TODA
 function npdStat(f,t){return memo("npd|"+f+"|"+t,()=>npdStat0(f,t))}
 function npdStat0(f,t){const M=npdSegs(),R={wei:0,fail:0,other:0},per=[];let npd=0,sd=0;
   Object.entries(M).forEach(([id,o])=>{const a=o.start>f?o.start:f,b=o.end<t?o.end:t;if(a>b)return;let n=0;const rs={wei:0,fail:0,other:0};
-    for(let d=a;d<=b;d=addDays(d,1)){sd++;if(o.prod.some(([x,y])=>d>=x&&d<y))continue;let why="other";for(const [ed,k] of o.ev){if(ed<=d)why=k;else break}n++;rs[why]++}
+    // 날짜 글자 대신 날 번호로 하루씩 셈(결과 같음, 저사양 기기에서 몇 배 빠름) · "0000"·"9999" 는 끝없는 앞·뒤
+    const dn=x=>x==="9999"?1e9:x==="0000"?-1e9:Math.round(toUTC(x)/864e5),P=o.prod.map(([x,y])=>[dn(x),dn(y)]),E=o.ev.map(([ed,k])=>[dn(ed),k]);let ei=0,why="other";
+    for(let d=dn(a),e=dn(b);d<=e;d++){sd++;while(ei<E.length&&E[ei][0]<=d)why=E[ei++][1];if(P.some(([x,y])=>d>=x&&d<y))continue;n++;rs[why]++}
     npd+=n;NPD_R.forEach(([k])=>R[k]+=rs[k]);if(n)per.push({id,n,...rs})});
   return sd?{npd:npd/sd*365,days:npd,sd,R,per:per.sort((x,y)=>y.n-x.n),sows:sd/(diff(f,t)+1)}:null}
 const npdCol=(v,g)=>!okv(v)?"var(--muted)":v<=g?"var(--good)":v<=g*1.25?"var(--amber)":"var(--red)";
