@@ -59,10 +59,18 @@ def write(dest, html, depth):
     for f in ('manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png', 'icon-512.png', 'logo.png'):
         html = html.replace('href="%s"' % f, 'href="%s%s"' % (up, f)).replace('src="%s"' % f, 'src="%s%s"' % (up, f))
     os.makedirs(os.path.dirname(os.path.join(ROOT, dest)) or ROOT, exist_ok=True)
+    if depth:   # 하위 폴더 앱은 자기 manifest (홈 화면에 추가하면 그 폴더 주소가 열리게 · 루트 것을 쓰면 본서버가 열림)
+        m = json.load(open(os.path.join(ROOT, 'manifest.webmanifest'), encoding='utf-8'))
+        nm = re.search(r'<title>(.*?)</title>', html).group(1)
+        m.update(name=nm, short_name=nm.replace('비담농장 ', '').replace('(테스트)', '테스트').strip() or nm, start_url='./', id='./', scope='./')
+        m['icons'] = [dict(i, src=up + i['src']) for i in m['icons']]
+        json.dump(m, open(os.path.join(ROOT, os.path.dirname(dest), 'manifest.webmanifest'), 'w', encoding='utf-8'), ensure_ascii=False)
+        html = html.replace('href="%smanifest.webmanifest"' % up, 'href="manifest.webmanifest"')
     open(os.path.join(ROOT, dest), 'w', encoding='utf-8').write(html)
 base = '' if PROD else 'test/'
 if not PROD:   # 시험용: 제목에 (테스트)
     out = re.sub(r'<title>(.*?)</title>', r'<title>\1 (테스트)</title>', out, count=1)
+    out = out.replace('apple-mobile-web-app-title" content="비담농장"', 'apple-mobile-web-app-title" content="비담 테스트"', 1)
 dest = base + 'index.html'
 write(dest, out, 0 if PROD else 1)
 # 별도 ‘초기 등록 앱’: 같은 코드·같은 저장 공간, 첫 화면 = 초기 등록, 메뉴 탭 없음
