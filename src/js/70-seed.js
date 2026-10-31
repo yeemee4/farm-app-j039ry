@@ -43,7 +43,11 @@ const FARM_LISTS = () => ({
   dests: mkList(["○○도축장", "△△공판장"]),
   cull: mkList(["번식장애(재발·공태)", "산자수 저조", "지제·다리 불량", "노산", "질병", "기타"])
 });
+// 예시 기록 만들기. 농장마다 다른 숫자는 FARM.seed(05·06) — 없으면 비담 값
+const SEED0 = { fw: 4, live: [10, 14], stillP: 0.45, mumP: 0.15, loss: 0.06, retP: 0.12, openP: 0.05, bpMax: 5, takeover: true, users: ["대표", "조성훈 팀장", "Nguyen", "Ram", "Sokha", "Somchai"], pig: [0.02, 0.015, 0.015, 0.015], feedIn: 1, prev: { far: 16, frate: 84, live: 12, wean: 10.9, psy: 24, msy: 21, surv: 89 } };
 function seedFarm() {
+  const S = { ...SEED0, ...(FARM.seed || {}) },
+    q = n => Math.max(1, Math.round((n * S.fw) / 4));   // 비담(주 4복) 기준 두수를 이 농장 규모로
   let r = 5;
   const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647,
     ri = (a, b) => a + Math.floor(rnd() * (b - a + 1)),
@@ -54,7 +58,7 @@ function seedFarm() {
     wk0 = weekStart(TODAY),
     recs = [],
     sows = [];
-  const USERS = ["대표", "조성훈 팀장", "Nguyen", "Ram", "Sokha", "Somchai"];
+  const USERS = S.users;
   const at = wd => {
     const t0 = new Date(toUTC(wd));
     const t = new Date(t0.getUTCFullYear(), t0.getUTCMonth(), t0.getUTCDate(), ri(7, 17), ri(0, 59));
@@ -87,9 +91,9 @@ function seedFarm() {
     }
   };
   const farrow = (id, F, weanDays) => {
-    const live = ri(10, 14);
-    add("분만", F, { sow: id, live, still: rnd() < 0.45 ? ri(1, 2) : 0, mum: rnd() < 0.15 ? 1 : 0 });
-    const lost = Math.max(0, Math.round(live * (0.06 + rnd() * 0.06)));
+    const live = ri(S.live[0], S.live[1]);
+    add("분만", F, { sow: id, live, still: rnd() < S.stillP ? ri(1, 2) : 0, mum: rnd() < S.mumP ? 1 : 0 });
+    const lost = Math.max(0, Math.round(live * (S.loss + rnd() * S.loss)));
     if (weanDays !== null) {
       const W = addDays(F, weanDays);
       litterDeaths(F, lost, weanDays - 1);
@@ -123,11 +127,11 @@ function seedFarm() {
       if (F < addDays(H0, -40)) break;
       farrow(id, F, wd);
       let Mp = addDays(F, -G);
-      if (rnd() < 0.12) {
+      if (rnd() < S.retP) {
         mate(id, addDays(Mp, -21), false);
         add("임신확인", Mp, { sow: id, result: "재발" });
         Mp = addDays(Mp, -21);
-      } else if (rnd() < 0.05) {
+      } else if (rnd() < S.openP) {
         mate(id, addDays(Mp, -40), false);
         add("임신확인", addDays(Mp, -12), { sow: id, result: "공태" });
         Mp = addDays(Mp, -40);
@@ -139,20 +143,20 @@ function seedFarm() {
   };
   let no = 1;
   const mk = loc => {
-    const bp = ri(0, 5),
+    const bp = ri(0, S.bpMax),
       id = FARM.sowPrefix + String(no++).padStart(3, "0");
     sows.push({ id, baseParity: bp, loc, breed: FARM.breed });
     return id;
   };
   // 분만사 30 = 분만 대기 8 + 포유 16 + 이유 직후 2 + 분만사에서 교배 4
-  for (let k = 0; k < 8; k++) {
+  for (let k = 0; k < q(8); k++) {
     const id = mk("분만사"),
-      M = addDays(TODAY, -(100 + Math.round((k * 13) / 7) + ri(0, 1)));
+      M = addDays(TODAY, -(100 + Math.round((k * 13) / (q(8) - 1)) + ri(0, 1)));
     mate(id, M);
     cycleBack(id, M);
   }
   for (let w = 0; w < 4; w++)
-    for (let k = 0; k < 4; k++) {
+    for (let k = 0; k < S.fw; k++) {
       const back = diff(wk0, TODAY);
       const F = addDays(wk0, -7 * w + (w === 0 ? ri(0, back) : ri(0, 6)));
       if (F > TODAY) continue;
@@ -162,7 +166,7 @@ function seedFarm() {
       farrow(id, F, null);
       cycleBack(id, M);
     }
-  for (let k = 0; k < 2; k++) {
+  for (let k = 0; k < q(2); k++) {
     const id = mk("분만사"),
       W = addDays(TODAY, -ri(0, 2)),
       F = addDays(W, -28),
@@ -171,41 +175,41 @@ function seedFarm() {
     farrow(id, F, 28);
     cycleBack(id, M);
   }
-  for (let k = 0; k < 4; k++) {
+  for (let k = 0; k < q(4); k++) {
     const id = mk("분만사"),
-      M = addDays(TODAY, -(3 + k * 5 + ri(0, 2)));
+      M = addDays(TODAY, -(3 + Math.round((k * 20) / q(4)) + ri(0, 2)));
     mate(id, M, false);
     cycleBack(id, M);
   }
   // 임신사 40 (교배 30~99일)
   for (let w = 0; w < 10; w++)
-    for (let k = 0; k < 4; k++) {
+    for (let k = 0; k < S.fw; k++) {
       const id = mk(w < 5 ? "임신사 1동" : "임신사 2동"),
-        M = addDays(TODAY, -(30 + 7 * w + Math.round((k * 7) / 4)));
+        M = addDays(TODAY, -(30 + 7 * w + Math.round((k * 7) / S.fw)));
       mate(id, M);
       cycleBack(id, M);
     }
   // 교배사 22 = 이유 후 대기 3 + 교배 후 확인 전 15 + 재발 3 + 공태 1
-  for (let k = 0; k < 3; k++) {
+  for (let k = 0; k < q(3); k++) {
     const id = mk("교배사"),
-      W = addDays(TODAY, -(2 + k)),
+      W = addDays(TODAY, -(2 + (k % 3))),
       F = addDays(W, -28),
       M = addDays(F, -G);
     mate(id, M);
     farrow(id, F, 28);
     cycleBack(id, M);
   }
-  for (let k = 0; k < 15; k++) {
+  for (let k = 0; k < q(15); k++) {
     const id = mk("교배사"),
-      M = addDays(TODAY, -Math.round((k * 25) / 15));
+      M = addDays(TODAY, -Math.round((k * 25) / q(15)));
     mate(id, M, false);
     cycleBack(id, M);
   }
-  for (let k = 0; k < 4; k++) {
+  for (let k = 0; k < q(4); k++) {
     const id = mk("교배사"),
       M = addDays(TODAY, -ri(26, 40));
     mate(id, M, false);
-    add("임신확인", addDays(M, ri(19, 24)), { sow: id, result: k < 3 ? "재발" : "공태" });
+    add("임신확인", addDays(M, ri(19, 24)), { sow: id, result: k < q(3) ? "재발" : "공태" });
     cycleBack(id, M);
   }
   // 이유 날짜가 미래가 되지 않게 · 확인 전 모돈의 미래 백신 제거
@@ -231,15 +235,15 @@ function seedFarm() {
       );
       let n = wn.reduce((s, x) => s + x.data.n, 0);
       if (!n) return;
-      const old = k < cut,
+      const old = !S.takeover || k < cut,
         ship = addDays(k, SH * 7 + ri(0, 4)),
         end = old ? (ship <= TAKE ? ship : TAKE) : TODAY;
       const fb = "육성비육사";
       const phase = [
-        [28, 42, "인큐베이터", "이유자돈", 0.02, ["설사·소화기", "설사·소화기", "허약", "원인불명"]],
-        [42, 70, "자돈사", "이유자돈", 0.015, ["설사·소화기", "호흡기", "허약", "원인불명"]],
-        [70, 112, "군사방", "육성돈", 0.015, ["호흡기", "호흡기", "외상", "원인불명"]],
-        [112, SH * 7, fb, "비육돈", 0.015, ["호흡기", "외상", "원인불명", "기타"]]
+        [28, 42, "인큐베이터", "이유자돈", S.pig[0], ["설사·소화기", "설사·소화기", "허약", "원인불명"]],
+        [42, 70, "자돈사", "이유자돈", S.pig[1], ["설사·소화기", "호흡기", "허약", "원인불명"]],
+        [70, 112, "군사방", "육성돈", S.pig[2], ["호흡기", "호흡기", "외상", "원인불명"]],
+        [112, SH * 7, fb, "비육돈", S.pig[3], ["호흡기", "외상", "원인불명", "기타"]]
       ];
       let from = fBarn(k);
       for (const [a, b, barn, stage, rate, causes] of phase) {
@@ -257,6 +261,7 @@ function seedFarm() {
         }
       }
       if (!old) return;
+      if (!S.takeover && ship > TODAY) return;   // 계속 키우는 농장: 아직 출하 전
       if (ship <= TAKE)
         add("출하", ship, { barn: fb, n, kg: ri(113, 119), dest: rnd() < 0.8 ? "○○도축장" : "△△공판장" });
       else {
@@ -270,7 +275,7 @@ function seedFarm() {
   Object.entries(bulk).forEach(([barn, v]) =>
     add("출하", TAKE, { barn, n: v.n, kg: Math.round(v.w / v.n), dest: "△△공판장 (인수 시 일괄 판매)", bulk: true })
   );
-  add("특이사항", TAKE, {
+  if (S.takeover) add("특이사항", TAKE, {
     barn: "육성비육사",
     text: "농장 인수 · 전 주인이 육성·비육돈 일괄 판매. 육성비육사 비어 있음"
   });
@@ -280,7 +285,7 @@ function seedFarm() {
     add("폐사", wd, { barn, stage, n, cause });
   });
   // 사료 입고 · 약품
-  const FK = [...FARM.feed.bins.map(b => [b.feed, 3000, 7000]), ...FARM.feed.bags.map(b => [b.feed, 200, 600])];
+  const FK = [...FARM.feed.bins.map(b => [b.feed, 3000 * S.feedIn, 7000 * S.feedIn]), ...FARM.feed.bags.map(b => [b.feed, 200 * S.feedIn, 600 * S.feedIn])];
   for (let d = 548; d >= 11; d -= ri(2, 4)) {
     const f = pick(FK);
     add("사료", addDays(TODAY, -d), { kind: f[0], mode: "입고", kg: Math.round(ri(f[1], f[2]) / 100) * 100 });
@@ -297,19 +302,20 @@ function seedFarm() {
   for (let y = +H0.slice(0, 4) - 1; y <= +H0.slice(0, 4); y++)
     for (let m = 1; m <= 12; m++) {
       if (`${y}-${pad(m)}` >= H0.slice(0, 7)) break;
-      const far = ri(16, 18);
+      const P = S.prev,
+        far = ri(q(P.far), q(P.far + 2));
       prevYear[`${y}-${pad(m)}`] = {
         far,
-        mates: ri(18, 20),
-        frate: ri(84, 89),
-        tot: +(13.2 + rnd() * 0.8).toFixed(1),
-        live: +(12 + rnd() * 0.8).toFixed(1),
-        wean: +(10.9 + rnd() * 0.7).toFixed(1),
-        surv: ri(89, 92),
-        psy: +(24 + rnd() * 2).toFixed(1),
-        msy: +(21 + rnd() * 2).toFixed(1),
-        dead: ri(60, 90),
-        ship: ri(160, 190),
+        mates: ri(q(P.far + 2), q(P.far + 4)),
+        frate: ri(P.frate, P.frate + 5),
+        tot: +(P.live + 1.2 + rnd() * 0.8).toFixed(1),
+        live: +(P.live + rnd() * 0.8).toFixed(1),
+        wean: +(P.wean + rnd() * 0.7).toFixed(1),
+        surv: ri(P.surv, P.surv + 3),
+        psy: +(P.psy + rnd() * 2).toFixed(1),
+        msy: +(P.msy + rnd() * 2).toFixed(1),
+        dead: ri(q(60), q(90)),
+        ship: ri(q(160), q(190)),
         shipKg: ri(115, 118)
       };
     }
