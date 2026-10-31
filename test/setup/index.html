@@ -1037,6 +1037,7 @@ body.tv .d-bin svg{max-width:6vh}
 /* 동기화 그룹(레규) 카드 */
 .dk-regu .rg-bars{gap:4px;align-content:start}.dk-regu .rg-h{font-weight:700;margin-top:6px}.dk-regu .d-mu{font-size:12.5px;line-height:1.45}
 body.tv .dk-regu .rg-h{font-size:18px}body.tv .dk-regu .d-mu{font-size:14px}
+.d-card.d-min{flex:0 0 auto!important;min-height:0!important;height:auto!important;padding-top:10px;padding-bottom:10px}.d-card.d-min h3{margin:0}
 /* ===== v0.5 디자인 테마 (설정 › 디자인 테마 · html[data-skin]) =====
    1 clean  클린 라이트 (삼쩜삼·토스)   2 night 나이트 (알라미)
    3 fresh  프레시 그린 (네이버페이)    4 sport 스포츠 다크 (플랜핏)
@@ -1153,7 +1154,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 14:14";
+const BUILD_AT="10-31 14:16";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -5182,6 +5183,9 @@ DASH_P.regu=()=>{const B=reguBatches(),now=nowHM();
     return `${head}<div class="d-bar"><span>${t("교배")}</span><div class="d-track"><div class="d-fill" style="width:${done/4*100}%;background:var(--accent,#2b8a3e)"></div></div><span class="d-v"><b>${done}</b>/4</span></div>
     <div class="d-mu">${t("급여 끝")} ${sd(b.end)}${b.miss.length?` · <span style="color:var(--red)">${t("빠짐")} ${b.miss.length}${t("일")}</span>`:""} · ${nx?`${t("다음 교배")} ${sd(nx.date)} ${nx.time} (${nx.n}${t("차")})`:t("정시 교배 끝")} · ${t("발정 예상")} ${sd(b.est[0])}~${sd(b.est[1])}</div>`});
   return [t("동기화 그룹 (레규)"),`${B.filter(b=>b.on).length}${t("그룹 급여 중")}`,`<div class="d-bars rg-bars">${rows.join("")}</div>`]};
+// 레규 대상이 없으면 카드를 한 줄로 작게("없음") — 있으면 위 카드 그대로
+const _dashCard84=dashCard;dashCard=function(k){if(k!=="regu"||reguBatches().length)return _dashCard84(k);
+  return `<section class="d-card dk-regu d-min"><h3><button type="button" class="d-go" data-a="dashGo" data-v="regu">${t("동기화 그룹 (레규)")} ›</button><small>${t("없음")}</small></h3></section>`};
 /* ================= v0.6 · 구글 시트 서버 동기화 =================
    켜는 곳: 설정 › 서버 연결 (대표). 서버 = server/Code.gs (Apps Script 웹 앱).
    방식: save() 할 때마다 1.2초 뒤 '바뀐 것만' 골라(기록·모돈은 한 건씩, 나머지 설정은 키별) 보낼 목록에 넣고 보냄.

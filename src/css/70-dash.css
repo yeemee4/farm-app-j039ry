@@ -203,3 +203,4 @@ body.tv .d-bin svg{max-width:6vh}
 /* 동기화 그룹(레규) 카드 */
 .dk-regu .rg-bars{gap:4px;align-content:start}.dk-regu .rg-h{font-weight:700;margin-top:6px}.dk-regu .d-mu{font-size:12.5px;line-height:1.45}
 body.tv .dk-regu .rg-h{font-size:18px}body.tv .dk-regu .d-mu{font-size:14px}
+.d-card.d-min{flex:0 0 auto!important;min-height:0!important;height:auto!important;padding-top:10px;padding-bottom:10px}.d-card.d-min h3{margin:0}

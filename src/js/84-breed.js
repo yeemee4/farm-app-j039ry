@@ -167,3 +167,6 @@ DASH_P.regu=()=>{const B=reguBatches(),now=nowHM();
     return `${head}<div class="d-bar"><span>${t("교배")}</span><div class="d-track"><div class="d-fill" style="width:${done/4*100}%;background:var(--accent,#2b8a3e)"></div></div><span class="d-v"><b>${done}</b>/4</span></div>
     <div class="d-mu">${t("급여 끝")} ${sd(b.end)}${b.miss.length?` · <span style="color:var(--red)">${t("빠짐")} ${b.miss.length}${t("일")}</span>`:""} · ${nx?`${t("다음 교배")} ${sd(nx.date)} ${nx.time} (${nx.n}${t("차")})`:t("정시 교배 끝")} · ${t("발정 예상")} ${sd(b.est[0])}~${sd(b.est[1])}</div>`});
   return [t("동기화 그룹 (레규)"),`${B.filter(b=>b.on).length}${t("그룹 급여 중")}`,`<div class="d-bars rg-bars">${rows.join("")}</div>`]};
+// 레규 대상이 없으면 카드를 한 줄로 작게("없음") — 있으면 위 카드 그대로
+const _dashCard84=dashCard;dashCard=function(k){if(k!=="regu"||reguBatches().length)return _dashCard84(k);
+  return `<section class="d-card dk-regu d-min"><h3><button type="button" class="d-go" data-a="dashGo" data-v="regu">${t("동기화 그룹 (레규)")} ›</button><small>${t("없음")}</small></h3></section>`};
