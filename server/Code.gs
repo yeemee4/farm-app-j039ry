@@ -153,3 +153,34 @@ function discord(msgs) {
     try { UrlFetchApp.fetch(url, { method: "post", contentType: "application/json", payload: JSON.stringify({ content: text.slice(i, i + 1900) }), muteHttpExceptions: true }); } catch (e) {}
   }
 }
+
+// ---------- 레규메이트 급여 늦음 알림 (30분마다 자동 실행) ----------
+// 처음 한 번: Apps Script 편집기 위쪽 함수 목록에서 setupReguTrigger 를 고르고 ▶ 실행 (권한 허용)
+var REGU_STEPS = [60, 240, 480, 660];   // 정한 시각에서 1·4·8·11시간 (앱 84-breed.js 와 같은 규칙)
+function setupReguTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "reguTick") ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger("reguTick").timeBased().everyMinutes(30).create();
+}
+function reguTick() { reguCheck(new Date()); }
+function reguCheck(now) {
+  var day = Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd"), hm = Utilities.formatDate(now, "Asia/Seoul", "HH:mm");
+  var mins = function (x) { var p = String(x).split(":"); return Number(p[0]) * 60 + Number(p[1]); };
+  var recs = rows("data").filter(function (r) { return r[1] === "rec" && Number(r[5]) !== 1; })
+    .map(function (r) { try { return typeof r[3] === "string" ? JSON.parse(r[3]) : null; } catch (e) { return null; } }).filter(Boolean);
+  var fed = {}; recs.forEach(function (r) { if (r.type === "레규급여" && r.workDate === day) fed[r.data.batch] = 1; });
+  var p = props(), msgs = [];
+  recs.filter(function (r) { return r.type === "동기화"; }).forEach(function (g) {
+    var d = g.data, n = Math.round((new Date(day) - new Date(d.start)) / 864e5) + 1;
+    if (n < 1 || n > d.days || fed[g.id]) return;
+    var late = mins(hm) - mins(d.at), stage = REGU_STEPS.filter(function (m) { return late >= m; }).length;
+    if (!stage) return;
+    var key = "regu|" + g.id + "|" + day + "|" + stage;
+    if (p.getProperty(key)) return;
+    p.setProperty(key, "1");
+    var h = Math.floor(late / 60);
+    msgs.push("⚠ 레규메이트 급여 시각 " + d.at + " 에서 " + h + "시간 지남 · " + d.sows.length + "두 · " + n + "/" + d.days + "일째" +
+      (stage >= 3 ? " · 대표 확인 필요" : "") + (stage >= 4 ? " · 12시간까지 1시간 남음" : ""));
+  });
+  if (msgs.length) discord(msgs);
+  return msgs.length;
+}

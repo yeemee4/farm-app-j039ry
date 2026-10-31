@@ -1,7 +1,8 @@
 // 가짜 구글 Apps Script 환경에서 server/Code.gs 를 그대로 돌리는 테스트 서버
 // node tools/gas-mock.js [포트]  → http://localhost:포트 (POST = doPost, GET = doGet) · /__dump 시트 내용 · /__discord 보낸 알림
 const http=require("http"),fs=require("fs"),vm=require("vm"),path=require("path"),crypto=require("crypto");
-const PORT=+(process.argv[2]||8787),sheets={},props={},discord=[];
+const PORT=+(process.argv[2]||8787);
+function makeGas(){const sheets={},props={},discord=[];
 // 진짜 시트처럼: 숫자처럼 보이는 글자 → 숫자, true/false → 참거짓
 const sheetVal=x=>typeof x!=="string"?x:/^-?\d+(\.\d+)?$/.test(x.trim())?Number(x):/^(true|false)$/i.test(x)?/^true$/i.test(x):x;
 function Sheet(name){const d=[];return {name,d,getLastRow:()=>d.length,setFrozenRows(){},appendRow:r=>d.push(r.map(sheetVal)),
@@ -11,12 +12,14 @@ function Sheet(name){const d=[];return {name,d,getLastRow:()=>d.length,setFrozen
 const ctx={SpreadsheetApp:{getActive:()=>({getSheetByName:n=>sheets[n]||null,insertSheet:n=>(sheets[n]=Sheet(n))})},
   ContentService:{MimeType:{JSON:"json"},createTextOutput:s=>({s,setMimeType(){return this}})},
   PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]??null,setProperty:(k,v)=>{props[k]=String(v)},deleteProperty:k=>{delete props[k]}})},
-  LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},Utilities:{getUuid:()=>crypto.randomUUID()},
+  LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},Utilities:{getUuid:()=>crypto.randomUUID(),formatDate:(d,tz,f)=>{const P=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d).map(x=>[x.type,x.value]));return f.replace("yyyy",P.year).replace("MM",P.month).replace("dd",P.day).replace("HH",P.hour).replace("mm",P.minute)}},
   UrlFetchApp:{fetch:(u,o)=>{discord.push(JSON.parse(o.payload).content);return {}}},console};
-vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,"../server/Code.gs"),"utf8"),ctx);
+vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,"../server/Code.gs"),"utf8"),ctx);return {ctx,sheets,props,discord}}
+module.exports={makeGas};
+if(require.main===module){const {ctx,sheets,discord}=makeGas();
 http.createServer((q,s)=>{const H={"Access-Control-Allow-Origin":"*","Content-Type":"application/json"};
   if(q.url==="/__dump"){s.writeHead(200,H);return s.end(JSON.stringify(Object.fromEntries(Object.entries(sheets).map(([k,v])=>[k,v.d.length]))))}
   if(q.url==="/__discord"){s.writeHead(200,H);return s.end(JSON.stringify(discord))}
   if(q.method==="OPTIONS"){s.writeHead(204,{...H,"Access-Control-Allow-Headers":"*"});return s.end()}
   if(q.method==="GET"){s.writeHead(200,H);return s.end(ctx.doGet().s)}
-  let b="";q.on("data",c=>b+=c);q.on("end",()=>{if(process.env.OFF){s.destroy();return}const r=ctx.doPost({postData:{contents:b}});s.writeHead(200,H);s.end(r.s)})}).listen(PORT,()=>console.log("gas-mock on",PORT));
+  let b="";q.on("data",c=>b+=c);q.on("end",()=>{if(process.env.OFF){s.destroy();return}const r=ctx.doPost({postData:{contents:b}});s.writeHead(200,H);s.end(r.s)})}).listen(PORT,()=>console.log("gas-mock on",PORT));}
