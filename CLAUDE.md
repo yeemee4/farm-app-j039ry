@@ -34,7 +34,7 @@
   - 설정 메뉴·설정 페이지·할 일 묶음·성적 지표·할 일 종류 같은 목록은 **정의한 곳의 목록에 직접** 넣는다(splice·push 로 나중에 끼우지 않음).
   - 두 단계가 필요한 계산은 이름을 나눠 한 곳에: `rangeMetricsRaw`→`rangeMetrics`(NPD 더함), `feedPlanBase`→`feedPlanDays`(학습 보정), `vSowApp`↔`vSow`(현장 카드 전환).
 - **모양**: `.prettierrc`(120자). 고친 뒤 `node /opt/node-tools/node_modules/prettier/bin/prettier.cjs --write "src/js/*.js"`.
-- **결과 같음 확인**(정리·리팩터링 때): 고치기 전 `node tools/golden.js save /tmp/g.json` → 고친 뒤 `node tools/golden.js check /tmp/g.json` (화면 422개·계산 결과, 날짜·무작위 고정. 일부러 바꾼 화면만 달라야 함).
+- **결과 같음 확인**(정리·리팩터링 때): 고치기 전 `node tools/golden.js save /tmp/g.json` → 고친 뒤 `node tools/golden.js check /tmp/g.json` (화면 422개·계산 결과, 날짜·무작위 고정. 일부러 바꾼 화면만 달라야 함). 누르는 흐름은 `node tools/flows.js <전 빌드 html> test/index.html 40 50`(두 빌드에서 같은 버튼을 같은 순서로 눌러 걸음마다 화면·저장 기록 비교, 약 15분).
 - **속도**: 같은 화면 안 무거운 계산은 `memo(key,fn)`, 기록 종류별은 `recsOf(type)`(저장·그리기 때 비움).
 - 정리 전 코드 백업: 브랜치 `backup/before-refactor-2026-10-31`.
 
