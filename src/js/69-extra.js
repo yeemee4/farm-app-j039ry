@@ -1,7 +1,7 @@
 /* ================= v0.5 · 2차 교배 할 일 · 복별 처치 항목 · 돈사별 실사 · 급수량 ================= */
 // 10. 어제(또는 그제) 1차 교배하고 2차가 없는 모돈 → 할 일
 function mate2Todos(){const y1=addDays(REF,-1),y2=addDays(REF,-2),items=[];
-  activeSows().forEach(s=>{const rs=state.records.filter(r=>r.type==="교배"&&r.data.sow===s.id&&r.workDate>=y2&&r.workDate<=REF);const f=rs.find(r=>r.data.round==="1차"&&r.workDate<REF);
+  activeSows().forEach(s=>{const rs=recsOf("교배").filter(r=>r.data.sow===s.id&&r.workDate>=y2&&r.workDate<=REF);const f=rs.find(r=>r.data.round==="1차"&&r.workDate<REF);
     if(f&&!rs.some(r=>r.data.round!=="1차"&&r.workDate>f.workDate))items.push({s,i:statusOf(s),label:`1차 ${kDate(f.workDate)} · ${t("오늘 2차")}`,sev:f.workDate<y1?"bad":"warn"})});
   return [{k:"mate2",t:"2차 교배 (어제 1차)",items,act:"교배"}]}
 // 11. 복별 처치: 항목 칩 (누르면 메모가 바뀜)
@@ -9,7 +9,7 @@ const litTasks=name=>String(name).split("·").slice(1).map(x=>x.trim()).filter(B
 function litChips(it,key){const tasks=litTasks(it.name);return `<div class="chipwrap littask" data-k="${esc(key)}">${tasks.map(x=>`<button type="button" class="chip wrap on" data-a="litTask" data-v="${esc(x)}">✓ ${esc(x)}</button>`).join("")}</div>`}
 // 12. 돈사별 재고두수 실사
 function barnEst(){const o={},L2=liveBatches();state.cfg.stage.forEach(([n])=>{o[n]=L2.filter(b=>stagePlan(bAge(b))===n).reduce((s,b)=>s+bHeads(b,bAge(b)),0)});return o}
-function lastCount(barn){return state.records.filter(r=>r.type==="실사"&&r.data.barn===barn).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0]}
+function lastCount(barn){return recsOf("실사").filter(r=>r.data.barn===barn).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0]}
 function vCount(){const E=barnEst(),C=ui.cnt=ui.cnt||{};
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="batch">‹ ${t("돈군")}</button><h2>${t("재고두수 실사")}</h2></div><div class="note">${t("돈사마다 실제로 센 두수를 넣으세요. 장부(기록으로 계산한 두수)와 차이가 성적 그래프에 나옵니다. 월 1회 권장.")}</div><div class="panel">`;
   Object.keys(E).forEach(b=>{const v=C[b]!==undefined?C[b]:E[b],lc=lastCount(b);

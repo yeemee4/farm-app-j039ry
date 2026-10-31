@@ -21,7 +21,7 @@ function binCap(b){return Math.round(binVmax(b)*binDens(b)*1000/50)*50}
 function binLevelOfKg(b,kg){const tv=Math.max(0,Math.min(binVmax(b),kg/1000/binDens(b)));let a=0,c=1;for(let k=0;k<26;k++){const m=(a+c)/2;binVol(b,m,m)<tv?a=m:c=m}return (a+c)/2}
 // 비중 자동 보정: 같은 날 '입고 전 게이지 → 입고 → 입고 후 게이지' 이면 입고 kg ÷ 늘어난 부피
 let BDE={};function binDensEst(b){const ck=state.records.length+"|"+b.feed;if(ck in BDE)return BDE[ck];return BDE[ck]=binDensEst0(b)}
-function binDensEst0(b){const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed).sort((x,y)=>(x.createdAt||"").localeCompare(y.createdAt||"")),est=[];
+function binDensEst0(b){const R=recsOf("사료").filter(r=>r.data.kind===b.feed).sort((x,y)=>(x.createdAt||"").localeCompare(y.createdAt||"")),est=[];
   R.forEach((r,i)=>{if(r.data.mode!=="입고")return;const pre=[...R.slice(0,i)].reverse().find(q=>q.data.vol!=null),post=R.slice(i+1).find(q=>q.data.vol!=null);
     if(!pre||!post||diff(pre.workDate,post.workDate)>1)return;const inn=R.filter(q=>q.data.mode==="입고"&&q.createdAt>pre.createdAt&&q.createdAt<post.createdAt).reduce((s,q)=>s+q.data.kg,0),dv=post.data.vol-pre.data.vol;
     if(dv>.3){const d=inn/1000/dv;if(d>.35&&d<.85)est.push(d)}});
@@ -35,7 +35,7 @@ function binCol(days){return days===null||days===undefined?"#8a949e":days<=2?"#e
 // 모든 빈을 같은 축척(지름 2.3m = 96)으로 그려 5톤은 가늘게, 10톤은 굵고 높게
 function binPx(b){const g=binGeo(b),s=96/2.3,roof=g.dome*s,top=roof+6,cy=g.hy*s,cn=g.hc*s,hw=g.R*s;return {s,x0:60-hw,x1:60+hw,cx:60,top,cyl:cy,cone:cn,B:top+cy+cn,H:cy+cn+roof,o:BIN_R0*s,roof}}
 // 지금 추정 잔량을 마지막 게이지 기록의 기울기 그대로 그릴 때의 왼쪽·오른쪽 높이
-function binLastTilt(b){const r=state.records.filter(x=>x.type==="사료"&&x.data.kind===b.feed&&x.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];return r?(r.data.lR-r.data.lL)/2:0}
+function binLastTilt(b){const r=recsOf("사료").filter(x=>x.data.kind===b.feed&&x.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];return r?(r.data.lR-r.data.lL)/2:0}
 function binLevels(b,kg){const td=binLastTilt(b),tv=Math.max(0,kg)/1000/binDens(b);if(!td)return [binLevelOfKg(b,kg),binLevelOfKg(b,kg)];
   let a=-Math.abs(td),c=1+Math.abs(td);const f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));for(let k=0;k<24;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;return [Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td))]}
 function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binPx(b),yL=P.B-lL*P.H,yR=P.B-lR*P.H,yAt=x=>yL+(yR-yL)*(x-P.x0)/(P.x1-P.x0);
@@ -48,8 +48,8 @@ function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binP
 function vFeedBins(){const T=feedTable();
   return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),[lL,lR]=binLevels(b,Math.min(x.kg||0,cap)),P=binPx(b);
     return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
-function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},last=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];
-  const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.workDate===TODAY).sort((p,q)=>(p.createdAt||"").localeCompare(q.createdAt||"")),lg=[...R].reverse().find(r=>r.data.vol!=null);
+function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},last=recsOf("사료").filter(r=>r.data.kind===b.feed&&r.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];
+  const R=recsOf("사료").filter(r=>r.data.kind===b.feed&&r.workDate===TODAY).sort((p,q)=>(p.createdAt||"").localeCompare(q.createdAt||"")),lg=[...R].reverse().find(r=>r.data.vol!=null);
   if(lg&&lg.data.gauge==="입고 전"&&R.some(r=>r.data.mode==="입고"&&r.createdAt>lg.createdAt))ui.binMode="입고 후";
   const L0=x.kg==null?.5:binLevelOfKg(b,x.kg),k=binKnob(),P=binPx(b);ui.bin={i,lL:L0,lR:L0};
   // 마지막 기록의 기울기를 이어서 시작 (높이는 지금 추정량에 맞춤)

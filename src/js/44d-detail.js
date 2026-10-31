@@ -26,7 +26,7 @@ function cdBody(k,n){const G=sGoal();
     if(k==="week"){const goal=dashCfg().goal,R=(q,a)=>{const b=addDays(a,6),L=state.records.filter(r=>r.type===q&&r.workDate>=a&&r.workDate<=b);return q==="교배"?L.filter(r=>r.data.round==="1차").length:L.length};
       const S=["교배","분만","이유"].map((q,i)=>({l:t(q),v:W.map(w=>R(q,w)),c:[CC.a,CC.b,"var(--good)"][i]}));
       return barsSvg(lab,S,goal)+legendH(S.map(s=>[s.c,s.l]))+cdTable(["주","시작일","교배","분만","이유","임신 확인"],W.map((w,i)=>[lab[i],kDate(w),...S.map((s,j)=>{const g=goal[["교배","분만","이유"][j]]||1;return `${s.v[i]} <small class="${s.v[i]>=g?"ok":"lo"}">${Math.round(s.v[i]/g*100)}%</small>`}),R("임신확인",w)]).reverse())}
-    const D=state.records.filter(r=>r.type==="폐사"&&r.workDate>=f).sort((a,b)=>b.workDate.localeCompare(a.workDate));
+    const D=recsOf("폐사").filter(r=>r.workDate>=f).sort((a,b)=>b.workDate.localeCompare(a.workDate));
     if(k==="dead"){const cell={};let mx=1;D.forEach(r=>{const q=r.data.barn+"|"+weekStart(r.workDate);cell[q]=(cell[q]||0)+r.data.n;mx=Math.max(mx,cell[q])});const B=BARNS.filter(b=>W.some(w=>cell[b+"|"+w]));
       const tot=W.map(w=>D.filter(r=>weekStart(r.workDate)===w).reduce((s,r)=>s+r.data.n,0));
       return barsSvg(lab,[{l:t("폐사"),v:tot,c:"var(--red)"}])+(B.length?`<div class="hm" style="--hc:${W.length}"><span></span>${W.map((w,i)=>`<span class="hm-h">${n>12&&i%2?"":lab[i]}</span>`).join("")}${B.map(b=>`<span class="hm-l">${esc(t(b))}</span>${W.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/mx*82)}%, var(--surface))`:"var(--bg)"};color:${v/mx>.55?"#fff":"var(--ink)"}">${v||""}</span>`}).join("")}`).join("")}</div>`:"")+cdDeadTable(D)}
@@ -34,12 +34,12 @@ function cdBody(k,n){const G=sGoal();
     const bs={};D.forEach(r=>{const q=r.data.cause+"|"+r.data.barn;bs[q]=(bs[q]||0)+r.data.n});
     return (tot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/tot*100)}%`,c:"var(--red)"}))):"")+
       cdTable(["원인","돈사","두수"],Object.entries(bs).sort((a,b)=>b[1]-a[1]).map(([q,v])=>{const [c,b]=q.split("|");return [esc(t(c)),esc(t(b)),v]}))+cdDeadTable(D)}
-  if(k==="feed"){const fr=feedTable(),od=FARM.feed.orderDays,R=state.records.filter(r=>r.type==="사료").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
+  if(k==="feed"){const fr=feedTable(),od=FARM.feed.orderDays,R=recsOf("사료").slice().sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return hbarsH(fr.filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days).map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"})))+
       cdTable(["사료","보관","잔량 kg","하루 사용 kg","남은 일수"],fr.map(x=>[esc(x.f),x.bin?esc(x.bin.name):t("포대"),(x.kg||0).toLocaleString(),Math.round(x.use||0),x.days??"-"]))+
       vFeedPlan()+`<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
   if(k==="parity")return parityDetail();
-  if(k==="count"){const R=state.records.filter(r=>r.type==="실사").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
+  if(k==="count"){const R=recsOf("실사").slice().sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return (countChart()||"")+cdTable(["날짜","돈사","실사","장부","차이"],R.map(r=>{const d=r.data.n-r.data.est;return [kDate(r.workDate),esc(t(r.data.barn)),r.data.n,r.data.est,`<span class="dlt ${d<0?"down":d>0?"up":""}">${d>0?"+":""}${d}</span>`]}))}
   return `<div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div>`}
 function cdDeadTable(D){return `<div class="sec-t">${t("폐사 기록")} <span>${D.reduce((s,r)=>s+r.data.n,0)}${t("두")} · ${D.length}${t("건")}</span></div>`+cdTable(["날짜","돈사","단계","두수","원인","모돈"],D.map(r=>[kDate(r.workDate),esc(t(r.data.barn)),esc(t(r.data.stage||"")),r.data.n,esc(t(r.data.cause)),r.data.sow?esc(r.data.sow):""]))}

@@ -1,7 +1,7 @@
 /* ================= v0.4 · 백신 엔진 (모돈·후보돈·연간·복별 처치) ================= */
 // 기록 이름 → 재고 품목 이름들
 function vaxProds(name){const all=[...FARM.vax.annual,...FARM.vax.gilt,...FARM.vax.late,...FARM.vax.piglet],v=all.find(x=>x.name===name);return v?[].concat(v.prod):[name]}
-const sowVaxDone=(id,name,from)=>state.records.some(r=>r.type==="백신"&&r.data.sow===id&&r.data.name===name&&r.workDate>=from);
+const sowVaxDone=(id,name,from)=>recsOf("백신").some(r=>r.data.sow===id&&r.data.name===name&&r.workDate>=from);
 // 연간 일괄: 그 달 n째 주 월요일
 function annualDate(y,m,w){return addDays(weekStart(`${y}-${pad(m)}-01`),(w-1)*7+(weekStart(`${y}-${pad(m)}-01`)<`${y}-${pad(m)}-01`?7:0))}
 function vaxTodos(){

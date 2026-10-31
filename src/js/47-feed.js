@@ -9,7 +9,7 @@ function feedUse(){const u={},U=FARM.feed.use,add=(f,n)=>u[f]=(u[f]||0)+n;
   liveBatches().forEach(b=>{const d=diff(b.k,REF),n=bHeads(b,Math.floor(d/7));pigFeeds(d).forEach(p=>add(p.feed,n*(U[p.feed]||0)))});
   return u}
 // 재고 = 마지막 잔량 + 이후 입고 − 추정 사용
-function feedStock(f,use){const rs=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
+function feedStock(f,use){const rs=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
   const base=[...rs].reverse().find(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량");if(!base)return {kg:null,use,days:null};
   const inn=rs.filter(r=>r.data.mode==="입고"&&r.workDate>base.workDate&&r.workDate<=REF).reduce((s,r)=>s+r.data.kg,0);
   const kg=Math.max(0,Math.round(base.data.kg+inn-use*diff(base.workDate,REF)));

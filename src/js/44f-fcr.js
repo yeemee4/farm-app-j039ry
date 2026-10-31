@@ -6,7 +6,7 @@ const GROW=[1.5,2.5,4,5.8,7.5,9.5,12,14.5,17.5,21,25,29,33,37.5,42,47,52,57,62,6
 const dress=()=>state.dress||FARM.dress;
 function carcList(r){return String(r.data.carc||"").split(/[^0-9.]+/).map(Number).filter(v=>v>=40&&v<=200)}
 function shipLive(r){const c=carcList(r);return c.length?{n:c.length,kg:c.reduce((a,b)=>a+b,0)/dress(),src:"carc",avgC:c.reduce((a,b)=>a+b,0)/c.length}:{n:r.data.n,kg:r.data.n*r.data.kg,src:"avg"}}
-const shipsReal=()=>state.records.filter(r=>r.type==="출하"&&!r.data.bulk).sort((a,b)=>a.workDate.localeCompare(b.workDate));
+const shipsReal=()=>recsOf("출하").filter(r=>!r.data.bulk).sort((a,b)=>a.workDate.localeCompare(b.workDate));
 // 출하 → 돈군: 그날 출하 일령 ±6주 안의 돈군 중 가장 나이 많고 아직 다 안 나간 돈군
 let FCX={};
 function shipMap(){const k=state.records.length;if(FCX.k===k)return FCX;const B=batches(),sa=shipAge(),left={},map={};B.forEach(b=>left[b.k]=bHeads(b,sa));
@@ -24,9 +24,9 @@ function batchFCR(){const M=shipMap().map;return Object.entries(M).map(([k,R])=>
   return {k,b,n,born:b.live,live,avg:live/n,feed,perHead:feed/n,fcr:gain>0?feed/gain:null,carc:L.some(x=>x.src==="carc"),end,days:diff(k,end)}}).filter(Boolean).sort((a,b)=>b.end.localeCompare(a.end))}
 // 농장 전체
 function invKg(d){return batches().reduce((a,b)=>{const age=diff(b.k,d);if(age<0||age>=shipAge()*7+42)return a;const w=Math.floor(age/7),out=(shipMap().map[b.k]||[]).filter(r=>r.workDate<=d).reduce((x,r)=>x+shipLive(r).n,0);return a+Math.max(0,bHeads(b,w)-out)*growKg(w)},0)}
-function stockAt(f,d){const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate<=d&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];if(!R)return null;
-  const inn=state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.data.mode==="입고"&&r.createdAt>R.createdAt&&r.workDate<=d).reduce((a,r)=>a+r.data.kg,0);let use=0;const M=rawPast();for(let x=R.workDate;x<d;x=addDays(x,1))use+=((M[x]||{})[f]||0)*feedFactor(f);return Math.max(0,R.data.kg+inn-use)}
-function farmFCR(f,t2){const F=feedKinds();let feed=0;for(const k of F){const inn=state.records.filter(r=>r.type==="사료"&&r.data.kind===k&&r.data.mode==="입고"&&r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+r.data.kg,0),s0=stockAt(k,f),s1=stockAt(k,t2);feed+=inn+(s0!=null&&s1!=null?s0-s1:0)}
+function stockAt(f,d){const R=recsOf("사료").filter(r=>r.data.kind===f&&r.workDate<=d&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];if(!R)return null;
+  const inn=recsOf("사료").filter(r=>r.data.kind===f&&r.data.mode==="입고"&&r.createdAt>R.createdAt&&r.workDate<=d).reduce((a,r)=>a+r.data.kg,0);let use=0;const M=rawPast();for(let x=R.workDate;x<d;x=addDays(x,1))use+=((M[x]||{})[f]||0)*feedFactor(f);return Math.max(0,R.data.kg+inn-use)}
+function farmFCR(f,t2){const F=feedKinds();let feed=0;for(const k of F){const inn=recsOf("사료").filter(r=>r.data.kind===k&&r.data.mode==="입고"&&r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+r.data.kg,0),s0=stockAt(k,f),s1=stockAt(k,t2);feed+=inn+(s0!=null&&s1!=null?s0-s1:0)}
   const live=shipsReal().filter(r=>r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+shipLive(r).kg,0),dInv=invKg(t2)-invKg(f),gain=live+dInv;return gain>0?{fcr:feed/gain,feed,live,dInv}:null}
 function fcrCard(){const P=statPeriod(),t2=P.t>TODAY?TODAY:P.t,f=diff(P.f,t2)<55?addDays(t2,-55):P.f,F=farmFCR(f,t2),B=batchFCR().filter(x=>x.fcr),g=sGoal(),b5=B.slice(0,5),bAvg=b5.length?b5.reduce((a,x)=>a+x.feed,0)/b5.reduce((a,x)=>a+x.live-x.n*FARM.birthKg,0):null;
   const col=(v,gl)=>!okv(v)?"var(--muted)":v<=gl?"var(--good)":v<=gl*1.08?"var(--amber)":"var(--red)";

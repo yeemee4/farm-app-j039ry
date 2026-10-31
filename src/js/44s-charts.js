@@ -45,12 +45,12 @@ function chartCards(){const C=[];
   cut();
   // 4. 폐사 히트맵: 돈사 × 주 (최근 8주)
   const w8=[7,6,5,4,3,2,1,0].map(i=>addDays(weekStart(TODAY),-7*i)),barns=BARNS.slice(),cell={};let cmx=1;
-  state.records.filter(r=>r.type==="폐사"&&r.workDate>=w8[0]).forEach(r=>{const k=r.data.barn+"|"+weekStart(r.workDate);cell[k]=(cell[k]||0)+r.data.n;cmx=Math.max(cmx,cell[k])});
+  recsOf("폐사").filter(r=>r.workDate>=w8[0]).forEach(r=>{const k=r.data.barn+"|"+weekStart(r.workDate);cell[k]=(cell[k]||0)+r.data.n;cmx=Math.max(cmx,cell[k])});
   const rowsB=barns.filter(b=>w8.some(w=>cell[b+"|"+w]));
   h+=`<div class="card"><h3>${t("폐사 현황")}<small>${t("돈사 × 주 · 진할수록 많음")}</small></h3>${rowsB.length?`<div class="hm" style="--hc:${w8.length}"><span></span>${w8.map(w=>`<span class="hm-h">W${isoWeek(w).w}</span>`).join("")}${rowsB.map(b=>`<span class="hm-l">${esc(t(b))}</span>${w8.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/cmx*82)}%, var(--surface))`:"var(--bg)"};color:${v/cmx>.55?"#fff":"var(--ink)"}" title="${esc(t(b))} W${isoWeek(w).w} ${v}${t("두")}">${v||""}</span>`}).join("")}`).join("")}</div>`:`<div class="empty">${t("최근 8주 폐사 기록이 없습니다.")}</div>`}</div>`;
   cut();
   // 5. 폐사 원인 비중 (선택 기간, 많은 순)
-  const cz={};state.records.filter(r=>r.type==="폐사"&&r.workDate>=P.f&&r.workDate<=P.t).forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);
+  const cz={};recsOf("폐사").filter(r=>r.workDate>=P.f&&r.workDate<=P.t).forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);
   const ctot=Object.values(cz).reduce((a,b)=>a+b,0);
   h+=`<div class="card"><h3>${t("폐사 원인 비중")}<small>${esc(P.label)} · ${ctot}${t("두")}</small></h3>${ctot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/ctot*100)}%`,c:"var(--red)"}))):`<div class="empty">${t("이 기간에는 기록이 없습니다.")}</div>`}</div>`;
   cut();

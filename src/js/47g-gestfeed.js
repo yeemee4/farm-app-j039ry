@@ -3,7 +3,8 @@
    어제와 달라진 모돈은 할 일 '급여량 변경'으로. 매주 조절 제안(대표). 기준값은 일반 범위의 기본값 */
 function gCfg(){const G=FARM.gfeed,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
 const GF_BARNS=()=>Object.keys(gCfg().barns);
-function lastBCS(id,before){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===id&&x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
+function lastBCS(id,before){const r=memo("bcs",()=>{const m={};state.records.forEach(x=>{if(x.type==="BCS")(m[x.data.sow]=m[x.data.sow]||[]).push(x)});return m})[id];if(!r)return null;return lastBCS0(r,before)}
+function lastBCS0(L,before){const r=L.filter(x=>x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
 function barnTemp(barn,d){const a=(state.am||{})[d];const v=a&&a[barn]&&parseFloat(a[barn].temp);if(!isNaN(v))return v;if(d===TODAY&&typeof wxDay==="function"){const w=wxDay(0);if(w)return null}return null}
 // 모돈 한 마리의 그날 권장량
 function gestFeed(s,d=TODAY){const C=gCfg(),st=sowState(s.id),i=statusOf(s);if(i.key==="도태됨"||!GF_BARNS().includes(s.loc))return null;
@@ -43,7 +44,7 @@ function gfWeekly(A){const C=gCfg(),S=[],noB=A.filter(a=>!a.bcs||diff(a.bcs.d,TO
   if(late7)S.push(`${t("다음 7일 안에 85일(후기 증량) 들어가는 모돈")} ${late7}${t("두")} → ${C.phases[2].kg}kg${t("으로 올릴 준비")}`);
   if(fat)S.push(`BCS 4 ${t("이상")} ${fat}${t("두")} → ${t("감량 적용 중 · 2주 뒤 BCS 다시 확인")}`);if(thin)S.push(`BCS 2 ${t("이하")} ${thin}${t("두")} → ${t("증량 적용 중 · 2주 뒤 BCS 다시 확인")}`);
   if(typeof wxDay==="function"){let mn=99;for(let i=0;i<7;i++){const w=wxDay(i);if(w)mn=Math.min(mn,w.min)}if(mn<5)S.push(`${t("이번 주 최저기온")} ${mn}℃ → ${t("돈사 온도가")} ${C.lct}℃ ${t("아래로 내려가면 자동 증량 · 아침 점검 온도를 꼭 입력")}`)}
-  const F=state.records.filter(r=>r.type==="분만"&&r.workDate>=addDays(TODAY,-90));if(F.length>=5){const lo=F.filter(r=>r.data.live<=9).map(r=>lastBCS(r.data.sow,addDays(r.workDate,-5))).filter(Boolean),loT=lo.filter(b=>+b.score<=2.5).length;if(lo.length>=3&&loT/lo.length>=.5)S.push(`${t("최근 90일 실산 9두 이하 분만의 절반 이상이 분만 전 BCS 2.5 이하")} → ${t("임신 후기 증량을 0.2~0.3kg 더 올리는 것을 검토")}`)}
+  const F=recsOf("분만").filter(r=>r.workDate>=addDays(TODAY,-90));if(F.length>=5){const lo=F.filter(r=>r.data.live<=9).map(r=>lastBCS(r.data.sow,addDays(r.workDate,-5))).filter(Boolean),loT=lo.filter(b=>+b.score<=2.5).length;if(lo.length>=3&&loT/lo.length>=.5)S.push(`${t("최근 90일 실산 9두 이하 분만의 절반 이상이 분만 전 BCS 2.5 이하")} → ${t("임신 후기 증량을 0.2~0.3kg 더 올리는 것을 검토")}`)}
   return `<div class="sec-t">${t("이번 주 급여 조절 제안")}</div><div class="panel gfw">${S.length?S.map(x=>`<div>💡 ${x}</div>`).join(""):`<div>${t("특별히 조절할 점이 없습니다.")}</div>`}<button class="act" type="button" data-a="tab" data-v="gestset">${t("급여 기준 고치기")} ›</button></div>`}
 // 대표 설정: 임신돈 급여 기준
 function vGestSet(){const C=gCfg(),st=(path,v,step)=>`<div class="stepper"><button type="button" data-a="gSet" data-v="${path}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(step<1?(step<.1?2:1):0)}" readonly><button type="button" data-a="gSet" data-v="${path}" data-k="${step}" aria-label="+">+</button></div>`;

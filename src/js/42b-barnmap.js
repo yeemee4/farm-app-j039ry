@@ -34,7 +34,7 @@ function stallVal(lk){const m=ui.bmInfo||"feed";if(m==="next")return lk.nx;if(m=
 function doorsOf(b){const L=barnLayout(b);return L.doors||(L.door?[{x:L.door.x,y:L.door.y,dir:"left"}]:[])}
 function clockOrder(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];const cx=L.w/2,cy=L.h/2,d=doorsOf(b)[0]||{x:cx,y:L.h},a0=Math.atan2(d.y-cy,d.x-cx),T=2*Math.PI;
   return S.map(x=>({x,a:((Math.atan2(x.y+x.h/2-cy,x.x+x.w/2-cx)-a0)%T+T)%T})).sort((p,q)=>p.a-q.a).map(o=>o.x.id)}
-function lastIn(b,occ){const L=(state.lastIn||{})[b];if(L&&occ[L])return L;const R=state.records.filter(r=>r.type==="이동"&&r.data.to===b&&r.data.sow).sort((x,y)=>(y.createdAt||"").localeCompare(x.createdAt||""));
+function lastIn(b,occ){const L=(state.lastIn||{})[b];if(L&&occ[L])return L;const R=recsOf("이동").filter(r=>r.data.to===b&&r.data.sow).sort((x,y)=>(y.createdAt||"").localeCompare(x.createdAt||""));
   for(const r of R){const e=Object.entries(occ).find(([k,o])=>o.s.id===r.data.sow);if(e)return e[0]}return null}
 function nextIn(b,k=3){const {occ}=barnOcc(b),O=clockOrder(b);if(!O.length)return [];const li=lastIn(b,occ),st=li?O.indexOf(li)+1:0,out=[];for(let i=0;i<O.length&&out.length<k;i++){const id=O[(st+i)%O.length];if(!occ[id])out.push(id)}return out}
 function vBarnSvg(b,z,mini){const L=barnLayout(b);if(!L)return "";const NX=nextIn(b),{S,occ}=barnOcc(b),M=v=>v*z,ext=L.annex?L.annex.w:0,W=L.w+ext+(mini?.2:1.2),H=L.h+(mini?.2:1.2);
@@ -79,12 +79,12 @@ function vPickMap(){const B=BM_BARNS(),P=pickCtx(),cnt=b=>activeSows().filter(s=
   if(!ui.pkBarn||!B.includes(ui.pkBarn)){ui.pkBarn=B.slice().sort((a,c)=>cnt(c)-cnt(a))[0]}const b=ui.pkBarn;
   return `<div class="chips">${B.map(x=>`<button type="button" class="chip ${x===b?"on":""}" data-a="pkBarn" data-v="${esc(x)}">${esc(t(x))}${cnt(x)?` <b>${cnt(x)}</b>`:""}</button>`).join("")}</div><div class="note bl-how">${t("진한 칸 = 이 기록 대상 · ✓ 입력함 · 흐린 칸도 누를 수 있음")}</div>`+vBarnList(b,"pick")}
 // ---- BCS 입력용 배치도 ----
-function bcsInfo(s,due){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===s.id).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];
+function bcsInfo(s,due){const r=recsOf("BCS").filter(x=>x.data.sow===s.id).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];
   if(r&&r.workDate===TODAY)return {cls:"bcs-done",txt:`✓ ${t("오늘")} BCS ${r.data.score}`};const need=due.has(s.id);
   return {cls:need?"bcs-need":"",txt:(r?`BCS ${r.data.score} · ${kDate(r.workDate).replace(/\s*\(.*\)/,"")}`:t("BCS 없음"))+(need?` · ${t("측정 필요")}`:"")}}
 function bcsWhen(s){const st=sowState(s.id);if(st.stage==="이유")return "이유 시";if(st.stage==="포유")return "분만 시";if((st.stage==="교배"||st.stage==="임신")&&st.mate){const g=diff(st.mate,TODAY);return g<=3?"교배 시":g>=108?"분만 시":"임신 중"}return "기타"}
 const bcsHub=on=>`<div class="chips">${[["bcsmap","🗺 BCS 배치도"],["gfeed","임신돈 급여표"]].map(([k,l])=>`<button type="button" class="chip ${on===k?"on":""}" data-a="tab" data-v="${k}">${t(l)}</button>`).join("")}</div>`;
-function vBcsMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],n=state.records.filter(r=>r.type==="BCS"&&r.workDate===TODAY).length;
+function vBcsMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],n=recsOf("BCS").filter(r=>r.workDate===TODAY).length;
   return `<div class="pagehd"><button class="back" type="button" data-a="bcsList">‹ BCS ${t("목록 입력")}</button><h2>BCS · ${t("배치도")}</h2></div>${bcsHub("bcsmap")}<div class="banner info"><b>${t("오늘 측정")} ${n}${t("두")}</b><span>${t("측정 필요")} ${typeof bcsDue==="function"?bcsDue().length:0}${t("두")}</span></div>
   <div class="chips">${B.map(x=>`<button type="button" class="chip ${x===b?"on":""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))}</button>`).join("")}</div>`+vBarnList(b,"bcs")}
 function bcsSheet(b,sid){const o=barnOcc(b).occ[sid];if(!o)return;const s=o.s,w=bcsWhen(s),i=statusOf(s);

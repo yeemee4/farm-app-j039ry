@@ -12,7 +12,7 @@ const CULL0={parity:7,returns:2,low:9};
 function cullRule(){return {...CULL0,...(state.cullRule||{})}}
 function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[];
   if(i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);if(i.returns>=R.returns)w.push(`${t("재발·공태")} ${i.returns}${t("회")}`);
-  const fs=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
+  const fs=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
   if(fs.length===2&&fs.every(r=>r.data.live<=R.low))w.push(`${t("실산")} ${fs.map(r=>r.data.live).join("·")}`);
   return w.length?w.join(" · "):null}
 function cullRuleSet(){const R=cullRule();return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터")}</span></div><div class="panel">${[["parity","산차 이상"],["returns","재발·공태 횟수 이상"],["low","최근 2복 실산 이하"]].map(([k,l])=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`).join("")}</div>`}

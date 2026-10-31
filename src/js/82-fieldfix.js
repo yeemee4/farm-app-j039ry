@@ -51,7 +51,7 @@ wxAlerts=function(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d
 const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
 cullRule=function(){const r={...CULL1,...(state.cullRule||{})};return r};
 cullWhy=function(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
-  const F=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
+  const F=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
   if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
   if(F.length>=2){const dy=F.filter(r=>isDys(r)).length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
   if(st.stage==="이유"&&diff(st.since,TODAY)>=R.anest)w.push(`${t("무발정")} ${diff(st.since,TODAY)}${t("일")}`);
@@ -129,7 +129,7 @@ const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(tod
 
 // ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
 function feedEmpty(f,kg){if(kg==null)return false;const b=feedBin(f);return b?kg<=Math.max(100,binCap(b)*.03):kg<=0}
-function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
   const rd=R.filter(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량"),last=rd[rd.length-1];if(!last||!feedEmpty(f,last.data.kg))return;
   if(R.some(r=>r.data.mode==="입고"&&r.createdAt>last.createdAt))return;
   let i=rd.length-1;while(i>0&&feedEmpty(f,rd[i-1].data.kg))i--;const since=rd[i].workDate,b=feedBin(f);
@@ -153,7 +153,7 @@ A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=promp
 
 // 예시 데이터: 빈 잔량 기록에 양쪽 게이지(기울기)도 넣기 → 현황판·사료 화면 빈이 기울어진 면으로 보임
 const _seedFarmPost0=seedFarmPost;
-seedFarmPost=function(){_seedFarmPost0();try{const R=state.records.filter(r=>r.type==="사료"&&r.data.mode==="빈 잔량"&&r.data.lL==null);
+seedFarmPost=function(){_seedFarmPost0();try{const R=recsOf("사료").filter(r=>r.data.mode==="빈 잔량"&&r.data.lL==null);
   FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
     const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
     r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()};

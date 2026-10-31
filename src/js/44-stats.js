@@ -6,9 +6,9 @@ function metrics(from,to){
   const inP=r=>r.workDate>=from&&r.workDate<=to,R=t=>state.records.filter(r=>r.type===t&&inP(r));
   const days=diff(from,to)+1,mates=R("교배").filter(r=>r.data.round==="1차"),far=R("분만"),wn=R("이유"),dead=R("폐사"),ship=R("출하").filter(r=>!r.data.bulk);
   const avg=(a,f)=>a.length?a.reduce((s,x)=>s+f(x),0)/a.length:null;
-  const mb=state.records.filter(r=>r.type==="교배"&&r.data.round==="1차"&&r.workDate>=addDays(from,-CFG.gest)&&r.workDate<=addDays(to,-CFG.gest));
-  const fr=mb.filter(m=>state.records.some(f=>f.type==="분만"&&f.data.sow===m.data.sow&&diff(m.workDate,f.workDate)>=105&&diff(m.workDate,f.workDate)<=125)).length;
-  const liveOf=w=>{const f=state.records.filter(x=>x.type==="분만"&&x.data.sow===w.data.sow&&x.workDate<w.workDate).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return f?f.data.live:null};
+  const mb=recsOf("교배").filter(r=>r.data.round==="1차"&&r.workDate>=addDays(from,-CFG.gest)&&r.workDate<=addDays(to,-CFG.gest));
+  const fr=mb.filter(m=>recsOf("분만").some(f=>f.data.sow===m.data.sow&&diff(m.workDate,f.workDate)>=105&&diff(m.workDate,f.workDate)<=125)).length;
+  const liveOf=w=>{const f=recsOf("분만").filter(x=>x.data.sow===w.data.sow&&x.workDate<w.workDate).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return f?f.data.live:null};
   const pairs=wn.map(w=>[w.data.n,liveOf(w)]).filter(p=>p[1]);
   const sows=activeSows().filter(s=>!statusOf(s).gilt).length||1;
   const shipN=ship.reduce((s,r)=>s+r.data.n,0);

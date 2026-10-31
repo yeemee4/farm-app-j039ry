@@ -1,7 +1,8 @@
 /* ===== 당일 기록 마감 (기본 21:00 · 대표 설정 › 현황판 항목) =====
    마감 전: 홈 띠로 남은 기록 · 마감 후: '기록 누락' 할 일 묶음(지난 7일까지, 다음 날에도 리마인드) */
 function closeBy(){return state.closeBy||FARM.closeBy||"21:00"}
-function closeMiss(day){return day<(state.startDate||"")?[]:DAILY.filter(q=>dayStatus(day,q).s==="miss")}
+function closeMiss(day){return memo("cm|"+day,()=>closeMiss0(day))}
+function closeMiss0(day){return day<(state.startDate||"")?[]:DAILY.filter(q=>dayStatus(day,q).s==="miss")}
 function closeTodos(){if(REF!==TODAY)return [{k:"closemiss",t:"기록 누락",items:[],act:null}];const items=[];
   for(let i=7;i>=0;i--){const d=addDays(TODAY,-i);if(i===0&&nowHM()<closeBy())continue;
     closeMiss(d).forEach(q=>items.push({cm:{day:d,type:q},label:i===0?`${t("마감")} ${closeBy()} ${t("지남")}`:`${i}${t("일 전")} · ${t("누락")}`,sev:"bad"}))}

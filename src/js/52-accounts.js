@@ -19,7 +19,8 @@ function can(x,r){const m=me();if(!m)return false;const R=m.role;
 const navLabel=k=>(state.labels&&state.labels.nav&&state.labels.nav[k])||t(k==="more"?"더보기":NAV.find(n=>n[0]===k)[1]);
 
 /* ================= v0.3 · 상태 문구 (번역) ================= */
-function statusOf(s){
+function statusOf(s){return memo("st|"+s.id,()=>statusOf0(s))}
+function statusOf0(s){
   const st=sowState(s.id),c=culledRec(s.id),parity=s.baseParity+st.farrows;
   const gilt=!!s.gilt&&!st.pregEver;
   if(c)return {...st,parity,gilt:false,key:"도태됨",label:t("도태됨"),sub:`${kDate(c.workDate)} · ${c.data.reason}`,cls:"x",heat:false,d:0};
@@ -60,7 +61,7 @@ function summary(r){const d=r.data;switch(r.type){
 /* ================= v0.3 · 폐사 알림 기준 ================= */
 function deadPending(){
   const C=state.cfg,out=[];
-  const recs=state.records.filter(r=>r.type==="폐사"&&diff(r.workDate,TODAY)<=7);
+  const recs=recsOf("폐사").filter(r=>diff(r.workDate,TODAY)<=7);
   recs.forEach(r=>{if(r.data.n>=C.deadOne&&!r.data.decision)out.push({r,pending:true,label:`${kDate(r.workDate)} · ${summary(r)}`,sev:"bad"})});
   const g={};recs.forEach(r=>{const k=r.workDate+"|"+r.data.barn;(g[k]=g[k]||[]).push(r)});
   Object.entries(g).forEach(([k,rs])=>{const day=dayGroup(k,rs);if(day.pending)out.push({day,pending:true,label:`${kDate(day.date)} · ${day.barn} ${t("하루 합계")} ${day.total}${t("두")} (${rs.length}${t("건")})`,sev:"bad"})});

@@ -84,7 +84,7 @@ function seedFarmPost(){
   activeSows().forEach(s=>{const i=statusOf(s);if(i.stage!=="포유")return;FARM.vax.litter.forEach(v=>{const on=addDays(i.farrow,v.day);if(on<TODAY)state.todoLog[tdKey("lit",`${s.id}|${i.farrow}|${v.day}`)]={memo:"",user:USERS[u++%4],at:at(on),rec:null}})});
   // 지난 폐사는 판단 완료로
   state.records.forEach(x=>{if(x.type==="폐사"&&x.workDate<TODAY&&x.data.n>=state.cfg.deadOne)x.data.decision="none"});
-  const g={};state.records.filter(x=>x.type==="폐사"&&x.workDate<TODAY).forEach(x=>{const k=x.workDate+"|"+x.data.barn;g[k]=(g[k]||0)+x.data.n});
+  const g={};recsOf("폐사").filter(x=>x.workDate<TODAY).forEach(x=>{const k=x.workDate+"|"+x.data.barn;g[k]=(g[k]||0)+x.data.n});
   Object.entries(g).forEach(([k,n])=>{if(n>=state.cfg.deadDay)state.dayDec[k]={decision:"none",total:n,at:new Date().toISOString(),user:"조성훈 팀장"}});
   // 매일 마감: 기록 없는 항목은 ‘오늘 없음’
   const has=new Set(state.records.map(x=>x.type+"|"+x.workDate));
@@ -101,7 +101,7 @@ function seedFarmPost(){
   // 사료 학습용: 10일 전 잔량 앞으로 35일 동안 매일 아침 잔량(일요일 빼고)과 입고. 실제 사용 = 모델 × 사료별 숨은 배율 × 하루 흔들림
   {const d45=addDays(TODAY,-46);state.records=state.records.filter(r=>!(r.type==="사료"&&r.data.mode==="입고"&&r.workDate>=d45&&r.workDate<d10));
    const raw=feedPlanDays0(37,d45),TF={임신모돈:1.06,포유모돈:.93,젖먹이:.78,육성:.97,특호:1.35,"1호":1.25,"2호":1.15,"3호":1.08};let seedN=7;const rnd=()=>{seedN=(seedN*9301+49297)%233280;return seedN/233280};
-   feedKinds().forEach(f=>{const r10=state.records.find(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===d10&&r.data.mode==="빈 잔량");if(!r10)return;const bin=feedBin(f),bag=feedBag(f),hi=bin?bin.cap*.95:Math.max(400,(fu[f]||1)*30),lo=bin?bin.cap*.25:(fu[f]||1)*6;
+   feedKinds().forEach(f=>{const r10=recsOf("사료").find(r=>r.data.kind===f&&r.workDate===d10&&r.data.mode==="빈 잔량");if(!r10)return;const bin=feedBin(f),bag=feedBag(f),hi=bin?bin.cap*.95:Math.max(400,(fu[f]||1)*30),lo=bin?bin.cap*.25:(fu[f]||1)*6;
      let S=r10.data.kg;for(let k=1;k<=35;k++){const d=addDays(d10,-k),x=raw.find(z=>z.d===d),use=(x&&x.u[f]||0)*(TF[f]||1)*(1+(rnd()-.5)*.12);let c=S+use;
        if(c>hi){const q=bag?Math.round((c-lo)/bag.kg)*bag.kg:Math.round((c-lo)/500)*500;state.records.push({id:newId(),type:"사료",workDate:addDays(d,1),createdAt:new Date(toUTC(addDays(d,1))+(7)*36e5).toISOString(),user:"조성훈 팀장",data:{kind:f,mode:"입고",kg:q}});c-=q}
        S=c;if(dow(d)!==0)state.records.push({id:newId(),type:"사료",workDate:d,createdAt:new Date(toUTC(d)+8.5*36e5).toISOString(),user:"조성훈 팀장",data:{kind:f,mode:"빈 잔량",kg:Math.max(0,Math.round(S+(bin?(rnd()-.5)*bin.cap*.02:0)))}})}})}

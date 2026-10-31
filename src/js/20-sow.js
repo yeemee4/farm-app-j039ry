@@ -1,6 +1,7 @@
 /* ================= 모돈 상태 ================= */
 let EXCL=null,SIDX=null;
-function sowState(id){
+function sowState(id){return memo("ss|"+id,()=>sowState0(id))}
+function sowState0(id){
   if(!SIDX){SIDX={};state.records.forEach(r=>{if(r.data&&r.data.sow&&(r.type==="교배"||r.type==="임신확인"||r.type==="분만"||r.type==="이유"||r.type==="양자"))(SIDX[r.data.sow]=SIDX[r.data.sow]||[]).push(r);if(r.type==="양자"&&r.data.to)(SIDX[r.data.to]=SIDX[r.data.to]||[]).push(r)})}
   const evs=(SIDX[id]||[]).filter(r=>r.id!==EXCL)
     .sort((a,b)=>a.workDate.localeCompare(b.workDate)||a.createdAt.localeCompare(b.createdAt));
@@ -14,8 +15,8 @@ function sowState(id){
   });
   return st;
 }
-const culledRec=id=>state.records.find(r=>r.type==="도태"&&r.data.sow===id);
-const activeSows=()=>state.sows.filter(s=>!culledRec(s.id));
+const culledRec=id=>memo("cull",()=>{const m={};state.records.forEach(r=>{if(r.type==="도태"&&!m[r.data.sow])m[r.data.sow]=r});return m})[id];
+const activeSows=()=>memo("act",()=>state.sows.filter(s=>!culledRec(s.id))).slice();
 const STATUS_KEYS=[["후보","후보돈"],["발정대기","발정 대기"],["확인전","확인 전"],["임신","임신"],["분만임박","분만 임박"],["포유","포유"],["재발공태","재발·공태"],["도태예정","도태 예정"],["도태됨","도태됨"]];
 function matchStatus(s,i,k){
   if(k==="전체")return i.key!=="도태됨";
@@ -46,7 +47,8 @@ const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k===
 const tdLog=key=>(state.todoLog||{})[key];
 function itemTarget(it){return it.emp?"emp|"+it.emp.f:it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
 function tdName(it){return it.emp?it.emp.name+" 입고 확인":it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
-function buildTodos(){
+function buildTodos(){return memo("bt",buildTodos0).slice()}
+function buildTodos0(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{
     const i=statusOf(s);
@@ -61,7 +63,7 @@ function buildTodos(){
     if(i.stage==="포유"&&!weanSkip(s)&&i.d>=CFG.weanDay&&i.d<state.cfgSt.farrowNoWean)g.wean.push({s,i,label:`포유 ${i.d}일`,sev:i.d>CFG.weanDay+3?"bad":"ok"});
     if(s.cullPlan&&s.cullPlan.date<=addDays(REF,7))g.cull.push({s,i,label:`도태 예정 ${kDate(s.cullPlan.date)} · ${s.cullPlan.reason}`,sev:s.cullPlan.date<=REF?"bad":"warn"});
   });
-  state.records.filter(r=>r.type==="약품"&&r.data.withdraw).forEach(r=>{const d=diff(REF,r.data.withdraw);if(d>=0&&d<=7)g.withdraw.push({r,label:`${r.data.barn} · 휴약 종료 ${kDate(r.data.withdraw)}`,d,sev:"ok"})});
+  recsOf("약품").filter(r=>r.data.withdraw).forEach(r=>{const d=diff(REF,r.data.withdraw);if(d>=0&&d<=7)g.withdraw.push({r,label:`${r.data.barn} · 휴약 종료 ${kDate(r.data.withdraw)}`,d,sev:"ok"})});
   const pending=deadPending();
   const tasks=(state.tasks||[]).filter(t=>{const l=tdLog(tdKey("task",t.id));return !l||localDateOf(l.at)===TODAY}).sort((a,b)=>a.due.localeCompare(b.due))
     .map(t=>({t,label:`${t.due<REF?`${diff(t.due,REF)}일 지남`:t.due===REF?"오늘":kDate(t.due)} · 담당 ${t.who}`,sev:t.due<REF?"bad":t.due===REF?"warn":"ok"}));

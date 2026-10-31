@@ -2,7 +2,7 @@
    빈은 양쪽 게이지, 포대는 포대 수. 다 재면 다음 주문일·권장량을 바로 보여줌. 마감 시각 FARM.feed.checkBy (대표 설정) */
 function feedCheckBy(){return state.feedCheckBy||FARM.feed.checkBy||"10:00"}
 function fcItems(){const T=feedTable(),bins=FARM.feed.bins.map((b,i)=>({k:b.feed,i,bin:b})),bags=T.filter(x=>x.bag).map(x=>({k:x.f,bag:x.bag}));return [...bins,...bags]}
-function fcToday(f){return state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===TODAY&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0]}
+function fcToday(f){return recsOf("사료").filter(r=>r.data.kind===f&&r.workDate===TODAY&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0]}
 function fcLeft(){return fcItems().filter(x=>!fcToday(x.k))}
 function fcTodos(){if(REF!==TODAY)return [{k:"feedchk",t:"사료 잔량 점검",items:[],act:null}];const late=nowHM()>=feedCheckBy();
   return [{k:"feedchk",t:"사료 잔량 점검",items:fcLeft().map(x=>({fc2:x,label:`${x.bin?esc(x.bin.name):t("포대")} · ${t("오전")} ${feedCheckBy()}${t("까지")}`,sev:late?"bad":"warn"})),act:null}]}

@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 16:47";
+const BUILD_AT="10-31 19:22";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -1356,7 +1356,11 @@ const localDateOf=iso=>fmt(new Date(iso));
 const KEY=ENV==="test"?"farm-test-v3":"farm-proto-v3";   // 시험용(test/)은 저장 공간 따로
 let state,storageOK=true;
 function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){storageOK=false}return null}
-function save(){SIDX=null;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOK=false}}
+// 같은 화면·같은 데이터 안에서 무거운 계산 한 번만(저사양 기기) — 저장·화면 그리기·기록 수 변화 때 비움
+let MEMO={};function memo(k,f){k+="|"+state.records.length+"|"+state.sows.length;return k in MEMO?MEMO[k]:(MEMO[k]=f())}
+// 기록 종류별 묶음(순서 그대로) — state.records 전체를 매번 훑지 않게
+const recsOf=ty=>memo("ty",()=>{const m={};state.records.forEach(r=>(m[r.type]=m[r.type]||[]).push(r));return m})[ty]||[];
+function save(){SIDX=null;MEMO={};try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOK=false}}
 let uid=Date.now();const DEVID=(()=>{try{let d=localStorage.getItem("farm-dev");if(!d){d=Math.random().toString(36).slice(2,5);localStorage.setItem("farm-dev",d)}return d}catch(e){return Math.random().toString(36).slice(2,5)}})();const newId=()=>(uid++).toString(36)+DEVID;   // 기기 표시를 붙여 여러 휴대폰에서 겹치지 않게
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -1466,7 +1470,8 @@ function tagsToggle(){tagOn=!tagOn;try{localStorage.setItem("farm-tags",tagOn?"1
 new MutationObserver(()=>{if(!tagRaf)tagRaf=requestAnimationFrame(tagsApply)}).observe(document.body,{childList:true,subtree:true});
 /* ================= 모돈 상태 ================= */
 let EXCL=null,SIDX=null;
-function sowState(id){
+function sowState(id){return memo("ss|"+id,()=>sowState0(id))}
+function sowState0(id){
   if(!SIDX){SIDX={};state.records.forEach(r=>{if(r.data&&r.data.sow&&(r.type==="교배"||r.type==="임신확인"||r.type==="분만"||r.type==="이유"||r.type==="양자"))(SIDX[r.data.sow]=SIDX[r.data.sow]||[]).push(r);if(r.type==="양자"&&r.data.to)(SIDX[r.data.to]=SIDX[r.data.to]||[]).push(r)})}
   const evs=(SIDX[id]||[]).filter(r=>r.id!==EXCL)
     .sort((a,b)=>a.workDate.localeCompare(b.workDate)||a.createdAt.localeCompare(b.createdAt));
@@ -1480,8 +1485,8 @@ function sowState(id){
   });
   return st;
 }
-const culledRec=id=>state.records.find(r=>r.type==="도태"&&r.data.sow===id);
-const activeSows=()=>state.sows.filter(s=>!culledRec(s.id));
+const culledRec=id=>memo("cull",()=>{const m={};state.records.forEach(r=>{if(r.type==="도태"&&!m[r.data.sow])m[r.data.sow]=r});return m})[id];
+const activeSows=()=>memo("act",()=>state.sows.filter(s=>!culledRec(s.id))).slice();
 const STATUS_KEYS=[["후보","후보돈"],["발정대기","발정 대기"],["확인전","확인 전"],["임신","임신"],["분만임박","분만 임박"],["포유","포유"],["재발공태","재발·공태"],["도태예정","도태 예정"],["도태됨","도태됨"]];
 function matchStatus(s,i,k){
   if(k==="전체")return i.key!=="도태됨";
@@ -1512,7 +1517,8 @@ const tdKey=(k,target)=>k==="task"||k==="lit"||k==="annual"||k==="feedchg"||k===
 const tdLog=key=>(state.todoLog||{})[key];
 function itemTarget(it){return it.emp?"emp|"+it.emp.f:it.fdv?it.fdv.f:it.fc2?it.fc2.k:it.cm?it.cm.day+"|"+it.cm.type:it.ho?it.ho.id:it.am?it.am.barn:it.fc?it.fc.key:it.feed?it.feed.f:it.lit?it.lit:it.ann?it.ann.key:it.vx?it.s.id+"|"+it.vx.name:it.t?it.t.id:it.s?it.s.id:it.b?it.b.k+"|"+it.v.p.name:it.item?it.item.id:it.order?"semen":it.day?it.day.k:it.r.id}
 function tdName(it){return it.emp?it.emp.name+" 입고 확인":it.fdv?it.fdv.f+" 급여":it.fc2?it.fc2.k:it.cm?kDate(it.cm.day)+" "+L(it.cm.type):it.ho?it.ho.text:it.am?it.am.barn:it.fc?bName(it.fc.b.k)+" "+it.fc.p.feed:it.feed?it.feed.f+" 주문":it.lit?it.s.id+"번 "+it.name:it.ann?it.ann.name:it.vx?it.s.id+"번 "+it.vx.name:it.t?it.t.title:it.s?it.s.id+"번":it.b?bName(it.b.k)+" "+it.v.p.name:it.item?it.item.name:it.order?"정액 주문":it.day?it.day.barn:it.r.data.barn}
-function buildTodos(){
+function buildTodos(){return memo("bt",buildTodos0).slice()}
+function buildTodos0(){
   const g={mate:[],remate:[],ret:[],preg:[],movein:[],farrow:[],wean:[],withdraw:[],cull:[]};
   activeSows().forEach(s=>{
     const i=statusOf(s);
@@ -1527,7 +1533,7 @@ function buildTodos(){
     if(i.stage==="포유"&&!weanSkip(s)&&i.d>=CFG.weanDay&&i.d<state.cfgSt.farrowNoWean)g.wean.push({s,i,label:`포유 ${i.d}일`,sev:i.d>CFG.weanDay+3?"bad":"ok"});
     if(s.cullPlan&&s.cullPlan.date<=addDays(REF,7))g.cull.push({s,i,label:`도태 예정 ${kDate(s.cullPlan.date)} · ${s.cullPlan.reason}`,sev:s.cullPlan.date<=REF?"bad":"warn"});
   });
-  state.records.filter(r=>r.type==="약품"&&r.data.withdraw).forEach(r=>{const d=diff(REF,r.data.withdraw);if(d>=0&&d<=7)g.withdraw.push({r,label:`${r.data.barn} · 휴약 종료 ${kDate(r.data.withdraw)}`,d,sev:"ok"})});
+  recsOf("약품").filter(r=>r.data.withdraw).forEach(r=>{const d=diff(REF,r.data.withdraw);if(d>=0&&d<=7)g.withdraw.push({r,label:`${r.data.barn} · 휴약 종료 ${kDate(r.data.withdraw)}`,d,sev:"ok"})});
   const pending=deadPending();
   const tasks=(state.tasks||[]).filter(t=>{const l=tdLog(tdKey("task",t.id));return !l||localDateOf(l.at)===TODAY}).sort((a,b)=>a.due.localeCompare(b.due))
     .map(t=>({t,label:`${t.due<REF?`${diff(t.due,REF)}일 지남`:t.due===REF?"오늘":kDate(t.due)} · 담당 ${t.who}`,sev:t.due<REF?"bad":t.due===REF?"warn":"ok"}));
@@ -1561,7 +1567,7 @@ function dayStatus(day,type){
 function sowMatch(id,q){if(!q)return 1;const num=(String(id).match(/(\d+)$/)||[0,""])[1];if(+num===+q)return 0;return num.includes(q)||String(+num).includes(q)?1:null}
 // 다음 모돈 번호: 올해 끝자리-(올해 번호 중 가장 큰 수 + 1). 2026년 → 6-093, 2027년 → 7-001
 function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
-const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
+const feedNames=()=>[...new Set(recsOf("사료").slice().map(r=>r.data.kind))].sort();
 const FORMS={
   폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"},{k:"photo",l:"사진 (선택)",t:"photo",opt:true},{k:"sow",l:"어느 복 (포유자돈 · 선택)",t:"chips",opt:true,o:()=>ui.in&&ui.in.fv.stage==="포유자돈"?activeSows().filter(s=>sowState(s.id).stage==="포유").map(s=>s.id):[]}],
     warn:(d,wd)=>{const dup=state.records.find(r=>r.id!==EXCL&&r.type==="폐사"&&r.workDate===wd&&r.data.barn===d.barn&&r.data.cause===d.cause&&r.data.stage===d.stage&&(Date.now()-new Date(r.createdAt))<10*60e3);return dup?`10분 안에 같은 돈사·단계·원인으로 입력한 기록이 있습니다 (${kTime(dup.createdAt)}, ${dup.data.n}두). 중복 입력이 아닌지 확인해 주세요.`:null}},
@@ -1583,7 +1589,7 @@ const FORMS={
   이동:{f:[{k:"from",l:"출발 돈사",t:"chips",o:BARNS,def:"분만사"},{k:"to",l:"도착 돈사",t:"chips",o:BARNS,def:"인큐베이터"},{k:"n",l:"두수",t:"step",def:100,min:1,big:10}],
     warn:d=>d.from===d.to?"출발과 도착 돈사가 같습니다.":null},
   출하:{f:[{k:"barn",l:"출하 돈사",t:"chips",o:()=>{const f=BARNS.filter(b=>b.includes("비육"));return f.length?f:BARNS},def:"육성비육사"},{k:"n",l:"출하두수",t:"step",def:20,min:1},{k:"kg",l:"출하 평균체중 (kg)",t:"step",def:115,min:60},{k:"dest",l:"출하처",t:"chips",o:()=>DESTS,def:"○○도축장"},{k:"carc",l:"도체중 붙여넣기 (선택 · 나중에 도축장 성적이 나오면)",t:"textarea",opt:true}],
-    warn:(d,wd)=>{const w=state.records.find(r=>r.type==="약품"&&r.data.barn===d.barn&&r.data.withdraw&&r.data.withdraw>wd);return w?`${d.barn}은 휴약 중입니다 (종료 ${kDate(w.data.withdraw)}). 출하해도 되는지 확인해 주세요.`:null}},
+    warn:(d,wd)=>{const w=recsOf("약품").find(r=>r.data.barn===d.barn&&r.data.withdraw&&r.data.withdraw>wd);return w?`${d.barn}은 휴약 중입니다 (종료 ${kDate(w.data.withdraw)}). 출하해도 되는지 확인해 주세요.`:null}},
   사료:{f:[{k:"kind",l:"사료",t:"chips",o:()=>feedKinds(),def:FARM.feed.bins[0].feed},{k:"mode",l:"구분",t:"chips",o:["입고","빈 잔량"],def:"입고"},{k:"_lvl",l:"눈대중 (누르면 kg 자동)",t:"chips",opt:true,o:()=>{const k=ui.in&&ui.in.fv.kind;return feedBin(k)?["¼","½","¾","가득"]:["1포","5포","10포","20포","40포"]}},{k:"kg",l:"수량 (kg)",t:"step",def:5000,min:0,big:500}]},
   약품:{f:[{k:"kind",l:"구분",t:"chips",o:()=>CATS.filter(c=>c!=="백신"&&c!=="정액"),def:"항생제"},{k:"name",l:"품목 (약품·재고 탭에서 추가)",t:"chips",o:()=>itemNames(ui.in?ui.in.fv.kind:"항생제")},{k:"barn",l:"대상 돈사",t:"chips",o:BARNS,def:"육성비육사"},{k:"qty",l:"사용량",t:"step",def:1,min:0},{k:"withdraw",l:"휴약 종료일 (항생제 · 자동 제안)",t:"date",opt:true}]},
   BCS:{sow:{multi:false,target:false,filter:()=>true},f:[{k:"score",l:"BCS 점수",t:"chips",o:["1","1.5","2","2.5","3","3.5","4","4.5","5"],def:"3"},{k:"when",l:"측정 시점",t:"chips",o:["교배 시","임신 중","분만 시","이유 시","기타"],def:"임신 중"},{k:"memo",l:"메모 (선택)",t:"text",opt:true}]},
@@ -1865,7 +1871,7 @@ const shipAge=()=>state.cfg.stage.reduce((s,x)=>s+x[1],0);
 const bAge=b=>Math.floor(diff(b.k,REF)/7);
 function stagePlan(ageW){let a=0;for(const [n,w] of state.cfg.stage){a+=w;if(ageW<a)return n}return "출하"}
 function bHeads(b,ageW){let n=b.live,a=ageW;state.cfg.stage.forEach(([nm,len],i)=>{if(a<=0)return;n*=1-LOSS[i]*Math.min(a,len)/len;a-=len});return Math.round(n)}
-function bVax(b,p){const due=addDays(b.k,p.day),need=bHeads(b,Math.floor(p.day/7)),recs=state.records.filter(r=>r.type==="돈군백신"&&r.data.batch===b.k&&r.data.vax===p.name),done=recs.reduce((s,r)=>s+r.data.n,0);
+function bVax(b,p){const due=addDays(b.k,p.day),need=bHeads(b,Math.floor(p.day/7)),recs=recsOf("돈군백신").filter(r=>r.data.batch===b.k&&r.data.vax===p.name),done=recs.reduce((s,r)=>s+r.data.n,0);
   const over=REF>addDays(due,6);
   const st=done>=need*.98?"done":done>0?(over?"part":"partnow"):over?"late":REF>=due?"due":diff(REF,due)<=7?"soon":"plan";
   return {p,due,need,done,recs,st}}
@@ -1877,7 +1883,8 @@ const CATS=["항생제","사료첨가제","소독제","비품","백신","정액"
 const itemNames=cat=>state.items.filter(i=>!i.hidden&&i.cat===cat).map(i=>i.name);
 const itemById=id=>state.items.find(i=>i.id===id);
 const itemId=name=>(state.items.find(i=>i.name===name)||{}).id;
-function stockRecs(it){if(/^주사침/.test(it.name))return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||needleUse(it,r)>0).map(r=>r.type==="재고"?r:{...r,type:"_침",data:{n:needleUse(it,r)}});return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
+function stockRecs(it){return memo("sr|"+it.id,()=>stockRecs0(it))}
+function stockRecs0(it){if(/^주사침/.test(it.name))return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||needleUse(it,r)>0).map(r=>r.type==="재고"?r:{...r,type:"_침",data:{n:needleUse(it,r)}});return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
 function delta(r){if(r.type==="_침")return -r.data.n;if(r.type==="재고")return r.data.mode==="입고"?r.data.qty:r.data.mode==="사용"?-r.data.qty:0;if(r.type==="돈군백신")return -r.data.n;if(r.type==="약품")return -(r.data.qty||1);return -1}
 function semenOrder(){
   const tmr=addDays(TODAY,1);let n=0;
@@ -2112,7 +2119,7 @@ function stallVal(lk){const m=ui.bmInfo||"feed";if(m==="next")return lk.nx;if(m=
 function doorsOf(b){const L=barnLayout(b);return L.doors||(L.door?[{x:L.door.x,y:L.door.y,dir:"left"}]:[])}
 function clockOrder(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];const cx=L.w/2,cy=L.h/2,d=doorsOf(b)[0]||{x:cx,y:L.h},a0=Math.atan2(d.y-cy,d.x-cx),T=2*Math.PI;
   return S.map(x=>({x,a:((Math.atan2(x.y+x.h/2-cy,x.x+x.w/2-cx)-a0)%T+T)%T})).sort((p,q)=>p.a-q.a).map(o=>o.x.id)}
-function lastIn(b,occ){const L=(state.lastIn||{})[b];if(L&&occ[L])return L;const R=state.records.filter(r=>r.type==="이동"&&r.data.to===b&&r.data.sow).sort((x,y)=>(y.createdAt||"").localeCompare(x.createdAt||""));
+function lastIn(b,occ){const L=(state.lastIn||{})[b];if(L&&occ[L])return L;const R=recsOf("이동").filter(r=>r.data.to===b&&r.data.sow).sort((x,y)=>(y.createdAt||"").localeCompare(x.createdAt||""));
   for(const r of R){const e=Object.entries(occ).find(([k,o])=>o.s.id===r.data.sow);if(e)return e[0]}return null}
 function nextIn(b,k=3){const {occ}=barnOcc(b),O=clockOrder(b);if(!O.length)return [];const li=lastIn(b,occ),st=li?O.indexOf(li)+1:0,out=[];for(let i=0;i<O.length&&out.length<k;i++){const id=O[(st+i)%O.length];if(!occ[id])out.push(id)}return out}
 function vBarnSvg(b,z,mini){const L=barnLayout(b);if(!L)return "";const NX=nextIn(b),{S,occ}=barnOcc(b),M=v=>v*z,ext=L.annex?L.annex.w:0,W=L.w+ext+(mini?.2:1.2),H=L.h+(mini?.2:1.2);
@@ -2157,12 +2164,12 @@ function vPickMap(){const B=BM_BARNS(),P=pickCtx(),cnt=b=>activeSows().filter(s=
   if(!ui.pkBarn||!B.includes(ui.pkBarn)){ui.pkBarn=B.slice().sort((a,c)=>cnt(c)-cnt(a))[0]}const b=ui.pkBarn;
   return `<div class="chips">${B.map(x=>`<button type="button" class="chip ${x===b?"on":""}" data-a="pkBarn" data-v="${esc(x)}">${esc(t(x))}${cnt(x)?` <b>${cnt(x)}</b>`:""}</button>`).join("")}</div><div class="note bl-how">${t("진한 칸 = 이 기록 대상 · ✓ 입력함 · 흐린 칸도 누를 수 있음")}</div>`+vBarnList(b,"pick")}
 // ---- BCS 입력용 배치도 ----
-function bcsInfo(s,due){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===s.id).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];
+function bcsInfo(s,due){const r=recsOf("BCS").filter(x=>x.data.sow===s.id).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];
   if(r&&r.workDate===TODAY)return {cls:"bcs-done",txt:`✓ ${t("오늘")} BCS ${r.data.score}`};const need=due.has(s.id);
   return {cls:need?"bcs-need":"",txt:(r?`BCS ${r.data.score} · ${kDate(r.workDate).replace(/\s*\(.*\)/,"")}`:t("BCS 없음"))+(need?` · ${t("측정 필요")}`:"")}}
 function bcsWhen(s){const st=sowState(s.id);if(st.stage==="이유")return "이유 시";if(st.stage==="포유")return "분만 시";if((st.stage==="교배"||st.stage==="임신")&&st.mate){const g=diff(st.mate,TODAY);return g<=3?"교배 시":g>=108?"분만 시":"임신 중"}return "기타"}
 const bcsHub=on=>`<div class="chips">${[["bcsmap","🗺 BCS 배치도"],["gfeed","임신돈 급여표"]].map(([k,l])=>`<button type="button" class="chip ${on===k?"on":""}" data-a="tab" data-v="${k}">${t(l)}</button>`).join("")}</div>`;
-function vBcsMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],n=state.records.filter(r=>r.type==="BCS"&&r.workDate===TODAY).length;
+function vBcsMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],n=recsOf("BCS").filter(r=>r.workDate===TODAY).length;
   return `<div class="pagehd"><button class="back" type="button" data-a="bcsList">‹ BCS ${t("목록 입력")}</button><h2>BCS · ${t("배치도")}</h2></div>${bcsHub("bcsmap")}<div class="banner info"><b>${t("오늘 측정")} ${n}${t("두")}</b><span>${t("측정 필요")} ${typeof bcsDue==="function"?bcsDue().length:0}${t("두")}</span></div>
   <div class="chips">${B.map(x=>`<button type="button" class="chip ${x===b?"on":""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))}</button>`).join("")}</div>`+vBarnList(b,"bcs")}
 function bcsSheet(b,sid){const o=barnOcc(b).occ[sid];if(!o)return;const s=o.s,w=bcsWhen(s),i=statusOf(s);
@@ -2232,9 +2239,9 @@ function metrics(from,to){
   const inP=r=>r.workDate>=from&&r.workDate<=to,R=t=>state.records.filter(r=>r.type===t&&inP(r));
   const days=diff(from,to)+1,mates=R("교배").filter(r=>r.data.round==="1차"),far=R("분만"),wn=R("이유"),dead=R("폐사"),ship=R("출하").filter(r=>!r.data.bulk);
   const avg=(a,f)=>a.length?a.reduce((s,x)=>s+f(x),0)/a.length:null;
-  const mb=state.records.filter(r=>r.type==="교배"&&r.data.round==="1차"&&r.workDate>=addDays(from,-CFG.gest)&&r.workDate<=addDays(to,-CFG.gest));
-  const fr=mb.filter(m=>state.records.some(f=>f.type==="분만"&&f.data.sow===m.data.sow&&diff(m.workDate,f.workDate)>=105&&diff(m.workDate,f.workDate)<=125)).length;
-  const liveOf=w=>{const f=state.records.filter(x=>x.type==="분만"&&x.data.sow===w.data.sow&&x.workDate<w.workDate).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return f?f.data.live:null};
+  const mb=recsOf("교배").filter(r=>r.data.round==="1차"&&r.workDate>=addDays(from,-CFG.gest)&&r.workDate<=addDays(to,-CFG.gest));
+  const fr=mb.filter(m=>recsOf("분만").some(f=>f.data.sow===m.data.sow&&diff(m.workDate,f.workDate)>=105&&diff(m.workDate,f.workDate)<=125)).length;
+  const liveOf=w=>{const f=recsOf("분만").filter(x=>x.data.sow===w.data.sow&&x.workDate<w.workDate).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return f?f.data.live:null};
   const pairs=wn.map(w=>[w.data.n,liveOf(w)]).filter(p=>p[1]);
   const sows=activeSows().filter(s=>!statusOf(s).gilt).length||1;
   const shipN=ship.reduce((s,r)=>s+r.data.n,0);
@@ -2373,7 +2380,7 @@ function cdBody(k,n){const G=sGoal();
     if(k==="week"){const goal=dashCfg().goal,R=(q,a)=>{const b=addDays(a,6),L=state.records.filter(r=>r.type===q&&r.workDate>=a&&r.workDate<=b);return q==="교배"?L.filter(r=>r.data.round==="1차").length:L.length};
       const S=["교배","분만","이유"].map((q,i)=>({l:t(q),v:W.map(w=>R(q,w)),c:[CC.a,CC.b,"var(--good)"][i]}));
       return barsSvg(lab,S,goal)+legendH(S.map(s=>[s.c,s.l]))+cdTable(["주","시작일","교배","분만","이유","임신 확인"],W.map((w,i)=>[lab[i],kDate(w),...S.map((s,j)=>{const g=goal[["교배","분만","이유"][j]]||1;return `${s.v[i]} <small class="${s.v[i]>=g?"ok":"lo"}">${Math.round(s.v[i]/g*100)}%</small>`}),R("임신확인",w)]).reverse())}
-    const D=state.records.filter(r=>r.type==="폐사"&&r.workDate>=f).sort((a,b)=>b.workDate.localeCompare(a.workDate));
+    const D=recsOf("폐사").filter(r=>r.workDate>=f).sort((a,b)=>b.workDate.localeCompare(a.workDate));
     if(k==="dead"){const cell={};let mx=1;D.forEach(r=>{const q=r.data.barn+"|"+weekStart(r.workDate);cell[q]=(cell[q]||0)+r.data.n;mx=Math.max(mx,cell[q])});const B=BARNS.filter(b=>W.some(w=>cell[b+"|"+w]));
       const tot=W.map(w=>D.filter(r=>weekStart(r.workDate)===w).reduce((s,r)=>s+r.data.n,0));
       return barsSvg(lab,[{l:t("폐사"),v:tot,c:"var(--red)"}])+(B.length?`<div class="hm" style="--hc:${W.length}"><span></span>${W.map((w,i)=>`<span class="hm-h">${n>12&&i%2?"":lab[i]}</span>`).join("")}${B.map(b=>`<span class="hm-l">${esc(t(b))}</span>${W.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/mx*82)}%, var(--surface))`:"var(--bg)"};color:${v/mx>.55?"#fff":"var(--ink)"}">${v||""}</span>`}).join("")}`).join("")}</div>`:"")+cdDeadTable(D)}
@@ -2381,12 +2388,12 @@ function cdBody(k,n){const G=sGoal();
     const bs={};D.forEach(r=>{const q=r.data.cause+"|"+r.data.barn;bs[q]=(bs[q]||0)+r.data.n});
     return (tot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/tot*100)}%`,c:"var(--red)"}))):"")+
       cdTable(["원인","돈사","두수"],Object.entries(bs).sort((a,b)=>b[1]-a[1]).map(([q,v])=>{const [c,b]=q.split("|");return [esc(t(c)),esc(t(b)),v]}))+cdDeadTable(D)}
-  if(k==="feed"){const fr=feedTable(),od=FARM.feed.orderDays,R=state.records.filter(r=>r.type==="사료").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
+  if(k==="feed"){const fr=feedTable(),od=FARM.feed.orderDays,R=recsOf("사료").slice().sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return hbarsH(fr.filter(x=>x.use>0&&x.days!==null).sort((a,b)=>a.days-b.days).map(x=>({l:x.f,v:x.days,txt:`${x.days}${t("일")}`,c:x.days<=2?"var(--red)":x.days<=od?"var(--amber)":"var(--good)"})))+
       cdTable(["사료","보관","잔량 kg","하루 사용 kg","남은 일수"],fr.map(x=>[esc(x.f),x.bin?esc(x.bin.name):t("포대"),(x.kg||0).toLocaleString(),Math.round(x.use||0),x.days??"-"]))+
       vFeedPlan()+`<div class="sec-t">${t("최근 사료 기록")}</div>`+cdTable(["날짜","사료","구분","kg"],R.map(r=>[kDate(r.workDate),esc(r.data.kind),t(r.data.mode),(+r.data.kg||0).toLocaleString()]))}
   if(k==="parity")return parityDetail();
-  if(k==="count"){const R=state.records.filter(r=>r.type==="실사").sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
+  if(k==="count"){const R=recsOf("실사").slice().sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,n*4);
     return (countChart()||"")+cdTable(["날짜","돈사","실사","장부","차이"],R.map(r=>{const d=r.data.n-r.data.est;return [kDate(r.workDate),esc(t(r.data.barn)),r.data.n,r.data.est,`<span class="dlt ${d<0?"down":d>0?"up":""}">${d>0?"+":""}${d}</span>`]}))}
   return `<div class="empty">${t("출하 후 도축장 성적 파일을 넣으면 표시합니다.")}</div>`}
 function cdDeadTable(D){return `<div class="sec-t">${t("폐사 기록")} <span>${D.reduce((s,r)=>s+r.data.n,0)}${t("두")} · ${D.length}${t("건")}</span></div>`+cdTable(["날짜","돈사","단계","두수","원인","모돈"],D.map(r=>[kDate(r.workDate),esc(t(r.data.barn)),esc(t(r.data.stage||"")),r.data.n,esc(t(r.data.cause)),r.data.sow?esc(r.data.sow):""]))}
@@ -2404,7 +2411,7 @@ const GROW=[1.5,2.5,4,5.8,7.5,9.5,12,14.5,17.5,21,25,29,33,37.5,42,47,52,57,62,6
 const dress=()=>state.dress||FARM.dress;
 function carcList(r){return String(r.data.carc||"").split(/[^0-9.]+/).map(Number).filter(v=>v>=40&&v<=200)}
 function shipLive(r){const c=carcList(r);return c.length?{n:c.length,kg:c.reduce((a,b)=>a+b,0)/dress(),src:"carc",avgC:c.reduce((a,b)=>a+b,0)/c.length}:{n:r.data.n,kg:r.data.n*r.data.kg,src:"avg"}}
-const shipsReal=()=>state.records.filter(r=>r.type==="출하"&&!r.data.bulk).sort((a,b)=>a.workDate.localeCompare(b.workDate));
+const shipsReal=()=>recsOf("출하").filter(r=>!r.data.bulk).sort((a,b)=>a.workDate.localeCompare(b.workDate));
 // 출하 → 돈군: 그날 출하 일령 ±6주 안의 돈군 중 가장 나이 많고 아직 다 안 나간 돈군
 let FCX={};
 function shipMap(){const k=state.records.length;if(FCX.k===k)return FCX;const B=batches(),sa=shipAge(),left={},map={};B.forEach(b=>left[b.k]=bHeads(b,sa));
@@ -2422,9 +2429,9 @@ function batchFCR(){const M=shipMap().map;return Object.entries(M).map(([k,R])=>
   return {k,b,n,born:b.live,live,avg:live/n,feed,perHead:feed/n,fcr:gain>0?feed/gain:null,carc:L.some(x=>x.src==="carc"),end,days:diff(k,end)}}).filter(Boolean).sort((a,b)=>b.end.localeCompare(a.end))}
 // 농장 전체
 function invKg(d){return batches().reduce((a,b)=>{const age=diff(b.k,d);if(age<0||age>=shipAge()*7+42)return a;const w=Math.floor(age/7),out=(shipMap().map[b.k]||[]).filter(r=>r.workDate<=d).reduce((x,r)=>x+shipLive(r).n,0);return a+Math.max(0,bHeads(b,w)-out)*growKg(w)},0)}
-function stockAt(f,d){const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate<=d&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];if(!R)return null;
-  const inn=state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.data.mode==="입고"&&r.createdAt>R.createdAt&&r.workDate<=d).reduce((a,r)=>a+r.data.kg,0);let use=0;const M=rawPast();for(let x=R.workDate;x<d;x=addDays(x,1))use+=((M[x]||{})[f]||0)*feedFactor(f);return Math.max(0,R.data.kg+inn-use)}
-function farmFCR(f,t2){const F=feedKinds();let feed=0;for(const k of F){const inn=state.records.filter(r=>r.type==="사료"&&r.data.kind===k&&r.data.mode==="입고"&&r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+r.data.kg,0),s0=stockAt(k,f),s1=stockAt(k,t2);feed+=inn+(s0!=null&&s1!=null?s0-s1:0)}
+function stockAt(f,d){const R=recsOf("사료").filter(r=>r.data.kind===f&&r.workDate<=d&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];if(!R)return null;
+  const inn=recsOf("사료").filter(r=>r.data.kind===f&&r.data.mode==="입고"&&r.createdAt>R.createdAt&&r.workDate<=d).reduce((a,r)=>a+r.data.kg,0);let use=0;const M=rawPast();for(let x=R.workDate;x<d;x=addDays(x,1))use+=((M[x]||{})[f]||0)*feedFactor(f);return Math.max(0,R.data.kg+inn-use)}
+function farmFCR(f,t2){const F=feedKinds();let feed=0;for(const k of F){const inn=recsOf("사료").filter(r=>r.data.kind===k&&r.data.mode==="입고"&&r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+r.data.kg,0),s0=stockAt(k,f),s1=stockAt(k,t2);feed+=inn+(s0!=null&&s1!=null?s0-s1:0)}
   const live=shipsReal().filter(r=>r.workDate>f&&r.workDate<=t2).reduce((a,r)=>a+shipLive(r).kg,0),dInv=invKg(t2)-invKg(f),gain=live+dInv;return gain>0?{fcr:feed/gain,feed,live,dInv}:null}
 function fcrCard(){const P=statPeriod(),t2=P.t>TODAY?TODAY:P.t,f=diff(P.f,t2)<55?addDays(t2,-55):P.f,F=farmFCR(f,t2),B=batchFCR().filter(x=>x.fcr),g=sGoal(),b5=B.slice(0,5),bAvg=b5.length?b5.reduce((a,x)=>a+x.feed,0)/b5.reduce((a,x)=>a+x.live-x.n*FARM.birthKg,0):null;
   const col=(v,gl)=>!okv(v)?"var(--muted)":v<=gl?"var(--good)":v<=gl*1.08?"var(--amber)":"var(--red)";
@@ -2533,12 +2540,12 @@ function chartCards(){const C=[];
   cut();
   // 4. 폐사 히트맵: 돈사 × 주 (최근 8주)
   const w8=[7,6,5,4,3,2,1,0].map(i=>addDays(weekStart(TODAY),-7*i)),barns=BARNS.slice(),cell={};let cmx=1;
-  state.records.filter(r=>r.type==="폐사"&&r.workDate>=w8[0]).forEach(r=>{const k=r.data.barn+"|"+weekStart(r.workDate);cell[k]=(cell[k]||0)+r.data.n;cmx=Math.max(cmx,cell[k])});
+  recsOf("폐사").filter(r=>r.workDate>=w8[0]).forEach(r=>{const k=r.data.barn+"|"+weekStart(r.workDate);cell[k]=(cell[k]||0)+r.data.n;cmx=Math.max(cmx,cell[k])});
   const rowsB=barns.filter(b=>w8.some(w=>cell[b+"|"+w]));
   h+=`<div class="card"><h3>${t("폐사 현황")}<small>${t("돈사 × 주 · 진할수록 많음")}</small></h3>${rowsB.length?`<div class="hm" style="--hc:${w8.length}"><span></span>${w8.map(w=>`<span class="hm-h">W${isoWeek(w).w}</span>`).join("")}${rowsB.map(b=>`<span class="hm-l">${esc(t(b))}</span>${w8.map(w=>{const v=cell[b+"|"+w]||0;return `<span class="hm-c" style="background:${v?`color-mix(in srgb, var(--red) ${Math.round(18+v/cmx*82)}%, var(--surface))`:"var(--bg)"};color:${v/cmx>.55?"#fff":"var(--ink)"}" title="${esc(t(b))} W${isoWeek(w).w} ${v}${t("두")}">${v||""}</span>`}).join("")}`).join("")}</div>`:`<div class="empty">${t("최근 8주 폐사 기록이 없습니다.")}</div>`}</div>`;
   cut();
   // 5. 폐사 원인 비중 (선택 기간, 많은 순)
-  const cz={};state.records.filter(r=>r.type==="폐사"&&r.workDate>=P.f&&r.workDate<=P.t).forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);
+  const cz={};recsOf("폐사").filter(r=>r.workDate>=P.f&&r.workDate<=P.t).forEach(r=>cz[r.data.cause]=(cz[r.data.cause]||0)+r.data.n);
   const ctot=Object.values(cz).reduce((a,b)=>a+b,0);
   h+=`<div class="card"><h3>${t("폐사 원인 비중")}<small>${esc(P.label)} · ${ctot}${t("두")}</small></h3>${ctot?hbarsH(Object.entries(cz).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l:t(l),v,txt:`${v}${t("두")} · ${Math.round(v/ctot*100)}%`,c:"var(--red)"}))):`<div class="empty">${t("이 기간에는 기록이 없습니다.")}</div>`}</div>`;
   cut();
@@ -2568,7 +2575,7 @@ Object.assign(A,{stvZoom:v=>{ui.stvZ=ui.stvZ===+v?null:+v;render()}});
 /* ================= v0.4 · 백신 엔진 (모돈·후보돈·연간·복별 처치) ================= */
 // 기록 이름 → 재고 품목 이름들
 function vaxProds(name){const all=[...FARM.vax.annual,...FARM.vax.gilt,...FARM.vax.late,...FARM.vax.piglet],v=all.find(x=>x.name===name);return v?[].concat(v.prod):[name]}
-const sowVaxDone=(id,name,from)=>state.records.some(r=>r.type==="백신"&&r.data.sow===id&&r.data.name===name&&r.workDate>=from);
+const sowVaxDone=(id,name,from)=>recsOf("백신").some(r=>r.data.sow===id&&r.data.name===name&&r.workDate>=from);
 // 연간 일괄: 그 달 n째 주 월요일
 function annualDate(y,m,w){return addDays(weekStart(`${y}-${pad(m)}-01`),(w-1)*7+(weekStart(`${y}-${pad(m)}-01`)<`${y}-${pad(m)}-01`?7:0))}
 function vaxTodos(){
@@ -2664,7 +2671,7 @@ function feedUse(){const u={},U=FARM.feed.use,add=(f,n)=>u[f]=(u[f]||0)+n;
   liveBatches().forEach(b=>{const d=diff(b.k,REF),n=bHeads(b,Math.floor(d/7));pigFeeds(d).forEach(p=>add(p.feed,n*(U[p.feed]||0)))});
   return u}
 // 재고 = 마지막 잔량 + 이후 입고 − 추정 사용
-function feedStock(f,use){const rs=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
+function feedStock(f,use){const rs=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
   const base=[...rs].reverse().find(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량");if(!base)return {kg:null,use,days:null};
   const inn=rs.filter(r=>r.data.mode==="입고"&&r.workDate>base.workDate&&r.workDate<=REF).reduce((s,r)=>s+r.data.kg,0);
   const kg=Math.max(0,Math.round(base.data.kg+inn-use*diff(base.workDate,REF)));
@@ -2855,7 +2862,7 @@ function binCap(b){return Math.round(binVmax(b)*binDens(b)*1000/50)*50}
 function binLevelOfKg(b,kg){const tv=Math.max(0,Math.min(binVmax(b),kg/1000/binDens(b)));let a=0,c=1;for(let k=0;k<26;k++){const m=(a+c)/2;binVol(b,m,m)<tv?a=m:c=m}return (a+c)/2}
 // 비중 자동 보정: 같은 날 '입고 전 게이지 → 입고 → 입고 후 게이지' 이면 입고 kg ÷ 늘어난 부피
 let BDE={};function binDensEst(b){const ck=state.records.length+"|"+b.feed;if(ck in BDE)return BDE[ck];return BDE[ck]=binDensEst0(b)}
-function binDensEst0(b){const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed).sort((x,y)=>(x.createdAt||"").localeCompare(y.createdAt||"")),est=[];
+function binDensEst0(b){const R=recsOf("사료").filter(r=>r.data.kind===b.feed).sort((x,y)=>(x.createdAt||"").localeCompare(y.createdAt||"")),est=[];
   R.forEach((r,i)=>{if(r.data.mode!=="입고")return;const pre=[...R.slice(0,i)].reverse().find(q=>q.data.vol!=null),post=R.slice(i+1).find(q=>q.data.vol!=null);
     if(!pre||!post||diff(pre.workDate,post.workDate)>1)return;const inn=R.filter(q=>q.data.mode==="입고"&&q.createdAt>pre.createdAt&&q.createdAt<post.createdAt).reduce((s,q)=>s+q.data.kg,0),dv=post.data.vol-pre.data.vol;
     if(dv>.3){const d=inn/1000/dv;if(d>.35&&d<.85)est.push(d)}});
@@ -2869,7 +2876,7 @@ function binCol(days){return days===null||days===undefined?"#8a949e":days<=2?"#e
 // 모든 빈을 같은 축척(지름 2.3m = 96)으로 그려 5톤은 가늘게, 10톤은 굵고 높게
 function binPx(b){const g=binGeo(b),s=96/2.3,roof=g.dome*s,top=roof+6,cy=g.hy*s,cn=g.hc*s,hw=g.R*s;return {s,x0:60-hw,x1:60+hw,cx:60,top,cyl:cy,cone:cn,B:top+cy+cn,H:cy+cn+roof,o:BIN_R0*s,roof}}
 // 지금 추정 잔량을 마지막 게이지 기록의 기울기 그대로 그릴 때의 왼쪽·오른쪽 높이
-function binLastTilt(b){const r=state.records.filter(x=>x.type==="사료"&&x.data.kind===b.feed&&x.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];return r?(r.data.lR-r.data.lL)/2:0}
+function binLastTilt(b){const r=recsOf("사료").filter(x=>x.data.kind===b.feed&&x.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];return r?(r.data.lR-r.data.lL)/2:0}
 function binLevels(b,kg){const td=binLastTilt(b),tv=Math.max(0,kg)/1000/binDens(b);if(!td)return [binLevelOfKg(b,kg),binLevelOfKg(b,kg)];
   let a=-Math.abs(td),c=1+Math.abs(td);const f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));for(let k=0;k<24;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;return [Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td))]}
 function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binPx(b),yL=P.B-lL*P.H,yR=P.B-lR*P.H,yAt=x=>yL+(yR-yL)*(x-P.x0)/(P.x1-P.x0);
@@ -2882,8 +2889,8 @@ function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binP
 function vFeedBins(){const T=feedTable();
   return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),[lL,lR]=binLevels(b,Math.min(x.kg||0,cap)),P=binPx(b);
     return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
-function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},last=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];
-  const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===b.feed&&r.workDate===TODAY).sort((p,q)=>(p.createdAt||"").localeCompare(q.createdAt||"")),lg=[...R].reverse().find(r=>r.data.vol!=null);
+function openBin(i){const b=FARM.feed.bins[i],x=feedTable().find(r=>r.f===b.feed)||{},last=recsOf("사료").filter(r=>r.data.kind===b.feed&&r.data.lL!=null).sort((p,q)=>(q.createdAt||"").localeCompare(p.createdAt||""))[0];
+  const R=recsOf("사료").filter(r=>r.data.kind===b.feed&&r.workDate===TODAY).sort((p,q)=>(p.createdAt||"").localeCompare(q.createdAt||"")),lg=[...R].reverse().find(r=>r.data.vol!=null);
   if(lg&&lg.data.gauge==="입고 전"&&R.some(r=>r.data.mode==="입고"&&r.createdAt>lg.createdAt))ui.binMode="입고 후";
   const L0=x.kg==null?.5:binLevelOfKg(b,x.kg),k=binKnob(),P=binPx(b);ui.bin={i,lL:L0,lR:L0};
   // 마지막 기록의 기울기를 이어서 시작 (높이는 지금 추정량에 맞춤)
@@ -2928,7 +2935,7 @@ Object.assign(A,{binSpec:(v,el)=>{const o=state.binCfg=state.binCfg||{};(o[v]=o[
    빈은 양쪽 게이지, 포대는 포대 수. 다 재면 다음 주문일·권장량을 바로 보여줌. 마감 시각 FARM.feed.checkBy (대표 설정) */
 function feedCheckBy(){return state.feedCheckBy||FARM.feed.checkBy||"10:00"}
 function fcItems(){const T=feedTable(),bins=FARM.feed.bins.map((b,i)=>({k:b.feed,i,bin:b})),bags=T.filter(x=>x.bag).map(x=>({k:x.f,bag:x.bag}));return [...bins,...bags]}
-function fcToday(f){return state.records.filter(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===TODAY&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0]}
+function fcToday(f){return recsOf("사료").filter(r=>r.data.kind===f&&r.workDate===TODAY&&(r.data.mode==="빈 잔량"||r.data.mode==="잔량")).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0]}
 function fcLeft(){return fcItems().filter(x=>!fcToday(x.k))}
 function fcTodos(){if(REF!==TODAY)return [{k:"feedchk",t:"사료 잔량 점검",items:[],act:null}];const late=nowHM()>=feedCheckBy();
   return [{k:"feedchk",t:"사료 잔량 점검",items:fcLeft().map(x=>({fc2:x,label:`${x.bin?esc(x.bin.name):t("포대")} · ${t("오전")} ${feedCheckBy()}${t("까지")}`,sev:late?"bad":"warn"})),act:null}]}
@@ -2954,7 +2961,7 @@ function fcBySet(){const c=feedCheckBy();return `<div class="sec-t">${t("사료 
    튀는 값(예측의 0.4배 이하·2.5배 이상)은 버림. 대표 설정에서 사료별 '다시 배우기'(그날 이후만 사용) */
 let FLX={};
 function rawPast(){const k=state.records.length+"|"+state.sows.length+"|"+TODAY+"|"+JSON.stringify(state.intake||{});if(FLX.k===k)return FLX.m;const D=feedPlanDays0(61,addDays(TODAY,-60)),m={};D.forEach(x=>m[x.d]=x.u);FLX={k,m,obs:{}};return m}
-function feedObs(f){rawPast();if(FLX.obs[f])return FLX.obs[f];const M=FLX.m,from=(state.feedLearn||{})[f]||"0000",R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+function feedObs(f){rawPast();if(FLX.obs[f])return FLX.obs[f];const M=FLX.m,from=(state.feedLearn||{})[f]||"0000",R=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
   const rd=R.filter(r=>(r.data.mode==="빈 잔량"||r.data.mode==="잔량")&&r.data.kg!=null&&r.workDate>=from),out=[];
   for(let i=1;i<rd.length;i++){const a=rd[i-1],b=rd[i],g=diff(a.workDate,b.workDate);if(g<1||g>14)continue;
     const inn=R.filter(r=>r.data.mode==="입고"&&r.createdAt>a.createdAt&&r.createdAt<=b.createdAt).reduce((s,r)=>s+r.data.kg,0),act=a.data.kg+inn-b.data.kg;
@@ -3003,7 +3010,8 @@ function devDetail(f){const e=devEnd(f),W=[5,4,3,2,1,0].map(i=>{const b=addDays(
    어제와 달라진 모돈은 할 일 '급여량 변경'으로. 매주 조절 제안(대표). 기준값은 일반 범위의 기본값 */
 function gCfg(){const G=FARM.gfeed,o=state.gest||{};return {...G,...o,phases:G.phases.map((p,i)=>({...p,...((o.phases||[])[i]||{})})),bcs:{...G.bcs,...(o.bcs||{})},barns:Object.fromEntries(Object.entries(G.barns).map(([k,v])=>[k,{...v,...((o.barns||{})[k]||{})}]))}}
 const GF_BARNS=()=>Object.keys(gCfg().barns);
-function lastBCS(id,before){const r=state.records.filter(x=>x.type==="BCS"&&x.data.sow===id&&x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
+function lastBCS(id,before){const r=memo("bcs",()=>{const m={};state.records.forEach(x=>{if(x.type==="BCS")(m[x.data.sow]=m[x.data.sow]||[]).push(x)});return m})[id];if(!r)return null;return lastBCS0(r,before)}
+function lastBCS0(L,before){const r=L.filter(x=>x.workDate<=before).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0];return r?{score:r.data.score,d:r.workDate}:null}
 function barnTemp(barn,d){const a=(state.am||{})[d];const v=a&&a[barn]&&parseFloat(a[barn].temp);if(!isNaN(v))return v;if(d===TODAY&&typeof wxDay==="function"){const w=wxDay(0);if(w)return null}return null}
 // 모돈 한 마리의 그날 권장량
 function gestFeed(s,d=TODAY){const C=gCfg(),st=sowState(s.id),i=statusOf(s);if(i.key==="도태됨"||!GF_BARNS().includes(s.loc))return null;
@@ -3043,7 +3051,7 @@ function gfWeekly(A){const C=gCfg(),S=[],noB=A.filter(a=>!a.bcs||diff(a.bcs.d,TO
   if(late7)S.push(`${t("다음 7일 안에 85일(후기 증량) 들어가는 모돈")} ${late7}${t("두")} → ${C.phases[2].kg}kg${t("으로 올릴 준비")}`);
   if(fat)S.push(`BCS 4 ${t("이상")} ${fat}${t("두")} → ${t("감량 적용 중 · 2주 뒤 BCS 다시 확인")}`);if(thin)S.push(`BCS 2 ${t("이하")} ${thin}${t("두")} → ${t("증량 적용 중 · 2주 뒤 BCS 다시 확인")}`);
   if(typeof wxDay==="function"){let mn=99;for(let i=0;i<7;i++){const w=wxDay(i);if(w)mn=Math.min(mn,w.min)}if(mn<5)S.push(`${t("이번 주 최저기온")} ${mn}℃ → ${t("돈사 온도가")} ${C.lct}℃ ${t("아래로 내려가면 자동 증량 · 아침 점검 온도를 꼭 입력")}`)}
-  const F=state.records.filter(r=>r.type==="분만"&&r.workDate>=addDays(TODAY,-90));if(F.length>=5){const lo=F.filter(r=>r.data.live<=9).map(r=>lastBCS(r.data.sow,addDays(r.workDate,-5))).filter(Boolean),loT=lo.filter(b=>+b.score<=2.5).length;if(lo.length>=3&&loT/lo.length>=.5)S.push(`${t("최근 90일 실산 9두 이하 분만의 절반 이상이 분만 전 BCS 2.5 이하")} → ${t("임신 후기 증량을 0.2~0.3kg 더 올리는 것을 검토")}`)}
+  const F=recsOf("분만").filter(r=>r.workDate>=addDays(TODAY,-90));if(F.length>=5){const lo=F.filter(r=>r.data.live<=9).map(r=>lastBCS(r.data.sow,addDays(r.workDate,-5))).filter(Boolean),loT=lo.filter(b=>+b.score<=2.5).length;if(lo.length>=3&&loT/lo.length>=.5)S.push(`${t("최근 90일 실산 9두 이하 분만의 절반 이상이 분만 전 BCS 2.5 이하")} → ${t("임신 후기 증량을 0.2~0.3kg 더 올리는 것을 검토")}`)}
   return `<div class="sec-t">${t("이번 주 급여 조절 제안")}</div><div class="panel gfw">${S.length?S.map(x=>`<div>💡 ${x}</div>`).join(""):`<div>${t("특별히 조절할 점이 없습니다.")}</div>`}<button class="act" type="button" data-a="tab" data-v="gestset">${t("급여 기준 고치기")} ›</button></div>`}
 // 대표 설정: 임신돈 급여 기준
 function vGestSet(){const C=gCfg(),st=(path,v,step)=>`<div class="stepper"><button type="button" data-a="gSet" data-v="${path}" data-k="${-step}" aria-label="−">−</button><input type="number" value="${(+v).toFixed(step<1?(step<.1?2:1):0)}" readonly><button type="button" data-a="gSet" data-v="${path}" data-k="${step}" aria-label="+">+</button></div>`;
@@ -3198,7 +3206,7 @@ const DASH_P={
     return [t("NPD 비생산일수"),`${t("최근 90일 · 연환산")} · ${t("목표")} ${g}${t("일")}`,`<div class="d-hero"><b style="color:${col}">${S.npd.toFixed(1)}<small>${t("일")}</small></b>${okv(d)?`<span style="color:${d<=0?DCOL[2]:"#ff6b6b"}">${d>0?"▲":"▼"} ${Math.abs(d).toFixed(1)} <small>${t("직전 90일 대비")}</small></span>`:""}</div><div class="d-bars">${NPD_R.map(([k,l],i)=>{const v=S.R[k]/S.sd*365;return `<div class="d-bar"><span>${t(l)}</span><div class="d-track"><div class="d-fill" style="width:${Math.min(100,v/(S.npd||1)*100)}%;background:${[DCOL[0],"#ff6b6b",DCOL[3]][i]}"></div></div><span class="d-v"><b>${v.toFixed(1)}</b>${t("일")}</span></div>`}).join("")}</div>`]},
   parity:()=>{const D=parityDist(),G=parGoal(),mx=Math.max(1,...PAR_B.map(b=>D.c[b].length)),gc={young:DCOL[0],core:DCOL[2],old:DCOL[3]};
     return [t("산차 구성"),`${D.tot}${t("두")} · ${["young","core","old"].map(k=>`${Math.round(D.g[k]/D.tot*100)}/${G[k]}%`).join(" · ")}`,`<div class="d-cols">${PAR_B.map(b=>{const n=D.c[b].length;return `<div class="d-col"><b>${n}</b><div class="d-c" style="height:${Math.max(n?3:0,n/mx*100)}%;background:${gc[parGrp(b)]}"></div><span>${b==="후보"?t("후보"):b}</span></div>`}).join("")}</div>`]},
-  dead:()=>{const w=dWeek(),W=[3,2,1,0].map(i=>{const a=addDays(w,-7*i),b=addDays(a,6);return {k:isoWeek(a).w,now:i===0,n:state.records.filter(r=>r.type==="폐사"&&r.workDate>=a&&r.workDate<=b).reduce((s,r)=>s+r.data.n,0)}}),mx=Math.max(1,...W.map(x=>x.n));
+  dead:()=>{const w=dWeek(),W=[3,2,1,0].map(i=>{const a=addDays(w,-7*i),b=addDays(a,6);return {k:isoWeek(a).w,now:i===0,n:recsOf("폐사").filter(r=>r.workDate>=a&&r.workDate<=b).reduce((s,r)=>s+r.data.n,0)}}),mx=Math.max(1,...W.map(x=>x.n));
     return [t("폐사 추이"),t("최근 4주 · 두"),`<div class="d-cols">${W.map(x=>`<div class="d-col ${x.now?"now":""}"><b>${x.n}</b><div class="d-c" style="height:${Math.max(2,x.n/mx*100)}%" title="W${x.k} ${x.n}"></div><span>W${x.k}${x.now?" "+t("진행"):""}</span></div>`).join("")}</div>`]},
   flow:()=>{const L2=liveBatches(),S=state.cfg.stage.map(([n],i)=>{const inS=L2.filter(b=>stagePlan(bAge(b))===n);return {n,g:inS.length,h:inS.reduce((s,b)=>s+bHeads(b,bAge(b)),0),c:DCOL[[2,0,5,3,1][i]||0]}}),tot=S.reduce((s,x)=>s+x.h,0)||1;
     return [t("돈군 흐름"),t("돈사별 두수"),`<div class="d-flow">${S.map(x=>`<div style="flex:${Math.max(x.h,tot*.06)};background:${x.h?x.c:"#3a4640"}" title="${t(x.n)} ${x.h}">${x.h.toLocaleString()}</div>`).join("")}</div><div class="d-flowlab">${S.map(x=>`<div style="flex:${Math.max(x.h,tot*.06)}">${t(x.n)}<br><small>${x.g}${t("군")}</small></div>`).join("")}</div>`]},
@@ -3693,7 +3701,8 @@ function can(x,r){const m=me();if(!m)return false;const R=m.role;
 const navLabel=k=>(state.labels&&state.labels.nav&&state.labels.nav[k])||t(k==="more"?"더보기":NAV.find(n=>n[0]===k)[1]);
 
 /* ================= v0.3 · 상태 문구 (번역) ================= */
-function statusOf(s){
+function statusOf(s){return memo("st|"+s.id,()=>statusOf0(s))}
+function statusOf0(s){
   const st=sowState(s.id),c=culledRec(s.id),parity=s.baseParity+st.farrows;
   const gilt=!!s.gilt&&!st.pregEver;
   if(c)return {...st,parity,gilt:false,key:"도태됨",label:t("도태됨"),sub:`${kDate(c.workDate)} · ${c.data.reason}`,cls:"x",heat:false,d:0};
@@ -3734,7 +3743,7 @@ function summary(r){const d=r.data;switch(r.type){
 /* ================= v0.3 · 폐사 알림 기준 ================= */
 function deadPending(){
   const C=state.cfg,out=[];
-  const recs=state.records.filter(r=>r.type==="폐사"&&diff(r.workDate,TODAY)<=7);
+  const recs=recsOf("폐사").filter(r=>diff(r.workDate,TODAY)<=7);
   recs.forEach(r=>{if(r.data.n>=C.deadOne&&!r.data.decision)out.push({r,pending:true,label:`${kDate(r.workDate)} · ${summary(r)}`,sev:"bad"})});
   const g={};recs.forEach(r=>{const k=r.workDate+"|"+r.data.barn;(g[k]=g[k]||[]).push(r)});
   Object.entries(g).forEach(([k,rs])=>{const day=dayGroup(k,rs);if(day.pending)out.push({day,pending:true,label:`${kDate(day.date)} · ${day.barn} ${t("하루 합계")} ${day.total}${t("두")} (${rs.length}${t("건")})`,sev:"bad"})});
@@ -3756,7 +3765,7 @@ function renderTabs(){
   $("#tabsD").innerHTML=NAV.map(([k])=>btn(k,cur===k)).join("");
 }
 function render(){
-  SIDX=null;applySkin();const m=me();
+  SIDX=null;MEMO={};applySkin();const m=me();
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");
   LANG=m.lang||"ko";document.documentElement.lang=LANG;state.user=m.name;syncLists();
@@ -3995,7 +4004,7 @@ function recRow(r){
 
 /* ================= v0.3 · 돈군 · 재고 보조 ================= */
 function survF(age){let f=1,a=age;state.cfg.stage.forEach(([n,len],i)=>{if(a<=0)return;f*=1-LOSS[i]*Math.min(a,len)/len;a-=len});return f}
-function batches(){const g={};state.records.filter(r=>r.type==="분만").forEach(f=>{const k=weekStart(f.workDate);(g[k]=g[k]||{k,f:[]}).f.push(f)});
+function batches(){const g={};recsOf("분만").slice().forEach(f=>{const k=weekStart(f.workDate);(g[k]=g[k]||{k,f:[]}).f.push(f)});
   const out=Object.values(g).map(b=>({...b,live:b.f.reduce((s,f)=>s+f.data.live,0)}));
   (state.mbatches||[]).forEach(m=>{const live=Math.round(m.n/survF(m.age));const ex=out.find(b=>b.k===m.k);if(ex){ex.live=live;ex.fixed=m.n}else out.push({k:m.k,f:[],live,manual:true,litters:m.litters||0,n0:m.n})});
   return out.sort((a,b)=>b.k.localeCompare(a.k))}
@@ -4257,7 +4266,7 @@ Object.assign(A,{
 /* ================= v0.5 · 2차 교배 할 일 · 복별 처치 항목 · 돈사별 실사 · 급수량 ================= */
 // 10. 어제(또는 그제) 1차 교배하고 2차가 없는 모돈 → 할 일
 function mate2Todos(){const y1=addDays(REF,-1),y2=addDays(REF,-2),items=[];
-  activeSows().forEach(s=>{const rs=state.records.filter(r=>r.type==="교배"&&r.data.sow===s.id&&r.workDate>=y2&&r.workDate<=REF);const f=rs.find(r=>r.data.round==="1차"&&r.workDate<REF);
+  activeSows().forEach(s=>{const rs=recsOf("교배").filter(r=>r.data.sow===s.id&&r.workDate>=y2&&r.workDate<=REF);const f=rs.find(r=>r.data.round==="1차"&&r.workDate<REF);
     if(f&&!rs.some(r=>r.data.round!=="1차"&&r.workDate>f.workDate))items.push({s,i:statusOf(s),label:`1차 ${kDate(f.workDate)} · ${t("오늘 2차")}`,sev:f.workDate<y1?"bad":"warn"})});
   return [{k:"mate2",t:"2차 교배 (어제 1차)",items,act:"교배"}]}
 // 11. 복별 처치: 항목 칩 (누르면 메모가 바뀜)
@@ -4265,7 +4274,7 @@ const litTasks=name=>String(name).split("·").slice(1).map(x=>x.trim()).filter(B
 function litChips(it,key){const tasks=litTasks(it.name);return `<div class="chipwrap littask" data-k="${esc(key)}">${tasks.map(x=>`<button type="button" class="chip wrap on" data-a="litTask" data-v="${esc(x)}">✓ ${esc(x)}</button>`).join("")}</div>`}
 // 12. 돈사별 재고두수 실사
 function barnEst(){const o={},L2=liveBatches();state.cfg.stage.forEach(([n])=>{o[n]=L2.filter(b=>stagePlan(bAge(b))===n).reduce((s,b)=>s+bHeads(b,bAge(b)),0)});return o}
-function lastCount(barn){return state.records.filter(r=>r.type==="실사"&&r.data.barn===barn).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0]}
+function lastCount(barn){return recsOf("실사").filter(r=>r.data.barn===barn).sort((a,b)=>b.workDate.localeCompare(a.workDate))[0]}
 function vCount(){const E=barnEst(),C=ui.cnt=ui.cnt||{};
   let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="batch">‹ ${t("돈군")}</button><h2>${t("재고두수 실사")}</h2></div><div class="note">${t("돈사마다 실제로 센 두수를 넣으세요. 장부(기록으로 계산한 두수)와 차이가 성적 그래프에 나옵니다. 월 1회 권장.")}</div><div class="panel">`;
   Object.keys(E).forEach(b=>{const v=C[b]!==undefined?C[b]:E[b],lc=lastCount(b);
@@ -4366,7 +4375,7 @@ function seedFarmPost(){
   activeSows().forEach(s=>{const i=statusOf(s);if(i.stage!=="포유")return;FARM.vax.litter.forEach(v=>{const on=addDays(i.farrow,v.day);if(on<TODAY)state.todoLog[tdKey("lit",`${s.id}|${i.farrow}|${v.day}`)]={memo:"",user:USERS[u++%4],at:at(on),rec:null}})});
   // 지난 폐사는 판단 완료로
   state.records.forEach(x=>{if(x.type==="폐사"&&x.workDate<TODAY&&x.data.n>=state.cfg.deadOne)x.data.decision="none"});
-  const g={};state.records.filter(x=>x.type==="폐사"&&x.workDate<TODAY).forEach(x=>{const k=x.workDate+"|"+x.data.barn;g[k]=(g[k]||0)+x.data.n});
+  const g={};recsOf("폐사").filter(x=>x.workDate<TODAY).forEach(x=>{const k=x.workDate+"|"+x.data.barn;g[k]=(g[k]||0)+x.data.n});
   Object.entries(g).forEach(([k,n])=>{if(n>=state.cfg.deadDay)state.dayDec[k]={decision:"none",total:n,at:new Date().toISOString(),user:"조성훈 팀장"}});
   // 매일 마감: 기록 없는 항목은 ‘오늘 없음’
   const has=new Set(state.records.map(x=>x.type+"|"+x.workDate));
@@ -4383,7 +4392,7 @@ function seedFarmPost(){
   // 사료 학습용: 10일 전 잔량 앞으로 35일 동안 매일 아침 잔량(일요일 빼고)과 입고. 실제 사용 = 모델 × 사료별 숨은 배율 × 하루 흔들림
   {const d45=addDays(TODAY,-46);state.records=state.records.filter(r=>!(r.type==="사료"&&r.data.mode==="입고"&&r.workDate>=d45&&r.workDate<d10));
    const raw=feedPlanDays0(37,d45),TF={임신모돈:1.06,포유모돈:.93,젖먹이:.78,육성:.97,특호:1.35,"1호":1.25,"2호":1.15,"3호":1.08};let seedN=7;const rnd=()=>{seedN=(seedN*9301+49297)%233280;return seedN/233280};
-   feedKinds().forEach(f=>{const r10=state.records.find(r=>r.type==="사료"&&r.data.kind===f&&r.workDate===d10&&r.data.mode==="빈 잔량");if(!r10)return;const bin=feedBin(f),bag=feedBag(f),hi=bin?bin.cap*.95:Math.max(400,(fu[f]||1)*30),lo=bin?bin.cap*.25:(fu[f]||1)*6;
+   feedKinds().forEach(f=>{const r10=recsOf("사료").find(r=>r.data.kind===f&&r.workDate===d10&&r.data.mode==="빈 잔량");if(!r10)return;const bin=feedBin(f),bag=feedBag(f),hi=bin?bin.cap*.95:Math.max(400,(fu[f]||1)*30),lo=bin?bin.cap*.25:(fu[f]||1)*6;
      let S=r10.data.kg;for(let k=1;k<=35;k++){const d=addDays(d10,-k),x=raw.find(z=>z.d===d),use=(x&&x.u[f]||0)*(TF[f]||1)*(1+(rnd()-.5)*.12);let c=S+use;
        if(c>hi){const q=bag?Math.round((c-lo)/bag.kg)*bag.kg:Math.round((c-lo)/500)*500;state.records.push({id:newId(),type:"사료",workDate:addDays(d,1),createdAt:new Date(toUTC(addDays(d,1))+(7)*36e5).toISOString(),user:"조성훈 팀장",data:{kind:f,mode:"입고",kg:q}});c-=q}
        S=c;if(dow(d)!==0)state.records.push({id:newId(),type:"사료",workDate:d,createdAt:new Date(toUTC(d)+8.5*36e5).toISOString(),user:"조성훈 팀장",data:{kind:f,mode:"빈 잔량",kg:Math.max(0,Math.round(S+(bin?(rnd()-.5)*bin.cap*.02:0)))}})}})}
@@ -4437,7 +4446,7 @@ const CULL0={parity:7,returns:2,low:9};
 function cullRule(){return {...CULL0,...(state.cullRule||{})}}
 function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[];
   if(i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);if(i.returns>=R.returns)w.push(`${t("재발·공태")} ${i.returns}${t("회")}`);
-  const fs=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
+  const fs=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
   if(fs.length===2&&fs.every(r=>r.data.live<=R.low))w.push(`${t("실산")} ${fs.map(r=>r.data.live).join("·")}`);
   return w.length?w.join(" · "):null}
 function cullRuleSet(){const R=cullRule();return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터")}</span></div><div class="panel">${[["parity","산차 이상"],["returns","재발·공태 횟수 이상"],["low","최근 2복 실산 이하"]].map(([k,l])=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`).join("")}</div>`}
@@ -4479,7 +4488,8 @@ addEventListener("resize",()=>{if(pcMode()==="auto")applySkin()});
 /* ===== 당일 기록 마감 (기본 21:00 · 대표 설정 › 현황판 항목) =====
    마감 전: 홈 띠로 남은 기록 · 마감 후: '기록 누락' 할 일 묶음(지난 7일까지, 다음 날에도 리마인드) */
 function closeBy(){return state.closeBy||FARM.closeBy||"21:00"}
-function closeMiss(day){return day<(state.startDate||"")?[]:DAILY.filter(q=>dayStatus(day,q).s==="miss")}
+function closeMiss(day){return memo("cm|"+day,()=>closeMiss0(day))}
+function closeMiss0(day){return day<(state.startDate||"")?[]:DAILY.filter(q=>dayStatus(day,q).s==="miss")}
 function closeTodos(){if(REF!==TODAY)return [{k:"closemiss",t:"기록 누락",items:[],act:null}];const items=[];
   for(let i=7;i>=0;i--){const d=addDays(TODAY,-i);if(i===0&&nowHM()<closeBy())continue;
     closeMiss(d).forEach(q=>items.push({cm:{day:d,type:q},label:i===0?`${t("마감")} ${closeBy()} ${t("지남")}`:`${i}${t("일 전")} · ${t("누락")}`,sev:"bad"}))}
@@ -4556,13 +4566,13 @@ Object.assign(A,{
   resetPick:v=>{ui.resetPick=v||null;render()},
   resetDo:v=>{const keep=state;makeState(v,keep);if(!me()){ME=null;try{localStorage.removeItem(SKEY)}catch(e){}}ui.resetPick=null;ui.setPage="main";tab=me()?"home":tab;render();toast("초기화했습니다")},
   judge:v=>{openInput("폐사",{date:String(v).replace(/^d:/,"")})},
-  decNone:v=>{if(String(v).startsWith("day|")){const k=v.slice(4),g=state.records.filter(r=>r.type==="폐사"&&r.workDate+"|"+r.data.barn===k);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:"none",total:g.reduce((s,r)=>s+r.data.n,0),at:new Date().toISOString(),user:state.user}}
+  decNone:v=>{if(String(v).startsWith("day|")){const k=v.slice(4),g=recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:"none",total:g.reduce((s,r)=>s+r.data.n,0),at:new Date().toISOString(),user:state.user}}
     else{const r=state.records.find(x=>x.id===v);r.data.decision="none"}save();render();toast(t("조치 필요 없음"))},
-  decNeed:v=>{let causes;if(String(v).startsWith("day|")){const k=v.slice(4);causes=[...new Set(state.records.filter(r=>r.type==="폐사"&&r.workDate+"|"+r.data.barn===k).map(r=>r.data.cause))]}else{causes=[state.records.find(x=>x.id===v).data.cause]}
+  decNeed:v=>{let causes;if(String(v).startsWith("day|")){const k=v.slice(4);causes=[...new Set(recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k).map(r=>r.data.cause))]}else{causes=[state.records.find(x=>x.id===v).data.cause]}
     ui.dec={id:v,acts:[...new Set(causes.flatMap(c=>REC[c]||[]))].filter(a=>ACTIONS.includes(a)),when:"오늘 중",who:state.user,memo:""};render()},
   decSave:()=>{const D=ui.dec;if(!D.acts.length)return;const due=D.when==="내일"?addDays(TODAY,1):D.when==="모레"?addDays(TODAY,2):TODAY,memo=(($("#decMemo")||{}).value||"").trim();
     let title,src=null;
-    if(String(D.id).startsWith("day|")){const k=D.id.slice(4),[d,...b]=k.split("|"),g=state.records.filter(r=>r.type==="폐사"&&r.workDate+"|"+r.data.barn===k),total=g.reduce((s,r)=>s+r.data.n,0);title=`${b.join("|")} 하루 폐사 ${total}두`;const tk={id:newId(),src:k,title,acts:D.acts,due,who:D.who,memo,createdAt:new Date().toISOString(),user:state.user};state.tasks.push(tk);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:tk.id,total,at:tk.createdAt,user:state.user}}
+    if(String(D.id).startsWith("day|")){const k=D.id.slice(4),[d,...b]=k.split("|"),g=recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k),total=g.reduce((s,r)=>s+r.data.n,0);title=`${b.join("|")} 하루 폐사 ${total}두`;const tk={id:newId(),src:k,title,acts:D.acts,due,who:D.who,memo,createdAt:new Date().toISOString(),user:state.user};state.tasks.push(tk);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:tk.id,total,at:tk.createdAt,user:state.user}}
     else{const r=state.records.find(x=>x.id===D.id);title=`${r.data.barn} ${r.data.stage} ${r.data.cause}`;const tk={id:newId(),src:r.id,title,acts:D.acts,due,who:D.who,memo,createdAt:new Date().toISOString(),user:state.user};state.tasks.push(tk);r.data.decision=tk.id}
     ui.dec=null;save();render();toast(`${t("할 일에 추가")} · ${t(D.when)} · ${D.who}`)}
 });
@@ -4717,7 +4727,7 @@ wxAlerts=function(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d
 const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
 cullRule=function(){const r={...CULL1,...(state.cullRule||{})};return r};
 cullWhy=function(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
-  const F=state.records.filter(r=>r.type==="분만"&&r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
+  const F=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
   if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
   if(F.length>=2){const dy=F.filter(r=>isDys(r)).length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
   if(st.stage==="이유"&&diff(st.since,TODAY)>=R.anest)w.push(`${t("무발정")} ${diff(st.since,TODAY)}${t("일")}`);
@@ -4795,7 +4805,7 @@ const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(tod
 
 // ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
 function feedEmpty(f,kg){if(kg==null)return false;const b=feedBin(f);return b?kg<=Math.max(100,binCap(b)*.03):kg<=0}
-function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
   const rd=R.filter(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량"),last=rd[rd.length-1];if(!last||!feedEmpty(f,last.data.kg))return;
   if(R.some(r=>r.data.mode==="입고"&&r.createdAt>last.createdAt))return;
   let i=rd.length-1;while(i>0&&feedEmpty(f,rd[i-1].data.kg))i--;const since=rd[i].workDate,b=feedBin(f);
@@ -4819,7 +4829,7 @@ A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=promp
 
 // 예시 데이터: 빈 잔량 기록에 양쪽 게이지(기울기)도 넣기 → 현황판·사료 화면 빈이 기울어진 면으로 보임
 const _seedFarmPost0=seedFarmPost;
-seedFarmPost=function(){_seedFarmPost0();try{const R=state.records.filter(r=>r.type==="사료"&&r.data.mode==="빈 잔량"&&r.data.lL==null);
+seedFarmPost=function(){_seedFarmPost0();try{const R=recsOf("사료").filter(r=>r.data.mode==="빈 잔량"&&r.data.lL==null);
   FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
     const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
     r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()};
@@ -5079,8 +5089,8 @@ const _vSows1=vSows;vSows=function(){return _vSows1().replace(`data-a="tab" data
 // ---- 발정동기화 (레규메이트): 묶음 시작(동기화 기록 1건) → 18일 매일 정한 시각·양 급여 확인(레규급여) → 끝난 뒤 4~7일 발정 예상 ----
 const REGU0={days:18,ml:5,at:"08:00",from:4,to:7,late:60};   // 1두 mL · 급여 시각 · 발정 예상(끝난 다음 날부터 4~7일) · 시각 허용(분)
 const reguCfg=()=>({...REGU0,...(state.regu||{})});
-const reguFeeds=id=>state.records.filter(r=>r.type==="레규급여"&&r.data.batch===id);
-function reguBatches(){return state.records.filter(r=>r.type==="동기화").map(r=>{const d=r.data,end=addDays(d.start,d.days-1),day=diff(d.start,TODAY)+1,F=reguFeeds(r.id),fed=new Set(F.map(x=>x.workDate));
+const reguFeeds=id=>recsOf("레규급여").filter(r=>r.data.batch===id);
+function reguBatches(){return recsOf("동기화").slice().map(r=>{const d=r.data,end=addDays(d.start,d.days-1),day=diff(d.start,TODAY)+1,F=reguFeeds(r.id),fed=new Set(F.map(x=>x.workDate));
   const miss=[];for(let k=0;k<Math.min(day-1,d.days);k++){const x=addDays(d.start,k);if(!fed.has(x))miss.push(x)}
   const off=F.filter(x=>x.data.off||x.data.ml!==d.ml).length;
   return {r,d,end,day,on:day>=1&&day<=d.days,todayFed:fed.has(TODAY),miss,off,est:[addDays(end,1+reguCfg().from-1),addDays(end,1+reguCfg().to-1)]}}).filter(b=>b.day<=b.d.days+reguCfg().to+1)}
@@ -5141,10 +5151,10 @@ function reguSummary(g){const d=g.data,end=addDays(d.start,d.days-1),win=[addDay
   return {n:d.sows.length,mated,checked,preg,farrow,live:farrow?live/farrow:null,miss,off:F.filter(x=>x.data.off).length}}
 
 // ---- 화면 연결: 정시 교배 할 일 · (레규) 표시 · 정액 주문 · 급여 늦음 빨간 띠 · 끝난 그룹 성적 · 교배 시각 설정 ----
-function reguGroups(){return state.records.filter(r=>r.type==="동기화")}
+function reguGroups(){return recsOf("동기화").slice()}
 // 오늘 할 정시 교배 회차(아직 기록 안 한 것)
 function reguMateDue(){const out=[];reguGroups().forEach(g=>reguMating(g.data).forEach(m=>{if(m.date!==TODAY)return;
-  const done=state.records.some(r=>r.type==="교배"&&r.data.rg===g.id&&r.data.session===m.n);if(!done)out.push({g,m})}));return out}
+  const done=recsOf("교배").some(r=>r.data.rg===g.id&&r.data.session===m.n);if(!done)out.push({g,m})}));return out}
 const _extraTodos3=extraTodos;
 extraTodos=function(){const a=_extraTodos3();let it=[];try{it=reguMateDue().map(({g,m})=>({rgm:g.id+"|"+m.n,label:`${t("동기화 그룹 교배")} (${t("레규")}) ${m.n}/4${t("회")} · ${g.data.sows.length}${t("두")} · ${m.time}`,sev:nowHM()>=m.time?"bad":"warn"}))}catch(e){}
   return [...a,{k:"regumate",t:"정시 교배 (레규 동기화 그룹)",items:it,act:null}]};
@@ -5185,12 +5195,12 @@ const _dashCfg84=dashCfg;dashCfg=function(){const d=state.dash,had=d&&d.order&&d
   if(!had){c.order=c.order.filter(k=>k!=="regu");c.order.splice(c.order.indexOf("breed")+1,0,"regu")}return c};
 DASH_P.regu=()=>{const B=reguBatches(),now=nowHM();
   if(!B.length)return [t("동기화 그룹 (레규)"),t("진행 중인 그룹 없음"),`<div class="d-mu">${t("진행 중인 동기화 그룹이 없습니다")}</div>`];
-  const rows=B.map(b=>{const d=b.d,M=reguMating(d),done=M.filter(m=>state.records.some(r=>r.type==="교배"&&r.data.rg===b.r.id&&r.data.session===m.n)).length;
+  const rows=B.map(b=>{const d=b.d,M=reguMating(d),done=M.filter(m=>recsOf("교배").some(r=>r.data.rg===b.r.id&&r.data.session===m.n)).length;
     const sd=x=>+x.slice(5,7)+"/"+(+x.slice(8)),head=`<div class="rg-h">${sd(d.start)}~ · ${d.sows.length}${t("두")}</div>`;
     if(b.on){const st=reguAlertStage(d.at,now,b.todayFed),fed=b.todayFed?`<span style="color:var(--good)">✓ ${t("오늘 급여")}</span>`:`<span style="color:${st?"var(--red)":"var(--amber)"}">${st?"⚠ ":""}${t("오늘 급여 전")} · ${d.at}</span>`;
       return `${head}<div class="d-bar"><span>${t("급여")}</span><div class="d-track"><div class="d-fill" style="width:${b.day/d.days*100}%;background:var(--good)"></div></div><span class="d-v"><b>${b.day}</b>/${d.days}</span></div>
       <div class="d-mu">${fed}${b.miss.length?` · <span style="color:var(--red)">${t("빠짐")} ${b.miss.length}${t("일")}</span>`:""}${b.off?` · ${t("시각·양 벗어남")} ${b.off}`:""} · ${t("정시 교배")} ${sd(M[0].date)}</div>`}
-    const nx=M.find(m=>!state.records.some(r=>r.type==="교배"&&r.data.rg===b.r.id&&r.data.session===m.n));
+    const nx=M.find(m=>!recsOf("교배").some(r=>r.data.rg===b.r.id&&r.data.session===m.n));
     return `${head}<div class="d-bar"><span>${t("교배")}</span><div class="d-track"><div class="d-fill" style="width:${done/4*100}%;background:var(--accent,#2b8a3e)"></div></div><span class="d-v"><b>${done}</b>/4</span></div>
     <div class="d-mu">${t("급여 끝")} ${sd(b.end)}${b.miss.length?` · <span style="color:var(--red)">${t("빠짐")} ${b.miss.length}${t("일")}</span>`:""} · ${nx?`${t("다음 교배")} ${sd(nx.date)} ${nx.time} (${nx.n}${t("차")})`:t("정시 교배 끝")} · ${t("발정 예상")} ${sd(b.est[0])}~${sd(b.est[1])}</div>`});
   return [t("동기화 그룹 (레규)"),`${B.filter(b=>b.on).length}${t("그룹 급여 중")}`,`<div class="d-bars rg-bars">${rows.join("")}</div>`]};
@@ -5402,7 +5412,7 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   let cm=[];try{cm=closeMiss(TODAY)}catch(e){}
   add("close",closeBy(),cm.length?`📝 ${closeBy()} 기록 마감 · 빠진 기록: ${cm.map(L).join(", ")}`:"",`📝 ${closeBy()} 기록 마감 · 빠진 기록: 사료`);
   // 6 같은 돈사 하루 폐사 3두 이상 (지금 바로)
-  const dd={};state.records.filter(r=>r.type==="폐사"&&r.workDate===TODAY).forEach(r=>{const b=r.data.barn||"?";dd[b]=(dd[b]||0)+(+r.data.n||1)});
+  const dd={};recsOf("폐사").filter(r=>r.workDate===TODAY).forEach(r=>{const b=r.data.barn||"?";dd[b]=(dd[b]||0)+(+r.data.n||1)});
   const hot=Object.keys(dd).filter(b=>dd[b]>=3);
   add("dead",nowHM().slice(0,3)+"00",hot.length?"⚠ 폐사 많음: "+hot.map(b=>`${b} ${dd[b]}두`).join(", "):"","⚠ 폐사 많음: 자돈사 4두");
   // 시험: 모든 알림을 시험 시각에 + 기록 알림 예시(최근 기록, 켜진 종류마다 1건)

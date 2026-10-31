@@ -90,7 +90,7 @@ function recRow(r){
 
 /* ================= v0.3 · 돈군 · 재고 보조 ================= */
 function survF(age){let f=1,a=age;state.cfg.stage.forEach(([n,len],i)=>{if(a<=0)return;f*=1-LOSS[i]*Math.min(a,len)/len;a-=len});return f}
-function batches(){const g={};state.records.filter(r=>r.type==="분만").forEach(f=>{const k=weekStart(f.workDate);(g[k]=g[k]||{k,f:[]}).f.push(f)});
+function batches(){const g={};recsOf("분만").slice().forEach(f=>{const k=weekStart(f.workDate);(g[k]=g[k]||{k,f:[]}).f.push(f)});
   const out=Object.values(g).map(b=>({...b,live:b.f.reduce((s,f)=>s+f.data.live,0)}));
   (state.mbatches||[]).forEach(m=>{const live=Math.round(m.n/survF(m.age));const ex=out.find(b=>b.k===m.k);if(ex){ex.live=live;ex.fixed=m.n}else out.push({k:m.k,f:[],live,manual:true,litters:m.litters||0,n0:m.n})});
   return out.sort((a,b)=>b.k.localeCompare(a.k))}

@@ -22,7 +22,7 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   let cm=[];try{cm=closeMiss(TODAY)}catch(e){}
   add("close",closeBy(),cm.length?`📝 ${closeBy()} 기록 마감 · 빠진 기록: ${cm.map(L).join(", ")}`:"",`📝 ${closeBy()} 기록 마감 · 빠진 기록: 사료`);
   // 6 같은 돈사 하루 폐사 3두 이상 (지금 바로)
-  const dd={};state.records.filter(r=>r.type==="폐사"&&r.workDate===TODAY).forEach(r=>{const b=r.data.barn||"?";dd[b]=(dd[b]||0)+(+r.data.n||1)});
+  const dd={};recsOf("폐사").filter(r=>r.workDate===TODAY).forEach(r=>{const b=r.data.barn||"?";dd[b]=(dd[b]||0)+(+r.data.n||1)});
   const hot=Object.keys(dd).filter(b=>dd[b]>=3);
   add("dead",nowHM().slice(0,3)+"00",hot.length?"⚠ 폐사 많음: "+hot.map(b=>`${b} ${dd[b]}두`).join(", "):"","⚠ 폐사 많음: 자돈사 4두");
   // 시험: 모든 알림을 시험 시각에 + 기록 알림 예시(최근 기록, 켜진 종류마다 1건)

@@ -3,7 +3,7 @@
 function sowMatch(id,q){if(!q)return 1;const num=(String(id).match(/(\d+)$/)||[0,""])[1];if(+num===+q)return 0;return num.includes(q)||String(+num).includes(q)?1:null}
 // 다음 모돈 번호: 올해 끝자리-(올해 번호 중 가장 큰 수 + 1). 2026년 → 6-093, 2027년 → 7-001
 function nextSowId(){const p=TODAY.slice(3,4)+"-",n=Math.max(0,...state.sows.filter(s=>String(s.id).startsWith(p)).map(s=>+String(s.id).slice(p.length)||0));return p+String(n+1).padStart(3,"0")}
-const feedNames=()=>[...new Set(state.records.filter(r=>r.type==="사료").map(r=>r.data.kind))].sort();
+const feedNames=()=>[...new Set(recsOf("사료").slice().map(r=>r.data.kind))].sort();
 const FORMS={
   폐사:{f:[{k:"barn",l:"돈사",t:"chips",o:BARNS,def:"분만사"},{k:"stage",l:"단계",t:"chips",o:PIG_STAGES,def:"포유자돈"},{k:"n",l:"두수",t:"step",def:1,min:1},{k:"cause",l:"원인",t:"chips",o:CAUSES,def:"원인불명"},{k:"photo",l:"사진 (선택)",t:"photo",opt:true},{k:"sow",l:"어느 복 (포유자돈 · 선택)",t:"chips",opt:true,o:()=>ui.in&&ui.in.fv.stage==="포유자돈"?activeSows().filter(s=>sowState(s.id).stage==="포유").map(s=>s.id):[]}],
     warn:(d,wd)=>{const dup=state.records.find(r=>r.id!==EXCL&&r.type==="폐사"&&r.workDate===wd&&r.data.barn===d.barn&&r.data.cause===d.cause&&r.data.stage===d.stage&&(Date.now()-new Date(r.createdAt))<10*60e3);return dup?`10분 안에 같은 돈사·단계·원인으로 입력한 기록이 있습니다 (${kTime(dup.createdAt)}, ${dup.data.n}두). 중복 입력이 아닌지 확인해 주세요.`:null}},
@@ -25,7 +25,7 @@ const FORMS={
   이동:{f:[{k:"from",l:"출발 돈사",t:"chips",o:BARNS,def:"분만사"},{k:"to",l:"도착 돈사",t:"chips",o:BARNS,def:"인큐베이터"},{k:"n",l:"두수",t:"step",def:100,min:1,big:10}],
     warn:d=>d.from===d.to?"출발과 도착 돈사가 같습니다.":null},
   출하:{f:[{k:"barn",l:"출하 돈사",t:"chips",o:()=>{const f=BARNS.filter(b=>b.includes("비육"));return f.length?f:BARNS},def:"육성비육사"},{k:"n",l:"출하두수",t:"step",def:20,min:1},{k:"kg",l:"출하 평균체중 (kg)",t:"step",def:115,min:60},{k:"dest",l:"출하처",t:"chips",o:()=>DESTS,def:"○○도축장"},{k:"carc",l:"도체중 붙여넣기 (선택 · 나중에 도축장 성적이 나오면)",t:"textarea",opt:true}],
-    warn:(d,wd)=>{const w=state.records.find(r=>r.type==="약품"&&r.data.barn===d.barn&&r.data.withdraw&&r.data.withdraw>wd);return w?`${d.barn}은 휴약 중입니다 (종료 ${kDate(w.data.withdraw)}). 출하해도 되는지 확인해 주세요.`:null}},
+    warn:(d,wd)=>{const w=recsOf("약품").find(r=>r.data.barn===d.barn&&r.data.withdraw&&r.data.withdraw>wd);return w?`${d.barn}은 휴약 중입니다 (종료 ${kDate(w.data.withdraw)}). 출하해도 되는지 확인해 주세요.`:null}},
   사료:{f:[{k:"kind",l:"사료",t:"chips",o:()=>feedKinds(),def:FARM.feed.bins[0].feed},{k:"mode",l:"구분",t:"chips",o:["입고","빈 잔량"],def:"입고"},{k:"_lvl",l:"눈대중 (누르면 kg 자동)",t:"chips",opt:true,o:()=>{const k=ui.in&&ui.in.fv.kind;return feedBin(k)?["¼","½","¾","가득"]:["1포","5포","10포","20포","40포"]}},{k:"kg",l:"수량 (kg)",t:"step",def:5000,min:0,big:500}]},
   약품:{f:[{k:"kind",l:"구분",t:"chips",o:()=>CATS.filter(c=>c!=="백신"&&c!=="정액"),def:"항생제"},{k:"name",l:"품목 (약품·재고 탭에서 추가)",t:"chips",o:()=>itemNames(ui.in?ui.in.fv.kind:"항생제")},{k:"barn",l:"대상 돈사",t:"chips",o:BARNS,def:"육성비육사"},{k:"qty",l:"사용량",t:"step",def:1,min:0},{k:"withdraw",l:"휴약 종료일 (항생제 · 자동 제안)",t:"date",opt:true}]},
   BCS:{sow:{multi:false,target:false,filter:()=>true},f:[{k:"score",l:"BCS 점수",t:"chips",o:["1","1.5","2","2.5","3","3.5","4","4.5","5"],def:"3"},{k:"when",l:"측정 시점",t:"chips",o:["교배 시","임신 중","분만 시","이유 시","기타"],def:"임신 중"},{k:"memo",l:"메모 (선택)",t:"text",opt:true}]},

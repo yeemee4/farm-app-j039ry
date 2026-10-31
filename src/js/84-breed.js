@@ -52,8 +52,8 @@ const _vSows1=vSows;vSows=function(){return _vSows1().replace(`data-a="tab" data
 // ---- 발정동기화 (레규메이트): 묶음 시작(동기화 기록 1건) → 18일 매일 정한 시각·양 급여 확인(레규급여) → 끝난 뒤 4~7일 발정 예상 ----
 const REGU0={days:18,ml:5,at:"08:00",from:4,to:7,late:60};   // 1두 mL · 급여 시각 · 발정 예상(끝난 다음 날부터 4~7일) · 시각 허용(분)
 const reguCfg=()=>({...REGU0,...(state.regu||{})});
-const reguFeeds=id=>state.records.filter(r=>r.type==="레규급여"&&r.data.batch===id);
-function reguBatches(){return state.records.filter(r=>r.type==="동기화").map(r=>{const d=r.data,end=addDays(d.start,d.days-1),day=diff(d.start,TODAY)+1,F=reguFeeds(r.id),fed=new Set(F.map(x=>x.workDate));
+const reguFeeds=id=>recsOf("레규급여").filter(r=>r.data.batch===id);
+function reguBatches(){return recsOf("동기화").slice().map(r=>{const d=r.data,end=addDays(d.start,d.days-1),day=diff(d.start,TODAY)+1,F=reguFeeds(r.id),fed=new Set(F.map(x=>x.workDate));
   const miss=[];for(let k=0;k<Math.min(day-1,d.days);k++){const x=addDays(d.start,k);if(!fed.has(x))miss.push(x)}
   const off=F.filter(x=>x.data.off||x.data.ml!==d.ml).length;
   return {r,d,end,day,on:day>=1&&day<=d.days,todayFed:fed.has(TODAY),miss,off,est:[addDays(end,1+reguCfg().from-1),addDays(end,1+reguCfg().to-1)]}}).filter(b=>b.day<=b.d.days+reguCfg().to+1)}
@@ -114,10 +114,10 @@ function reguSummary(g){const d=g.data,end=addDays(d.start,d.days-1),win=[addDay
   return {n:d.sows.length,mated,checked,preg,farrow,live:farrow?live/farrow:null,miss,off:F.filter(x=>x.data.off).length}}
 
 // ---- 화면 연결: 정시 교배 할 일 · (레규) 표시 · 정액 주문 · 급여 늦음 빨간 띠 · 끝난 그룹 성적 · 교배 시각 설정 ----
-function reguGroups(){return state.records.filter(r=>r.type==="동기화")}
+function reguGroups(){return recsOf("동기화").slice()}
 // 오늘 할 정시 교배 회차(아직 기록 안 한 것)
 function reguMateDue(){const out=[];reguGroups().forEach(g=>reguMating(g.data).forEach(m=>{if(m.date!==TODAY)return;
-  const done=state.records.some(r=>r.type==="교배"&&r.data.rg===g.id&&r.data.session===m.n);if(!done)out.push({g,m})}));return out}
+  const done=recsOf("교배").some(r=>r.data.rg===g.id&&r.data.session===m.n);if(!done)out.push({g,m})}));return out}
 const _extraTodos3=extraTodos;
 extraTodos=function(){const a=_extraTodos3();let it=[];try{it=reguMateDue().map(({g,m})=>({rgm:g.id+"|"+m.n,label:`${t("동기화 그룹 교배")} (${t("레규")}) ${m.n}/4${t("회")} · ${g.data.sows.length}${t("두")} · ${m.time}`,sev:nowHM()>=m.time?"bad":"warn"}))}catch(e){}
   return [...a,{k:"regumate",t:"정시 교배 (레규 동기화 그룹)",items:it,act:null}]};
@@ -158,12 +158,12 @@ const _dashCfg84=dashCfg;dashCfg=function(){const d=state.dash,had=d&&d.order&&d
   if(!had){c.order=c.order.filter(k=>k!=="regu");c.order.splice(c.order.indexOf("breed")+1,0,"regu")}return c};
 DASH_P.regu=()=>{const B=reguBatches(),now=nowHM();
   if(!B.length)return [t("동기화 그룹 (레규)"),t("진행 중인 그룹 없음"),`<div class="d-mu">${t("진행 중인 동기화 그룹이 없습니다")}</div>`];
-  const rows=B.map(b=>{const d=b.d,M=reguMating(d),done=M.filter(m=>state.records.some(r=>r.type==="교배"&&r.data.rg===b.r.id&&r.data.session===m.n)).length;
+  const rows=B.map(b=>{const d=b.d,M=reguMating(d),done=M.filter(m=>recsOf("교배").some(r=>r.data.rg===b.r.id&&r.data.session===m.n)).length;
     const sd=x=>+x.slice(5,7)+"/"+(+x.slice(8)),head=`<div class="rg-h">${sd(d.start)}~ · ${d.sows.length}${t("두")}</div>`;
     if(b.on){const st=reguAlertStage(d.at,now,b.todayFed),fed=b.todayFed?`<span style="color:var(--good)">✓ ${t("오늘 급여")}</span>`:`<span style="color:${st?"var(--red)":"var(--amber)"}">${st?"⚠ ":""}${t("오늘 급여 전")} · ${d.at}</span>`;
       return `${head}<div class="d-bar"><span>${t("급여")}</span><div class="d-track"><div class="d-fill" style="width:${b.day/d.days*100}%;background:var(--good)"></div></div><span class="d-v"><b>${b.day}</b>/${d.days}</span></div>
       <div class="d-mu">${fed}${b.miss.length?` · <span style="color:var(--red)">${t("빠짐")} ${b.miss.length}${t("일")}</span>`:""}${b.off?` · ${t("시각·양 벗어남")} ${b.off}`:""} · ${t("정시 교배")} ${sd(M[0].date)}</div>`}
-    const nx=M.find(m=>!state.records.some(r=>r.type==="교배"&&r.data.rg===b.r.id&&r.data.session===m.n));
+    const nx=M.find(m=>!recsOf("교배").some(r=>r.data.rg===b.r.id&&r.data.session===m.n));
     return `${head}<div class="d-bar"><span>${t("교배")}</span><div class="d-track"><div class="d-fill" style="width:${done/4*100}%;background:var(--accent,#2b8a3e)"></div></div><span class="d-v"><b>${done}</b>/4</span></div>
     <div class="d-mu">${t("급여 끝")} ${sd(b.end)}${b.miss.length?` · <span style="color:var(--red)">${t("빠짐")} ${b.miss.length}${t("일")}</span>`:""} · ${nx?`${t("다음 교배")} ${sd(nx.date)} ${nx.time} (${nx.n}${t("차")})`:t("정시 교배 끝")} · ${t("발정 예상")} ${sd(b.est[0])}~${sd(b.est[1])}</div>`});
   return [t("동기화 그룹 (레규)"),`${B.filter(b=>b.on).length}${t("그룹 급여 중")}`,`<div class="d-bars rg-bars">${rows.join("")}</div>`]};

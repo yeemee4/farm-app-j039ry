@@ -3,7 +3,7 @@
    튀는 값(예측의 0.4배 이하·2.5배 이상)은 버림. 대표 설정에서 사료별 '다시 배우기'(그날 이후만 사용) */
 let FLX={};
 function rawPast(){const k=state.records.length+"|"+state.sows.length+"|"+TODAY+"|"+JSON.stringify(state.intake||{});if(FLX.k===k)return FLX.m;const D=feedPlanDays0(61,addDays(TODAY,-60)),m={};D.forEach(x=>m[x.d]=x.u);FLX={k,m,obs:{}};return m}
-function feedObs(f){rawPast();if(FLX.obs[f])return FLX.obs[f];const M=FLX.m,from=(state.feedLearn||{})[f]||"0000",R=state.records.filter(r=>r.type==="사료"&&r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
+function feedObs(f){rawPast();if(FLX.obs[f])return FLX.obs[f];const M=FLX.m,from=(state.feedLearn||{})[f]||"0000",R=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>(a.createdAt||"").localeCompare(b.createdAt||""));
   const rd=R.filter(r=>(r.data.mode==="빈 잔량"||r.data.mode==="잔량")&&r.data.kg!=null&&r.workDate>=from),out=[];
   for(let i=1;i<rd.length;i++){const a=rd[i-1],b=rd[i],g=diff(a.workDate,b.workDate);if(g<1||g>14)continue;
     const inn=R.filter(r=>r.data.mode==="입고"&&r.createdAt>a.createdAt&&r.createdAt<=b.createdAt).reduce((s,r)=>s+r.data.kg,0),act=a.data.kg+inn-b.data.kg;

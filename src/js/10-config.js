@@ -38,7 +38,11 @@ const localDateOf=iso=>fmt(new Date(iso));
 const KEY=ENV==="test"?"farm-test-v3":"farm-proto-v3";   // 시험용(test/)은 저장 공간 따로
 let state,storageOK=true;
 function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){storageOK=false}return null}
-function save(){SIDX=null;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOK=false}}
+// 같은 화면·같은 데이터 안에서 무거운 계산 한 번만(저사양 기기) — 저장·화면 그리기·기록 수 변화 때 비움
+let MEMO={};function memo(k,f){k+="|"+state.records.length+"|"+state.sows.length;return k in MEMO?MEMO[k]:(MEMO[k]=f())}
+// 기록 종류별 묶음(순서 그대로) — state.records 전체를 매번 훑지 않게
+const recsOf=ty=>memo("ty",()=>{const m={};state.records.forEach(r=>(m[r.type]=m[r.type]||[]).push(r));return m})[ty]||[];
+function save(){SIDX=null;MEMO={};try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOK=false}}
 let uid=Date.now();const DEVID=(()=>{try{let d=localStorage.getItem("farm-dev");if(!d){d=Math.random().toString(36).slice(2,5);localStorage.setItem("farm-dev",d)}return d}catch(e){return Math.random().toString(36).slice(2,5)}})();const newId=()=>(uid++).toString(36)+DEVID;   // 기기 표시를 붙여 여러 휴대폰에서 겹치지 않게
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));

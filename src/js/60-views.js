@@ -6,7 +6,7 @@ function renderTabs(){
   $("#tabsD").innerHTML=NAV.map(([k])=>btn(k,cur===k)).join("");
 }
 function render(){
-  SIDX=null;applySkin();const m=me();
+  SIDX=null;MEMO={};applySkin();const m=me();
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");
   LANG=m.lang||"ko";document.documentElement.lang=LANG;state.user=m.name;syncLists();

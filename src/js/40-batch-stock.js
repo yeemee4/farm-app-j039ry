@@ -8,7 +8,7 @@ const shipAge=()=>state.cfg.stage.reduce((s,x)=>s+x[1],0);
 const bAge=b=>Math.floor(diff(b.k,REF)/7);
 function stagePlan(ageW){let a=0;for(const [n,w] of state.cfg.stage){a+=w;if(ageW<a)return n}return "출하"}
 function bHeads(b,ageW){let n=b.live,a=ageW;state.cfg.stage.forEach(([nm,len],i)=>{if(a<=0)return;n*=1-LOSS[i]*Math.min(a,len)/len;a-=len});return Math.round(n)}
-function bVax(b,p){const due=addDays(b.k,p.day),need=bHeads(b,Math.floor(p.day/7)),recs=state.records.filter(r=>r.type==="돈군백신"&&r.data.batch===b.k&&r.data.vax===p.name),done=recs.reduce((s,r)=>s+r.data.n,0);
+function bVax(b,p){const due=addDays(b.k,p.day),need=bHeads(b,Math.floor(p.day/7)),recs=recsOf("돈군백신").filter(r=>r.data.batch===b.k&&r.data.vax===p.name),done=recs.reduce((s,r)=>s+r.data.n,0);
   const over=REF>addDays(due,6);
   const st=done>=need*.98?"done":done>0?(over?"part":"partnow"):over?"late":REF>=due?"due":diff(REF,due)<=7?"soon":"plan";
   return {p,due,need,done,recs,st}}
@@ -20,7 +20,8 @@ const CATS=["항생제","사료첨가제","소독제","비품","백신","정액"
 const itemNames=cat=>state.items.filter(i=>!i.hidden&&i.cat===cat).map(i=>i.name);
 const itemById=id=>state.items.find(i=>i.id===id);
 const itemId=name=>(state.items.find(i=>i.name===name)||{}).id;
-function stockRecs(it){if(/^주사침/.test(it.name))return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||needleUse(it,r)>0).map(r=>r.type==="재고"?r:{...r,type:"_침",data:{n:needleUse(it,r)}});return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
+function stockRecs(it){return memo("sr|"+it.id,()=>stockRecs0(it))}
+function stockRecs0(it){if(/^주사침/.test(it.name))return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||needleUse(it,r)>0).map(r=>r.type==="재고"?r:{...r,type:"_침",data:{n:needleUse(it,r)}});return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
 function delta(r){if(r.type==="_침")return -r.data.n;if(r.type==="재고")return r.data.mode==="입고"?r.data.qty:r.data.mode==="사용"?-r.data.qty:0;if(r.type==="돈군백신")return -r.data.n;if(r.type==="약품")return -(r.data.qty||1);return -1}
 function semenOrder(){
   const tmr=addDays(TODAY,1);let n=0;

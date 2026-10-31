@@ -63,13 +63,13 @@ Object.assign(A,{
   resetPick:v=>{ui.resetPick=v||null;render()},
   resetDo:v=>{const keep=state;makeState(v,keep);if(!me()){ME=null;try{localStorage.removeItem(SKEY)}catch(e){}}ui.resetPick=null;ui.setPage="main";tab=me()?"home":tab;render();toast("초기화했습니다")},
   judge:v=>{openInput("폐사",{date:String(v).replace(/^d:/,"")})},
-  decNone:v=>{if(String(v).startsWith("day|")){const k=v.slice(4),g=state.records.filter(r=>r.type==="폐사"&&r.workDate+"|"+r.data.barn===k);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:"none",total:g.reduce((s,r)=>s+r.data.n,0),at:new Date().toISOString(),user:state.user}}
+  decNone:v=>{if(String(v).startsWith("day|")){const k=v.slice(4),g=recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:"none",total:g.reduce((s,r)=>s+r.data.n,0),at:new Date().toISOString(),user:state.user}}
     else{const r=state.records.find(x=>x.id===v);r.data.decision="none"}save();render();toast(t("조치 필요 없음"))},
-  decNeed:v=>{let causes;if(String(v).startsWith("day|")){const k=v.slice(4);causes=[...new Set(state.records.filter(r=>r.type==="폐사"&&r.workDate+"|"+r.data.barn===k).map(r=>r.data.cause))]}else{causes=[state.records.find(x=>x.id===v).data.cause]}
+  decNeed:v=>{let causes;if(String(v).startsWith("day|")){const k=v.slice(4);causes=[...new Set(recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k).map(r=>r.data.cause))]}else{causes=[state.records.find(x=>x.id===v).data.cause]}
     ui.dec={id:v,acts:[...new Set(causes.flatMap(c=>REC[c]||[]))].filter(a=>ACTIONS.includes(a)),when:"오늘 중",who:state.user,memo:""};render()},
   decSave:()=>{const D=ui.dec;if(!D.acts.length)return;const due=D.when==="내일"?addDays(TODAY,1):D.when==="모레"?addDays(TODAY,2):TODAY,memo=(($("#decMemo")||{}).value||"").trim();
     let title,src=null;
-    if(String(D.id).startsWith("day|")){const k=D.id.slice(4),[d,...b]=k.split("|"),g=state.records.filter(r=>r.type==="폐사"&&r.workDate+"|"+r.data.barn===k),total=g.reduce((s,r)=>s+r.data.n,0);title=`${b.join("|")} 하루 폐사 ${total}두`;const tk={id:newId(),src:k,title,acts:D.acts,due,who:D.who,memo,createdAt:new Date().toISOString(),user:state.user};state.tasks.push(tk);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:tk.id,total,at:tk.createdAt,user:state.user}}
+    if(String(D.id).startsWith("day|")){const k=D.id.slice(4),[d,...b]=k.split("|"),g=recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k),total=g.reduce((s,r)=>s+r.data.n,0);title=`${b.join("|")} 하루 폐사 ${total}두`;const tk={id:newId(),src:k,title,acts:D.acts,due,who:D.who,memo,createdAt:new Date().toISOString(),user:state.user};state.tasks.push(tk);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:tk.id,total,at:tk.createdAt,user:state.user}}
     else{const r=state.records.find(x=>x.id===D.id);title=`${r.data.barn} ${r.data.stage} ${r.data.cause}`;const tk={id:newId(),src:r.id,title,acts:D.acts,due,who:D.who,memo,createdAt:new Date().toISOString(),user:state.user};state.tasks.push(tk);r.data.decision=tk.id}
     ui.dec=null;save();render();toast(`${t("할 일에 추가")} · ${t(D.when)} · ${D.who}`)}
 });
