@@ -22,7 +22,7 @@ function vBreed(){const S=activeSows().map(s=>[s,statusOf(s)]),cnt=k=>S.filter((
   // 1. 사이클 띠
   h+=`<div class="br-cycle">${BR_STAGES.map(([k,l])=>`<button type="button" class="${sel===k?"on":""}" data-a="brStage" data-v="${k}"><b>${cnt(k)}</b><span>${t(l)}</span></button>`).join("")}</div>`;
   // 2. 고른 단계의 모돈
-  if(sel){const L=S.filter(([,i])=>i.key===sel);h+=`<div class="sec-t">${t((BR_STAGES.find(x=>x[0]===sel)||[])[1]||sel)} <span>${L.length}${t("두")} · <button type="button" class="linkbtn" data-a="brStage" data-v="">${t("닫기")}</button></span></div><div class="sowtiles">${L.map(([s,i])=>sowTile(s,i)).join("")||`<div class="empty">${t("없음")}</div>`}</div>`}
+  if(sel){const L=S.filter(([s,i])=>sel==="동기화"?reguSows().has(s.id):i.key===sel);h+=`<div class="sec-t">${t((BR_STAGES.find(x=>x[0]===sel)||[])[1]||(sel==="동기화"?"동기화 중":sel))} <span>${L.length}${t("두")} · <button type="button" class="linkbtn" data-a="brStage" data-v="">${t("닫기")}</button></span></div><div class="sowtiles">${L.map(([s,i])=>sowTile(s,i)).join("")||`<div class="empty">${t("없음")}</div>`}</div>`}
   // 3. 오늘 번식 할 일
   const td=buildTodos().filter(x=>BR_TODO.includes(x.k)&&x.items.length);
   h+=`<div class="sec-t">${t("오늘 번식 할 일")} <span>${td.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
@@ -48,3 +48,52 @@ Object.assign(A,{brStage:v=>{ui.brStage=ui.brStage===v?"":v;render()}});
 DASH_GO.breed="breed";
 const _vMore1=vMore;vMore=function(){return _vMore1().replace('<button class="mitem" type="button" data-a="tab" data-v="stats">',`<button class="mitem" type="button" data-a="tab" data-v="breed"><span class="ic" style="background:var(--accent-soft);color:var(--accent)"></span><span><b>${t("번식")}</b><small>${t("교배 → 임신 → 분만 → 이유 사이클 한 화면")}</small></span><span>›</span></button><button class="mitem" type="button" data-a="tab" data-v="stats">`)};
 const _vSows1=vSows;vSows=function(){return _vSows1().replace(`data-a="tab" data-v="barnmap">`,`data-a="tab" data-v="breed">${t("번식")} ›</button><button class="act" type="button" data-a="tab" data-v="barnmap">`)};
+
+// ---- 발정동기화 (레규메이트): 묶음 시작(동기화 기록 1건) → 18일 매일 정한 시각·양 급여 확인(레규급여) → 끝난 뒤 4~7일 발정 예상 ----
+const REGU0={days:18,ml:5,at:"08:00",from:4,to:7,late:60};   // 1두 mL · 급여 시각 · 발정 예상(끝난 다음 날부터 4~7일) · 시각 허용(분)
+const reguCfg=()=>({...REGU0,...(state.regu||{})});
+const reguFeeds=id=>state.records.filter(r=>r.type==="레규급여"&&r.data.batch===id);
+function reguBatches(){return state.records.filter(r=>r.type==="동기화").map(r=>{const d=r.data,end=addDays(d.start,d.days-1),day=diff(d.start,TODAY)+1,F=reguFeeds(r.id),fed=new Set(F.map(x=>x.workDate));
+  const miss=[];for(let k=0;k<Math.min(day-1,d.days);k++){const x=addDays(d.start,k);if(!fed.has(x))miss.push(x)}
+  const off=F.filter(x=>x.data.off||x.data.ml!==d.ml).length;
+  return {r,d,end,day,on:day>=1&&day<=d.days,todayFed:fed.has(TODAY),miss,off,est:[addDays(end,1+reguCfg().from-1),addDays(end,1+reguCfg().to-1)]}}).filter(b=>b.day<=b.d.days+reguCfg().to+1)}
+function reguSows(){const s=new Set();reguBatches().filter(b=>b.on).forEach(b=>b.d.sows.forEach(x=>s.add(x)));return s}
+// 할 일: 오늘 아직 안 먹인 동기화 묶음 (꼭 할 일)
+const _extraTodos2=extraTodos;
+extraTodos=function(){const a=_extraTodos2();let it=[];try{it=reguBatches().filter(b=>b.on&&!b.todayFed).map(b=>({rg:b.r.id,label:`${b.day}/${b.d.days}${t("일째")} · ${b.d.sows.length}${t("두")} · ${t("1두")} ${b.d.ml}mL · ${b.d.at}${b.miss.length?` · ${t("빠진 날")} ${b.miss.length}${t("일")}`:""}`,sev:b.miss.length||nowHM()>addMin(b.d.at,reguCfg().late)?"bad":"warn"}))}catch(e){}
+  return [...a,{k:"regu",t:"레규메이트 급여 (발정동기화)",items:it,act:null}]};
+if(!TODO_KINDS.some(x=>x[0]==="regu"))TODO_KINDS.splice(4,0,["regu","레규메이트 급여 (발정동기화)"]);
+BR_TODO.unshift("regu");
+function addMin(hm,m){const [h,mm]=hm.split(":").map(Number),x=h*60+mm+m;return `${String(Math.floor(x/60)%24).padStart(2,"0")}:${String(x%60).padStart(2,"0")}`}
+function vRegu(){const B=reguBatches(),C=reguCfg();
+  let h=`<div class="sec-t">${t("발정동기화 (레규메이트)")} <span><button type="button" class="linkbtn" data-a="reguNew">+ ${t("동기화 시작")}</button></span></div>`;
+  if(ui.reguNew){const N=ui.reguNew,cand=activeSows().filter(s=>["후보","발정대기","재발공태"].includes(statusOf(s).key)&&!reguSows().has(s.id));
+    h+=`<div class="panel"><div class="f"><span class="lb">${t("대상")} (${N.sows.length}${t("두")})</span><div class="chipwrap">${cand.map(s=>`<button type="button" class="chip wrap ${N.sows.includes(s.id)?"on":""}" data-a="reguPick" data-v="${s.id}">${s.id} <small>${t(statusOf(s).label)}</small></button>`).join("")||`<span class="sow-meta">${t("후보돈·발정 대기·재발 모돈이 없습니다")}</span>`}</div></div>
+      <div class="f"><label for="rgStart">${t("시작일 (1일째)")}</label><input type="date" id="rgStart" value="${esc(N.start)}"></div>
+      <div class="setrow"><span>${t("1두 급여량")} (mL)</span><input type="number" id="rgMl" value="${N.ml}" min="1" step="0.5" style="width:90px"></div>
+      <div class="setrow"><span>${t("매일 급여 시각")}</span><input type="time" id="rgAt" value="${esc(N.at)}"></div>
+      <div class="note">${t("끝나는 날")}: ${kDate(addDays(N.start,C.days-1))} · ${t("발정 예상")}: ${kDate(addDays(N.start,C.days-1+C.from))} ~ ${kDate(addDays(N.start,C.days-1+C.to))}</div>
+      <div class="acts"><button class="act pri" type="button" data-a="reguSave" ${N.sows.length?"":"disabled"}>${t("시작")}</button><button class="act" type="button" data-a="reguNew">${t("취소")}</button></div></div>`}
+  h+=B.length?B.map(b=>{const pct=Math.min(100,Math.max(0,b.day/b.d.days*100)),st=b.on?`${b.day}/${b.d.days}${t("일째")}`:b.day>b.d.days?`${t("투여 끝")} · ${t("발정 예상")} ${kDate(b.est[0])}~${kDate(b.est[1])}`:`${t("시작 전")}`;
+    return `<div class="panel rg-b"><div class="setrow"><span><b>${kDate(b.d.start)} ${t("시작")}</b> · ${b.d.sows.length}${t("두")} · ${b.d.ml}mL · ${b.d.at}</span><span>${b.on?(b.todayFed?`<span style="color:var(--good)">✓ ${t("오늘 급여")}</span>`:`<button class="act pri" type="button" data-a="reguFeed" data-v="${b.r.id}">${t("급여 완료")}</button>`):""}</span></div>
+      <div class="prog-bar"><i style="width:${pct}%"></i></div><div class="sow-meta">${st} · ${t("끝나는 날")} ${kDate(b.end)}${b.miss.length?` · <b style="color:var(--red)">${t("빠진 날")} ${b.miss.map(x=>kDate(x).replace(/\s*\(.*\)/,"")).join(", ")}</b>`:""}${b.off?` · <b style="color:var(--amber)">${t("시각·양 벗어남")} ${b.off}${t("회")}</b>`:""}</div>
+      <div class="sow-meta">${b.d.sows.join(", ")}</div></div>`}).join(""):`<div class="note">${t("진행 중인 동기화가 없습니다. 후보돈 묶음을 한 번에 발정 오게 할 때 씁니다.")}</div>`;
+  return h}
+Object.assign(A,{
+  reguNew:()=>{ui.reguNew=ui.reguNew?null:{sows:[],start:TODAY,ml:reguCfg().ml,at:reguCfg().at};render()},
+  reguPick:v=>{const L2=ui.reguNew.sows,i=L2.indexOf(v);i<0?L2.push(v):L2.splice(i,1);render()},
+  reguSave:()=>{const N=ui.reguNew,start=$("#rgStart").value||TODAY,ml=+$("#rgMl").value||reguCfg().ml,at=$("#rgAt").value||reguCfg().at;if(!N.sows.length)return;
+    state.regu={...(state.regu||{}),ml,at};addRecord("동기화",start,{sows:N.sows.slice(),start,ml,at,days:reguCfg().days});ui.reguNew=null;save();render();toast(`${t("발정동기화 시작")} · ${N.sows.length}${t("두")}`)},
+  reguFeed:v=>{const b=reguBatches().find(x=>x.r.id===v);if(!b)return;const now=nowHM(),late=Math.abs(diff0(now,b.d.at))>reguCfg().late;
+    const ml=prompt(`${b.d.sows.length}${t("두")} · ${t("1두 급여량")} (mL)${late?`\n⚠ ${t("정한 시각")} ${b.d.at} · ${t("지금")} ${now}`:""}`,String(b.d.ml));if(ml===null)return;const m=+ml;if(!(m>0)){toast(t("양을 숫자로 넣어 주세요"));return}
+    addRecord("레규급여",TODAY,{batch:v,day:b.day,ml:m,time:now,n:b.d.sows.length,off:late||m!==b.d.ml});closeSheet();render();toast(`${t("레규메이트 급여")} ${b.day}/${b.d.days}${t("일째")} ✓${late||m!==b.d.ml?" · "+t("시각·양 벗어남 기록"):""}`)}});
+function diff0(a,b){const f=x=>{const [h,m]=x.split(":").map(Number);return h*60+m};return f(a)-f(b)}
+// 할 일 시트·이름
+const _itemTarget1=itemTarget;itemTarget=function(it){return it.rg?"rg|"+it.rg:_itemTarget1(it)};
+const _tdName1=tdName;tdName=function(it){return it.rg?t("레규메이트 급여"):_tdName1(it)};
+const _itemShort1=itemShort;itemShort=function(it){return it.rg?it.label.split(" · ")[0]:_itemShort1(it)};
+// 기록 글귀
+const _summary1=summary;summary=function(r){const d=r.data||{};if(r.type==="동기화")return `${t("발정동기화 시작")} · ${(d.sows||[]).length}${t("두")} · ${d.ml}mL · ${d.at}`;if(r.type==="레규급여")return `${t("레규메이트 급여")} ${d.day}${t("일째")} · ${d.n}${t("두")} · ${d.ml}mL · ${d.time}${d.off?" ⚠":""}`;return _summary1(r)};
+// 번식 탭에 넣기: 사이클 띠 맨 앞 ‘동기화 중’ + 아래 칸
+const _vBreed1=vBreed;vBreed=function(){const h=_vBreed1(),n=reguSows().size;
+  return h.replace('<div class="br-cycle">',`<div class="br-cycle"><button type="button" class="${ui.brStage==="동기화"?"on":""}" data-a="brStage" data-v="동기화"><b>${n}</b><span>${t("동기화 중")}</span></button>`).replace(`<div class="sec-t">${t("오늘 번식 할 일")}`,vRegu()+`<div class="sec-t">${t("오늘 번식 할 일")}`)};
