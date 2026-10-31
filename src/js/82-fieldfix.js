@@ -118,13 +118,6 @@ Object.assign(A,{
   stOn:v=>{const [key,k]=v.split("|"),o=key==="kpi"?stKpi():stCards(),S=state.stOrder=state.stOrder||{};const off=new Set(o.off);off.has(k)?off.delete(k):off.add(k);S[key+"Off"]=[...off];S[key]=o.L;save();render()},
   stMv:(v,el)=>{const [key,k]=v.split("|"),o=key==="kpi"?stKpi():stCards(),L=o.L.slice(),i=L.indexOf(k),j=i+Number(el.dataset.k);if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];const S=state.stOrder=state.stOrder||{};S[key]=L;S[key+"Off"]=[...o.off];save();render()},
   stReset:()=>{state.stOrder={};save();render()}});
-// 설정 메뉴에 ‘배치도 칸 정보’·‘성적 항목’ 추가
-const _vSettings0=vSettings;
-vSettings=function(){const P=ui.setPage||"main",back=`<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button></div>`;
-  if(P==="bmshow"&&can("admin"))return back+vBmShowSet();if(P==="statset"&&can("admin"))return back+vStatSet();
-  const h=_vSettings0();if(P!=="main"||!can("admin"))return h;
-  const mi=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${t(ti)}</b><small>${t(d)}</small></span><span>›</span></button>`;
-  return h.replace(/<button class="mitem" type="button" data-a="setPage" data-v="labels">/,mi("statset","성적 항목","성적 탭·성적 TV 숫자와 그래프 켜기·끄기, 순서 (NPD 등)")+mi("bmshow","배치도 칸 정보","칸에 보일 상태·이슈 아이콘·셋째 줄 정보")+'<button class="mitem" type="button" data-a="setPage" data-v="labels">')};
 const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(todos.filter(x=>!todoIsCheck(x.k)))};
 
 // ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
@@ -184,7 +177,7 @@ function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
   el.classList.add("mq-on");el.innerHTML=`<span class="mq">${el.innerHTML}</span>`;const m=el.firstChild,d=m.scrollWidth-el.clientWidth;if(d<=2){el.classList.remove("mq-on");el.innerHTML=m.innerHTML;return}
   m.style.setProperty("--dx",-d+"px");m.style.animationDuration=Math.max(5,d/30+4)+"s"})}
-const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0);return r};
+AFTER_RENDER.push(()=>setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0));
 addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
 document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));
 
@@ -206,9 +199,9 @@ questStat=function(todos){const tot=todos.reduce((s,x)=>s+bTot(x),0),left=todos.
 
 // ---- TV 에서 카드를 눌러 다른 화면으로 가면: 구석에 ‘📺 TV로 돌아가기’ (누르면 그 TV 화면으로 바로) ----
 dashLeave=(f=>function(){if(document.body.classList.contains("tv"))ui.tvBack=tab;return f()})(dashLeave);
-const _render5=render;render=function(){const r=_render5.apply(this,arguments);let b=$("#tvBackBtn");const show=ui.tvBack&&!document.body.classList.contains("tv")&&me();
+AFTER_RENDER.push(()=>{let b=$("#tvBackBtn");const show=ui.tvBack&&!document.body.classList.contains("tv")&&me();
   if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
-  if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
+  if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}});
 Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
 
 // 현황판 ‘이번 주 · 다음 주’: 날마다 할 일 종류별 건수 (주간 달력 요약, 누르면 주간 달력)

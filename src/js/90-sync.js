@@ -90,7 +90,7 @@ save=function(){_save0();if(SYNC_MUTE||!syOn())return;clearTimeout(syT);syT=setT
 setInterval(()=>{if(syOn()&&document.visibilityState==="visible"){if(syPending())syFlush();else syPull()}},60e3);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&syOn())syPull()});
 addEventListener("online",()=>{if(syOn())syFlush().then(()=>syPull())});
-const _render0=render;render=function(){_render0();try{syBadge()}catch(e){}};
+AFTER_RENDER.push(syBadge);
 
 // ---- 로그인: 서버 연결 중이면 PIN 을 서버에서 확인 (한 번 성공한 계정은 오프라인에서도 이 휴대폰에서 로그인) ----
 const _pinKey0=A.pinKey;
@@ -141,12 +141,6 @@ Object.assign(A,{
 const _syPull0=syPull;
 syPull=async function(full){if(SY.join&&SY.token){SY.join=false;SY.replace=true;sySave();const c=await syQ(()=>syPull1(true));
     if(typeof migrate==="function")try{migrate()}catch(e){}SYNC_MUTE=true;save();SYNC_MUTE=false;render();return c}return _syPull0(full)};
-// 설정 메뉴에 ‘서버 연결’
-const _vSettings1=vSettings;
-vSettings=function(){const P=ui.setPage||"main",back=`<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button></div>`;
-  if(P==="sync"&&can("admin"))return back+vSyncSet();const h=_vSettings1();if(P!=="main"||!can("admin"))return h;
-  const mi=`<button class="mitem" type="button" data-a="setPage" data-v="sync"><span></span><span><b>☁ ${t("서버 연결")}</b><small>${SY.url?(syOn()?t("연결됨"):t("로그인 필요")):t("구글 시트 서버 · 여러 휴대폰 동기화 · 디스코드 알림")}</small></span><span>›</span></button>`;
-  return h.replace('<button class="mitem" type="button" data-a="setPage" data-v="accounts">',mi+'<button class="mitem" type="button" data-a="setPage" data-v="accounts">')};
 // 앱을 열 때: 연결돼 있으면 받아 오기
 setTimeout(()=>{if(syOn()){syPull();if(syPending())syFlush()}},1500);
 // 로그인 화면: 팀장·작업자 휴대폰도 대표 PIN 없이 서버에 연결 (서버에서 받기)
@@ -167,7 +161,7 @@ if(ENV==="test"){document.body.classList.add("env-test");const v=$("#hdVer");if(
   const h=location.hash.replace(/&?join=[^&]+/,"");history.replaceState(null,"",location.pathname+location.search+(h.length>1?h:""))})();
 let syInvDone=false;function syInviteRun(){let u=null;try{u=sessionStorage.getItem("farm-join");sessionStorage.removeItem("farm-join")}catch(e){}
   if(!u||!/^(https:\/\/script\.google\.com\/|http:\/\/localhost:)/.test(u)||(SY.url===u&&SY.token))return;SY.url=u;sySave();A.syJoin(null,true)}
-const _render90i=render;render=function(){const r=_render90i.apply(this,arguments);if(!syInvDone){syInvDone=true;setTimeout(syInviteRun,0)}return r};
+AFTER_RENDER.push(()=>{if(!syInvDone){syInvDone=true;setTimeout(syInviteRun,0)}});
 function syInviteUrl(){return location.origin+location.pathname+"#join="+encodeURIComponent(SY.url)}
 A.syInvite=()=>{const u=syInviteUrl();try{navigator.clipboard.writeText(u)}catch(e){}
   $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet"><div class="sh-hd"><h2>${t("초대 링크")}</h2></div>

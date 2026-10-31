@@ -5,7 +5,10 @@ function renderTabs(){
   $("#tabsM").innerHTML=MNAV.map(k=>btn(k,curM===k)).join("");
   $("#tabsD").innerHTML=NAV.map(([k])=>btn(k,cur===k)).join("");
 }
-function render(){
+// 화면 그리기 = 그리기 전(BEFORE_RENDER) → drawView → 뒤처리(AFTER_RENDER, 등록한 파일 순서대로). 기능 파일은 render 를 감싸지 말고 여기에 등록
+const BEFORE_RENDER=[],AFTER_RENDER=[];let RT=[];   // RT = 최근 20번 그리기 시간(설정 '데이터 상태')
+function render(){const s=performance.now();BEFORE_RENDER.forEach(f=>f());drawView();AFTER_RENDER.forEach(f=>{try{f()}catch(e){}});RT.push(performance.now()-s);if(RT.length>20)RT.shift()}
+function drawView(){
   SIDX=null;MEMO={};applySkin();const m=me();
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");

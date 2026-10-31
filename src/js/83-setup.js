@@ -128,15 +128,10 @@ Object.assign(A,{
   suApply:()=>{const B=suBuild();state.records=state.records.filter(r=>!(r.data&&r.data.setup)).concat(B.recs);
     B.sows.forEach(n=>{const s=state.sows.find(x=>x.id===n.id);if(s)Object.assign(s,Object.fromEntries(Object.entries(n).filter(([,v])=>v!==undefined)));else state.sows.push(Object.fromEntries(Object.entries(n).filter(([,v])=>v!==undefined)))});
     if(!state.startDate||state.startDate>TODAY)state.startDate=TODAY;save();render();toast(`${t("기록")} ${B.recs.length}${t("건 · 모돈")} ${B.sows.length}${t("두를 만들었습니다")}`)}});
-// 설정 메뉴에 ‘초기 등록’
-const _vSettings2=vSettings;
-vSettings=function(){const P=ui.setPage||"main",h=_vSettings2();if(P!=="main"||!can("admin"))return h;
-  const mi=`<button class="mitem" type="button" data-a="tab" data-v="setup"><span></span><span><b>📋 ${t("초기 등록")}</b><small>${t("본서버 첫 자료: 돈사 돌며 현장 카드 입력 → 기록 만들기")}</small></span><span>›</span></button>`;
-  return h.replace('<button class="mitem" type="button" data-a="setPage" data-v="accounts">',mi+'<button class="mitem" type="button" data-a="setPage" data-v="accounts">')};
 const suGuard=f=>()=>can("admin")?f():`<div class="empty">${t("대표 계정에서만 쓸 수 있습니다.")}</div>`;
 // ---- 별도 ‘초기 등록 앱’ (setup/ 주소): 첫 화면 = 초기 등록, 메뉴 탭 숨김, 허용 화면만 ----
 if(typeof MODE!=="undefined"&&MODE==="setup"){document.body.classList.add("mode-setup");
   const OK=["setup","suwalk","sureview","settings","feedchk","sow"];
   const _go1=go;go=function(v){if(!OK.includes(v))v="setup";return _go1(v)};
-  const _r3=render;render=function(){if(me()&&!OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup";return _r3()};
+  BEFORE_RENDER.push(()=>{if(me()&&!OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup"});
   const _vs=vSetup;vSetup=function(){return _vs().replace(`<button class="back" type="button" data-a="tab" data-v="settings">‹ ${t("설정")}</button>`,`<a class="back" href="../">${t("본 앱 열기")} ›</a>`)};}

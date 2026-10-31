@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 00:40";
+const BUILD_AT="11-01 01:04";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -3767,7 +3767,10 @@ function renderTabs(){
   $("#tabsM").innerHTML=MNAV.map(k=>btn(k,curM===k)).join("");
   $("#tabsD").innerHTML=NAV.map(([k])=>btn(k,cur===k)).join("");
 }
-function render(){
+// 화면 그리기 = 그리기 전(BEFORE_RENDER) → drawView → 뒤처리(AFTER_RENDER, 등록한 파일 순서대로). 기능 파일은 render 를 감싸지 말고 여기에 등록
+const BEFORE_RENDER=[],AFTER_RENDER=[];let RT=[];   // RT = 최근 20번 그리기 시간(설정 '데이터 상태')
+function render(){const s=performance.now();BEFORE_RENDER.forEach(f=>f());drawView();AFTER_RENDER.forEach(f=>{try{f()}catch(e){}});RT.push(performance.now()-s);if(RT.length>20)RT.shift()}
+function drawView(){
   SIDX=null;MEMO={};applySkin();const m=me();
   if(!m){document.body.classList.add("login");LANG=ui.loginLang||"ko";document.documentElement.lang=LANG;$("#view").innerHTML=vLogin();$("#sheetRoot").innerHTML="";return}
   document.body.classList.remove("login");
@@ -4034,7 +4037,7 @@ A.dockTg=()=>{dockHid=!dockHid;try{localStorage.setItem(KEY+"-dockhid",dockHid?"
 function dockApply(){document.querySelectorAll(".dock").forEach(d=>{d.classList.toggle("hid",dockHid);const h=d.querySelector(".dock-hd");if(!h)return;
   let b=h.querySelector(".dock-tg");if(!b){b=document.createElement("button");b.type="button";b.className="dock-tg";b.dataset.a="dockTg";h.appendChild(b)}
   b.textContent=dockHid?"▲ "+t("펼치기"):"▼ "+t("접기")})}
-const _render62d=render;render=function(){const r=_render62d.apply(this,arguments);try{dockApply()}catch(e){}return r};
+AFTER_RENDER.push(dockApply);
 /* ================= v0.3 · 로그인 ================= */
 function vLogin(){
   const L2=ui.loginLang||"ko",sel=ui.loginId?state.accounts.find(a=>a.id===ui.loginId):null,pin=ui.pin||"";
@@ -4071,27 +4074,31 @@ function vSettings(){
   if(P==="binit")return back+vBatchInit();
   if(P==="backup")return back+vBackup();
   if(P==="reset")return back+vReset();
+  if(P==="bmshow")return back+vBmShowSet();
+  if(P==="statset")return back+vStatSet();
+  if(P==="sync")return back+vSyncSet();
   let h=`<div class="pagehd"><h2>${t("설정")}</h2></div>`;
   h+=`<div class="panel"><div class="sow-top"><b style="font-size:16px">${esc(m.name)}</b><span class="stage c-preg">${t(ROLE[m.role])}</span></div>
     ${vMyDesign()}
     <div class="f"><span class="lb">${t("언어")}</span><div class="chipwrap">${LANGS.map(([c,n])=>`<button type="button" class="chip wrap ${m.lang===c?"on":""}" data-a="myLang" data-v="${c}">${n}</button>`).join("")}</div></div>
     ${ui.myPin?`<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>`:`<div class="acts"><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
-  const menu=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`;
+  const menu=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`,tmenu=(k,ti,d)=>menu(k,t(ti),t(d));
   h+=`<div class="more">${menu("guide",t("앱 가이드"),"상황별 사용 방법")}${menu("hus",t("사양관리 가이드"),"임신기간, 포유, 온도, 급수 등 기본 기준")}</div>`;
   if(can("admin")&&FARM.confirm.length)h+=`<div class="sec-t">확인 필요 <span>${FARM.confirm.length}</span></div><div class="panel"><div class="note">아래 값은 임시로 넣어 두었습니다. 알려 주시면 바로 고칩니다.</div>${FARM.confirm.map(x=>`<div class="setrow"><span>${esc(x)}</span></div>`).join("")}</div>`;
   if(can("admin")){
     h+=`<div class="sec-t">관리자 설정 <span>대표 계정에서만 보입니다</span></div><div class="more">
-      ${menu("accounts","계정 관리","직원 추가 · 권한 · 언어 · PIN · 정지")}
+      <button class="mitem" type="button" data-a="tab" data-v="setup"><span></span><span><b>📋 ${t("초기 등록")}</b><small>${t("본서버 첫 자료: 돈사 돌며 현장 카드 입력 → 기록 만들기")}</small></span><span>›</span></button><button class="mitem" type="button" data-a="setPage" data-v="sync"><span></span><span><b>☁ ${t("서버 연결")}</b><small>${SY.url?(syOn()?t("연결됨"):t("로그인 필요")):t("구글 시트 서버 · 여러 휴대폰 동기화 · 디스코드 알림")}</small></span><span>›</span></button>${menu("accounts","계정 관리","직원 추가 · 권한 · 언어 · PIN · 정지")}
       ${menu("lists","목록·이름 관리","돈사, 폐사 원인, 조치, 정액, 출하처, 도태 사유")}
       ${menu("todorank","할 일 순서","할 일 묶음의 우선순위 (위에서부터)")}
       ${menu("supply","백신·주사침 준비물","1병당 접종 두수, 주사침 규격·사용량")}
       ${menu("dash","현황판 항목 · 목표","현황판 칸 켜기·끄기, 순서, 주간 번식 목표, PSY·MSY 목표")}
-      ${menu("labels","메뉴·버튼 이름","탭 이름, 홈 입력 버튼 이름과 표시 여부")}
+      ${tmenu("statset","성적 항목","성적 탭·성적 TV 숫자와 그래프 켜기·끄기, 순서 (NPD 등)")}${tmenu("bmshow","배치도 칸 정보","칸에 보일 상태·이슈 아이콘·셋째 줄 정보")}${menu("labels","메뉴·버튼 이름","탭 이름, 홈 입력 버튼 이름과 표시 여부")}
       ${menu("criteria","기준값","폐사 알림 기준, 무변동 기준, 돈사별 주 수, 백신 프로그램, 정액")}
       ${menu("bulk","모돈 일괄 등록","번호를 붙여 넣고 현재 상태와 날짜로 등록")}
       ${menu("binit","돈군 초기 등록","분만 주차별 현재 두수")}
       ${menu("backup","백업·복원","기록을 복사해 두고 다시 붙여 넣기")}
       ${menu("reset","데이터 초기화","우리 농장 초기값 · 예시 농장 · 빈 농장")}</div>`;
+    h+=healthBox();
   }
   return h;
 }
@@ -4797,13 +4804,6 @@ Object.assign(A,{
   stOn:v=>{const [key,k]=v.split("|"),o=key==="kpi"?stKpi():stCards(),S=state.stOrder=state.stOrder||{};const off=new Set(o.off);off.has(k)?off.delete(k):off.add(k);S[key+"Off"]=[...off];S[key]=o.L;save();render()},
   stMv:(v,el)=>{const [key,k]=v.split("|"),o=key==="kpi"?stKpi():stCards(),L=o.L.slice(),i=L.indexOf(k),j=i+Number(el.dataset.k);if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];const S=state.stOrder=state.stOrder||{};S[key]=L;S[key+"Off"]=[...o.off];save();render()},
   stReset:()=>{state.stOrder={};save();render()}});
-// 설정 메뉴에 ‘배치도 칸 정보’·‘성적 항목’ 추가
-const _vSettings0=vSettings;
-vSettings=function(){const P=ui.setPage||"main",back=`<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button></div>`;
-  if(P==="bmshow"&&can("admin"))return back+vBmShowSet();if(P==="statset"&&can("admin"))return back+vStatSet();
-  const h=_vSettings0();if(P!=="main"||!can("admin"))return h;
-  const mi=(k,ti,d)=>`<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${t(ti)}</b><small>${t(d)}</small></span><span>›</span></button>`;
-  return h.replace(/<button class="mitem" type="button" data-a="setPage" data-v="labels">/,mi("statset","성적 항목","성적 탭·성적 TV 숫자와 그래프 켜기·끄기, 순서 (NPD 등)")+mi("bmshow","배치도 칸 정보","칸에 보일 상태·이슈 아이콘·셋째 줄 정보")+'<button class="mitem" type="button" data-a="setPage" data-v="labels">')};
 const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(todos.filter(x=>!todoIsCheck(x.k)))};
 
 // ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
@@ -4863,7 +4863,7 @@ function marquee(root){if(!root)return;root.querySelectorAll("b,small,span,em,i,
   const par=el.parentElement,cw=el.clientWidth,sw=el.scrollWidth,pw=par?par.clientWidth:cw,over=Math.max(sw-cw,el.offsetWidth-pw);if(over<=2||cw<12)return;
   el.classList.add("mq-on");el.innerHTML=`<span class="mq">${el.innerHTML}</span>`;const m=el.firstChild,d=m.scrollWidth-el.clientWidth;if(d<=2){el.classList.remove("mq-on");el.innerHTML=m.innerHTML;return}
   m.style.setProperty("--dx",-d+"px");m.style.animationDuration=Math.max(5,d/30+4)+"s"})}
-const _render4=render;render=function(){const r=_render4.apply(this,arguments);setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0);return r};
+AFTER_RENDER.push(()=>setTimeout(()=>{dashFit();if(tab==='board'&&!document.body.classList.contains('tv'))marquee($('.dash'));if(tab==='todo')marquee($('.todolist'))},0));
 addEventListener("resize",()=>{clearTimeout(window.__dft);window.__dft=setTimeout(dashFit,150)});
 document.addEventListener("fullscreenchange",()=>setTimeout(dashFit,200));
 
@@ -4885,9 +4885,9 @@ questStat=function(todos){const tot=todos.reduce((s,x)=>s+bTot(x),0),left=todos.
 
 // ---- TV 에서 카드를 눌러 다른 화면으로 가면: 구석에 ‘📺 TV로 돌아가기’ (누르면 그 TV 화면으로 바로) ----
 dashLeave=(f=>function(){if(document.body.classList.contains("tv"))ui.tvBack=tab;return f()})(dashLeave);
-const _render5=render;render=function(){const r=_render5.apply(this,arguments);let b=$("#tvBackBtn");const show=ui.tvBack&&!document.body.classList.contains("tv")&&me();
+AFTER_RENDER.push(()=>{let b=$("#tvBackBtn");const show=ui.tvBack&&!document.body.classList.contains("tv")&&me();
   if(show&&!b){b=document.createElement("div");b.id="tvBackBtn";document.body.appendChild(b)}
-  if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}return r};
+  if(b){if(show)b.innerHTML=`<button type="button" data-a="tvBack">📺 ${t("TV로 돌아가기")}</button><button type="button" class="x" data-a="tvBackX" aria-label="${t("닫기")}">✕</button>`;else b.remove()}});
 Object.assign(A,{tvBack:()=>{const t0=ui.tvBack||"board";ui.tvBack=null;closeSheet();go(t0);A.tvMode()},tvBackX:()=>{ui.tvBack=null;render()}});
 
 // 현황판 ‘이번 주 · 다음 주’: 날마다 할 일 종류별 건수 (주간 달력 요약, 누르면 주간 달력)
@@ -5026,17 +5026,12 @@ Object.assign(A,{
   suApply:()=>{const B=suBuild();state.records=state.records.filter(r=>!(r.data&&r.data.setup)).concat(B.recs);
     B.sows.forEach(n=>{const s=state.sows.find(x=>x.id===n.id);if(s)Object.assign(s,Object.fromEntries(Object.entries(n).filter(([,v])=>v!==undefined)));else state.sows.push(Object.fromEntries(Object.entries(n).filter(([,v])=>v!==undefined)))});
     if(!state.startDate||state.startDate>TODAY)state.startDate=TODAY;save();render();toast(`${t("기록")} ${B.recs.length}${t("건 · 모돈")} ${B.sows.length}${t("두를 만들었습니다")}`)}});
-// 설정 메뉴에 ‘초기 등록’
-const _vSettings2=vSettings;
-vSettings=function(){const P=ui.setPage||"main",h=_vSettings2();if(P!=="main"||!can("admin"))return h;
-  const mi=`<button class="mitem" type="button" data-a="tab" data-v="setup"><span></span><span><b>📋 ${t("초기 등록")}</b><small>${t("본서버 첫 자료: 돈사 돌며 현장 카드 입력 → 기록 만들기")}</small></span><span>›</span></button>`;
-  return h.replace('<button class="mitem" type="button" data-a="setPage" data-v="accounts">',mi+'<button class="mitem" type="button" data-a="setPage" data-v="accounts">')};
 const suGuard=f=>()=>can("admin")?f():`<div class="empty">${t("대표 계정에서만 쓸 수 있습니다.")}</div>`;
 // ---- 별도 ‘초기 등록 앱’ (setup/ 주소): 첫 화면 = 초기 등록, 메뉴 탭 숨김, 허용 화면만 ----
 if(typeof MODE!=="undefined"&&MODE==="setup"){document.body.classList.add("mode-setup");
   const OK=["setup","suwalk","sureview","settings","feedchk","sow"];
   const _go1=go;go=function(v){if(!OK.includes(v))v="setup";return _go1(v)};
-  const _r3=render;render=function(){if(me()&&!OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup";return _r3()};
+  BEFORE_RENDER.push(()=>{if(me()&&!OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup"});
   const _vs=vSetup;vSetup=function(){return _vs().replace(`<button class="back" type="button" data-a="tab" data-v="settings">‹ ${t("설정")}</button>`,`<a class="back" href="../">${t("본 앱 열기")} ›</a>`)};}
 /* ================= 번식 탭: 번식 사이클 한 화면 (위 = 오늘 할 일, 아래 = 목표·성적) =================
    사이클 띠(단계별 두수, 누르면 그 단계 목록) · 오늘 번식 할 일 묶음 · 다음 2주 일정 · 이번 주 목표 · 최근 90일 성적 */
@@ -5180,9 +5175,9 @@ Object.assign(A,{rgmOpen:v=>reguMateSheet(v),rgmSkip:v=>{const S=ui.rgm.skip,i=S
   rgmSave:()=>{const [gid,n]=ui.rgm.id.split("|"),g=reguGroups().find(x=>x.id===gid);const L2=g.data.sows.filter(s=>!ui.rgm.skip.includes(s));
     L2.forEach(s=>addRecord("교배",TODAY,{sow:s,round:n+"차",semen:SEMENS[0],rg:gid,session:+n}));ui.rgm=null;closeSheet();save();render();toast(`${t("정시 교배")} ${n}/4${t("회")} · ${L2.length}${t("두")} ✓`)}});
 // 급여 늦음: 모든 화면 맨 위 빨간 띠 (1시간 지나면)
-const _render6=render;render=function(){const r=_render6.apply(this,arguments);try{let b=$("#reguBand");const late=me()?reguBatches().filter(x=>x.on&&!x.todayFed).map(x=>[x,reguAlertStage(x.d.at,nowHM(),false)]).filter(x=>x[1]>0):[];
+AFTER_RENDER.push(()=>{let b=$("#reguBand");const late=me()?reguBatches().filter(x=>x.on&&!x.todayFed).map(x=>[x,reguAlertStage(x.d.at,nowHM(),false)]).filter(x=>x[1]>0):[];
   if(late.length){if(!b){b=document.createElement("button");b.id="reguBand";b.type="button";b.dataset.a="tab";b.dataset.v="breed";document.querySelector(".app").prepend(b)}const [x,st]=late[0];
-    b.textContent=`⚠ ${t("레규메이트 급여 시각")} ${x.d.at} ${t("지남")} ${Math.floor(diff0(nowHM(),x.d.at)/60)}${t("시간")} · ${x.d.sows.length}${t("두")}${st>=3?" · "+t("대표 확인 필요"):""} — ${t("12시간 넘기지 마세요")}`}else if(b)b.remove()}catch(e){}return r};
+    b.textContent=`⚠ ${t("레규메이트 급여 시각")} ${x.d.at} ${t("지남")} ${Math.floor(diff0(nowHM(),x.d.at)/60)}${t("시간")} · ${x.d.sows.length}${t("두")}${st>=3?" · "+t("대표 확인 필요"):""} — ${t("12시간 넘기지 마세요")}`}else if(b)b.remove()});
 setInterval(()=>{if(me()&&reguBatches().some(x=>x.on&&!x.todayFed))render()},5*60e3);
 // 번식 탭: 끝난 동기화 그룹 성적(최근 1년) + 정시 교배 시각 설정(대표)
 const _vRegu1=vRegu;vRegu=function(){let h=_vRegu1().replace(t("진행 중인 동기화가 없습니다. 후보돈 묶음을 한 번에 발정 오게 할 때 씁니다."),t("진행 중인 동기화 그룹이 없습니다. 후보돈 여러 두를 한 번에 발정 오게 할 때 씁니다."));
@@ -5302,7 +5297,7 @@ save=function(){_save0();if(SYNC_MUTE||!syOn())return;clearTimeout(syT);syT=setT
 setInterval(()=>{if(syOn()&&document.visibilityState==="visible"){if(syPending())syFlush();else syPull()}},60e3);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&syOn())syPull()});
 addEventListener("online",()=>{if(syOn())syFlush().then(()=>syPull())});
-const _render0=render;render=function(){_render0();try{syBadge()}catch(e){}};
+AFTER_RENDER.push(syBadge);
 
 // ---- 로그인: 서버 연결 중이면 PIN 을 서버에서 확인 (한 번 성공한 계정은 오프라인에서도 이 휴대폰에서 로그인) ----
 const _pinKey0=A.pinKey;
@@ -5353,12 +5348,6 @@ Object.assign(A,{
 const _syPull0=syPull;
 syPull=async function(full){if(SY.join&&SY.token){SY.join=false;SY.replace=true;sySave();const c=await syQ(()=>syPull1(true));
     if(typeof migrate==="function")try{migrate()}catch(e){}SYNC_MUTE=true;save();SYNC_MUTE=false;render();return c}return _syPull0(full)};
-// 설정 메뉴에 ‘서버 연결’
-const _vSettings1=vSettings;
-vSettings=function(){const P=ui.setPage||"main",back=`<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button></div>`;
-  if(P==="sync"&&can("admin"))return back+vSyncSet();const h=_vSettings1();if(P!=="main"||!can("admin"))return h;
-  const mi=`<button class="mitem" type="button" data-a="setPage" data-v="sync"><span></span><span><b>☁ ${t("서버 연결")}</b><small>${SY.url?(syOn()?t("연결됨"):t("로그인 필요")):t("구글 시트 서버 · 여러 휴대폰 동기화 · 디스코드 알림")}</small></span><span>›</span></button>`;
-  return h.replace('<button class="mitem" type="button" data-a="setPage" data-v="accounts">',mi+'<button class="mitem" type="button" data-a="setPage" data-v="accounts">')};
 // 앱을 열 때: 연결돼 있으면 받아 오기
 setTimeout(()=>{if(syOn()){syPull();if(syPending())syFlush()}},1500);
 // 로그인 화면: 팀장·작업자 휴대폰도 대표 PIN 없이 서버에 연결 (서버에서 받기)
@@ -5379,7 +5368,7 @@ if(ENV==="test"){document.body.classList.add("env-test");const v=$("#hdVer");if(
   const h=location.hash.replace(/&?join=[^&]+/,"");history.replaceState(null,"",location.pathname+location.search+(h.length>1?h:""))})();
 let syInvDone=false;function syInviteRun(){let u=null;try{u=sessionStorage.getItem("farm-join");sessionStorage.removeItem("farm-join")}catch(e){}
   if(!u||!/^(https:\/\/script\.google\.com\/|http:\/\/localhost:)/.test(u)||(SY.url===u&&SY.token))return;SY.url=u;sySave();A.syJoin(null,true)}
-const _render90i=render;render=function(){const r=_render90i.apply(this,arguments);if(!syInvDone){syInvDone=true;setTimeout(syInviteRun,0)}return r};
+AFTER_RENDER.push(()=>{if(!syInvDone){syInvDone=true;setTimeout(syInviteRun,0)}});
 function syInviteUrl(){return location.origin+location.pathname+"#join="+encodeURIComponent(SY.url)}
 A.syInvite=()=>{const u=syInviteUrl();try{navigator.clipboard.writeText(u)}catch(e){}
   $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet"><div class="sh-hd"><h2>${t("초대 링크")}</h2></div>
@@ -5430,7 +5419,7 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   return P.map(x=>({id:TODAY+"|"+(T0?"test"+T0+"|":"")+x.id,at:TODAY+" "+x.at,msg:x.msg}))}
 let alT=null;function alarmSync(){if(typeof syOn!=="function"||!syOn()||(typeof MODE!=="undefined"&&MODE==="setup"))return;clearTimeout(alT);alT=setTimeout(()=>{try{
   const P=alarmPlan(),A=state.alarm=state.alarm||{};if(JSON.stringify(A.plan)!==JSON.stringify(P)){A.plan=P;save()}}catch(e){}},2500)}
-const _render91=render;render=function(){const r=_render91.apply(this,arguments);alarmSync();return r};
+AFTER_RENDER.push(alarmSync);
 setInterval(alarmSync,5*60000);
 Object.assign(A,{
   alTest:()=>{const at=($("#alAt")||{}).value||"11:45";state.alarm=state.alarm||{};state.alarm.test={day:TODAY,at};save();alarmSync();toast(t("오늘")+" "+at+" "+t("에 모든 알림을 시험으로 보냅니다"));render()},
@@ -5441,7 +5430,6 @@ function alarmTestBox(){const T=(state.alarm||{}).test,on=T&&T.day===TODAY;
   <button class="act pri" type="button" data-a="alTest">${on?t("다시 예약"):t("시험 예약")}</button> ${on?`<button class="act" type="button" data-a="alTestOff">${t("시험 끄기")}</button> <b>${t("예약됨")} ${T.at}</b>`:""}</div>`}
 const _vSyncSet91=vSyncSet;vSyncSet=function(){return _vSyncSet91()+(can("admin")&&SY.token?alarmTestBox():"")};
 // ---- 데이터 상태 감시(저사양 기기): 기록 수 · 이 휴대폰 저장 용량(브라우저 한도 약 5MB) · 화면 그리기 시간 → 대표 설정에 표시, 주의면 하루 한 번 알림 ----
-let RT=[];const _render92=render;render=function(){const s=performance.now(),r=_render92.apply(this,arguments);RT.push(performance.now()-s);if(RT.length>20)RT.shift();return r};
 function health(){let kb=0;try{kb=Math.round((localStorage.getItem(KEY)||"").length*2/1024)}catch(e){}   // 브라우저는 글자당 2바이트로 셈
   const ms=RT.length?Math.round(RT.slice().sort((a,b)=>a-b)[Math.floor(RT.length/2)]):0,n=state.records.length;
   const warn=[kb>3500&&t("저장 용량이 한도(약 5MB)에 가깝습니다"),ms>700&&t("화면이 느려졌습니다"),n>15000&&t("기록이 많습니다")].filter(Boolean);
@@ -5451,7 +5439,6 @@ function healthBox(){const H=health(),c=H.warn.length?"var(--red)":"var(--good)"
   <div class="setrow"><span>${t("이 휴대폰 저장 용량")}</span><b>${(H.kb/1024).toFixed(1)}MB / ${t("약")} 5MB</b></div>
   <div class="setrow"><span>${t("화면 그리기")}</span><b>${H.ms}ms</b></div>
   <p class="sow-meta" style="color:${c}">${H.warn.length?"⚠ "+H.warn.join(" · ")+" — "+t("오래된 기록 보관함을 검토할 때입니다"):t("정상입니다")}</p></div>`}
-const _vSettings92=vSettings;vSettings=function(){const h=_vSettings92.apply(this,arguments);return ui.setPage==="main"&&can("admin")?h+healthBox():h};
 setTimeout(()=>{try{const H=health(),k=KEY+"-healthwarn";if(H.warn.length&&can("admin")&&localStorage.getItem(k)!==TODAY){localStorage.setItem(k,TODAY);toast("⚠ "+H.warn.join(" · ")+" · "+t("설정 › 데이터 상태"))}}catch(e){}},8000);
 // ---- 휴대폰 보관 기간(저장 용량 한도 약 5MB): 매일 기록은 최근 12개월만 휴대폰에, 그 전은 서버(구글 시트)와 드라이브 백업에만 ----
 // 모돈 번식 기록(모돈 번호가 붙은 기록·KEEP_T)은 현장 카드 8산 때문에 항상 남김. 서버 Code.gs 의 KEEP_T·oldDaily 와 같은 규칙

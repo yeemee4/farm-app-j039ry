@@ -117,4 +117,4 @@ A.dockTg=()=>{dockHid=!dockHid;try{localStorage.setItem(KEY+"-dockhid",dockHid?"
 function dockApply(){document.querySelectorAll(".dock").forEach(d=>{d.classList.toggle("hid",dockHid);const h=d.querySelector(".dock-hd");if(!h)return;
   let b=h.querySelector(".dock-tg");if(!b){b=document.createElement("button");b.type="button";b.className="dock-tg";b.dataset.a="dockTg";h.appendChild(b)}
   b.textContent=dockHid?"▲ "+t("펼치기"):"▼ "+t("접기")})}
-const _render62d=render;render=function(){const r=_render62d.apply(this,arguments);try{dockApply()}catch(e){}return r};
+AFTER_RENDER.push(dockApply);

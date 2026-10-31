@@ -140,9 +140,9 @@ Object.assign(A,{rgmOpen:v=>reguMateSheet(v),rgmSkip:v=>{const S=ui.rgm.skip,i=S
   rgmSave:()=>{const [gid,n]=ui.rgm.id.split("|"),g=reguGroups().find(x=>x.id===gid);const L2=g.data.sows.filter(s=>!ui.rgm.skip.includes(s));
     L2.forEach(s=>addRecord("교배",TODAY,{sow:s,round:n+"차",semen:SEMENS[0],rg:gid,session:+n}));ui.rgm=null;closeSheet();save();render();toast(`${t("정시 교배")} ${n}/4${t("회")} · ${L2.length}${t("두")} ✓`)}});
 // 급여 늦음: 모든 화면 맨 위 빨간 띠 (1시간 지나면)
-const _render6=render;render=function(){const r=_render6.apply(this,arguments);try{let b=$("#reguBand");const late=me()?reguBatches().filter(x=>x.on&&!x.todayFed).map(x=>[x,reguAlertStage(x.d.at,nowHM(),false)]).filter(x=>x[1]>0):[];
+AFTER_RENDER.push(()=>{let b=$("#reguBand");const late=me()?reguBatches().filter(x=>x.on&&!x.todayFed).map(x=>[x,reguAlertStage(x.d.at,nowHM(),false)]).filter(x=>x[1]>0):[];
   if(late.length){if(!b){b=document.createElement("button");b.id="reguBand";b.type="button";b.dataset.a="tab";b.dataset.v="breed";document.querySelector(".app").prepend(b)}const [x,st]=late[0];
-    b.textContent=`⚠ ${t("레규메이트 급여 시각")} ${x.d.at} ${t("지남")} ${Math.floor(diff0(nowHM(),x.d.at)/60)}${t("시간")} · ${x.d.sows.length}${t("두")}${st>=3?" · "+t("대표 확인 필요"):""} — ${t("12시간 넘기지 마세요")}`}else if(b)b.remove()}catch(e){}return r};
+    b.textContent=`⚠ ${t("레규메이트 급여 시각")} ${x.d.at} ${t("지남")} ${Math.floor(diff0(nowHM(),x.d.at)/60)}${t("시간")} · ${x.d.sows.length}${t("두")}${st>=3?" · "+t("대표 확인 필요"):""} — ${t("12시간 넘기지 마세요")}`}else if(b)b.remove()});
 setInterval(()=>{if(me()&&reguBatches().some(x=>x.on&&!x.todayFed))render()},5*60e3);
 // 번식 탭: 끝난 동기화 그룹 성적(최근 1년) + 정시 교배 시각 설정(대표)
 const _vRegu1=vRegu;vRegu=function(){let h=_vRegu1().replace(t("진행 중인 동기화가 없습니다. 후보돈 묶음을 한 번에 발정 오게 할 때 씁니다."),t("진행 중인 동기화 그룹이 없습니다. 후보돈 여러 두를 한 번에 발정 오게 할 때 씁니다."));

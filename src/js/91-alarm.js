@@ -33,7 +33,7 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   return P.map(x=>({id:TODAY+"|"+(T0?"test"+T0+"|":"")+x.id,at:TODAY+" "+x.at,msg:x.msg}))}
 let alT=null;function alarmSync(){if(typeof syOn!=="function"||!syOn()||(typeof MODE!=="undefined"&&MODE==="setup"))return;clearTimeout(alT);alT=setTimeout(()=>{try{
   const P=alarmPlan(),A=state.alarm=state.alarm||{};if(JSON.stringify(A.plan)!==JSON.stringify(P)){A.plan=P;save()}}catch(e){}},2500)}
-const _render91=render;render=function(){const r=_render91.apply(this,arguments);alarmSync();return r};
+AFTER_RENDER.push(alarmSync);
 setInterval(alarmSync,5*60000);
 Object.assign(A,{
   alTest:()=>{const at=($("#alAt")||{}).value||"11:45";state.alarm=state.alarm||{};state.alarm.test={day:TODAY,at};save();alarmSync();toast(t("오늘")+" "+at+" "+t("에 모든 알림을 시험으로 보냅니다"));render()},
