@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 00:04";
+const BUILD_AT="11-01 00:40";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -4170,7 +4170,7 @@ function vBackup(){
 }
 function vReset(){
   const R=ui.resetPick;
-  const opts=[["farm","우리 농장 초기값","모돈 92두(분만사 30 · 임신사 40 · 교배사 22), 돈군 12개(W33~W44), 비육 0두. 계정과 설정도 처음 값으로 돌아갑니다."],["demo","예시 농장","v0.2와 같은 가상 농장. 기능을 둘러볼 때 씁니다."],["empty","빈 농장","모돈·기록을 모두 지우고 시작합니다. 계정, 목록, 기준값은 그대로 둡니다."]];
+  const opts=[["farm","우리 농장 초기값","모돈 92두(분만사 30 · 임신사 40 · 교배사 22), 돈군 12개(W33~W44), 비육 0두. 계정과 설정도 처음 값으로 돌아갑니다."],["demo","예시 농장","v0.2와 같은 가상 농장. 기능을 둘러볼 때 씁니다."],["empty","빈 농장","모돈·기록을 모두 지우고 시작합니다. 계정, 목록, 기준값은 그대로 둡니다."]].filter(o=>ENV==="test"||o[0]!=="demo");
   let h=`<h2>데이터 초기화</h2>`+opts.map(([k,ti,d])=>`<div class="panel" style="${R===k?"border-color:var(--red)":""}"><div><b>${ti}</b><div class="sow-meta">${d}</div></div>${R===k?`<div class="warnbox"><span><b>정말 바꾸시겠습니까?</b> 지금 기록은 사라집니다. 필요하면 먼저 백업하세요.</span><div class="acts"><button class="act bad" type="button" data-a="resetDo" data-v="${k}">초기화</button><button class="act" type="button" data-a="resetPick" data-v="">취소</button></div></div>`:`<button class="act" type="button" data-a="resetPick" data-v="${k}" style="justify-self:start">이 상태로 시작</button>`}</div>`).join("");
   return h;
 }
@@ -5216,7 +5216,7 @@ const _dashCard84=dashCard;dashCard=function(k){if(k!=="regu"||reguBatches().len
          인터넷이 끊기면 보낼 목록에 쌓아 두었다가 다시 연결되면 보냄. 1분마다·화면을 다시 열 때 받아 옴.
          같은 기록을 두 곳에서 고치면 나중에 서버에 닿은 쪽이 남음. 아직 못 보낸 내 수정은 받아 온 값으로 덮지 않음.
    PIN 은 서버로 해시만 보냄. 서버 주소·토큰은 이 휴대폰에만 저장(저장소에 없음). */
-const SYNC_KEY=ENV==="test"?"farm-test-sync":"farm-sync",SYNC_SKIP=["v","user","accounts"],PIN_MASK="•",SUBK="§";
+const SYNC_KEY=ENV==="test"?"farm-test-sync":"farm-sync",SYNC_SKIP=["v","user","accounts","records","sows"],PIN_MASK="•",SUBK="§";
 const syObj=v=>v&&typeof v==="object"&&!Array.isArray(v);
 let SY=(()=>{try{return JSON.parse(localStorage.getItem(SYNC_KEY)||"null")}catch(e){return null}})()||{};
 SY.snap=SY.snap||{rec:{},sow:{},key:{}};SY.out=SY.out||{};SY.ph=SY.ph||{};
@@ -5273,7 +5273,10 @@ async function syFlush1(){if(!syOn())return;SYST.busy=true;
   catch(e){SYST.err=t("보내기")+" · "+String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
 function syPull(full){return syQ(()=>syPull1(full))}
 async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
-  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
+  try{let r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
+    // 대표가 서버를 새로 시작·되돌리기 했으면(gen 바뀜) 이 휴대폰도 통째로 다시 받음. 못 보낸 예전 기록 수정은 버림(예전 기록은 서버 보관 시트에 있음)
+    if(SY.genSeen&&(r.gen||"")!==(SY.gen||"")){SY.out={};SY.replace=true;r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:0,from:arcCut()});if(!r.ok)throw new Error("서버: "+r.err)}
+    SY.gen=r.gen||"";SY.genSeen=true;
     if(SY.replace){SY.replace=false;state.records=[];state.sows=[];SY.snap={rec:{},sow:{},key:{}}}
     const S=SY.snap,idx={rec:{},sow:{}};(state.records||[]).forEach((x,i)=>idx.rec[x.id]=i);(state.sows||[]).forEach((x,i)=>idx.sow[x.id]=i);
     const kill={rec:new Set(),sow:new Set()};
@@ -5481,6 +5484,25 @@ const _vTimeline93=vTimeline;vTimeline=function(){return oldBar()+_vTimeline93.a
 // 보기 전용 기록은 고치기·지우기 막음
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-a]");if(!b||!OLDV)return;const id=b.dataset.v,r=id&&state.records.find(x=>x.id===id&&x._old);
   if(r&&/edit|del|Del|Edit/.test(b.dataset.a)){e.stopImmediatePropagation();e.preventDefault();toast(t("예전 기록은 보기 전용입니다"))}},true);
+// ---- 서버에 연결된 휴대폰의 '데이터 초기화': 이 휴대폰만 서버에서 다시 받기 · 대표만 '서버 새로 시작'(지우지 않고 보관 시트로)·'되돌리기' — 계정·PIN 은 그대로 ----
+let ARC=null;
+function syAfterSwap(msg){SY.out={};SY.replace=true;SY.cursor=0;sySave();return syPull(true).then(()=>{toast(msg);render()})}
+const _vReset93=vReset;vReset=function(){if(!(syOn()&&SY.token))return _vReset93.apply(this,arguments);
+  let h=`<h2>${t("데이터 초기화")}</h2><div class="panel"><b>${t("이 휴대폰만 다시 받기")}</b><div class="sow-meta">${t("이 휴대폰의 기록을 비우고 서버 기록으로 다시 받습니다. 서버와 다른 휴대폰은 그대로입니다.")}</div><button class="act" type="button" data-a="syReDown">${t("다시 받기")}</button></div>`;
+  if(can("admin")){if(!ARC){ARC={list:[]};syCall({a:"archives",token:SY.token,farm:syFarm()}).then(r=>{if(r.ok){ARC.list=r.list;render()}}).catch(()=>{})}
+    h+=`<div class="sec-t">${t("서버 새로 시작 (대표)")}</div><div class="panel"><div class="sow-meta">${t("서버의 이 농장 기록을 지우지 않고 보관 시트로 옮긴 뒤 빈 상태로 시작합니다. 드라이브 백업을 먼저 만들고, 계정·PIN 은 그대로입니다. 아래 '되돌리기'로 언제든 원래대로 돌릴 수 있습니다.")}</div>
+    <div class="setrow"><span>${t("확인: 농장 이름 입력")} <b>${esc(FARM.name||"")}</b></span><input id="frYes" type="text" placeholder="${esc(FARM.name||"")}" autocomplete="off"></div><button class="act bad" type="button" data-a="srvFresh">${t("서버 새로 시작")}</button></div>
+    <div class="sec-t">${t("이전 기록으로 되돌리기 (대표)")}</div><div class="panel">${ARC.list.length?ARC.list.slice().reverse().map(n=>`<div class="setrow"><span>${esc(n.replace("보관 "+syFarm()+" ",""))} ${t("까지의 기록")}</span><button class="act" type="button" data-a="srvBack" data-v="${esc(n)}">${t("되돌리기")}</button></div>`).join(""):`<div class="sow-meta">${t("보관된 기록이 없습니다")}</div>`}</div>`}
+  return h};
+Object.assign(A,{
+  // 못 보낸 기록이 있으면 먼저 보내고, 남아 있으면 멈춤(지우지 않음)
+  syReDown:async()=>{if(!confirm(t("이 휴대폰 기록을 비우고 서버에서 다시 받을까요?")))return;await syFlush();if(syPending()){toast(t("아직 못 보낸 기록이 있습니다. 인터넷 연결 뒤 다시 하세요"));return}await syAfterSwap(t("다시 받았습니다"))},
+  resetDo:(f=>v=>{if(syOn()&&SY.token){toast(t("서버 연결 중에는 이 휴대폰만 다시 받을 수 있습니다"));return}f(v)})(A.resetDo),
+  srvFresh:async()=>{const y=($("#frYes").value||"").trim();if(y!==(FARM.name||"")){toast(t("농장 이름이 맞지 않습니다"));return}
+    if(!confirm(t("서버의 지금 기록을 보관 시트로 옮기고 빈 상태로 시작할까요? (되돌리기 가능)")))return;
+    toast(t("백업하고 옮기는 중…"));try{const r=await syCall({a:"fresh",token:SY.token,farm:syFarm(),yes:syFarm()});if(!r.ok)throw new Error(r.err);ARC=null;await syAfterSwap(t("서버를 새로 시작했습니다"))}catch(e){toast(t("실패")+": "+e.message)}},
+  srvBack:async v=>{if(!confirm(t("이 보관 기록으로 되돌릴까요? 지금 기록은 다시 보관됩니다(지워지지 않음).")))return;
+    toast(t("백업하고 되돌리는 중…"));try{const r=await syCall({a:"rollback",token:SY.token,farm:syFarm(),name:v});if(!r.ok)throw new Error(r.err);ARC=null;await syAfterSwap(t("되돌렸습니다"))}catch(e){toast(t("실패")+": "+e.message)}}});
 /* ================= 입장 키 (링크를 받은 사람만) ================= */
 const GATE="cbfad02f9ed2a8d1e08d8f74f5303e9eb93637d47f82ab6f1c15871cf8dd0481";
 async function sha(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}

@@ -162,7 +162,7 @@ var API = {
     var L = dataRows().filter(function (r) { return r[0] === farm && Number(r[4]) > since && !(from && r[1] === "rec" && oldDaily(r[3], from)); })
       .map(function (r) { return { k: r[1], id: String(r[2]), j: r[3], u: Number(r[4]), del: Number(r[5]) === 1, by: r[6] }; });
     var acc = accList().map(pubAcc);
-    return { ok: true, rows: L, cursor: Number(props().getProperty("SEQ") || 0), accounts: acc, discord: !!props().getProperty("DISCORD") };
+    return { ok: true, rows: L, cursor: Number(props().getProperty("SEQ") || 0), accounts: acc, discord: !!props().getProperty("DISCORD"), gen: props().getProperty("GEN|" + farm) || "" };
   },
 
   // 예전 기간 보기(보기 전용): f~t 사이 기록 전부 (내 농장만)
@@ -176,6 +176,28 @@ var API = {
       if (o && o.workDate >= q.f && o.workDate <= q.t) L.push(o);
     });
     return { ok: true, recs: L };
+  },
+
+  // 대표: 서버 새로 시작 — 이 농장 기록을 지우지 않고 '보관 …' 시트로 옮김(드라이브 백업 먼저) · 계정·PIN 은 그대로
+  fresh: function (q) {
+    var S = session(q.token); if (!S || S.role !== "admin") return { ok: false, err: "admin only" };
+    if (!q.farm || q.yes !== q.farm) return { ok: false, err: "confirm" };
+    backupNow(new Date(), "새로 시작 전 ");
+    var name = farmSwap(q.farm, null);
+    logA(S.acc, "fresh", name); return { ok: true, archived: name };
+  },
+  // 대표: 되돌리기 — 가장 최근 보관(또는 q.name)을 제자리로, 지금 기록은 다시 보관(아무것도 안 지움)
+  rollback: function (q) {
+    var S = session(q.token); if (!S || S.role !== "admin") return { ok: false, err: "admin only" };
+    var L = archives(q.farm); if (!L.length) return { ok: false, err: "보관된 기록이 없습니다" };
+    var pick = q.name && L.indexOf(q.name) >= 0 ? q.name : L[L.length - 1];
+    backupNow(new Date(), "되돌리기 전 ");
+    var name = farmSwap(q.farm, pick);
+    logA(S.acc, "rollback", pick); return { ok: true, restored: pick, archived: name };
+  },
+  archives: function (q) {
+    var S = session(q.token); if (!S || S.role !== "admin") return { ok: false, err: "admin only" };
+    return { ok: true, list: archives(q.farm) };
   },
 
   // 대표: 디스코드 웹훅 주소 저장 (스크립트 속성에만, 시트·앱 저장소에는 없음)
@@ -219,8 +241,8 @@ function oldDaily(j, from) {
 var BK_DIR = "비담농장 백업";
 function backupTick() { backupNow(new Date()); }
 function backupFolder() { var it = DriveApp.getFoldersByName(BK_DIR); return it.hasNext() ? it.next() : DriveApp.createFolder(BK_DIR); }
-function backupNow(now) {
-  var day = Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd"), dir = backupFolder(), pre = SS().getName() + " 백업 ", name = pre + day + ".json";
+function backupNow(now, why) {
+  var day = Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd"), dir = backupFolder(), pre = SS().getName() + " 백업 ", name = why ? SS().getName() + " " + why + Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd HHmmss") + ".json" : pre + day + ".json";
   if (dir.getFilesByName(name).hasNext()) return name;
   var all = {}; ["data", "accounts"].forEach(function (n) { var x = sh(n); all[n] = x.getLastRow() ? x.getRange(1, 1, x.getLastRow(), Math.max(1, x.getLastColumn())).getValues() : []; });
   dir.createFile(name, JSON.stringify({ at: nowIso(), seq: Number(props().getProperty("SEQ") || 0), sheets: all }), "application/json");
@@ -228,6 +250,27 @@ function backupNow(now) {
   while (files.hasNext()) { var f = files.next(), n = f.getName(); if (n.indexOf(pre) !== 0) continue; var d = n.slice(pre.length, pre.length + 10); if (d < keep && d.slice(8) !== "01") f.setTrashed(true); }
   return name;
 }
+// 농장 기록 갈아 끼우기: 이 농장 행을 '보관 농장 날짜' 시트로 옮기고, back 시트가 있으면 그 행을 data 로 되돌림. 다른 농장 행·계정은 그대로
+function archives(farm) { return SS().getSheets().map(function (x) { return x.getName(); }).filter(function (n) { return n.indexOf("보관 " + farm + " ") === 0; }).sort(); }
+function farmSwap(farm, back) {
+  var s = sh("data"), n = s.getLastRow(), w = Math.max(8, s.getLastColumn()), all = n > 1 ? s.getRange(2, 1, n - 1, w).getValues() : [];
+  // 기록·모돈만 옮김(설정 key 는 그대로 둠)
+  var moved = function (r) { return r[0] === farm && (r[1] === "rec" || r[1] === "sow"); };
+  var mine = all.filter(moved), rest = all.filter(function (r) { return !moved(r); });
+  var name = "보관 " + farm + " " + Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd HH:mm:ss"), base = name, k = 2;
+  while (SS().getSheetByName(name)) name = base + " (" + (k++) + ")";
+  var a = SS().insertSheet(name); a.getRange(1, 1, 1, w).setValues([HEAD.data.concat(new Array(w - 8).fill(""))]);
+  if (mine.length) a.getRange(2, 1, mine.length, w).setValues(mine);
+  if (back) { var b = SS().getSheetByName(back), bn = b.getLastRow(), bw = Math.max(8, b.getLastColumn()); if (bn > 1) {
+    var BR = b.getRange(2, 1, bn - 1, bw).getValues(), W = Math.max(w, bw); rest = rest.concat(BR); w = W; } SS().deleteSheet(b); }
+  rest = rest.map(function (r) { r = r.slice(); while (r.length < w) r.push(""); return r; });
+  if (w > s.getMaxColumns()) s.insertColumnsAfter(s.getMaxColumns(), w - s.getMaxColumns());
+  if (n > 1) s.getRange(2, 1, n - 1, Math.max(8, s.getLastColumn())).clearContent();
+  if (rest.length) s.getRange(2, 1, rest.length, w).setValues(rest);
+  var p = props(); p.setProperty("GEN|" + farm, name); p.setProperty("SEQ", String(Number(p.getProperty("SEQ") || 0) + 1));   // 휴대폰들이 바뀐 걸 알고 전부 다시 받게
+  return name;
+}
+
 // 복원(편집기에서 직접 실행, 비상용): 가장 최근 백업 파일 → data·accounts 시트를 그 내용으로 바꿈. 끝나면 휴대폰마다 '전부 다시 받기'
 function restoreBackup() {
   var dir = backupFolder(), pre = SS().getName() + " 백업 ", files = dir.getFiles(), best = null;

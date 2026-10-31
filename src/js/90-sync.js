@@ -4,7 +4,7 @@
          인터넷이 끊기면 보낼 목록에 쌓아 두었다가 다시 연결되면 보냄. 1분마다·화면을 다시 열 때 받아 옴.
          같은 기록을 두 곳에서 고치면 나중에 서버에 닿은 쪽이 남음. 아직 못 보낸 내 수정은 받아 온 값으로 덮지 않음.
    PIN 은 서버로 해시만 보냄. 서버 주소·토큰은 이 휴대폰에만 저장(저장소에 없음). */
-const SYNC_KEY=ENV==="test"?"farm-test-sync":"farm-sync",SYNC_SKIP=["v","user","accounts"],PIN_MASK="•",SUBK="§";
+const SYNC_KEY=ENV==="test"?"farm-test-sync":"farm-sync",SYNC_SKIP=["v","user","accounts","records","sows"],PIN_MASK="•",SUBK="§";
 const syObj=v=>v&&typeof v==="object"&&!Array.isArray(v);
 let SY=(()=>{try{return JSON.parse(localStorage.getItem(SYNC_KEY)||"null")}catch(e){return null}})()||{};
 SY.snap=SY.snap||{rec:{},sow:{},key:{}};SY.out=SY.out||{};SY.ph=SY.ph||{};
@@ -61,7 +61,10 @@ async function syFlush1(){if(!syOn())return;SYST.busy=true;
   catch(e){SYST.err=t("보내기")+" · "+String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
 function syPull(full){return syQ(()=>syPull1(full))}
 async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
-  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
+  try{let r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
+    // 대표가 서버를 새로 시작·되돌리기 했으면(gen 바뀜) 이 휴대폰도 통째로 다시 받음. 못 보낸 예전 기록 수정은 버림(예전 기록은 서버 보관 시트에 있음)
+    if(SY.genSeen&&(r.gen||"")!==(SY.gen||"")){SY.out={};SY.replace=true;r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:0,from:arcCut()});if(!r.ok)throw new Error("서버: "+r.err)}
+    SY.gen=r.gen||"";SY.genSeen=true;
     if(SY.replace){SY.replace=false;state.records=[];state.sows=[];SY.snap={rec:{},sow:{},key:{}}}
     const S=SY.snap,idx={rec:{},sow:{}};(state.records||[]).forEach((x,i)=>idx.rec[x.id]=i);(state.sows||[]).forEach((x,i)=>idx.sow[x.id]=i);
     const kill={rec:new Set(),sow:new Set()};

@@ -5,7 +5,7 @@ const PORT=+(process.argv[2]||8787);
 function makeGas(){const sheets={},props={},discord=[],drive={};
 // 진짜 시트처럼: 숫자처럼 보이는 글자 → 숫자, true/false → 참거짓
 const sheetVal=x=>typeof x!=="string"?x:/^-?\d+(\.\d+)?$/.test(x.trim())?Number(x):/^(true|false)$/i.test(x)?/^true$/i.test(x):x;
-function Sheet(name){const d=[];let mc=26;return {name,d,getLastRow:()=>d.length,getLastColumn:()=>Math.max(0,...d.map(r=>{let n=r.length;while(n&&(r[n-1]===""||r[n-1]===undefined))n--;return n})),
+function Sheet(name){const d=[];let mc=26;return {name,d,getName:()=>name,getLastRow:()=>d.length,getLastColumn:()=>Math.max(0,...d.map(r=>{let n=r.length;while(n&&(r[n-1]===""||r[n-1]===undefined))n--;return n})),
   getMaxColumns:()=>mc,insertColumnsAfter:(a,n)=>{mc+=n},setFrozenRows(){},appendRow:r=>d.push(r.map(sheetVal)),
   getRange:(r,c,nr=1,nc=1)=>({setValues:v=>{if(c-1+nc>mc)throw new Error("범위가 시트 밖");if(v.some(x=>x.some(y=>typeof y==="string"&&y.length>50000)))throw new Error("하나에 셀에 허용되는 최대 문자수 50000개를 초과해서 입력했습니다.");for(let i=0;i<nr;i++){d[r-1+i]=d[r-1+i]||[];for(let j=0;j<nc;j++)d[r-1+i][c-1+j]=sheetVal(v[i][j])}},
     getValues:()=>Array.from({length:nr},(_,i)=>Array.from({length:nc},(_,j)=>{const x=(d[r-1+i]||[])[c-1+j];return x===undefined?"":x})),
@@ -14,7 +14,7 @@ function Sheet(name){const d=[];let mc=26;return {name,d,getLastRow:()=>d.length
 const it=a=>{let i=0;return {hasNext:()=>i<a.length,next:()=>a[i++]}};
 const Folder=n=>{const F=drive[n]=drive[n]||{};const file=k=>({getName:()=>k,setTrashed:()=>{delete F[k]},getBlob:()=>({getDataAsString:()=>F[k]})});
   return {getFilesByName:k=>it(k in F?[file(k)]:[]),getFiles:()=>it(Object.keys(F).map(file)),createFile:(k,c)=>{F[k]=c;return file(k)}}};
-const ctx={SpreadsheetApp:{getActive:()=>({getName:()=>"비담농장 서버 (테스트)",getSheetByName:n=>sheets[n]||null,insertSheet:n=>(sheets[n]=Sheet(n))})},
+const ctx={SpreadsheetApp:{getActive:()=>({getName:()=>"비담농장 서버 (테스트)",getSheetByName:n=>sheets[n]||null,insertSheet:n=>(sheets[n]=Sheet(n)),getSheets:()=>Object.values(sheets),deleteSheet:x=>{delete sheets[x.name]}})},
   DriveApp:{getFoldersByName:n=>it(drive[n]?[Folder(n)]:[]),createFolder:n=>Folder(n)},
   ContentService:{MimeType:{JSON:"json"},createTextOutput:s=>({s,setMimeType(){return this}})},
   PropertiesService:{getScriptProperties:()=>({getKeys:()=>Object.keys(props),getProperty:k=>props[k]??null,setProperty:(k,v)=>{props[k]=String(v)},deleteProperty:k=>{delete props[k]}})},
