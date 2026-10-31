@@ -10,7 +10,8 @@ function sowCycles(id){
     return {parity:s.baseParity+n+1,m,f,w,nm}});
 }
 const EDITABLE=t=>FORMS[t]&&t!=="이동";
-function vSow(){
+// 모돈 상세 · 앱 보기 (현장 카드와 바꿔 보기는 81 vSow)
+function vSowApp(){
   const id=ui.sowId,s=state.sows.find(x=>x.id===id);
   if(!s)return `<div class="empty">모돈을 찾을 수 없습니다.</div>`;
   const i=statusOf(s),culled=culledRec(id);

@@ -61,7 +61,8 @@ Object.assign(A,{
   restoreNo:()=>{ui.restoreAsk=false;render()},
   restoreOk:()=>{try{const s=JSON.parse(ui.restoreTxt||"");if(!s||!s.sows||!s.records)throw 0;state=s;if(state.v!==7)upgradeDemo(state);syncLists();save();ui.restoreAsk=false;toast("복원했습니다");render()}catch(e){ui.restoreAsk=false;render();toast("복원할 수 없는 내용입니다. 백업한 글자 전체를 붙여 넣어 주세요.")}},
   resetPick:v=>{ui.resetPick=v||null;render()},
-  resetDo:v=>{const keep=state;makeState(v,keep);if(!me()){ME=null;try{localStorage.removeItem(SKEY)}catch(e){}}ui.resetPick=null;ui.setPage="main";tab=me()?"home":tab;render();toast("초기화했습니다")},
+  resetDo:v=>{if(syOn()&&SY.token){toast(t("서버 연결 중에는 이 휴대폰만 다시 받을 수 있습니다"));return}   // 서버 연결 중엔 초기화 화면이 '다시 받기'(93)
+    const keep=state;makeState(v,keep);if(!me()){ME=null;try{localStorage.removeItem(SKEY)}catch(e){}}ui.resetPick=null;ui.setPage="main";tab=me()?"home":tab;render();toast("초기화했습니다")},
   judge:v=>{openInput("폐사",{date:String(v).replace(/^d:/,"")})},
   decNone:v=>{if(String(v).startsWith("day|")){const k=v.slice(4),g=recsOf("폐사").filter(r=>r.workDate+"|"+r.data.barn===k);state.dayDec=state.dayDec||{};state.dayDec[k]={decision:"none",total:g.reduce((s,r)=>s+r.data.n,0),at:new Date().toISOString(),user:state.user}}
     else{const r=state.records.find(x=>x.id===v);r.data.decision="none"}save();render();toast(t("조치 필요 없음"))},
@@ -80,7 +81,8 @@ document.addEventListener("change",e=>{const x=e.target;
   if(x.dataset&&x.dataset.lab){const L3=state.labels[x.dataset.lab];const v=x.value.trim();if(v)L3[x.dataset.k]=v;else delete L3[x.dataset.k];save();renderTabs();toast("이름을 저장했습니다")}
 });
 
-function peKeep(){const a=$("#peIntro"),b=$("#peMemo"),c=$("#peId");if(a)ui.pe.intro=a.value;if(b)ui.pe.memo=b.value;if(c)ui.pe.id=c.value.trim()}
+function peKeep(){const a=$("#peIntro"),b=$("#peMemo"),c=$("#peId");if(a)ui.pe.intro=a.value;if(b)ui.pe.memo=b.value;if(c)ui.pe.id=c.value.trim();// 현장 카드 머리(생년월일·구입처·초교배 예정일, 81)
+  {const g=k=>{const e=$("#"+k);return e?e.value.trim():undefined},b=g("peBirth"),c=g("peSrc"),f=g("peFm");if(b!==undefined)ui.pe.birth=b;if(c!==undefined)ui.pe.src=c;if(f!==undefined)ui.pe.fm=f}}
 Object.assign(A,{
   tab:v=>{closeSheet();if(v==="settings")ui.setPage="main";go(v)},
   peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId),nid=ui.pe.id||s.id;

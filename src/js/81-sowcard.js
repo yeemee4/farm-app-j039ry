@@ -49,9 +49,8 @@ function vSowCard(s){
   return `<div class="sowcard">${hd}${tb}<div class="sc-foot">${t("점선 위 = 첫 교배, 아래 = 재발 후 마지막 교배 · ×2 = 같은 발정에 2번 교배 · 주황 날짜 = 아직 분만 전 예정")}</div></div>${nav}`;
 }
 function sowViewMode(){try{return localStorage.getItem("farm-sowcard")||"app"}catch(e){return "app"}}
-const _vSowApp=vSow;
-vSow=function(){
-  const s=state.sows.find(x=>x.id===ui.sowId),html=_vSowApp();
+function vSow(){
+  const s=state.sows.find(x=>x.id===ui.sowId),html=vSowApp();
   if(!s)return html;
   const m=sowViewMode(),seg=`<div class="seg sc-seg" role="group" aria-label="${t("보기")}"><button type="button" class="${m==="app"?"on":""}" data-a="sowView" data-v="app">${t("앱 보기")}</button><button type="button" class="${m==="card"?"on":""}" data-a="sowView" data-v="card">📋 ${t("현장 카드")}</button></div>`;
   const cut=html.indexOf('<div class="inputgrid">');
@@ -67,10 +66,8 @@ vSow=function(){
     <div class="f"><label for="peFm">${t("초교배예정일")}</label><input type="date" id="peFm" value="${esc(ui.pe.fm||"")}"></div>
     <div class="acts"><button class="act pri" type="button" data-a="peSave">${t("저장")}</button><button class="act" type="button" data-a="peCancel">${t("취소")}</button></div></div>`:"";
   return head+seg+loc+vSowCard(s)+`<div class="acts">${ed}</div>`+form;
-};
+}
 /* 기본 정보에 생년월일·구입처·초교배예정일 추가 */
-const _peKeep0=peKeep;
-peKeep=function(){_peKeep0();const g=k=>{const e=$("#"+k);return e?e.value.trim():undefined},b=g("peBirth"),c=g("peSrc"),f=g("peFm");if(b!==undefined)ui.pe.birth=b;if(c!==undefined)ui.pe.src=c;if(f!==undefined)ui.pe.fm=f};
 const _peOpen0=A.peOpen,_peSave0=A.peSave;
 Object.assign(A,{
   sowView:v=>{try{localStorage.setItem("farm-sowcard",v)}catch(e){}ui.pe=null;render()},

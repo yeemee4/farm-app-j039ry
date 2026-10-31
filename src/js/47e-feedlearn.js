@@ -17,9 +17,8 @@ function feedLearn(f){const O=feedObs(f),fac=fitFactor(O),errs=[];let i=3;while(
   const m=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;return {f,n:O.length,fac,err:m(errs.slice(-2)),err0:m(errs.slice(0,1)),raw:m(O.slice(-5).map(o=>Math.abs(o.r-1)))}}
 const feedFactor=f=>{const L=feedLearn(f);return L.fac||1};
 // 사료 계획에 보정 적용 (원래 feedPlanDays 를 감쌈)
-const _feedPlanDays0=feedPlanDays;
-feedPlanDays=function(H=FP_H,S0=TODAY){const v=_feedPlanDays0(H,S0),F={};feedKinds().forEach(f=>F[f]=feedFactor(f));const ck=v.length+"|"+S0+"|"+JSON.stringify(F);if(v._ck===ck)return v._sc;
-  const sc=v.map(x=>{const u={};Object.entries(x.u).forEach(([f,kg])=>u[f]=kg*(F[f]||1));return {d:x.d,u}});v._ck=ck;v._sc=sc;return sc};
+function feedPlanDays(H=FP_H,S0=TODAY){const v=feedPlanBase(H,S0),F={};feedKinds().forEach(f=>F[f]=feedFactor(f));const ck=v.length+"|"+S0+"|"+JSON.stringify(F);if(v._ck===ck)return v._sc;
+  const sc=v.map(x=>{const u={};Object.entries(x.u).forEach(([f,kg])=>u[f]=kg*(F[f]||1));return {d:x.d,u}});v._ck=ck;v._sc=sc;return sc}
 function learnTag(f){const L=feedLearn(f);if(!L.fac)return `<small class="fl">${t("예측 학습 중")} · ${t("잔량 기록")} ${L.n}/3</small>`;
   return `<small class="fl">${t("학습 보정")} ×${L.fac.toFixed(2)} · ${L.n}${t("회")}${L.err!=null?` · ${t("주간 예측 오차")} ±${Math.round(L.err*100)}%${L.err0!=null&&L.err0>L.err?` (${t("처음")} ±${Math.round(L.err0*100)}%)`:""}`:""}</small>`}
 function learnSet(){return `<div class="sec-t">${t("사료 예측 학습")} <span>${t("매일 잔량 기록으로 사료마다 스스로 보정")}</span></div><div class="panel">${feedKinds().map(f=>{const L=feedLearn(f),fr=(state.feedLearn||{})[f];

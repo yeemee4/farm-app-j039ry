@@ -12,7 +12,7 @@ function vLogin(){
       ${ui.pinErr?`<div class="errbox" style="text-align:center">${t("PIN이 맞지 않습니다")}</div>`:""}
       <div class="pinpad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button type="button" data-a="pinKey" data-v="${n}">${n}</button>`).join("")}<button type="button" data-a="loginBack">‹</button><button type="button" data-a="pinKey" data-v="0">0</button><button type="button" data-a="pinDel">⌫</button></div>`;
   }
-  return h+`</div>`;
+  return (h+`</div>`)+(ui.loginId?"":syLoginBox());
 }
 
 /* ================= v0.3 · 설정 ================= */
@@ -135,7 +135,8 @@ function vBackup(){
   h+=ui.restoreAsk?`<div class="warnbox"><span><b>지금 기록을 모두 바꿉니다.</b> 복원하시겠습니까?</span><div class="acts"><button class="act bad" type="button" data-a="restoreOk">복원</button><button class="act" type="button" data-a="restoreNo">취소</button></div></div>`:`<button class="act" type="button" data-a="restoreAsk" style="justify-self:start">복원</button>`;
   return h;
 }
-function vReset(){
+function vReset(){if(syOn()&&SY.token)return vResetSynced();   // 서버 연결 중: 이 휴대폰만 다시 받기·서버 새로 시작(93)
+  
   const R=ui.resetPick;
   const opts=[["farm","우리 농장 초기값","모돈 92두(분만사 30 · 임신사 40 · 교배사 22), 돈군 12개(W33~W44), 비육 0두. 계정과 설정도 처음 값으로 돌아갑니다."],["demo","예시 농장","v0.2와 같은 가상 농장. 기능을 둘러볼 때 씁니다."],["empty","빈 농장","모돈·기록을 모두 지우고 시작합니다. 계정, 목록, 기준값은 그대로 둡니다."]].filter(o=>ENV==="test"||o[0]!=="demo");
   let h=`<h2>데이터 초기화</h2>`+opts.map(([k,ti,d])=>`<div class="panel" style="${R===k?"border-color:var(--red)":""}"><div><b>${ti}</b><div class="sow-meta">${d}</div></div>${R===k?`<div class="warnbox"><span><b>정말 바꾸시겠습니까?</b> 지금 기록은 사라집니다. 필요하면 먼저 백업하세요.</span><div class="acts"><button class="act bad" type="button" data-a="resetDo" data-v="${k}">초기화</button><button class="act" type="button" data-a="resetPick" data-v="">취소</button></div></div>`:`<button class="act" type="button" data-a="resetPick" data-v="${k}" style="justify-self:start">이 상태로 시작</button>`}</div>`).join("");

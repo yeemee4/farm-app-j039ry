@@ -45,11 +45,11 @@ function statPeriod(){
 }
 function fmtV(v,dp){return v===null||v===undefined||isNaN(v)?"-":(+v).toFixed(dp)}
 function vStats(){
-  if(document.body.classList.contains("tv"))return vStatsTV();
+  if(document.body.classList.contains("tv"))return oldBar()+(vStatsTV());
   const S=ui.st;
   const noShip=!state.records.some(r=>r.type==="출하");const ob=liveBatches().slice(-1)[0];
   let h=`<div class="pagehd"><h2>성적</h2><button class="act" type="button" data-a="tvMode" style="margin-left:auto">📺 ${t("TV로 보기")}</button></div>${noShip?`<div class="banner info"><b>출하 시작 전</b><span>출하 기록이 아직 없어 MSY·출하 성적은 비어 있습니다.${ob?` 첫 출하 예정: ${kDate(addDays(ob.k,shipAge()*7))} 주 (${bName(ob.k)})`:""}</span></div>`:""}<div class="chips">${["월","분기","연간","전년 비교","기간"].map(m=>`<button type="button" class="chip ${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${m==="월"?"월간":m==="기간"?"기간 설정":m}</button>`).join("")}</div>`;
-  if(S.mode==="전년 비교")return h+vYoY();
+  if(S.mode==="전년 비교")return oldBar()+(h+vYoY());
   const P=statPeriod();
   // 기간 선택
   if(S.mode==="월")h+=`<div class="datebar"><button type="button" data-a="stNav" data-v="-1" aria-label="이전 달">‹</button><input type="month" id="stYm" value="${S.ym}" max="${TODAY.slice(0,7)}" aria-label="월 선택" style="width:auto;border:0;background:transparent;font-weight:700;text-align:center"><button type="button" data-a="stNav" data-v="1" aria-label="다음 달">›</button></div>`;
@@ -76,7 +76,7 @@ function vStats(){
   const pts=[];for(let n=11;n>=0;n--){let y=ey,m=em-n;while(m<1){m+=12;y--}const [f,t]=monthRange(y,m);const v=rangeMetrics(f,t);pts.push({y,m,v:v?v[mk]:null,src:v?v.src:null})}
   h+=`<div class="card"><h3>그 밖의 지표 월별 추이 · ${md[1]}</h3><div class="chips" style="margin-bottom:8px">${MET.filter(m=>m[0]!=="shipKg").map(m=>`<button type="button" class="chip ${mk===m[0]?"on":""}" data-a="stMetric" data-v="${m[0]}">${m[1]}</button>`).join("")}</div>${lineSvg(pts,md)}<div class="note">빈 점: 직접 입력한 작년 성적 · 찬 점: 앱 기록</div></div>`;
   h+=prevYearForm();
-  return h;
+  return oldBar()+(h);
 }
 function lineSvg(pts,md){
   const W=340,H=170,P={l:34,r:12,t:18,b:24},vals=pts.map(p=>p.v).filter(v=>v!==null&&v!==undefined&&!isNaN(v));

@@ -60,11 +60,12 @@ function questGauge(todos){todos=todos.filter(x=>!todoIsCheck(x.k));const q=ques
 // ---- 디자인 테마 ----
 const SKINS=[["","기본","지금 디자인"],["clean","클린 라이트","연회색 바탕 · 흰 카드 · 파랑 (삼쩜삼·토스)"],["night","나이트","짙은 남색 · 보라 (알라미)"],["fresh","프레시 그린","흰 바탕 · 초록 · 진한 칩 (네이버페이)"],["sport","스포츠 다크","검정 · 민트 · 굵은 글씨 (플랜핏)"],["soft","소프트 파스텔","아이보리 · 분홍 · 둥근 모서리 (로고)"]];
 function mySkin(){try{const v=localStorage.getItem("farm-skin");return v===null?FARM.skin:v}catch(e){return FARM.skin}}
-function applySkin(){const k=mySkin();if(k)document.documentElement.dataset.skin=k;else delete document.documentElement.dataset.skin}
+function applySkin(){const k=mySkin();if(k)document.documentElement.dataset.skin=k;else delete document.documentElement.dataset.skin;const m=pcMode(),de=document.documentElement;if(m==="auto")delete de.dataset.pc;else de.dataset.pc=m;
+  const b=$("#pcBtn");if(b){const pc=isPC();b.textContent=pc?"📱":"🖥";b.title=t(pc?"휴대폰 화면으로":"PC 화면으로");b.setAttribute("aria-label",b.title)}}
 function vSkinSet(){return `<div class="pagehd"><h2>${t("디자인 테마")}</h2></div><div class="panel">${SKINS.map(([k,n,d])=>`<div class="setrow"><span><b>${t(n)}</b><br><small class="sow-meta">${esc(d)}</small></span><button class="act ${mySkin()===k?"pri":""}" type="button" data-a="skin" data-v="${k}">${mySkin()===k?t("사용 중"):t("고르기")}</button></div>`).join("")}</div>`}
 Object.assign(A,{skin:v=>{try{localStorage.setItem("farm-skin",v)}catch(e){}render()},icostyle:v=>{try{localStorage.setItem("farm-icon",v)}catch(e){}render()}});
 // 개인 설정: 화면 디자인 (이 기기에만 적용)
-function vMyDesign(){const s=mySkin(),i=iconStyle();return `<div class="f"><span class="lb">${t("화면 디자인")} <small class="sow-meta">${t("이 기기에만 적용")}</small></span><div class="chipwrap">${SKINS.map(([k,n])=>`<button type="button" class="chip wrap ${s===k?"on":""}" data-a="skin" data-v="${k}">${t(n)}</button>`).join("")}</div></div><div class="f"><span class="lb">${t("입력 아이콘")}</span><div class="chipwrap">${ICON_STYLES.map(([k,n])=>`<button type="button" class="chip wrap ${i===k?"on":""}" data-a="icostyle" data-v="${k}">${t(n)}</button>`).join("")}</div></div>`}
+function vMyDesign(){const s=mySkin(),i=iconStyle();return pcSet()+(`<div class="f"><span class="lb">${t("화면 디자인")} <small class="sow-meta">${t("이 기기에만 적용")}</small></span><div class="chipwrap">${SKINS.map(([k,n])=>`<button type="button" class="chip wrap ${s===k?"on":""}" data-a="skin" data-v="${k}">${t(n)}</button>`).join("")}</div></div><div class="f"><span class="lb">${t("입력 아이콘")}</span><div class="chipwrap">${ICON_STYLES.map(([k,n])=>`<button type="button" class="chip wrap ${i===k?"on":""}" data-a="icostyle" data-v="${k}">${t(n)}</button>`).join("")}</div></div>`)}
 // ---- 저장 후 5초 '되돌리기' ----
 let undoT=null;
 function undoToast(m,ids){const now=Date.now(),busy=now-lastSaveAt<15000;lastSaveAt=now;

@@ -15,7 +15,8 @@ function sowNeed(a,day,I){const C=gCfg();if(a.open)return a.gilt?C.gilt:C.flush;
 function avgLive(){const m=rangeMetrics(addDays(TODAY,-180),TODAY);return m&&okv(m.live)?m.live:11}
 // 날짜별 사료 종류별 필요량 {feed:kg}
 let FPD={};
-function feedPlanDays(H=FP_H,S0=TODAY){const ck=[H,S0,state.records.length,state.sows.length,JSON.stringify(state.intake||{}),JSON.stringify(state.mbatches||[])].join("|");if(FPD.k===ck)return FPD.v;FPD={k:ck,v:feedPlanDays0(H,S0)};return FPD.v}
+// 모델 계산(학습 보정 전). 앱 전체는 feedPlanDays(47e, 학습 보정 적용)를 씀
+function feedPlanBase(H=FP_H,S0=TODAY){const ck=[H,S0,state.records.length,state.sows.length,JSON.stringify(state.intake||{}),JSON.stringify(state.mbatches||[])].join("|");if(FPD.k===ck)return FPD.v;FPD={k:ck,v:feedPlanDays0(H,S0)};return FPD.v}
 function feedPlanDays0(H,S0){const I=fIntake(),days=[],sows=activeSows().map(s=>[s,sowAnchor(s)]).filter(x=>x[1]);
   const bs=batches().map(b=>({k:b.k,b})),lv=avgLive(),born={};
   sows.forEach(([s,a])=>{if(a.open||a.pos0!==0)return;const F=addDays(a.at,115);if(F>=S0&&diff(S0,F)<=H){const k=weekStart(F);born[k]=(born[k]||0)+lv}});

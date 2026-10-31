@@ -25,7 +25,7 @@ function suBad(c){const D=suDates(c),w=[];Object.keys(c.cols).map(Number).sort((
 // ---- 허브 ----
 function vSetup(){const S=suS(),C=Object.values(S.cards),done=C.filter(c=>c.done).length,gen=state.records.filter(r=>r.data&&r.data.setup).length;
   const step=(n,ti,sub,act,ok)=>`<button type="button" class="mitem su-step" ${act}><span class="su-n ${ok?"ok":""}">${ok?"✓":n}</span><span><b>${t(ti)}</b><small>${sub}</small></span><span>›</span></button>`;
-  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="settings">‹ ${t("설정")}</button><h2>📋 ${t("초기 등록")}</h2></div>
+  let h=`<div class="pagehd">${IS_SETUP?`<a class="back" href="../">${t("본 앱 열기")} ›</a>`:`<button class="back" type="button" data-a="tab" data-v="settings">‹ ${t("설정")}</button>`}<h2>📋 ${t("초기 등록")}</h2></div>
   <div class="note">${t("본서버를 처음 시작할 때 실제 자료를 넣는 곳입니다. 휴대폰 하나로 돈사를 돌며 현장 카드를 보고 입력하세요. 인터넷이 없어도 됩니다.")}</div><div class="more">`;
   h+=step(1,"빈 농장으로 시작",state.sows.length?`${t("지금 모돈")} ${state.sows.length}${t("두")} · ${t("예시 자료면 먼저 비우기")}`:t("비어 있음 ✓"),`data-a="suEmpty"`,!state.sows.length||gen>0);
   h+=step(2,"계정 · PIN",`${state.accounts.filter(a=>a.active!==false).length}${t("명")} · ${t("이름·PIN 바꾸기")}`,`data-a="suGo" data-v="accounts"`,false);
@@ -130,8 +130,7 @@ Object.assign(A,{
     if(!state.startDate||state.startDate>TODAY)state.startDate=TODAY;save();render();toast(`${t("기록")} ${B.recs.length}${t("건 · 모돈")} ${B.sows.length}${t("두를 만들었습니다")}`)}});
 const suGuard=f=>()=>can("admin")?f():`<div class="empty">${t("대표 계정에서만 쓸 수 있습니다.")}</div>`;
 // ---- 별도 ‘초기 등록 앱’ (setup/ 주소): 첫 화면 = 초기 등록, 메뉴 탭 숨김, 허용 화면만 ----
-if(typeof MODE!=="undefined"&&MODE==="setup"){document.body.classList.add("mode-setup");
-  const OK=["setup","suwalk","sureview","settings","feedchk","sow"];
-  const _go1=go;go=function(v){if(!OK.includes(v))v="setup";return _go1(v)};
-  BEFORE_RENDER.push(()=>{if(me()&&!OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup"});
-  const _vs=vSetup;vSetup=function(){return _vs().replace(`<button class="back" type="button" data-a="tab" data-v="settings">‹ ${t("설정")}</button>`,`<a class="back" href="../">${t("본 앱 열기")} ›</a>`)};}
+const IS_SETUP=typeof MODE!=="undefined"&&MODE==="setup",SETUP_OK=["setup","suwalk","sureview","settings","feedchk","sow"];   // 초기 등록 앱에서 갈 수 있는 화면(go 가 이 밖이면 초기 등록으로)
+if(IS_SETUP){document.body.classList.add("mode-setup");
+  BEFORE_RENDER.push(()=>{if(me()&&!SETUP_OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup"});
+}

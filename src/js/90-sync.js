@@ -59,7 +59,13 @@ async function syFlush1(){if(!syOn())return;SYST.busy=true;
       part.forEach(k=>{if(SY.out[k]===rows[part.indexOf(k)])delete SY.out[k]})}
     SYST.err=null;SYST.last=nowHM();SY.last=SYST.last}
   catch(e){SYST.err=t("보내기")+" · "+String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
-function syPull(full){return syQ(()=>syPull1(full))}
+// 받기: 처음 연결(서버에서 받기) 뒤 첫 로그인이면 서버 기록 전체로 이 휴대폰을 채움 · 받은 뒤 1년 지난 매일 기록은 휴대폰에서 뺌(93)
+async function syPull(full){let r;
+  if(SY.join&&SY.token){SY.join=false;SY.replace=true;sySave();r=await syQ(()=>syPull1(true));
+    if(typeof migrate==="function")try{migrate()}catch(e){}SYNC_MUTE=true;save();SYNC_MUTE=false;render()}
+  else r=await syQ(()=>syPull1(full));
+  try{if(syPrune()&&tab!=="input")render()}catch(e){}
+  return r}
 async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
   try{let r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
     // 대표가 서버를 새로 시작·되돌리기 했으면(gen 바뀜) 이 휴대폰도 통째로 다시 받음. 못 보낸 예전 기록 수정은 버림(예전 기록은 서버 보관 시트에 있음)
@@ -85,8 +91,8 @@ async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
   return changed}
 function syAuthLost(){SY.token=null;sySave();SYST.busy=false;syBadge();toast(t("서버 로그인이 끝났습니다. 다시 로그인해 주세요."))}
 // save() 를 감싸 변경 감지 예약
-let SYNC_MUTE=false;const _save0=save;
-save=function(){_save0();if(SYNC_MUTE||!syOn())return;clearTimeout(syT);syT=setTimeout(syDiff,1200)};
+let SYNC_MUTE=false;   // true 동안 저장은 동기화 목록에 안 올림(서버에서 받은 것을 저장할 때)
+AFTER_SAVE.push(()=>{if(SYNC_MUTE||!syOn())return;clearTimeout(syT);syT=setTimeout(syDiff,1200)});
 setInterval(()=>{if(syOn()&&document.visibilityState==="visible"){if(syPending())syFlush();else syPull()}},60e3);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&syOn())syPull()});
 addEventListener("online",()=>{if(syOn())syFlush().then(()=>syPull())});
@@ -109,13 +115,13 @@ function vSyncSet(){const n=syPending(),me0=me();
     ${ui.syMsg?`<div class="note" style="color:${ui.syMsg.bad?"var(--red)":"var(--good)"}">${esc(ui.syMsg.t)}</div>`:""}</div>`;
   if(ui.syHello&&ui.syHello.empty&&can("admin"))h+=`<div class="sec-t">${t("처음 설치")}</div><div class="panel"><div class="note">${t("서버가 비어 있습니다. 이 휴대폰의 계정·기록으로 서버를 시작합니다. 다른 휴대폰은 그다음 ‘서버에서 받기’로 연결합니다.")}</div><div class="acts"><button class="act pri" type="button" data-a="syInit">${t("이 휴대폰 기록으로 서버 시작")}</button></div></div>`;
   if(ui.syHello&&!ui.syHello.empty&&!SY.token)h+=`<div class="sec-t">${t("이 휴대폰 연결")}</div><div class="panel"><div class="note">${t("서버의 기록을 받아 이 휴대폰의 기록을 바꿉니다(이 휴대폰에만 있던 기록은 사라집니다). 그다음 로그인 화면에서 내 PIN 으로 로그인하세요.")}</div><div class="acts"><button class="act pri" type="button" data-a="syJoin">${t("서버에서 받기")}</button></div></div>`;
-  if(SY.url&&SY.token){h+=`<div class="sec-t">${t("상태")}</div><div class="panel"><div class="setrow"><span>${t("농장")}</span><b>${esc(syFarm())}</b></div><div class="setrow"><span>${t("보낼 기록")}</span><b>${n}${t("건")}</b></div><div class="setrow"><span>${t("마지막 동기화")}</span><b>${esc(SYST.last||"-")}</b></div>${SYST.err?`<div class="note" style="color:var(--amber)">${esc(SYST.err)}</div>`:""}
+  if(SY.url&&SY.token){h+=`${can("admin")?`<div class="sec-t">${t("다른 휴대폰 초대")}</div><div class="panel"><p class="sow-meta">${t("링크나 QR 로 연결하면 계정·PIN 만 넣으면 됩니다.")}</p><button class="act pri" type="button" data-a="syInvite">📲 ${t("초대 링크·QR")}</button></div>`:""}<div class="sec-t">${t("상태")}</div><div class="panel"><div class="setrow"><span>${t("농장")}</span><b>${esc(syFarm())}</b></div><div class="setrow"><span>${t("보낼 기록")}</span><b>${n}${t("건")}</b></div><div class="setrow"><span>${t("마지막 동기화")}</span><b>${esc(SYST.last||"-")}</b></div>${SYST.err?`<div class="note" style="color:var(--amber)">${esc(SYST.err)}</div>`:""}
     <div class="acts"><button class="act" type="button" data-a="syNow">${t("지금 동기화")}</button><button class="act" type="button" data-a="syFull">${t("전부 다시 받기")}</button></div></div>`;
     if(can("admin")){h+=`<div class="sec-t">${t("디스코드 알림")} <span>${SY.discord?t("연결됨"):t("안 됨")}</span></div><div class="panel"><div class="f"><label for="syDc">${t("디스코드 웹훅 주소 (서버에만 저장)")}</label><input type="url" id="syDc" placeholder="https://discord.com/api/webhooks/…"></div><div class="acts"><button class="act pri" type="button" data-a="syDc">${t("저장·시험 메시지")}</button>${SY.discord?`<button class="act" type="button" data-a="syDcOff">${t("알림 끄기")}</button>`:""}</div></div>`;
       const T=[...new Set([...NOTIF_ON,"양자","특이사항","사료","재고","도입"])];
       h+=`<div class="sec-t">${t("알림 보낼 기록")}</div><div class="panel">${T.map(k=>{const on=notifOn(k,{mode:"빈 잔량"});return `<div class="setrow"><span>${esc(L(k))}${k==="사료"?` <small class="sow-meta">(${t("잔량만, 입고는 안 보냄")})</small>`:""}</span><button class="sbtn ${on?"on":""}" type="button" data-a="syNotif" data-v="${k}">${on?t("보냄"):t("안 보냄")}</button></div>`}).join("")}</div>`}}
   h+=`<div class="note">${t("앱 빌드")} ${esc(ENV)} · ${esc(typeof BUILD_AT!=="undefined"?BUILD_AT:"-")} · ${t("설치 방법은 저장소의 server/설치안내 를 보세요. 서버 주소와 PIN 은 저장소에 올라가지 않습니다.")}</div>`;
-  return h}
+  return (h)+(can("admin")&&SY.token?alarmTestBox():"")}
 Object.assign(A,{
   syHello:async()=>{const u=($("#syUrl").value||"").trim();if(!/^(https:\/\/script\.google(usercontent)?\.com\/|http:\/\/localhost:)/.test(u)){ui.syMsg={t:t("Apps Script 웹 앱 주소(https://script.google.com/…/exec)를 넣어 주세요."),bad:1};render();return}
     SY.url=u;sySave();try{const r=await syCall({a:"hello"});ui.syHello=r;ui.syMsg={t:r.empty?t("연결됨 · 서버가 비어 있음(처음 설치)"):t("연결됨 · 기록이 있는 서버")};}catch(e){ui.syMsg={t:t("연결 실패")+": "+e.message,bad:1}}render()},
@@ -137,20 +143,13 @@ Object.assign(A,{
   syDc:async()=>{const u=($("#syDc").value||"").trim();const r=await syCall({a:"setDiscord",token:SY.token,url:u}).catch(e=>({ok:false,err:e.message}));if(r.ok){SY.discord=!!u;sySave();toast(t("디스코드 알림을 저장했습니다"))}else toast(t("실패")+": "+r.err);render()},
   syDcOff:async()=>{await syCall({a:"setDiscord",token:SY.token,url:""}).catch(()=>{});SY.discord=false;sySave();render()},
   syNotif:v=>{const o=state.notif=state.notif||{};o[v]=!notifOn(v,{mode:"빈 잔량"});save();render()}});
-// 처음 연결(서버에서 받기) 뒤 첫 로그인: 서버 기록 전체로 이 휴대폰을 채움
-const _syPull0=syPull;
-syPull=async function(full){if(SY.join&&SY.token){SY.join=false;SY.replace=true;sySave();const c=await syQ(()=>syPull1(true));
-    if(typeof migrate==="function")try{migrate()}catch(e){}SYNC_MUTE=true;save();SYNC_MUTE=false;render();return c}return _syPull0(full)};
 // 앱을 열 때: 연결돼 있으면 받아 오기
 setTimeout(()=>{if(syOn()){syPull();if(syPending())syFlush()}},1500);
 // 로그인 화면: 팀장·작업자 휴대폰도 대표 PIN 없이 서버에 연결 (서버에서 받기)
-const _vLogin0=vLogin;
-vLogin=function(){const h=_vLogin0();if(ui.loginId)return h;
-  const box=ui.syLogin?`<div class="panel sy-login"><div class="f"><label for="syUrl">${t("서버 주소 (대표에게 받은 주소)")}</label><input type="url" id="syUrl" value="${esc(SY.url||"")}" placeholder="https://script.google.com/macros/s/…/exec"></div>
+function syLoginBox(){return ui.syLogin?`<div class="panel sy-login"><div class="f"><label for="syUrl">${t("서버 주소 (대표에게 받은 주소)")}</label><input type="url" id="syUrl" value="${esc(SY.url||"")}" placeholder="https://script.google.com/macros/s/…/exec"></div>
       <div class="acts"><button class="act pri" type="button" data-a="syHello">${t("연결 확인")}</button>${ui.syHello&&!ui.syHello.empty?`<button class="act pri" type="button" data-a="syJoin">${t("서버에서 받기")}</button>`:""}</div>
       ${ui.syMsg?`<div class="note" style="color:${ui.syMsg.bad?"var(--red)":"var(--good)"}">${esc(ui.syMsg.t)}</div>`:""}</div>`
-    :`<button class="act" type="button" data-a="syLogin" style="margin:14px auto 0;display:block">☁ ${SY.url?t("서버 연결됨"):t("서버 연결")}</button>`;
-  return h+box};
+    :`<button class="act" type="button" data-a="syLogin" style="margin:14px auto 0;display:block">☁ ${SY.url?t("서버 연결됨"):t("서버 연결")}</button>`}
 A.syLogin=()=>{ui.syLogin=true;render()};
 
 // 시험용 표시: 주황 띠 + 제목
@@ -171,7 +170,6 @@ A.syInvite=()=>{const u=syInviteUrl();try{navigator.clipboard.writeText(u)}catch
   const draw=()=>{try{new QRCode($("#syQr"),{text:u,width:220,height:220,correctLevel:QRCode.CorrectLevel.M})}catch(e){}};
   if(window.QRCode)draw();else{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";sc.onload=draw;sc.onerror=()=>{const q=$("#syQr");if(q)q.textContent=t("QR 을 불러오지 못했습니다(인터넷 확인). 링크는 복사되었습니다.")};document.head.appendChild(sc)}};
 A.syInvCopy=()=>{try{navigator.clipboard.writeText(syInviteUrl());toast(t("복사했습니다"))}catch(e){prompt(t("복사하세요"),syInviteUrl())}};
-const _vSyncSet90i=vSyncSet;vSyncSet=function(){const h=_vSyncSet90i();return can("admin")&&SY.url&&SY.token?h.replace(`<div class="sec-t">${t("상태")}</div>`,`<div class="sec-t">${t("다른 휴대폰 초대")}</div><div class="panel"><p class="sow-meta">${t("링크나 QR 로 연결하면 계정·PIN 만 넣으면 됩니다.")}</p><button class="act pri" type="button" data-a="syInvite">📲 ${t("초대 링크·QR")}</button></div><div class="sec-t">${t("상태")}</div>`):h};
 
 // ---- 기본 서버 주소: 처음 여는 휴대폰은 이 서버에 자동 연결(초대 링크와 같은 흐름) · 서버는 PIN 5번 틀리면 15분 잠금 · '연결 끊기' 한 휴대폰은 다시 자동 연결 안 함 ----
 const SY_DEFAULT=ENV==="test"?"https://script.google.com/macros/s/AKfycbwUKfh-wktSt7jGSdZzTUsVqWKtyotbpZetw3THeBdFOTtzc2OuKCe6eCPugxNUSRL-og/exec":"";

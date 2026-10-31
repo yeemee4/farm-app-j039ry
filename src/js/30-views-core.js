@@ -20,7 +20,7 @@ function navBadge(k){
   if(k==="close"||k==="more")return missCount(TODAY)+missCount(addDays(TODAY,-1));
   return 0;
 }
-function go(t){tab=t;ui.delId=null;ui.dec=null;if(t==="close")ui.closeDay=TODAY;render();window.scrollTo(0,0)}
+function go(t){if(IS_SETUP&&!SETUP_OK.includes(t))t="setup";tab=t;ui.delId=null;ui.dec=null;if(t==="close")ui.closeDay=TODAY;render();window.scrollTo(0,0)}
 
 /* ================= 홈 ================= */
 function statusCounts(){const c={};activeSows().forEach(s=>{const i=statusOf(s);c[i.key]=(c[i.key]||0)+1;if(i.gilt&&i.key!=="후보")c["후보"]=(c["후보"]||0)+1;if(i.heat)c.heat=(c.heat||0)+1});return c}
@@ -148,7 +148,7 @@ function vTimeline(){
       <div class="del">${ui.delId===r.id?`<button class="act bad" type="button" data-a="delOk" data-v="${r.id}">삭제 확정</button><button class="act" type="button" data-a="delNo">취소</button>`:can("delete")?`<button class="act" type="button" data-a="del" data-v="${r.id}" style="font-size:12px;padding:4px 10px">삭제</button>`:""}</div></div>`;
   });
   if(!list.length)h+=`<div class="empty">기록이 없습니다.</div>`;
-  return h;
+  return oldBar()+(h);
 }
 /* ================= 토스트 ================= */
 let tt;function toast(m){$("#toastRoot").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>$("#toastRoot").innerHTML="",2400)}

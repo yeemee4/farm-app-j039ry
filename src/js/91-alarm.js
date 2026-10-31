@@ -42,4 +42,3 @@ function alarmTestBox(){const T=(state.alarm||{}).test,on=T&&T.day===TODAY;
   return `<div class="sec-t">${t("알림 시험")}</div><div class="panel"><p class="sow-meta">${t("정한 시각에 오늘의 모든 디스코드 알림(할 일·날씨·정액·내일 일정·마감·폐사·기록 알림 예시)을 한꺼번에 보냅니다. 서버가 5분마다 확인하므로 최대 5분 늦을 수 있습니다.")}</p>
   <div class="setrow"><span>${t("보낼 시각")}</span><input id="alAt" type="time" value="${on?T.at:"11:45"}"></div>
   <button class="act pri" type="button" data-a="alTest">${on?t("다시 예약"):t("시험 예약")}</button> ${on?`<button class="act" type="button" data-a="alTestOff">${t("시험 끄기")}</button> <b>${t("예약됨")} ${T.at}</b>`:""}</div>`}
-const _vSyncSet91=vSyncSet;vSyncSet=function(){return _vSyncSet91()+(can("admin")&&SY.token?alarmTestBox():"")};
