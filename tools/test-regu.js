@@ -2,7 +2,7 @@
 // 시험하는 곳(대표와 합의): 정시 교배 날짜 · 급여 늦음 알림 단계 · 끝난 그룹 성적 · 서버 디스코드 발송
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, ".."), PAGE = path.join(ROOT, process.env.PAGE || "test/index.html");
-const GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 const T = [];   // [이름, 페이지 안에서 돌릴 함수, 기대값]
 const t = (name, fn, want) => T.push([name, fn, want]);
 

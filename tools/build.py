@@ -7,7 +7,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = lambda *p: os.path.join(ROOT, 'src', *p)
 read = lambda p: open(p, encoding='utf-8').read()
 # 입장 키 해시는 이미 배포된 index.html 에서 이어받는다(키 원문은 어디에도 두지 않음)
-GATE = re.search(r'const GATE="([0-9a-f]{64})"', read(os.path.join(ROOT, 'index.html'))).group(1)
+GATE = re.search(r'const GATE\s*=\s*"([0-9a-f]{64})"', read(os.path.join(ROOT, 'index.html'))).group(1)
 TAGS = '--no-tags' not in sys.argv          # 테스트 라벨(포스트잇) 기본 켜짐
 PROD = '--prod' in sys.argv              # 기본은 시험용(test/)
 

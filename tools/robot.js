@@ -5,7 +5,7 @@ const { chromium } = require("playwright"), fs = require("fs"), path = require("
 const PAGE = path.join(__dirname, "..", process.env.PAGE || "test/index.html");
 const { ROBOT_URL: URL, ROBOT_PIN: PIN, ROBOT_NAME: NAME = "알림 로봇" } = process.env;
 if (!URL || !PIN) { console.log("ROBOT_URL·ROBOT_PIN 없음 → 건너뜀"); process.exit(0); }
-const GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 (async () => {
   const b = await chromium.launch(), ctx = await b.newContext({ timezoneId: "Asia/Seoul", locale: "ko-KR" }), p = await ctx.newPage();
   await p.addInitScript(g => { localStorage.setItem("farm-gate", g); window.confirm = () => true; }, GATE);

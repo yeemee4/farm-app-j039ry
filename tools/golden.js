@@ -4,7 +4,7 @@
 // PAGE=test/index.html(기본) · 초기 등록 앱은 같은 폴더 setup/index.html 도 함께
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path");
 const [mode, file] = process.argv.slice(2), ROOT = path.join(__dirname, ".."), PAGE = path.join(ROOT, process.env.PAGE || "test/index.html");
-const GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 const VIEWS = "home todo sows batch drug stats board tl close settings more input sow morning count cal feedset feedchk gfeed gestset barnmap bcsmap breed".split(" ");
 const SETP = "main accounts backup binit bmshow bulk criteria dash guide hus labels lists reset skin statset supply sync todorank".split(" ");
 async function open(b, vp, page) {

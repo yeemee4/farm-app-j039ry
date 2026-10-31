@@ -1,128 +1,702 @@
 /* ===== 돈사 배치도: 실제 비율로 스톨을 그리고 칸마다 버튼 =====
    칸 누르면: 모돈 정보 · 오늘 급여량 ±0.1 수동 조정(이유) · 옮기기 · 모돈 상세 / 빈 칸이면 모돈 넣기.
    s.stall = "A5" (없으면 번호 순서로 빈 칸에 자동 배치해 보여 줌 = 가배치). 모돈 탭 [배치도] · 현황판 칸 '돈사 배치도' */
-function barnLayout(b){const L=FARM.layout[b];if(!L)return null;if(!L.auto)return L;const [r,n,cw,cd]=L.auto,ai=1.0,W=n*cw+1.6,rows=[],H=.6+r*cd+(r-1)*ai+.8;
-  for(let i=0;i<r;i++)rows.push({id:String.fromCharCode(65+i),x:.2,y:.6+i*(cd+ai),n,cw,cd,from:"right",head:i%2?"up":"down"});
-  return {sure:false,w:W,h:H,rows,areas:r>1?[{x:.2,y:.6+cd,w:W-.2,h:ai,l:"통로",aisle:1}]:[],door:{x:W,y:.6+cd+ai/2}}}
-function stallsOf(b){const L=barnLayout(b);if(!L)return [];const S=[];L.rows.forEach(r=>{for(let k=0;k<r.n;k++){if(r.v){const y=r.from==="bottom"?r.y+(r.n-1-k)*r.cw:r.y+k*r.cw;S.push({id:r.id+(k+1),x:r.x,y,w:r.cd,h:r.cw,head:r.head,v:1})}else{const x=r.from==="right"?r.x+(r.n-1-k)*r.cw:r.x+k*r.cw;S.push({id:r.id+(k+1),x,y:r.y,w:r.cw,h:r.cd,head:r.head})}}});return S}
-function barnOcc(b){const S=stallsOf(b),occ={},ids=new Set(S.map(x=>x.id)),sows=activeSows().filter(s=>s.loc===b).sort((a,c)=>a.id.localeCompare(c.id)),left=[];
-  sows.forEach(s=>{if(s.stall&&ids.has(s.stall)&&!occ[s.stall])occ[s.stall]={s,auto:false};else left.push(s)});
-  const free=S.filter(x=>!occ[x.id]);left.forEach((s,i)=>{if(free[i])occ[free[i].id]={s,auto:true}});return {S,occ,over:Math.max(0,left.length-free.length)}}
-const BM_BARNS=()=>Object.keys(FARM.layout);
-function stallLook(s,b){const i=statusOf(s),st=sowState(s.id),g=typeof gestFeed==="function"?gestFeed(s):null;let c="mate",l1="",l2="";
-  if(st.stage==="포유"){c="lact";l1=t("포유");l2=diff(st.farrow,TODAY)+t("일")}
-  else if(i.key==="분만임박"||(st.mate&&diff(st.mate,TODAY)>=105&&(st.stage==="임신"||st.stage==="교배"))){c="due";l1="D-"+Math.max(0,115-diff(st.mate,TODAY));l2=t("분만")}
-  else if(st.stage==="임신"){c="preg";l1=t("임신");l2=diff(st.mate,TODAY)+""}
-  else if(st.stage==="교배"){c="mate";l1=t("교배");l2=diff(st.mate,TODAY)+""}
-  else if(st.stage==="이유"){c="heat";l1=t("이유");l2=diff(st.since,TODAY)+""}
-  else if(st.stage==="후보"){c="gilt";l1=t("후보");l2=""}
-  else {c="ret";l1=i.key==="재발공태"?t("재발"):i.label;l2=st.since?diff(st.since,TODAY)+"":""}
+function barnLayout(b) {
+  const L = FARM.layout[b];
+  if (!L) return null;
+  if (!L.auto) return L;
+  const [r, n, cw, cd] = L.auto,
+    ai = 1.0,
+    W = n * cw + 1.6,
+    rows = [],
+    H = 0.6 + r * cd + (r - 1) * ai + 0.8;
+  for (let i = 0; i < r; i++)
+    rows.push({
+      id: String.fromCharCode(65 + i),
+      x: 0.2,
+      y: 0.6 + i * (cd + ai),
+      n,
+      cw,
+      cd,
+      from: "right",
+      head: i % 2 ? "up" : "down"
+    });
+  return {
+    sure: false,
+    w: W,
+    h: H,
+    rows,
+    areas: r > 1 ? [{ x: 0.2, y: 0.6 + cd, w: W - 0.2, h: ai, l: "통로", aisle: 1 }] : [],
+    door: { x: W, y: 0.6 + cd + ai / 2 }
+  };
+}
+function stallsOf(b) {
+  const L = barnLayout(b);
+  if (!L) return [];
+  const S = [];
+  L.rows.forEach(r => {
+    for (let k = 0; k < r.n; k++) {
+      if (r.v) {
+        const y = r.from === "bottom" ? r.y + (r.n - 1 - k) * r.cw : r.y + k * r.cw;
+        S.push({ id: r.id + (k + 1), x: r.x, y, w: r.cd, h: r.cw, head: r.head, v: 1 });
+      } else {
+        const x = r.from === "right" ? r.x + (r.n - 1 - k) * r.cw : r.x + k * r.cw;
+        S.push({ id: r.id + (k + 1), x, y: r.y, w: r.cw, h: r.cd, head: r.head });
+      }
+    }
+  });
+  return S;
+}
+function barnOcc(b) {
+  const S = stallsOf(b),
+    occ = {},
+    ids = new Set(S.map(x => x.id)),
+    sows = activeSows()
+      .filter(s => s.loc === b)
+      .sort((a, c) => a.id.localeCompare(c.id)),
+    left = [];
+  sows.forEach(s => {
+    if (s.stall && ids.has(s.stall) && !occ[s.stall]) occ[s.stall] = { s, auto: false };
+    else left.push(s);
+  });
+  const free = S.filter(x => !occ[x.id]);
+  left.forEach((s, i) => {
+    if (free[i]) occ[free[i].id] = { s, auto: true };
+  });
+  return { S, occ, over: Math.max(0, left.length - free.length) };
+}
+const BM_BARNS = () => Object.keys(FARM.layout);
+function stallLook(s, b) {
+  const i = statusOf(s),
+    st = sowState(s.id),
+    g = typeof gestFeed === "function" ? gestFeed(s) : null;
+  let c = "mate",
+    l1 = "",
+    l2 = "";
+  if (st.stage === "포유") {
+    c = "lact";
+    l1 = t("포유");
+    l2 = diff(st.farrow, TODAY) + t("일");
+  } else if (
+    i.key === "분만임박" ||
+    (st.mate && diff(st.mate, TODAY) >= 105 && (st.stage === "임신" || st.stage === "교배"))
+  ) {
+    c = "due";
+    l1 = "D-" + Math.max(0, 115 - diff(st.mate, TODAY));
+    l2 = t("분만");
+  } else if (st.stage === "임신") {
+    c = "preg";
+    l1 = t("임신");
+    l2 = diff(st.mate, TODAY) + "";
+  } else if (st.stage === "교배") {
+    c = "mate";
+    l1 = t("교배");
+    l2 = diff(st.mate, TODAY) + "";
+  } else if (st.stage === "이유") {
+    c = "heat";
+    l1 = t("이유");
+    l2 = diff(st.since, TODAY) + "";
+  } else if (st.stage === "후보") {
+    c = "gilt";
+    l1 = t("후보");
+    l2 = "";
+  } else {
+    c = "ret";
+    l1 = i.key === "재발공태" ? t("재발") : i.label;
+    l2 = st.since ? diff(st.since, TODAY) + "" : "";
+  }
   // 말로 풀어 쓴 상태 · 다음 일정 · 산차·BCS
-  const D=(n)=>n>0?"D-"+n:n===0?t("오늘"):"D+"+(-n);let ph="",nx="";
-  if(c==="lact"){const d=diff(st.farrow,TODAY);ph=`${t("포유")} ${d}${t("일")}`;nx=`${t("이유")} ${D(CFG.weanDay-d)}`}
-  else if(c==="due"){const gd=diff(st.mate,TODAY);ph=`${t("분만")} ${D(115-gd)}`;nx=`${t("분만 예정")} ${kDate(addDays(st.mate,115)).replace(/\s*\(.*\)/,"")}`}
-  else if(c==="preg"){const gd=diff(st.mate,TODAY);ph=`${t("임신")} ${gd}${t("일")}`;nx=gd<108?`${t("분만사 이동")} ${D(108-gd)}`:`${t("분만사 이동")} ${t("오늘")}`}
-  else if(c==="mate"){const gd=diff(st.mate,TODAY);ph=`${t("교배 후")} ${gd}${t("일")}`;nx=gd<21?`${t("임신진단")} ${D(21-gd)}`:`${t("임신진단 시기")}`}
-  else if(c==="heat"){const d=diff(st.since,TODAY);ph=`${t("이유 후")} ${d}${t("일")}`;nx=`${t("발정 예상")} ${D(5-d)}`}
-  else if(c==="gilt"){ph=t("후보돈");nx=t("교배 대기")}
-  else {ph=`${l1}${l2?" "+l2+t("일"):""}`;nx=t("재교배 대기")}
-  const b2=typeof lastBCS==="function"?lastBCS(s.id,TODAY):null,cull=typeof cullWhy==="function"&&!!cullWhy(s);
-  const lk={c,l1,l2,ph,nx,par:i.gilt?0:i.parity,bcs:b2?b2.score:null,cull,kg:g?g.kg:null,ov:g&&g.ov,live:st.stage==="포유"?st.live:null};
-if(lk.c==="heat")lk.ph=`${t("교배 대기")} · ${t("이유")} ${diff(st.since,TODAY)}${t("일")}`;
-  else if(lk.c==="mate"){const gd=diff(st.mate,TODAY);lk.ph=gd>=CFG.returnCheck[0]?`${t("진단 대기")} · ${gd}${t("일")}`:`${t("교배 후")} ${gd}${t("일")}`}
-  else if(lk.c==="gilt")lk.ph=`${t("후보")} · ${t("교배 대기")}`;
-  else if(lk.c==="ret")lk.ph=`${t("재교배 대기")}${st.since?" · "+diff(st.since,TODAY)+t("일"):""}`;
-  const C=bmCfg();
-  if(!C.status)lk.ph="";
-  lk.iss=(bmIssues()[s.id]||[]).slice();
-  if(C.iss.heat&&i.heat)lk.iss.push(["🔥","발정 관찰"]);
-  return lk}
+  const D = n => (n > 0 ? "D-" + n : n === 0 ? t("오늘") : "D+" + -n);
+  let ph = "",
+    nx = "";
+  if (c === "lact") {
+    const d = diff(st.farrow, TODAY);
+    ph = `${t("포유")} ${d}${t("일")}`;
+    nx = `${t("이유")} ${D(CFG.weanDay - d)}`;
+  } else if (c === "due") {
+    const gd = diff(st.mate, TODAY);
+    ph = `${t("분만")} ${D(115 - gd)}`;
+    nx = `${t("분만 예정")} ${kDate(addDays(st.mate, 115)).replace(/\s*\(.*\)/, "")}`;
+  } else if (c === "preg") {
+    const gd = diff(st.mate, TODAY);
+    ph = `${t("임신")} ${gd}${t("일")}`;
+    nx = gd < 108 ? `${t("분만사 이동")} ${D(108 - gd)}` : `${t("분만사 이동")} ${t("오늘")}`;
+  } else if (c === "mate") {
+    const gd = diff(st.mate, TODAY);
+    ph = `${t("교배 후")} ${gd}${t("일")}`;
+    nx = gd < 21 ? `${t("임신진단")} ${D(21 - gd)}` : `${t("임신진단 시기")}`;
+  } else if (c === "heat") {
+    const d = diff(st.since, TODAY);
+    ph = `${t("이유 후")} ${d}${t("일")}`;
+    nx = `${t("발정 예상")} ${D(5 - d)}`;
+  } else if (c === "gilt") {
+    ph = t("후보돈");
+    nx = t("교배 대기");
+  } else {
+    ph = `${l1}${l2 ? " " + l2 + t("일") : ""}`;
+    nx = t("재교배 대기");
+  }
+  const b2 = typeof lastBCS === "function" ? lastBCS(s.id, TODAY) : null,
+    cull = typeof cullWhy === "function" && !!cullWhy(s);
+  const lk = {
+    c,
+    l1,
+    l2,
+    ph,
+    nx,
+    par: i.gilt ? 0 : i.parity,
+    bcs: b2 ? b2.score : null,
+    cull,
+    kg: g ? g.kg : null,
+    ov: g && g.ov,
+    live: st.stage === "포유" ? st.live : null
+  };
+  if (lk.c === "heat") lk.ph = `${t("교배 대기")} · ${t("이유")} ${diff(st.since, TODAY)}${t("일")}`;
+  else if (lk.c === "mate") {
+    const gd = diff(st.mate, TODAY);
+    lk.ph = gd >= CFG.returnCheck[0] ? `${t("진단 대기")} · ${gd}${t("일")}` : `${t("교배 후")} ${gd}${t("일")}`;
+  } else if (lk.c === "gilt") lk.ph = `${t("후보")} · ${t("교배 대기")}`;
+  else if (lk.c === "ret") lk.ph = `${t("재교배 대기")}${st.since ? " · " + diff(st.since, TODAY) + t("일") : ""}`;
+  const C = bmCfg();
+  if (!C.status) lk.ph = "";
+  lk.iss = (bmIssues()[s.id] || []).slice();
+  if (C.iss.heat && i.heat) lk.iss.push(["🔥", "발정 관찰"]);
+  return lk;
+}
 // 칸 오른쪽 값: 급여 / 다음 일정 / 산차·BCS
-function stallVal(lk){const m=ui.bmInfo||bmCfg().third;if(m==="none")return "";if(m==="next")return lk.nx;if(m==="par")return `${lk.par?lk.par+t("산"):t("후보")} · BCS ${lk.bcs||"-"}`;return lk.live?`${t("새끼")} ${lk.live}${t("두")}`:lk.kg?`${t("급여")} ${lk.kg.toFixed(1)}kg${lk.ov?"*":""}`:""}
+function stallVal(lk) {
+  const m = ui.bmInfo || bmCfg().third;
+  if (m === "none") return "";
+  if (m === "next") return lk.nx;
+  if (m === "par") return `${lk.par ? lk.par + t("산") : t("후보")} · BCS ${lk.bcs || "-"}`;
+  return lk.live
+    ? `${t("새끼")} ${lk.live}${t("두")}`
+    : lk.kg
+      ? `${t("급여")} ${lk.kg.toFixed(1)}kg${lk.ov ? "*" : ""}`
+      : "";
+}
 // ---- 시계 방향 입식 순서: 첫 입구에서 시작해 돈사 중심 둘레로 시계 방향 ----
-function doorsOf(b){const L=barnLayout(b);return L.doors||(L.door?[{x:L.door.x,y:L.door.y,dir:"left"}]:[])}
-function clockOrder(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];const cx=L.w/2,cy=L.h/2,d=doorsOf(b)[0]||{x:cx,y:L.h},a0=Math.atan2(d.y-cy,d.x-cx),T=2*Math.PI;
-  return S.map(x=>({x,a:((Math.atan2(x.y+x.h/2-cy,x.x+x.w/2-cx)-a0)%T+T)%T})).sort((p,q)=>p.a-q.a).map(o=>o.x.id)}
-function lastIn(b,occ){const L=(state.lastIn||{})[b];if(L&&occ[L])return L;const R=recsOf("이동").filter(r=>r.data.to===b&&r.data.sow).sort((x,y)=>(y.createdAt||"").localeCompare(x.createdAt||""));
-  for(const r of R){const e=Object.entries(occ).find(([k,o])=>o.s.id===r.data.sow);if(e)return e[0]}return null}
-function nextIn(b,k=3){const {occ}=barnOcc(b),O=clockOrder(b);if(!O.length)return [];const li=lastIn(b,occ),st=li?O.indexOf(li)+1:0,out=[];for(let i=0;i<O.length&&out.length<k;i++){const id=O[(st+i)%O.length];if(!occ[id])out.push(id)}return out}
-function vBarnSvg(b,z,mini){const L=barnLayout(b);if(!L)return "";const NX=nextIn(b),{S,occ}=barnOcc(b),M=v=>v*z,ext=L.annex?L.annex.w:0,W=L.w+ext+(mini?.2:1.2),H=L.h+(mini?.2:1.2);
-  let g=`<svg viewBox="${mini?-1.6*z:-.6*z} ${mini?-1.6*z:-.6*z} ${M(W+(mini?3:0))} ${M(H+(mini?3:0))}" width="${mini?"100%":M(W)}" class="bm-svg" role="img" aria-label="${esc(b)}"><defs><marker id="mArr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#12A150"/></marker></defs>`;
-  g+=`<rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
-  (L.areas||[]).forEach(a=>{if(a.stage){const Bs=liveBatches().filter(x=>stagePlan(bAge(x))===a.stage),hd=Bs.reduce((n,x)=>n+bHeads(x,bAge(x)),0);
-      g+=`<g class="bm-pen" ${mini?"":`data-a="bmPen" data-v="${esc(a.stage)}" role="button" tabindex="0"`}><rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}"/>${mini?"":`<text x="${M(a.x+a.w/2)}" y="${M(a.y)+22}" class="bm-pt">${esc(t(a.l))} · ${hd}${t("두")}</text>${Bs.map((x,i)=>`<text x="${M(a.x+a.w/2)}" y="${M(a.y)+46+i*18}" class="bm-al">${esc(bName(x.k))} · ${bAge(x)}${t("주령")} · ${bHeads(x,bAge(x))}${t("두")}</text>`).join("")}`}</g>`;return}
-    g+=`<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="${a.aisle?"bm-aisle":"bm-area"}"/>${mini?"":`<text x="${M(a.x+a.w/2)}" y="${M(a.y+a.h/2)+4}" class="bm-al">${esc(t(a.l))}</text>`}`});
-  if(L.annex){const a=L.annex;g+=`<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="bm-wall"/>${mini?"":`<text x="${M(a.x+a.w/2)}" y="${M(a.y+a.h/2)}" class="bm-al">${esc(t(a.l))}</text>`}`}
-  (L.doors||[]).forEach(d=>{if(mini){const k=d.dir==="up"?[0,1]:d.dir==="down"?[0,-1]:d.dir==="right"?[-1,0]:[1,0];g+=`<path d="M${M(d.x+k[0]*1.4)} ${M(d.y+k[1]*1.4)} L${M(d.x)} ${M(d.y)}" stroke="#12A150" stroke-width="${z*.35}" stroke-linecap="round" marker-end="url(#mArr)"/>`;return}if(d.dir==="left"||d.dir==="right"){const s3=d.dir==="right"?-1:1,x0=d.x+s3*1.1;g+=`<path d="M${M(x0)} ${M(d.y)} L${M(d.x-s3*.2)} ${M(d.y)} M${M(d.x)+s3*8} ${M(d.y)-8} L${M(d.x-s3*.2)} ${M(d.y)} L${M(d.x)+s3*8} ${M(d.y)+8}" class="bm-door"/><text x="${M(d.x-s3*.6)}" y="${M(d.y)-14}" class="bm-dl">${t("입구")}</text>`;return}const s2=d.dir==="up"?1:-1,y0=d.y+s2*1.1;g+=`<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y-s2*.2)} M${M(d.x)-8} ${M(d.y)+s2*8} L${M(d.x)} ${M(d.y-s2*.2)} L${M(d.x)+8} ${M(d.y)+s2*8}" class="bm-door"/><text x="${M(d.x)+12}" y="${M(d.y-s2*.5)}" class="bm-dl" style="text-anchor:start">${t("입구")}</text>`});
-  if(L.door&&!mini)g+=`<path d="M${M(L.door.x+1.1)} ${M(L.door.y)} L${M(L.door.x-.2)} ${M(L.door.y)} M${M(L.door.x)} ${M(L.door.y)-8} L${M(L.door.x-.2)} ${M(L.door.y)} L${M(L.door.x)} ${M(L.door.y)+8}" class="bm-door"/><text x="${M(L.door.x+.6)}" y="${M(L.door.y)-8}" class="bm-dl">${t("입구")}</text>`;
-  S.forEach(x=>{const o=occ[x.id],lk=o?stallLook(o.s,b):null,sel=ui.moving&&o&&o.s.id===ui.moving,cx=M(x.x+x.w/2),hy=x.head==="down"?M(x.y+x.h-.16):M(x.y),tr=x.v?(x.head==="right"?[M(x.x+x.w-.16),M(x.y)+2,M(.16),M(x.h)-4]:[M(x.x),M(x.y)+2,M(.16),M(x.h)-4]):[M(x.x)+2,hy,M(x.w)-4,M(.16)];
-    g+=`<g class="bm-st ${lk?"c-"+lk.c:"empty"} ${o&&o.auto?"auto":""} ${sel?"sel":""}" ${mini?"":`data-a="stall" data-v="${esc(b)}|${x.id}" role="button" tabindex="0"`}><rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}"/><rect x="${tr[0]}" y="${tr[1]}" width="${tr[2]}" height="${tr[3]}" class="bm-tr"/>`;
-    const ni=NX.indexOf(x.id);if(ni>=0)g+=`<rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}" class="bm-next"/>${mini?"":`<text x="${cx}" y="${M(x.y+x.h/2)+(x.v?4:22)}" class="bm-nx">${"①②③"[ni]}</text>`}`;
+function doorsOf(b) {
+  const L = barnLayout(b);
+  return L.doors || (L.door ? [{ x: L.door.x, y: L.door.y, dir: "left" }] : []);
+}
+function clockOrder(b) {
+  const L = barnLayout(b),
+    S = stallsOf(b);
+  if (!L) return [];
+  const cx = L.w / 2,
+    cy = L.h / 2,
+    d = doorsOf(b)[0] || { x: cx, y: L.h },
+    a0 = Math.atan2(d.y - cy, d.x - cx),
+    T = 2 * Math.PI;
+  return S.map(x => ({ x, a: (((Math.atan2(x.y + x.h / 2 - cy, x.x + x.w / 2 - cx) - a0) % T) + T) % T }))
+    .sort((p, q) => p.a - q.a)
+    .map(o => o.x.id);
+}
+function lastIn(b, occ) {
+  const L = (state.lastIn || {})[b];
+  if (L && occ[L]) return L;
+  const R = recsOf("이동")
+    .filter(r => r.data.to === b && r.data.sow)
+    .sort((x, y) => (y.createdAt || "").localeCompare(x.createdAt || ""));
+  for (const r of R) {
+    const e = Object.entries(occ).find(([k, o]) => o.s.id === r.data.sow);
+    if (e) return e[0];
+  }
+  return null;
+}
+function nextIn(b, k = 3) {
+  const { occ } = barnOcc(b),
+    O = clockOrder(b);
+  if (!O.length) return [];
+  const li = lastIn(b, occ),
+    st = li ? O.indexOf(li) + 1 : 0,
+    out = [];
+  for (let i = 0; i < O.length && out.length < k; i++) {
+    const id = O[(st + i) % O.length];
+    if (!occ[id]) out.push(id);
+  }
+  return out;
+}
+function vBarnSvg(b, z, mini) {
+  const L = barnLayout(b);
+  if (!L) return "";
+  const NX = nextIn(b),
+    { S, occ } = barnOcc(b),
+    M = v => v * z,
+    ext = L.annex ? L.annex.w : 0,
+    W = L.w + ext + (mini ? 0.2 : 1.2),
+    H = L.h + (mini ? 0.2 : 1.2);
+  let g = `<svg viewBox="${mini ? -1.6 * z : -0.6 * z} ${mini ? -1.6 * z : -0.6 * z} ${M(W + (mini ? 3 : 0))} ${M(H + (mini ? 3 : 0))}" width="${mini ? "100%" : M(W)}" class="bm-svg" role="img" aria-label="${esc(b)}"><defs><marker id="mArr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#12A150"/></marker></defs>`;
+  g += `<rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
+  (L.areas || []).forEach(a => {
+    if (a.stage) {
+      const Bs = liveBatches().filter(x => stagePlan(bAge(x)) === a.stage),
+        hd = Bs.reduce((n, x) => n + bHeads(x, bAge(x)), 0);
+      g += `<g class="bm-pen" ${mini ? "" : `data-a="bmPen" data-v="${esc(a.stage)}" role="button" tabindex="0"`}><rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}"/>${mini ? "" : `<text x="${M(a.x + a.w / 2)}" y="${M(a.y) + 22}" class="bm-pt">${esc(t(a.l))} · ${hd}${t("두")}</text>${Bs.map((x, i) => `<text x="${M(a.x + a.w / 2)}" y="${M(a.y) + 46 + i * 18}" class="bm-al">${esc(bName(x.k))} · ${bAge(x)}${t("주령")} · ${bHeads(x, bAge(x))}${t("두")}</text>`).join("")}`}</g>`;
+      return;
+    }
+    g += `<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="${a.aisle ? "bm-aisle" : "bm-area"}"/>${mini ? "" : `<text x="${M(a.x + a.w / 2)}" y="${M(a.y + a.h / 2) + 4}" class="bm-al">${esc(t(a.l))}</text>`}`;
+  });
+  if (L.annex) {
+    const a = L.annex;
+    g += `<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="bm-wall"/>${mini ? "" : `<text x="${M(a.x + a.w / 2)}" y="${M(a.y + a.h / 2)}" class="bm-al">${esc(t(a.l))}</text>`}`;
+  }
+  (L.doors || []).forEach(d => {
+    if (mini) {
+      const k = d.dir === "up" ? [0, 1] : d.dir === "down" ? [0, -1] : d.dir === "right" ? [-1, 0] : [1, 0];
+      g += `<path d="M${M(d.x + k[0] * 1.4)} ${M(d.y + k[1] * 1.4)} L${M(d.x)} ${M(d.y)}" stroke="#12A150" stroke-width="${z * 0.35}" stroke-linecap="round" marker-end="url(#mArr)"/>`;
+      return;
+    }
+    if (d.dir === "left" || d.dir === "right") {
+      const s3 = d.dir === "right" ? -1 : 1,
+        x0 = d.x + s3 * 1.1;
+      g += `<path d="M${M(x0)} ${M(d.y)} L${M(d.x - s3 * 0.2)} ${M(d.y)} M${M(d.x) + s3 * 8} ${M(d.y) - 8} L${M(d.x - s3 * 0.2)} ${M(d.y)} L${M(d.x) + s3 * 8} ${M(d.y) + 8}" class="bm-door"/><text x="${M(d.x - s3 * 0.6)}" y="${M(d.y) - 14}" class="bm-dl">${t("입구")}</text>`;
+      return;
+    }
+    const s2 = d.dir === "up" ? 1 : -1,
+      y0 = d.y + s2 * 1.1;
+    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + 12}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:start">${t("입구")}</text>`;
+  });
+  if (L.door && !mini)
+    g += `<path d="M${M(L.door.x + 1.1)} ${M(L.door.y)} L${M(L.door.x - 0.2)} ${M(L.door.y)} M${M(L.door.x)} ${M(L.door.y) - 8} L${M(L.door.x - 0.2)} ${M(L.door.y)} L${M(L.door.x)} ${M(L.door.y) + 8}" class="bm-door"/><text x="${M(L.door.x + 0.6)}" y="${M(L.door.y) - 8}" class="bm-dl">${t("입구")}</text>`;
+  S.forEach(x => {
+    const o = occ[x.id],
+      lk = o ? stallLook(o.s, b) : null,
+      sel = ui.moving && o && o.s.id === ui.moving,
+      cx = M(x.x + x.w / 2),
+      hy = x.head === "down" ? M(x.y + x.h - 0.16) : M(x.y),
+      tr = x.v
+        ? x.head === "right"
+          ? [M(x.x + x.w - 0.16), M(x.y) + 2, M(0.16), M(x.h) - 4]
+          : [M(x.x), M(x.y) + 2, M(0.16), M(x.h) - 4]
+        : [M(x.x) + 2, hy, M(x.w) - 4, M(0.16)];
+    g += `<g class="bm-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""}" ${mini ? "" : `data-a="stall" data-v="${esc(b)}|${x.id}" role="button" tabindex="0"`}><rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}"/><rect x="${tr[0]}" y="${tr[1]}" width="${tr[2]}" height="${tr[3]}" class="bm-tr"/>`;
+    const ni = NX.indexOf(x.id);
+    if (ni >= 0)
+      g += `<rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}" class="bm-next"/>${mini ? "" : `<text x="${cx}" y="${M(x.y + x.h / 2) + (x.v ? 4 : 22)}" class="bm-nx">${"①②③"[ni]}</text>`}`;
     // 분만틀(돈방 폭 1.2m 이상): 가운데 모돈틀 0.6m × 2.0m + 양옆 자돈 공간, 한쪽 구석 보온 상자
-    if(x.w>=1.2&&!x.v){const ix=x.x+(x.w-.6)/2,iy=x.head==="down"?x.y+x.h-.16-2.0:x.y+.16;g+=`<rect x="${M(ix)}" y="${M(iy)}" width="${M(.6)}" height="${M(2.0)}" class="bm-crate"/><rect x="${M(x.x+.08)}" y="${M(x.head==="down"?x.y+.08:x.y+x.h-.58)}" width="${M(.5)}" height="${M(.5)}" rx="3" class="bm-creep"/>`}
-    if(!mini&&x.v){const my=M(x.y+x.h/2)+4,lx=x.head==="right"?M(x.x)+4:M(x.x+.2)+4;g+=`<text x="${lx}" y="${my}" class="bm-id" style="text-anchor:start">${x.id}</text>`+(o?`<text x="${lx+30}" y="${my}" class="bm-no" style="text-anchor:start">${esc(o.s.id.replace(/^\d+-/,""))}</text><text x="${lx+60}" y="${my}" class="bm-st1" style="text-anchor:start">${esc(lk.l1)} ${esc(lk.l2)}</text>${(lk.live||lk.kg)?`<text x="${(x.head==="right"?M(x.x+x.w-.16):M(x.x+x.w))-5}" y="${my}" class="bm-kg" style="text-anchor:end;font-weight:700">${lk.live?t("새끼")+" "+lk.live:lk.kg.toFixed(1)+(lk.ov?"*":"")}</text>`:""}`:`<text x="${cx}" y="${my}" class="bm-em">${t("빈 칸")}</text>`)}
-    else if(!mini){const ty=x.head==="down"?M(x.y)+14:M(x.y+.16)+14,big=x.w>=1;g+=`<text x="${cx}" y="${ty}" class="bm-id">${x.id}</text>`;
-      if(o){g+=`<text x="${cx}" y="${ty+17}" class="bm-no">${esc(o.s.id.replace(/^\d+-/,""))}</text><text x="${cx}" y="${ty+33}" class="bm-st1">${esc(lk.l1)}</text>${lk.l2?`<text x="${cx}" y="${ty+46}" class="bm-st1">${esc(lk.l2)}</text>`:""}${lk.live?`<text x="${cx}" y="${ty+62}" class="bm-kg">${t("새끼")} ${lk.live}</text>`:lk.kg?`<text x="${cx}" y="${ty+64}" class="bm-kg">${lk.kg.toFixed(1)}${lk.ov?"*":""}</text>`:""}`}
-      else g+=`<text x="${cx}" y="${ty+30}" class="bm-em">${t("빈 칸")}</text>`}
-    g+=`</g>`});
-  return g+`</svg>`}
+    if (x.w >= 1.2 && !x.v) {
+      const ix = x.x + (x.w - 0.6) / 2,
+        iy = x.head === "down" ? x.y + x.h - 0.16 - 2.0 : x.y + 0.16;
+      g += `<rect x="${M(ix)}" y="${M(iy)}" width="${M(0.6)}" height="${M(2.0)}" class="bm-crate"/><rect x="${M(x.x + 0.08)}" y="${M(x.head === "down" ? x.y + 0.08 : x.y + x.h - 0.58)}" width="${M(0.5)}" height="${M(0.5)}" rx="3" class="bm-creep"/>`;
+    }
+    if (!mini && x.v) {
+      const my = M(x.y + x.h / 2) + 4,
+        lx = x.head === "right" ? M(x.x) + 4 : M(x.x + 0.2) + 4;
+      g +=
+        `<text x="${lx}" y="${my}" class="bm-id" style="text-anchor:start">${x.id}</text>` +
+        (o
+          ? `<text x="${lx + 30}" y="${my}" class="bm-no" style="text-anchor:start">${esc(o.s.id.replace(/^\d+-/, ""))}</text><text x="${lx + 60}" y="${my}" class="bm-st1" style="text-anchor:start">${esc(lk.l1)} ${esc(lk.l2)}</text>${lk.live || lk.kg ? `<text x="${(x.head === "right" ? M(x.x + x.w - 0.16) : M(x.x + x.w)) - 5}" y="${my}" class="bm-kg" style="text-anchor:end;font-weight:700">${lk.live ? t("새끼") + " " + lk.live : lk.kg.toFixed(1) + (lk.ov ? "*" : "")}</text>` : ""}`
+          : `<text x="${cx}" y="${my}" class="bm-em">${t("빈 칸")}</text>`);
+    } else if (!mini) {
+      const ty = x.head === "down" ? M(x.y) + 14 : M(x.y + 0.16) + 14,
+        big = x.w >= 1;
+      g += `<text x="${cx}" y="${ty}" class="bm-id">${x.id}</text>`;
+      if (o) {
+        g += `<text x="${cx}" y="${ty + 17}" class="bm-no">${esc(o.s.id.replace(/^\d+-/, ""))}</text><text x="${cx}" y="${ty + 33}" class="bm-st1">${esc(lk.l1)}</text>${lk.l2 ? `<text x="${cx}" y="${ty + 46}" class="bm-st1">${esc(lk.l2)}</text>` : ""}${lk.live ? `<text x="${cx}" y="${ty + 62}" class="bm-kg">${t("새끼")} ${lk.live}</text>` : lk.kg ? `<text x="${cx}" y="${ty + 64}" class="bm-kg">${lk.kg.toFixed(1)}${lk.ov ? "*" : ""}</text>` : ""}`;
+      } else g += `<text x="${cx}" y="${ty + 30}" class="bm-em">${t("빈 칸")}</text>`;
+    }
+    g += `</g>`;
+  });
+  return g + `</svg>`;
+}
 // ---- 칸 목록형 (휴대폰 기본): 모든 줄을 세로 기둥으로, 실제 순서대로 나란히 · 1번(입구 쪽)이 위 · 칸 = 큰 버튼 ----
-function rowColumns(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];
+function rowColumns(b) {
+  const L = barnLayout(b),
+    S = stallsOf(b);
+  if (!L) return [];
   // 기둥 순서: 세로 줄은 x 순, 가로 줄은 y 순(위 줄이 왼쪽 기둥)
-  return L.rows.map(r=>({r,S:S.filter(x=>x.id.startsWith(r.id)&&/^\d+$/.test(x.id.slice(r.id.length))).sort((a,c)=>+a.id.slice(r.id.length)-+c.id.slice(r.id.length)),key:r.v?r.x:r.y}))
-    .sort((a,c)=>a.key-c.key)}
-function rowHint(r,L){return t("현장")+" "+(r.v?(r.from==="bottom"?t("1번 = 아래쪽"):t("1번 = 위쪽")):(r.from==="right"?t("1번 = 오른쪽"):t("1번 = 왼쪽")))}
+  return L.rows
+    .map(r => ({
+      r,
+      S: S.filter(x => x.id.startsWith(r.id) && /^\d+$/.test(x.id.slice(r.id.length))).sort(
+        (a, c) => +a.id.slice(r.id.length) - +c.id.slice(r.id.length)
+      ),
+      key: r.v ? r.x : r.y
+    }))
+    .sort((a, c) => a.key - c.key);
+}
+function rowHint(r, L) {
+  return (
+    t("현장") +
+    " " +
+    (r.v
+      ? r.from === "bottom"
+        ? t("1번 = 아래쪽")
+        : t("1번 = 위쪽")
+      : r.from === "right"
+        ? t("1번 = 오른쪽")
+        : t("1번 = 왼쪽"))
+  );
+}
 // 입구가 칸 목록(1번 위)의 위쪽 끝인지 아래쪽 끝인지
-function doorEnds(b){const L=barnLayout(b),r=L.rows[0],E={top:0,bot:0};doorsOf(b).forEach(d=>{let near1;if(r.v){const y1=r.from==="bottom"?r.y+r.n*r.cw:r.y;near1=Math.abs(d.y-y1)<Math.abs(d.y-(r.from==="bottom"?r.y:r.y+r.n*r.cw))}else{const x1=r.from==="right"?r.x+r.n*r.cw:r.x;near1=Math.abs(d.x-x1)<Math.abs(d.x-(r.from==="right"?r.x:r.x+r.n*r.cw))}E[near1?"top":"bot"]++});return E}
-function vBarnList(b,mode){const L=barnLayout(b),{occ}=barnOcc(b),C=rowColumns(b),NX=mode==="bcs"?[]:nextIn(b),DE=doorEnds(b),due=mode==="bcs"&&typeof bcsDue==="function"?new Set(bcsDue().map(x=>x.s.id)):new Set();const mini=`<div class="bl-mini">${vBarnSvg(b,9,1)}<div><b>${t("입구")} ${doorsOf(b).length}${t("곳")}</b><span>${DE.top?`▲ ${t("목록 위쪽 끝")}`:""}${DE.top&&DE.bot?" · ":""}${DE.bot?`▼ ${t("목록 아래쪽 끝")}`:""}</span>${mode?"":NX.length?`<span class="bl-nxt">${t("다음 입식")}: ${NX.map((x,i)=>"①②③"[i]+" "+x).join(" · ")}</span>`:`<span>${t("빈 칸 없음")}</span>`}<small>${mode?"":t("시계 방향 순서 · 입구에서 시작")}</small></div></div>`;
-  let h=mode==="pick"?"":mode==="bcs"?`<div class="note bl-how">${t("칸을 누르고 점수를 고르면 바로 저장됩니다. 측정 시점은 모돈 상태로 자동.")}</div>`+mini:`<div class="chips bl-info">${[["feed","급여"],["next","다음 일정"],["par","산차·BCS"]].map(([k,l])=>`<button type="button" class="chip ${(ui.bmInfo||(typeof bmCfg==="function"?bmCfg().third:"feed"))===k?"on":""}" data-a="bmInfo" data-v="${k}">${t(l)}</button>`).join("")}</div><div class="note bl-how">${t("칸 읽는 법")}: <b>${t("칸 번호")}</b> · <b>${t("모돈 번호")}</b> · ${t("지금 상태")} · ${t("셋째 줄 = 위에서 고른 정보")} · ⚠ ${t("도태 후보")} · * ${t("급여 수동 조정")} · ${t("넷째 줄 아이콘 = 오늘 할 일")}</div>`+mini;
-  (L.areas||[]).filter(a=>a.stage).forEach(a=>{const Bs=liveBatches().filter(x=>stagePlan(bAge(x))===a.stage),hd=Bs.reduce((n,x)=>n+bHeads(x,bAge(x)),0);h+=`<button type="button" class="bl-pen" data-a="bmPen" data-v="${esc(a.stage)}"><b>${esc(t(a.l))}</b><span>${hd}${t("두")} · ${Bs.map(x=>esc(bName(x.k).replace(" 돈군",""))+" "+bAge(x)+t("주령")).join(" · ")||t("비어 있음")}</span><i>›</i></button>`});
-  h+=`<div class="bl" style="--cols:${C.length}">`+C.map((c,ci)=>`${ci?`<div class="bl-aisle">${DE.top?`<i>▲<br>${t("입구")}</i>`:"<i></i>"}<span>${t("통로")}</span>${DE.bot?`<i>${t("입구")}<br>▼</i>`:"<i></i>"}</div>`:""}<div class="bl-col"><div class="bl-h"><b>${c.r.id}${t("줄")}</b><small>${rowHint(c.r,L)}</small></div>${c.S.map(x=>{const o=occ[x.id],lk=o?stallLook(o.s,b):null,sel=ui.moving&&o&&o.s.id===ui.moving;
-    const ni=NX.indexOf(x.id),bc=mode==="bcs"&&o?bcsInfo(o.s,due):null,pk=mode==="pick"&&o?pickInfo(o.s):null;return `<button type="button" class="bl-st ${lk?"c-"+lk.c:"empty"} ${o&&o.auto?"auto":""} ${sel?"sel":""} ${ni>=0?"next":""} ${bc?bc.cls:""} ${pk?pk.cls:""}" data-a="${mode==="bcs"?(o?"bcsTap":""):mode==="pick"?(o?"pick":""):"stall"}" data-v="${mode==="pick"&&o?o.s.id:esc(b)+"|"+x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o?`<b>${esc(o.s.id)}${lk.cull?' <small class="bl-cull">⚠</small>':""}</b><span>${esc(lk.ph)}</span><em>${bc?bc.txt:pk?pk.txt:esc(stallVal(lk))}</em>${!mode&&lk.iss&&lk.iss.length?`<u class="bl-iss">${lk.iss.map(x=>`<i title="${esc(t(x[1]))}">${x[0]}</i>`).join("")}</u>`:""}`:`<span class="bl-em">${ni>=0?`${"①②③"[ni]} ${t("다음 입식")}`:t("빈 칸")}</span>`}</button>`}).join("")}</div>`).join("")+`</div>`;
-  return h}
+function doorEnds(b) {
+  const L = barnLayout(b),
+    r = L.rows[0],
+    E = { top: 0, bot: 0 };
+  doorsOf(b).forEach(d => {
+    let near1;
+    if (r.v) {
+      const y1 = r.from === "bottom" ? r.y + r.n * r.cw : r.y;
+      near1 = Math.abs(d.y - y1) < Math.abs(d.y - (r.from === "bottom" ? r.y : r.y + r.n * r.cw));
+    } else {
+      const x1 = r.from === "right" ? r.x + r.n * r.cw : r.x;
+      near1 = Math.abs(d.x - x1) < Math.abs(d.x - (r.from === "right" ? r.x : r.x + r.n * r.cw));
+    }
+    E[near1 ? "top" : "bot"]++;
+  });
+  return E;
+}
+function vBarnList(b, mode) {
+  const L = barnLayout(b),
+    { occ } = barnOcc(b),
+    C = rowColumns(b),
+    NX = mode === "bcs" ? [] : nextIn(b),
+    DE = doorEnds(b),
+    due = mode === "bcs" && typeof bcsDue === "function" ? new Set(bcsDue().map(x => x.s.id)) : new Set();
+  const mini = `<div class="bl-mini">${vBarnSvg(b, 9, 1)}<div><b>${t("입구")} ${doorsOf(b).length}${t("곳")}</b><span>${DE.top ? `▲ ${t("목록 위쪽 끝")}` : ""}${DE.top && DE.bot ? " · " : ""}${DE.bot ? `▼ ${t("목록 아래쪽 끝")}` : ""}</span>${mode ? "" : NX.length ? `<span class="bl-nxt">${t("다음 입식")}: ${NX.map((x, i) => "①②③"[i] + " " + x).join(" · ")}</span>` : `<span>${t("빈 칸 없음")}</span>`}<small>${mode ? "" : t("시계 방향 순서 · 입구에서 시작")}</small></div></div>`;
+  let h =
+    mode === "pick"
+      ? ""
+      : mode === "bcs"
+        ? `<div class="note bl-how">${t("칸을 누르고 점수를 고르면 바로 저장됩니다. 측정 시점은 모돈 상태로 자동.")}</div>` +
+          mini
+        : `<div class="chips bl-info">${[
+            ["feed", "급여"],
+            ["next", "다음 일정"],
+            ["par", "산차·BCS"]
+          ]
+            .map(
+              ([k, l]) =>
+                `<button type="button" class="chip ${(ui.bmInfo || (typeof bmCfg === "function" ? bmCfg().third : "feed")) === k ? "on" : ""}" data-a="bmInfo" data-v="${k}">${t(l)}</button>`
+            )
+            .join(
+              ""
+            )}</div><div class="note bl-how">${t("칸 읽는 법")}: <b>${t("칸 번호")}</b> · <b>${t("모돈 번호")}</b> · ${t("지금 상태")} · ${t("셋째 줄 = 위에서 고른 정보")} · ⚠ ${t("도태 후보")} · * ${t("급여 수동 조정")} · ${t("넷째 줄 아이콘 = 오늘 할 일")}</div>` +
+          mini;
+  (L.areas || [])
+    .filter(a => a.stage)
+    .forEach(a => {
+      const Bs = liveBatches().filter(x => stagePlan(bAge(x)) === a.stage),
+        hd = Bs.reduce((n, x) => n + bHeads(x, bAge(x)), 0);
+      h += `<button type="button" class="bl-pen" data-a="bmPen" data-v="${esc(a.stage)}"><b>${esc(t(a.l))}</b><span>${hd}${t("두")} · ${Bs.map(x => esc(bName(x.k).replace(" 돈군", "")) + " " + bAge(x) + t("주령")).join(" · ") || t("비어 있음")}</span><i>›</i></button>`;
+    });
+  h +=
+    `<div class="bl" style="--cols:${C.length}">` +
+    C.map(
+      (c, ci) =>
+        `${ci ? `<div class="bl-aisle">${DE.top ? `<i>▲<br>${t("입구")}</i>` : "<i></i>"}<span>${t("통로")}</span>${DE.bot ? `<i>${t("입구")}<br>▼</i>` : "<i></i>"}</div>` : ""}<div class="bl-col"><div class="bl-h"><b>${c.r.id}${t("줄")}</b><small>${rowHint(c.r, L)}</small></div>${c.S.map(
+          x => {
+            const o = occ[x.id],
+              lk = o ? stallLook(o.s, b) : null,
+              sel = ui.moving && o && o.s.id === ui.moving;
+            const ni = NX.indexOf(x.id),
+              bc = mode === "bcs" && o ? bcsInfo(o.s, due) : null,
+              pk = mode === "pick" && o ? pickInfo(o.s) : null;
+            return `<button type="button" class="bl-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""} ${ni >= 0 ? "next" : ""} ${bc ? bc.cls : ""} ${pk ? pk.cls : ""}" data-a="${mode === "bcs" ? (o ? "bcsTap" : "") : mode === "pick" ? (o ? "pick" : "") : "stall"}" data-v="${mode === "pick" && o ? o.s.id : esc(b) + "|" + x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o ? `<b>${esc(o.s.id)}${lk.cull ? ' <small class="bl-cull">⚠</small>' : ""}</b><span>${esc(lk.ph)}</span><em>${bc ? bc.txt : pk ? pk.txt : esc(stallVal(lk))}</em>${!mode && lk.iss && lk.iss.length ? `<u class="bl-iss">${lk.iss.map(x => `<i title="${esc(t(x[1]))}">${x[0]}</i>`).join("")}</u>` : ""}` : `<span class="bl-em">${ni >= 0 ? `${"①②③"[ni]} ${t("다음 입식")}` : t("빈 칸")}</span>`}</button>`;
+          }
+        ).join("")}</div>`
+    ).join("") +
+    `</div>`;
+  return h;
+}
 // ---- 모돈 기록 입력: 배치도로 고르기 (대상 강조 · 입력함 ✓ · 선택) ----
-let PKX=null;
-function pickCtx(){const I=ui.in,F=FORMS[I.type];if(!PKX||PKX.k!==I.type+"|"+I.date+"|"+state.records.length){const done=new Set(state.records.filter(r=>r.type===I.type&&r.workDate===I.date&&r.data.sow).map(r=>r.data.sow));PKX={k:I.type+"|"+I.date+"|"+state.records.length,done,tg:new Set(activeSows().filter(s=>F.sow.filter(statusOf(s),I.date)).map(s=>s.id))}}return PKX}
-function pickInfo(s){const I=ui.in,P=pickCtx(),sel=I.sel.includes(s.id);return {cls:sel?"pk-sel":P.done.has(s.id)?"pk-done":P.tg.has(s.id)?"pk-tg":"pk-off",txt:sel?`✔ ${t("선택됨")}`:P.done.has(s.id)?`✓ ${t("입력함")}`:P.tg.has(s.id)?t("대상"):""}}
-function vPickMap(){const B=BM_BARNS(),P=pickCtx(),cnt=b=>activeSows().filter(s=>s.loc===b&&P.tg.has(s.id)&&!P.done.has(s.id)).length;
-  if(!ui.pkBarn||!B.includes(ui.pkBarn)){ui.pkBarn=B.slice().sort((a,c)=>cnt(c)-cnt(a))[0]}const b=ui.pkBarn;
-  return `<div class="chips">${B.map(x=>`<button type="button" class="chip ${x===b?"on":""}" data-a="pkBarn" data-v="${esc(x)}">${esc(t(x))}${cnt(x)?` <b>${cnt(x)}</b>`:""}</button>`).join("")}</div><div class="note bl-how">${t("진한 칸 = 이 기록 대상 · ✓ 입력함 · 흐린 칸도 누를 수 있음")}</div>`+vBarnList(b,"pick")}
+let PKX = null;
+function pickCtx() {
+  const I = ui.in,
+    F = FORMS[I.type];
+  if (!PKX || PKX.k !== I.type + "|" + I.date + "|" + state.records.length) {
+    const done = new Set(
+      state.records.filter(r => r.type === I.type && r.workDate === I.date && r.data.sow).map(r => r.data.sow)
+    );
+    PKX = {
+      k: I.type + "|" + I.date + "|" + state.records.length,
+      done,
+      tg: new Set(
+        activeSows()
+          .filter(s => F.sow.filter(statusOf(s), I.date))
+          .map(s => s.id)
+      )
+    };
+  }
+  return PKX;
+}
+function pickInfo(s) {
+  const I = ui.in,
+    P = pickCtx(),
+    sel = I.sel.includes(s.id);
+  return {
+    cls: sel ? "pk-sel" : P.done.has(s.id) ? "pk-done" : P.tg.has(s.id) ? "pk-tg" : "pk-off",
+    txt: sel ? `✔ ${t("선택됨")}` : P.done.has(s.id) ? `✓ ${t("입력함")}` : P.tg.has(s.id) ? t("대상") : ""
+  };
+}
+function vPickMap() {
+  const B = BM_BARNS(),
+    P = pickCtx(),
+    cnt = b => activeSows().filter(s => s.loc === b && P.tg.has(s.id) && !P.done.has(s.id)).length;
+  if (!ui.pkBarn || !B.includes(ui.pkBarn)) {
+    ui.pkBarn = B.slice().sort((a, c) => cnt(c) - cnt(a))[0];
+  }
+  const b = ui.pkBarn;
+  return (
+    `<div class="chips">${B.map(x => `<button type="button" class="chip ${x === b ? "on" : ""}" data-a="pkBarn" data-v="${esc(x)}">${esc(t(x))}${cnt(x) ? ` <b>${cnt(x)}</b>` : ""}</button>`).join("")}</div><div class="note bl-how">${t("진한 칸 = 이 기록 대상 · ✓ 입력함 · 흐린 칸도 누를 수 있음")}</div>` +
+    vBarnList(b, "pick")
+  );
+}
 // ---- BCS 입력용 배치도 ----
-function bcsInfo(s,due){const r=recsOf("BCS").filter(x=>x.data.sow===s.id).sort((a,b)=>(b.createdAt||"").localeCompare(a.createdAt||""))[0];
-  if(r&&r.workDate===TODAY)return {cls:"bcs-done",txt:`✓ ${t("오늘")} BCS ${r.data.score}`};const need=due.has(s.id);
-  return {cls:need?"bcs-need":"",txt:(r?`BCS ${r.data.score} · ${kDate(r.workDate).replace(/\s*\(.*\)/,"")}`:t("BCS 없음"))+(need?` · ${t("측정 필요")}`:"")}}
-function bcsWhen(s){const st=sowState(s.id);if(st.stage==="이유")return "이유 시";if(st.stage==="포유")return "분만 시";if((st.stage==="교배"||st.stage==="임신")&&st.mate){const g=diff(st.mate,TODAY);return g<=3?"교배 시":g>=108?"분만 시":"임신 중"}return "기타"}
-const bcsHub=on=>`<div class="chips">${[["bcsmap","🗺 BCS 배치도"],["gfeed","임신돈 급여표"]].map(([k,l])=>`<button type="button" class="chip ${on===k?"on":""}" data-a="tab" data-v="${k}">${t(l)}</button>`).join("")}</div>`;
-function vBcsMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],n=recsOf("BCS").filter(r=>r.workDate===TODAY).length;
-  return `<div class="pagehd"><button class="back" type="button" data-a="bcsList">‹ BCS ${t("목록 입력")}</button><h2>BCS · ${t("배치도")}</h2></div>${bcsHub("bcsmap")}<div class="banner info"><b>${t("오늘 측정")} ${n}${t("두")}</b><span>${t("측정 필요")} ${typeof bcsDue==="function"?bcsDue().length:0}${t("두")}</span></div>
-  <div class="chips">${B.map(x=>`<button type="button" class="chip ${x===b?"on":""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))}</button>`).join("")}</div>`+vBarnList(b,"bcs")}
-function bcsSheet(b,sid){const o=barnOcc(b).occ[sid];if(!o)return;const s=o.s,w=bcsWhen(s),i=statusOf(s);
-  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="sh-hd"><h2>${esc(t(b))} ${sid} · ${s.id} BCS</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><div class="sow-meta">${esc(i.label)} · ${esc(i.sub||"")} · ${t("측정 시점")}: <b>${t(w)}</b></div>
-  <div class="bcs-pick">${["1","1.5","2","2.5","3","3.5","4","4.5","5"].map(v=>`<button type="button" class="bcs-b b${v.replace(".","_")}" data-a="bcsSave" data-v="${esc(b)}|${sid}|${v}">${v}</button>`).join("")}</div><div class="note">${t("2 이하 마름 · 3 적정 · 4 이상 살찜")}</div></div></div></div>`}
-function vBarnMap(){const B=BM_BARNS(),b=ui.bm&&B.includes(ui.bm)?ui.bm:B[0],z=ui.bmZ||60,L=barnLayout(b),{S,occ,over}=barnOcc(b),n=Object.keys(occ).length,auto=Object.values(occ).some(o=>o.auto);
-  let h=`<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="sows">‹ ${t("모돈")}</button><h2>${t("돈사 배치도")}</h2><button class="act" type="button" data-a="tab" data-v="board" style="margin-left:auto">${t("현황판에서 보기")} ›</button></div>`;
-  h+=`<div class="chips">${B.map(x=>{const c=barnOcc(x);return `<button type="button" class="chip ${x===b?"on":""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))} ${Object.keys(c.occ).length}/${c.S.length}</button>`}).join("")}</div>`;
-  if(ui.moving)h+=`<div class="banner warn-b"><b>${t("옮기기")} ${esc(ui.moving)}</b><span>${t("옮길 칸을 누르세요 (다른 돈사는 위 칩으로 바꾼 뒤)")} · <button type="button" class="sbtn" data-a="bmCancel">${t("취소")}</button></span></div>`;
-  h+=`<div class="bm-head"><span>${n}${t("두")} / ${S.length}${t("칸")} · ${t("빈 칸")} ${S.length-n}${over?` · <b class="dv-bad">${t("칸 부족")} ${over}${t("두")}</b>`:""}${!L.sure?` · <b class="dv-warn">${t("가배치 (돈사 그림 받기 전)")}</b>`:""}${auto?` · <span class="sow-meta">${t("흐린 칸 = 칸 번호 미지정(자동 배치)")}</span>`:""}</span>${(ui.bmReal??(innerWidth>=1024))?`<span class="bm-z">`:`<span class="bm-z" hidden>`}<button type="button" class="sbtn" data-a="bmZoom" data-v="-15" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="bmZoom" data-v="15" aria-label="${t("확대")}">＋</button></span></div>`;
-  const real=ui.bmReal??(innerWidth>=1024);
-  h+=`<div class="chips"><button type="button" class="chip ${real?"":"on"}" data-a="bmView" data-v="0">${t("칸 목록")}</button><button type="button" class="chip ${real?"on":""}" data-a="bmView" data-v="1">${t("실제 배치")}</button></div>`;
-  h+=real?`<div class="bm-wrap">${vBarnSvg(b,z)}</div>`:vBarnList(b);
-  h+=`<div class="legend bm-lg">${[["preg","임신"],["mate","교배·확인 전"],["heat","이유 후 발정 대기"],["ret","재발·공태"],["due","분만 임박"],["lact","포유"],["gilt","후보"]].map(([c,l])=>`<span><i class="bm-sw c-${c}"></i>${t(l)}</span>`).join("")}<span>* ${t("수동 조정 급여")}</span></div>`;
-  return h}
-function openStall(b,sid){const {occ}=barnOcc(b),o=occ[sid];
-  if(ui.moving){const id=ui.moving,s=state.sows.find(x=>x.id===id);if(!s)return;if(o&&o.s.id!==id){if(!confirm(`${sid} ${t("칸의")} ${o.s.id}${t("와 자리를 바꿀까요?")}`))return;o.s.stall=s.loc===b?s.stall:null;if(s.loc!==b)o.s.stall=null}
-    if(s.loc!==b){if(!confirm(`${id} ${t("모돈을")} ${t(b)}${t("(으)로 변경하시겠습니까?")}`))return;moveSow(id,b)}s.stall=sid;(state.lastIn=state.lastIn||{})[b]=sid;ui.moving=null;save();render();toast(`${id} → ${t(b)} ${sid}`);return}
-  if(!o){const cand=activeSows().filter(s=>!(s.loc===b&&s.stall)).sort((x,y)=>(x.loc===b?0:1)-(y.loc===b?0:1)||x.id.localeCompare(y.id));ui.stallQ=ui.stallQ||"";
-    $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="sh-hd"><h2>${esc(t(b))} ${sid} · ${t("빈 칸")}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><div class="note">${t("이 칸에 넣을 모돈을 고르세요. 다른 돈사 모돈이면 위치 이동도 기록됩니다.")}</div><div class="chipwrap">${cand.slice(0,60).map(s=>`<button type="button" class="chip wrap" data-a="stallPut" data-v="${esc(b)}|${sid}|${s.id}">${s.id}${s.loc!==b?` <small>${esc(t(s.loc))}</small>`:""}</button>`).join("")}</div></div></div></div>`;return}
-  const s=o.s,i=statusOf(s),g=typeof gestFeed==="function"?gestFeed(s):null,b2=lastBCS?lastBCS(s.id,TODAY):null;
-  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="sh-hd"><h2>${esc(t(b))} ${sid} · ${s.id}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">
-    <div class="sow-top"><b>${esc(i.label)}</b><span class="sow-meta">${esc(i.sub||"")} · ${i.gilt?t("후보"):i.parity+t("산")} · BCS ${b2?b2.score:"-"}</span></div>
-    ${g?`<div class="panel gf-ov"><div class="setrow"><span><b>${t("오늘 급여")}</b> <small class="sow-meta">${esc(g.why.join(" · "))}</small></span><div class="stepper"><button type="button" data-a="gfOv" data-v="${s.id}" data-k="-0.1" aria-label="−">−</button><input type="number" value="${g.kg.toFixed(1)}" readonly aria-label="kg"><button type="button" data-a="gfOv" data-v="${s.id}" data-k="0.1" aria-label="+">+</button></div></div>
-      <div class="chipwrap">${["식욕 부진","마름","살찜","기타"].map(r=>`<button type="button" class="chip ${(state.gfOv||{})[s.id]&&state.gfOv[s.id].why===r?"on":""}" data-a="gfWhy" data-v="${s.id}|${r}">${t(r)}</button>`).join("")}${g.ov?`<button type="button" class="chip" data-a="gfOvClr" data-v="${s.id}">${t("기준으로")}</button>`:""}</div>${gfUnit(s.loc,g.kg)?`<div class="sow-meta">${gfUnit(s.loc,g.kg)}</div>`:""}</div>`:""}
-    <div class="acts"><button class="act" type="button" data-a="sowd" data-v="${s.id}">${t("모돈 상세")} ›</button><button class="act pri" type="button" data-a="bmMove" data-v="${s.id}">${t("옮기기")}</button></div></div></div></div>`}
-Object.assign(A,{pkBarn:v=>{ui.pkBarn=v;render()},pickView:v=>{try{localStorage.setItem("farm-pickmap",v)}catch(e){}render()},bcsTap:v=>{const [b,sid]=v.split("|");bcsSheet(b,sid)},bcsSave:v=>{const [b,sid,sc]=v.split("|"),o=barnOcc(b).occ[sid];if(!o)return;addRecord("BCS",TODAY,{sow:o.s.id,score:sc,when:bcsWhen(o.s)});closeSheet();render();toast(`${o.s.id} BCS ${sc} ${t("저장")}`)},bcsList:()=>{openInput("BCS")},bmInfo:v=>{ui.bmInfo=v;render()},bmView:v=>{ui.bmReal=v==="1";render()},bmPen:v=>{ui.batchStage=v;go("batch")},stall:v=>{const [b,sid]=v.split("|");openStall(b,sid)},bmBarn:v=>{ui.bm=v;render()},bmZoom:v=>{ui.bmZ=Math.max(30,Math.min(120,(ui.bmZ||60)+Number(v)));render()},
-  bmMove:v=>{ui.moving=v;const s=state.sows.find(x=>x.id===v);if(s&&FARM.layout[s.loc])ui.bm=s.loc;closeSheet();tab="barnmap";render()},bmCancel:()=>{ui.moving=null;render()},
-  stallPut:v=>{const [b,sid,id]=v.split("|"),s=state.sows.find(x=>x.id===id);if(!s)return;if(s.loc!==b){if(!confirm(`${id} ${t("모돈을")} ${t(b)}${t("(으)로 변경하시겠습니까?")}`))return;moveSow(id,b)}s.stall=sid;(state.lastIn=state.lastIn||{})[b]=sid;save();closeSheet();render()},
-  gfOv:(v,el)=>{const s=state.sows.find(x=>x.id===v),g=gestFeed(s);if(!g)return;const O=state.gfOv=state.gfOv||{},cur=g.kg;O[v]={...(O[v]||{}),kg:Math.round(Math.max(1,Math.min(5,cur+Number(el.dataset.k)))*10)/10,phase:g.phase,at:TODAY,by:state.user};save();const [b,sid]=[s.loc,(barnOcc(s.loc).S.find(x=>barnOcc(s.loc).occ[x.id]&&barnOcc(s.loc).occ[x.id].s.id===v)||{}).id];render();openStall(b,sid)},
-  gfWhy:v=>{const [id,r]=v.split("|"),O=state.gfOv=state.gfOv||{};if(!O[id]){const g=gestFeed(state.sows.find(x=>x.id===id));O[id]={kg:g.kg,phase:g.phase,at:TODAY,by:state.user}}O[id].why=r;save();document.querySelectorAll('[data-a="gfWhy"]').forEach(c=>c.classList.toggle("on",c.dataset.v===v))},
-  gfOvClr:v=>{if(state.gfOv)delete state.gfOv[v];save();closeSheet();render()}});
+function bcsInfo(s, due) {
+  const r = recsOf("BCS")
+    .filter(x => x.data.sow === s.id)
+    .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""))[0];
+  if (r && r.workDate === TODAY) return { cls: "bcs-done", txt: `✓ ${t("오늘")} BCS ${r.data.score}` };
+  const need = due.has(s.id);
+  return {
+    cls: need ? "bcs-need" : "",
+    txt:
+      (r ? `BCS ${r.data.score} · ${kDate(r.workDate).replace(/\s*\(.*\)/, "")}` : t("BCS 없음")) +
+      (need ? ` · ${t("측정 필요")}` : "")
+  };
+}
+function bcsWhen(s) {
+  const st = sowState(s.id);
+  if (st.stage === "이유") return "이유 시";
+  if (st.stage === "포유") return "분만 시";
+  if ((st.stage === "교배" || st.stage === "임신") && st.mate) {
+    const g = diff(st.mate, TODAY);
+    return g <= 3 ? "교배 시" : g >= 108 ? "분만 시" : "임신 중";
+  }
+  return "기타";
+}
+const bcsHub = on =>
+  `<div class="chips">${[
+    ["bcsmap", "🗺 BCS 배치도"],
+    ["gfeed", "임신돈 급여표"]
+  ]
+    .map(
+      ([k, l]) =>
+        `<button type="button" class="chip ${on === k ? "on" : ""}" data-a="tab" data-v="${k}">${t(l)}</button>`
+    )
+    .join("")}</div>`;
+function vBcsMap() {
+  const B = BM_BARNS(),
+    b = ui.bm && B.includes(ui.bm) ? ui.bm : B[0],
+    n = recsOf("BCS").filter(r => r.workDate === TODAY).length;
+  return (
+    `<div class="pagehd"><button class="back" type="button" data-a="bcsList">‹ BCS ${t("목록 입력")}</button><h2>BCS · ${t("배치도")}</h2></div>${bcsHub("bcsmap")}<div class="banner info"><b>${t("오늘 측정")} ${n}${t("두")}</b><span>${t("측정 필요")} ${typeof bcsDue === "function" ? bcsDue().length : 0}${t("두")}</span></div>
+  <div class="chips">${B.map(x => `<button type="button" class="chip ${x === b ? "on" : ""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))}</button>`).join("")}</div>` +
+    vBarnList(b, "bcs")
+  );
+}
+function bcsSheet(b, sid) {
+  const o = barnOcc(b).occ[sid];
+  if (!o) return;
+  const s = o.s,
+    w = bcsWhen(s),
+    i = statusOf(s);
+  $("#sheetRoot").innerHTML =
+    `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="sh-hd"><h2>${esc(t(b))} ${sid} · ${s.id} BCS</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><div class="sow-meta">${esc(i.label)} · ${esc(i.sub || "")} · ${t("측정 시점")}: <b>${t(w)}</b></div>
+  <div class="bcs-pick">${["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"].map(v => `<button type="button" class="bcs-b b${v.replace(".", "_")}" data-a="bcsSave" data-v="${esc(b)}|${sid}|${v}">${v}</button>`).join("")}</div><div class="note">${t("2 이하 마름 · 3 적정 · 4 이상 살찜")}</div></div></div></div>`;
+}
+function vBarnMap() {
+  const B = BM_BARNS(),
+    b = ui.bm && B.includes(ui.bm) ? ui.bm : B[0],
+    z = ui.bmZ || 60,
+    L = barnLayout(b),
+    { S, occ, over } = barnOcc(b),
+    n = Object.keys(occ).length,
+    auto = Object.values(occ).some(o => o.auto);
+  let h = `<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="sows">‹ ${t("모돈")}</button><h2>${t("돈사 배치도")}</h2><button class="act" type="button" data-a="tab" data-v="board" style="margin-left:auto">${t("현황판에서 보기")} ›</button></div>`;
+  h += `<div class="chips">${B.map(x => {
+    const c = barnOcc(x);
+    return `<button type="button" class="chip ${x === b ? "on" : ""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))} ${Object.keys(c.occ).length}/${c.S.length}</button>`;
+  }).join("")}</div>`;
+  if (ui.moving)
+    h += `<div class="banner warn-b"><b>${t("옮기기")} ${esc(ui.moving)}</b><span>${t("옮길 칸을 누르세요 (다른 돈사는 위 칩으로 바꾼 뒤)")} · <button type="button" class="sbtn" data-a="bmCancel">${t("취소")}</button></span></div>`;
+  h += `<div class="bm-head"><span>${n}${t("두")} / ${S.length}${t("칸")} · ${t("빈 칸")} ${S.length - n}${over ? ` · <b class="dv-bad">${t("칸 부족")} ${over}${t("두")}</b>` : ""}${!L.sure ? ` · <b class="dv-warn">${t("가배치 (돈사 그림 받기 전)")}</b>` : ""}${auto ? ` · <span class="sow-meta">${t("흐린 칸 = 칸 번호 미지정(자동 배치)")}</span>` : ""}</span>${(ui.bmReal ?? innerWidth >= 1024) ? `<span class="bm-z">` : `<span class="bm-z" hidden>`}<button type="button" class="sbtn" data-a="bmZoom" data-v="-15" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="bmZoom" data-v="15" aria-label="${t("확대")}">＋</button></span></div>`;
+  const real = ui.bmReal ?? innerWidth >= 1024;
+  h += `<div class="chips"><button type="button" class="chip ${real ? "" : "on"}" data-a="bmView" data-v="0">${t("칸 목록")}</button><button type="button" class="chip ${real ? "on" : ""}" data-a="bmView" data-v="1">${t("실제 배치")}</button></div>`;
+  h += real ? `<div class="bm-wrap">${vBarnSvg(b, z)}</div>` : vBarnList(b);
+  h += `<div class="legend bm-lg">${[
+    ["preg", "임신"],
+    ["mate", "교배·확인 전"],
+    ["heat", "이유 후 발정 대기"],
+    ["ret", "재발·공태"],
+    ["due", "분만 임박"],
+    ["lact", "포유"],
+    ["gilt", "후보"]
+  ]
+    .map(([c, l]) => `<span><i class="bm-sw c-${c}"></i>${t(l)}</span>`)
+    .join("")}<span>* ${t("수동 조정 급여")}</span></div>`;
+  return h;
+}
+function openStall(b, sid) {
+  const { occ } = barnOcc(b),
+    o = occ[sid];
+  if (ui.moving) {
+    const id = ui.moving,
+      s = state.sows.find(x => x.id === id);
+    if (!s) return;
+    if (o && o.s.id !== id) {
+      if (!confirm(`${sid} ${t("칸의")} ${o.s.id}${t("와 자리를 바꿀까요?")}`)) return;
+      o.s.stall = s.loc === b ? s.stall : null;
+      if (s.loc !== b) o.s.stall = null;
+    }
+    if (s.loc !== b) {
+      if (!confirm(`${id} ${t("모돈을")} ${t(b)}${t("(으)로 변경하시겠습니까?")}`)) return;
+      moveSow(id, b);
+    }
+    s.stall = sid;
+    (state.lastIn = state.lastIn || {})[b] = sid;
+    ui.moving = null;
+    save();
+    render();
+    toast(`${id} → ${t(b)} ${sid}`);
+    return;
+  }
+  if (!o) {
+    const cand = activeSows()
+      .filter(s => !(s.loc === b && s.stall))
+      .sort((x, y) => (x.loc === b ? 0 : 1) - (y.loc === b ? 0 : 1) || x.id.localeCompare(y.id));
+    ui.stallQ = ui.stallQ || "";
+    $("#sheetRoot").innerHTML =
+      `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="sh-hd"><h2>${esc(t(b))} ${sid} · ${t("빈 칸")}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><div class="note">${t("이 칸에 넣을 모돈을 고르세요. 다른 돈사 모돈이면 위치 이동도 기록됩니다.")}</div><div class="chipwrap">${cand
+        .slice(0, 60)
+        .map(
+          s =>
+            `<button type="button" class="chip wrap" data-a="stallPut" data-v="${esc(b)}|${sid}|${s.id}">${s.id}${s.loc !== b ? ` <small>${esc(t(s.loc))}</small>` : ""}</button>`
+        )
+        .join("")}</div></div></div></div>`;
+    return;
+  }
+  const s = o.s,
+    i = statusOf(s),
+    g = typeof gestFeed === "function" ? gestFeed(s) : null,
+    b2 = lastBCS ? lastBCS(s.id, TODAY) : null;
+  $("#sheetRoot").innerHTML =
+    `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true"><div class="sh-hd"><h2>${esc(t(b))} ${sid} · ${s.id}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">
+    <div class="sow-top"><b>${esc(i.label)}</b><span class="sow-meta">${esc(i.sub || "")} · ${i.gilt ? t("후보") : i.parity + t("산")} · BCS ${b2 ? b2.score : "-"}</span></div>
+    ${
+      g
+        ? `<div class="panel gf-ov"><div class="setrow"><span><b>${t("오늘 급여")}</b> <small class="sow-meta">${esc(g.why.join(" · "))}</small></span><div class="stepper"><button type="button" data-a="gfOv" data-v="${s.id}" data-k="-0.1" aria-label="−">−</button><input type="number" value="${g.kg.toFixed(1)}" readonly aria-label="kg"><button type="button" data-a="gfOv" data-v="${s.id}" data-k="0.1" aria-label="+">+</button></div></div>
+      <div class="chipwrap">${["식욕 부진", "마름", "살찜", "기타"].map(r => `<button type="button" class="chip ${(state.gfOv || {})[s.id] && state.gfOv[s.id].why === r ? "on" : ""}" data-a="gfWhy" data-v="${s.id}|${r}">${t(r)}</button>`).join("")}${g.ov ? `<button type="button" class="chip" data-a="gfOvClr" data-v="${s.id}">${t("기준으로")}</button>` : ""}</div>${gfUnit(s.loc, g.kg) ? `<div class="sow-meta">${gfUnit(s.loc, g.kg)}</div>` : ""}</div>`
+        : ""
+    }
+    <div class="acts"><button class="act" type="button" data-a="sowd" data-v="${s.id}">${t("모돈 상세")} ›</button><button class="act pri" type="button" data-a="bmMove" data-v="${s.id}">${t("옮기기")}</button></div></div></div></div>`;
+}
+Object.assign(A, {
+  pkBarn: v => {
+    ui.pkBarn = v;
+    render();
+  },
+  pickView: v => {
+    try {
+      localStorage.setItem("farm-pickmap", v);
+    } catch (e) {}
+    render();
+  },
+  bcsTap: v => {
+    const [b, sid] = v.split("|");
+    bcsSheet(b, sid);
+  },
+  bcsSave: v => {
+    const [b, sid, sc] = v.split("|"),
+      o = barnOcc(b).occ[sid];
+    if (!o) return;
+    addRecord("BCS", TODAY, { sow: o.s.id, score: sc, when: bcsWhen(o.s) });
+    closeSheet();
+    render();
+    toast(`${o.s.id} BCS ${sc} ${t("저장")}`);
+  },
+  bcsList: () => {
+    openInput("BCS");
+  },
+  bmInfo: v => {
+    ui.bmInfo = v;
+    render();
+  },
+  bmView: v => {
+    ui.bmReal = v === "1";
+    render();
+  },
+  bmPen: v => {
+    ui.batchStage = v;
+    go("batch");
+  },
+  stall: v => {
+    const [b, sid] = v.split("|");
+    openStall(b, sid);
+  },
+  bmBarn: v => {
+    ui.bm = v;
+    render();
+  },
+  bmZoom: v => {
+    ui.bmZ = Math.max(30, Math.min(120, (ui.bmZ || 60) + Number(v)));
+    render();
+  },
+  bmMove: v => {
+    ui.moving = v;
+    const s = state.sows.find(x => x.id === v);
+    if (s && FARM.layout[s.loc]) ui.bm = s.loc;
+    closeSheet();
+    tab = "barnmap";
+    render();
+  },
+  bmCancel: () => {
+    ui.moving = null;
+    render();
+  },
+  stallPut: v => {
+    const [b, sid, id] = v.split("|"),
+      s = state.sows.find(x => x.id === id);
+    if (!s) return;
+    if (s.loc !== b) {
+      if (!confirm(`${id} ${t("모돈을")} ${t(b)}${t("(으)로 변경하시겠습니까?")}`)) return;
+      moveSow(id, b);
+    }
+    s.stall = sid;
+    (state.lastIn = state.lastIn || {})[b] = sid;
+    save();
+    closeSheet();
+    render();
+  },
+  gfOv: (v, el) => {
+    const s = state.sows.find(x => x.id === v),
+      g = gestFeed(s);
+    if (!g) return;
+    const O = (state.gfOv = state.gfOv || {}),
+      cur = g.kg;
+    O[v] = {
+      ...(O[v] || {}),
+      kg: Math.round(Math.max(1, Math.min(5, cur + Number(el.dataset.k))) * 10) / 10,
+      phase: g.phase,
+      at: TODAY,
+      by: state.user
+    };
+    save();
+    const [b, sid] = [
+      s.loc,
+      (barnOcc(s.loc).S.find(x => barnOcc(s.loc).occ[x.id] && barnOcc(s.loc).occ[x.id].s.id === v) || {}).id
+    ];
+    render();
+    openStall(b, sid);
+  },
+  gfWhy: v => {
+    const [id, r] = v.split("|"),
+      O = (state.gfOv = state.gfOv || {});
+    if (!O[id]) {
+      const g = gestFeed(state.sows.find(x => x.id === id));
+      O[id] = { kg: g.kg, phase: g.phase, at: TODAY, by: state.user };
+    }
+    O[id].why = r;
+    save();
+    document.querySelectorAll('[data-a="gfWhy"]').forEach(c => c.classList.toggle("on", c.dataset.v === v));
+  },
+  gfOvClr: v => {
+    if (state.gfOv) delete state.gfOv[v];
+    save();
+    closeSheet();
+    render();
+  }
+});

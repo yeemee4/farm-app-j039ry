@@ -1,7 +1,7 @@
 // 빠른 점검: FARM_PIN=대표PIN node tools/smoke.js [스크린샷폴더]  — 모든 탭·입력 화면을 열어 오류를 찾는다.
 // 기본은 시험용 test/index.html · 본서버 빌드를 보려면 PAGE=index.html
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path");
-const ROOT = path.join(__dirname, ".."), OUT = process.argv[2] || "/tmp", GATE = fs.readFileSync(path.join(ROOT, "index.html"), "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const ROOT = path.join(__dirname, ".."), OUT = process.argv[2] || "/tmp", GATE = fs.readFileSync(path.join(ROOT, "index.html"), "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 (async () => {
   const b = await chromium.launch(), errs = [];
   for (const [name, vp] of [["phone", { width: 390, height: 844 }], ["desk", { width: 1280, height: 860 }]]) {

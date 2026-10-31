@@ -3,7 +3,7 @@
 // ③ 아직 안 보낸·고친 기록은 안 뺌 ④ 불러온 예전 기록은 휴대폰·서버에 다시 저장 안 됨 ⑤ 드라이브 백업·보관·복원
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), http = require("http");
 const { makeGas } = require("./gas-mock.js");
-const ROOT = path.join(__dirname, ".."), PAGE = path.join(ROOT, "test/index.html"), GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const ROOT = path.join(__dirname, ".."), PAGE = path.join(ROOT, "test/index.html"), GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 let fail = 0; const ok = (name, got, want) => { const g = JSON.stringify(got), w = JSON.stringify(want), p = g === w; if (!p) fail++; console.log((p ? "PASS " : "FAIL ") + name + (p ? "" : "\n  기대 " + w + "\n  실제 " + g)) };
 const kday = (n) => new Date(Date.now() + 9 * 3600e3 + n * 864e5).toISOString().slice(0, 10);
 (async () => {

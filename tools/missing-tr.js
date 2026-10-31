@@ -1,6 +1,6 @@
 // 번역 빠진 문구 찾기: node tools/missing-tr.js  (베트남어로 모든 화면을 돌며 TR에 없는 t() 문구를 모음)
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path");
-const ROOT = path.join(__dirname, ".."), GATE = fs.readFileSync(path.join(ROOT, "index.html"), "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const ROOT = path.join(__dirname, ".."), GATE = fs.readFileSync(path.join(ROOT, "index.html"), "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 (async () => { const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1280, height: 900 } });
   await p.addInitScript(g => { localStorage.clear(); localStorage.setItem("farm-gate", g) }, GATE);
   await p.goto("file://" + ROOT + "/index.html"); await p.waitForTimeout(1200);

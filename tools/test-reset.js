@@ -3,7 +3,7 @@
 // ④ 되돌리기 = 원래 기록 복귀·새로 시작 뒤 기록은 다시 보관 ⑤ 대표 아니면 못 함 ⑥ 다른 농장 기록은 그대로
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), http = require("http");
 const { makeGas } = require("./gas-mock.js");
-const PAGE = path.join(__dirname, "../test/index.html"), GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const PAGE = path.join(__dirname, "../test/index.html"), GATE = fs.readFileSync(PAGE, "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 let fail = 0; const ok = (name, got, want) => { const g = JSON.stringify(got), w = JSON.stringify(want), p = g === w; if (!p) fail++; console.log((p ? "PASS " : "FAIL ") + name + (p ? "" : "\n  기대 " + w + "\n  실제 " + g)) };
 (async () => {
   const g = makeGas(), C = g.ctx, post = q => JSON.parse(C.doPost({ postData: { contents: JSON.stringify(q) } }).s);

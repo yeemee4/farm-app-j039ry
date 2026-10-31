@@ -1,6 +1,6 @@
 // 앱 안에서 식 하나를 평가해 출력: node tools/probe.js '<JS 식>'
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path");
-const ROOT = path.join(__dirname, ".."), GATE = fs.readFileSync(path.join(ROOT, "index.html"), "utf8").match(/const GATE="([0-9a-f]{64})"/)[1];
+const ROOT = path.join(__dirname, ".."), GATE = fs.readFileSync(path.join(ROOT, "index.html"), "utf8").match(/const GATE\s*=\s*"([0-9a-f]{64})"/)[1];
 (async () => { const b = await chromium.launch(), p = await b.newPage(), errs = [];
   p.on("pageerror", e => errs.push(e.message));
   await p.addInitScript(g => { localStorage.clear(); localStorage.setItem("farm-gate", g) }, GATE);
