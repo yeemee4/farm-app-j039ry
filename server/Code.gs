@@ -191,6 +191,9 @@ function alarmCheck(now) {
   dataRows().forEach(function (r) {
     if (r[1] !== "key" || String(r[2]) !== "alarm\u00a7plan" || Number(r[5]) === 1) return;
     var L; try { L = JSON.parse(String(r[3])); } catch (e) { return; }
+    // 안전장치: 알림 계획이 26시간 넘게 안 바뀌면(로봇·앱 모두 멈춤) 하루 한 번 경고
+    var h = Math.floor((now.getTime() - new Date(r[7]).getTime()) / 3600000), sk = "al|" + r[0] + "|" + nowS.slice(0, 10) + "|stale";
+    if (h >= 26 && !p.getProperty(sk)) { p.setProperty(sk, "1"); msgs.push("⚠ 알림 계획이 " + h + "시간째 갱신되지 않았습니다. 알림 로봇(깃허브)이나 앱을 확인해 주세요.\n"); }
     (L || []).forEach(function (a) {
       if (!a || !a.at || !a.msg || a.at > nowS || a.at < lo) return;   // 3시간 넘게 지난 건 안 보냄(밤새 쌓인 것 폭탄 방지)
       var k = "al|" + r[0] + "|" + a.id; if (p.getProperty(k)) return;

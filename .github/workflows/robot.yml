@@ -1,0 +1,22 @@
+# 알림 로봇: 매시간 앱을 대신 열어 디스코드 알림 계획을 새로 만든다 (사람이 앱을 며칠 안 열어도 알림이 오게)
+# 비밀값(저장소 Settings › Secrets and variables › Actions): ROBOT_URL_TEST·ROBOT_PIN_TEST (시험용) · ROBOT_URL·ROBOT_PIN (본서버)
+name: alarm-robot
+on:
+  schedule: [{ cron: "17 * * * *" }]
+  workflow_dispatch:
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
+      - name: 시험용 서버
+        env: { ROBOT_URL: "${{ secrets.ROBOT_URL_TEST }}", ROBOT_PIN: "${{ secrets.ROBOT_PIN_TEST }}", PAGE: test/index.html }
+        run: node tools/robot.js
+      - name: 본서버
+        if: always()
+        env: { ROBOT_URL: "${{ secrets.ROBOT_URL }}", ROBOT_PIN: "${{ secrets.ROBOT_PIN }}", PAGE: index.html }
+        run: node tools/robot.js

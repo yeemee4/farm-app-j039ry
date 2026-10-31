@@ -17,7 +17,8 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   // 4 저녁: 내일 일정 (분만·이유·교배·임신확인·백신·입식)
   const tm=addDays(TODAY,1);let ev=[];try{ev=(calEvents(tm).ev||{})[tm]||[]}catch(e){}
   const g={};ev.forEach(([k,v])=>(g[k]=g[k]||[]).push(v));
-  add("eve",ALARM_T.eve,ev.length?"📅 내일 일정\n"+Object.keys(g).map(k=>`• ${L(k)} ${g[k].length}: ${list(g[k])}`).join("\n"):"","📅 내일 일정\n• 분만 1: 6-004");
+  let w1="";try{w1=wxAlerts(1)}catch(e){}
+  add("eve",ALARM_T.eve,(ev.length||w1)?"📅 내일 일정"+(w1?"\n🌡 "+w1:"")+"\n"+Object.keys(g).map(k=>`• ${L(k)} ${g[k].length}: ${list(g[k])}`).join("\n"):"","📅 내일 일정\n• 분만 1: 6-004");
   // 5 마감: 오늘 기록 누락
   let cm=[];try{cm=closeMiss(TODAY)}catch(e){}
   add("close",closeBy(),cm.length?`📝 ${closeBy()} 기록 마감 · 빠진 기록: ${cm.map(L).join(", ")}`:"",`📝 ${closeBy()} 기록 마감 · 빠진 기록: 사료`);
@@ -31,7 +32,7 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
     P.unshift({id:"head",at:T0,msg:`${F} 🔔 알림 시험 ${T0} — 아래는 모든 알림 예시입니다`});
     P.push({id:"rec",at:T0,msg:`${F} 기록 알림 예시 (입력하면 바로 오는 알림)\n`+ex.join("\n")})}
   return P.map(x=>({id:TODAY+"|"+(T0?"test"+T0+"|":"")+x.id,at:TODAY+" "+x.at,msg:x.msg}))}
-let alT=null;function alarmSync(){if(typeof syOn!=="function"||!syOn()||MODE==="setup")return;clearTimeout(alT);alT=setTimeout(()=>{try{
+let alT=null;function alarmSync(){if(typeof syOn!=="function"||!syOn()||(typeof MODE!=="undefined"&&MODE==="setup"))return;clearTimeout(alT);alT=setTimeout(()=>{try{
   const P=alarmPlan(),A=state.alarm=state.alarm||{};if(JSON.stringify(A.plan)!==JSON.stringify(P)){A.plan=P;save()}}catch(e){}},2500)}
 const _render91=render;render=function(){const r=_render91.apply(this,arguments);alarmSync();return r};
 setInterval(alarmSync,5*60000);
