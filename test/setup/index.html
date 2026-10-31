@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 23:51";
+const BUILD_AT="11-01 00:04";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -1360,7 +1360,7 @@ function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}
 let MEMO={};function memo(k,f){k+="|"+state.records.length+"|"+state.sows.length;return k in MEMO?MEMO[k]:(MEMO[k]=f())}
 // 기록 종류별 묶음(순서 그대로) — state.records 전체를 매번 훑지 않게
 const recsOf=ty=>memo("ty",()=>{const m={};state.records.forEach(r=>(m[r.type]=m[r.type]||[]).push(r));return m})[ty]||[];
-function save(){SIDX=null;MEMO={};try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){storageOK=false}}
+function save(){SIDX=null;MEMO={};try{localStorage.setItem(KEY,JSON.stringify(state,(k,v)=>k==="records"&&Array.isArray(v)?v.filter(r=>!r._old):v))}catch(e){storageOK=false}}
 let uid=Date.now();const DEVID=(()=>{try{let d=localStorage.getItem("farm-dev");if(!d){d=Math.random().toString(36).slice(2,5);localStorage.setItem("farm-dev",d)}return d}catch(e){return Math.random().toString(36).slice(2,5)}})();const newId=()=>(uid++).toString(36)+DEVID;   // 기기 표시를 붙여 여러 휴대폰에서 겹치지 않게
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -5246,7 +5246,8 @@ let syT=null;
 function syDiff(){if(!syOn()||!state)return;if(SY.join||SY.replace){clearTimeout(syT);syT=setTimeout(syDiff,1500);return}   // 처음 받기가 끝나기 전엔 이 휴대폰 옛 기록을 올리지 않음
   const S=SY.snap,F=syFarm(),add=(k,id,j,del)=>{SY.out[k+"|"+id]={farm:F,k,id,j:del?"":j,del:!!del,n:null}};
   const scan=(k,arr)=>{const seen={};arr.forEach(x=>{const j=JSON.stringify(x),h=fnv(j);seen[x.id]=1;if(S[k][x.id]!==h){S[k][x.id]=h;add(k,x.id,j);if(k==="rec"&&!SY.fresh)SY.out[k+"|"+x.id].n=syNote(x)}});Object.keys(S[k]).forEach(id=>{if(!seen[id]){delete S[k][id];add(k,id,"",true)}})};
-  scan("rec",state.records||[]);scan("sow",state.sows||[]);
+  scan("rec",(state.records||[]).filter(r=>!r._old));   // 예전 기간 보기로 불러온 기록(_old)은 보내지 않음
+  scan("sow",state.sows||[]);
   // 설정 묶음: 객체(할 일 체크·아침 점검·마감 등)는 안쪽 항목 하나씩 → 두 사람이 동시에 체크해도 서로 덮지 않음
   const seenK={};Object.keys(state).filter(k=>!SYNC_SKIP.includes(k)).forEach(k=>{const v=state[k];
     if(syObj(v))Object.keys(v).forEach(sub=>{const id=k+SUBK+sub,j=JSON.stringify(v[sub]),h=fnv(j);seenK[id]=1;if(S.key[id]!==h){S.key[id]=h;add("key",id,j)}});
@@ -5272,7 +5273,7 @@ async function syFlush1(){if(!syOn())return;SYST.busy=true;
   catch(e){SYST.err=t("보내기")+" · "+String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
 function syPull(full){return syQ(()=>syPull1(full))}
 async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
-  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0)});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
+  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
     if(SY.replace){SY.replace=false;state.records=[];state.sows=[];SY.snap={rec:{},sow:{},key:{}}}
     const S=SY.snap,idx={rec:{},sow:{}};(state.records||[]).forEach((x,i)=>idx.rec[x.id]=i);(state.sows||[]).forEach((x,i)=>idx.sow[x.id]=i);
     const kill={rec:new Set(),sow:new Set()};
@@ -5449,6 +5450,37 @@ function healthBox(){const H=health(),c=H.warn.length?"var(--red)":"var(--good)"
   <p class="sow-meta" style="color:${c}">${H.warn.length?"⚠ "+H.warn.join(" · ")+" — "+t("오래된 기록 보관함을 검토할 때입니다"):t("정상입니다")}</p></div>`}
 const _vSettings92=vSettings;vSettings=function(){const h=_vSettings92.apply(this,arguments);return ui.setPage==="main"&&can("admin")?h+healthBox():h};
 setTimeout(()=>{try{const H=health(),k=KEY+"-healthwarn";if(H.warn.length&&can("admin")&&localStorage.getItem(k)!==TODAY){localStorage.setItem(k,TODAY);toast("⚠ "+H.warn.join(" · ")+" · "+t("설정 › 데이터 상태"))}}catch(e){}},8000);
+// ---- 휴대폰 보관 기간(저장 용량 한도 약 5MB): 매일 기록은 최근 12개월만 휴대폰에, 그 전은 서버(구글 시트)와 드라이브 백업에만 ----
+// 모돈 번식 기록(모돈 번호가 붙은 기록·KEEP_T)은 현장 카드 8산 때문에 항상 남김. 서버 Code.gs 의 KEEP_T·oldDaily 와 같은 규칙
+const KEEP_T=["교배","임신확인","분만","이유","양자","도태","도입","BCS","동기화","레규급여"];
+const keepAlways=r=>KEEP_T.includes(r.type)||!!(r.data&&r.data.sow);
+const arcCut=()=>addDays(TODAY,-365);
+// 빼도 되는 것만 뺌: 서버에 이미 있는 그대로(보낼 목록에 없고, 마지막으로 주고받은 내용과 같음)인 오래된 매일 기록. 스냅숏에서도 지워 '삭제'로 보내지 않음
+function syPrune(){if(!syOn()||!SY.token||SY.join||SY.replace||!SY.snap)return 0;const cut=arcCut(),S=SY.snap.rec;let n=0;
+  state.records=state.records.filter(r=>{if(r._old||keepAlways(r)||!(r.workDate<cut)||SY.out["rec|"+r.id]||S[r.id]!==fnv(JSON.stringify(r)))return true;delete S[r.id];n++;return false});
+  if(n){sySave();SYNC_MUTE=true;save();SYNC_MUTE=false}return n}
+const _syPull93=syPull;syPull=function(){return _syPull93.apply(this,arguments).then(r=>{try{if(syPrune()&&tab!=="input")render()}catch(e){}return r})};
+// ---- 예전 기간 보기(보기 전용): 서버에서 받아 성적·타임라인·그래프에 보여 주고, 휴대폰·서버에는 저장 안 함(다시 열면 사라짐) ----
+let OLDV=null;
+async function oldLoad(f,t2){const r=await syCall({a:"range",token:SY.token,farm:syFarm(),f,t:t2});if(!r.ok)throw new Error(r.err);
+  const have=new Set(state.records.map(x=>x.id)),add=r.recs.filter(x=>!have.has(x.id)).map(x=>({...x,_old:1}));
+  oldClear();state.records.push(...add);OLDV={f,t:t2,n:add.length};return add.length}
+function oldClear(){if(state.records.some(r=>r._old))state.records=state.records.filter(r=>!r._old);OLDV=null}
+Object.assign(A,{
+  oldOpen:()=>{const m=TODAY.slice(0,7),y=addDays(TODAY,-730).slice(0,7);$("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet"><div class="sh-hd"><h2>${t("예전 기록 보기")}</h2></div>
+    <p class="sow-meta">${t("휴대폰에는 최근 12개월 매일 기록만 있습니다. 고른 기간을 서버에서 받아 성적·타임라인에 보여 줍니다. 보기 전용이며 앱을 다시 열면 사라집니다.")}</p>
+    <div class="setrow"><span>${t("시작 달")}</span><input id="oldF" type="month" value="${y}"></div><div class="setrow"><span>${t("끝 달")}</span><input id="oldT" type="month" value="${addDays(TODAY,-366).slice(0,7)}"></div>
+    <button class="act pri" type="button" data-a="oldGo">${t("불러오기")}</button></div></div>`},
+  oldGo:async()=>{const f=($("#oldF").value||"")+"-01",m=$("#oldT").value||"";if(!m||f<"2000")return;const [y,mo]=m.split("-").map(Number),t2=m+"-"+String(new Date(Date.UTC(y,mo,0)).getUTCDate()).padStart(2,"0");
+    toast(t("불러오는 중…"));try{const n=await oldLoad(f,t2);$("#sheetRoot").innerHTML="";toast(`${n}${t("건 불러옴")}`);render()}catch(e){toast(t("불러오지 못했습니다(인터넷·서버 연결 확인)"))}},
+  oldOff:()=>{oldClear();render()}});
+function oldBar(){if(!syOn()||!SY.token)return "";return OLDV?`<div class="banner info"><b>📂</b><span>${OLDV.f.slice(0,7)} ~ ${OLDV.t.slice(0,7)} ${t("예전 기록")} ${OLDV.n}${t("건 보는 중 · 보기 전용")}</span><button class="act" type="button" data-a="oldOff">${t("닫기")}</button></div>`
+  :`<div style="text-align:right;margin:0 0 6px"><button class="act" type="button" data-a="oldOpen">📂 ${t("예전 기록 보기")}</button></div>`}
+const _vStats93=vStats;vStats=function(){return oldBar()+_vStats93.apply(this,arguments)};
+const _vTimeline93=vTimeline;vTimeline=function(){return oldBar()+_vTimeline93.apply(this,arguments)};
+// 보기 전용 기록은 고치기·지우기 막음
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-a]");if(!b||!OLDV)return;const id=b.dataset.v,r=id&&state.records.find(x=>x.id===id&&x._old);
+  if(r&&/edit|del|Del|Edit/.test(b.dataset.a)){e.stopImmediatePropagation();e.preventDefault();toast(t("예전 기록은 보기 전용입니다"))}},true);
 /* ================= 입장 키 (링크를 받은 사람만) ================= */
 const GATE="cbfad02f9ed2a8d1e08d8f74f5303e9eb93637d47f82ab6f1c15871cf8dd0481";
 async function sha(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}

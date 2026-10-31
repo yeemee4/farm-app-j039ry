@@ -157,10 +157,25 @@ var API = {
     var S = session(q.token); if (!S) return { ok: false, err: "auth" };
     var since = Number(q.since || 0), farm = q.farm;
     if (!canFarm(S, farm)) return { ok: false, err: "farm" };
-    var L = dataRows().filter(function (r) { return r[0] === farm && Number(r[4]) > since; })
+    // from 이 있으면(처음 받기) 그 날짜 전 매일 기록은 빼고 보냄 — 모돈 번식 기록은 항상 보냄(현장 카드 8산)
+    var from = q.from ? String(q.from) : "";
+    var L = dataRows().filter(function (r) { return r[0] === farm && Number(r[4]) > since && !(from && r[1] === "rec" && oldDaily(r[3], from)); })
       .map(function (r) { return { k: r[1], id: String(r[2]), j: r[3], u: Number(r[4]), del: Number(r[5]) === 1, by: r[6] }; });
     var acc = accList().map(pubAcc);
     return { ok: true, rows: L, cursor: Number(props().getProperty("SEQ") || 0), accounts: acc, discord: !!props().getProperty("DISCORD") };
+  },
+
+  // 예전 기간 보기(보기 전용): f~t 사이 기록 전부 (내 농장만)
+  range: function (q) {
+    var S = session(q.token); if (!S) return { ok: false, err: "auth" };
+    if (!canFarm(S, q.farm) || !q.f || !q.t) return { ok: false, err: "farm" };
+    var L = [];
+    dataRows().forEach(function (r) {
+      if (r[0] !== q.farm || r[1] !== "rec" || Number(r[5]) === 1) return;
+      var o; try { o = JSON.parse(String(r[3])); } catch (e) { return; }
+      if (o && o.workDate >= q.f && o.workDate <= q.t) L.push(o);
+    });
+    return { ok: true, recs: L };
   },
 
   // 대표: 디스코드 웹훅 주소 저장 (스크립트 속성에만, 시트·앱 저장소에는 없음)
@@ -186,9 +201,43 @@ function discord(msgs) {
 var REGU_STEPS = [60, 240, 480, 660];   // 정한 시각에서 1·4·8·11시간 (앱 84-breed.js 와 같은 규칙)
 // 자동 실행 켜기(한 번만): 레규 급여 확인 30분마다 · 시간 알림 5분마다
 function setupReguTrigger() {
-  ScriptApp.getProjectTriggers().forEach(function (t) { if (["reguTick", "alarmTick"].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (["reguTick", "alarmTick", "backupTick"].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger("reguTick").timeBased().everyMinutes(30).create();
   ScriptApp.newTrigger("alarmTick").timeBased().everyMinutes(5).create();
+  ScriptApp.newTrigger("backupTick").timeBased().everyDays(1).atHour(3).inTimezone("Asia/Seoul").create();
+}
+
+// 휴대폰에 남기는 기록: 모돈 번식(모돈 번호가 붙은 기록·아래 종류)은 기간과 상관없이 항상. 앱 90-sync 의 keepAlways 와 같은 규칙
+var KEEP_T = ["교배", "임신확인", "분만", "이유", "양자", "도태", "도입", "BCS", "동기화", "레규급여"];
+function oldDaily(j, from) {
+  var o; try { o = JSON.parse(String(j)); } catch (e) { return false; }
+  if (!o || !o.workDate || o.workDate >= from) return false;
+  return !(KEEP_T.indexOf(o.type) >= 0 || (o.data && o.data.sow));
+}
+
+// ---------- 드라이브 백업: 매일 새벽 3시 '비담농장 백업' 폴더에 시트 전체를 파일 하나로 · 최근 30일 + 그 전은 매월 1일 것만 남김 ----------
+var BK_DIR = "비담농장 백업";
+function backupTick() { backupNow(new Date()); }
+function backupFolder() { var it = DriveApp.getFoldersByName(BK_DIR); return it.hasNext() ? it.next() : DriveApp.createFolder(BK_DIR); }
+function backupNow(now) {
+  var day = Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd"), dir = backupFolder(), pre = SS().getName() + " 백업 ", name = pre + day + ".json";
+  if (dir.getFilesByName(name).hasNext()) return name;
+  var all = {}; ["data", "accounts"].forEach(function (n) { var x = sh(n); all[n] = x.getLastRow() ? x.getRange(1, 1, x.getLastRow(), Math.max(1, x.getLastColumn())).getValues() : []; });
+  dir.createFile(name, JSON.stringify({ at: nowIso(), seq: Number(props().getProperty("SEQ") || 0), sheets: all }), "application/json");
+  var keep = Utilities.formatDate(new Date(now.getTime() - 30 * 86400000), "Asia/Seoul", "yyyy-MM-dd"), files = dir.getFiles();
+  while (files.hasNext()) { var f = files.next(), n = f.getName(); if (n.indexOf(pre) !== 0) continue; var d = n.slice(pre.length, pre.length + 10); if (d < keep && d.slice(8) !== "01") f.setTrashed(true); }
+  return name;
+}
+// 복원(편집기에서 직접 실행, 비상용): 가장 최근 백업 파일 → data·accounts 시트를 그 내용으로 바꿈. 끝나면 휴대폰마다 '전부 다시 받기'
+function restoreBackup() {
+  var dir = backupFolder(), pre = SS().getName() + " 백업 ", files = dir.getFiles(), best = null;
+  while (files.hasNext()) { var f = files.next(); if (f.getName().indexOf(pre) === 0 && (!best || f.getName() > best.getName())) best = f; }
+  if (!best) throw new Error("백업 파일이 없습니다");
+  var B = JSON.parse(best.getBlob().getDataAsString());
+  ["data", "accounts"].forEach(function (n) { var x = sh(n), v = B.sheets[n] || []; x.clearContents(); if (v.length) x.getRange(1, 1, v.length, v[0].length).setValues(v); });
+  var p = props(); if (Number(p.getProperty("SEQ") || 0) < B.seq) p.setProperty("SEQ", String(B.seq));
+  p.setProperty("SEQ", String(Number(p.getProperty("SEQ")) + 1));   // 휴대폰들이 '바뀜'을 알아채게
+  return best.getName();
 }
 
 // ---------- 시간 알림: 앱이 만든 계획(key alarm§plan = [{id,at:"yyyy-MM-dd HH:mm",msg}]) 중 시각이 된 것을 한 번씩 보냄 ----------

@@ -34,7 +34,8 @@ let syT=null;
 function syDiff(){if(!syOn()||!state)return;if(SY.join||SY.replace){clearTimeout(syT);syT=setTimeout(syDiff,1500);return}   // 처음 받기가 끝나기 전엔 이 휴대폰 옛 기록을 올리지 않음
   const S=SY.snap,F=syFarm(),add=(k,id,j,del)=>{SY.out[k+"|"+id]={farm:F,k,id,j:del?"":j,del:!!del,n:null}};
   const scan=(k,arr)=>{const seen={};arr.forEach(x=>{const j=JSON.stringify(x),h=fnv(j);seen[x.id]=1;if(S[k][x.id]!==h){S[k][x.id]=h;add(k,x.id,j);if(k==="rec"&&!SY.fresh)SY.out[k+"|"+x.id].n=syNote(x)}});Object.keys(S[k]).forEach(id=>{if(!seen[id]){delete S[k][id];add(k,id,"",true)}})};
-  scan("rec",state.records||[]);scan("sow",state.sows||[]);
+  scan("rec",(state.records||[]).filter(r=>!r._old));   // 예전 기간 보기로 불러온 기록(_old)은 보내지 않음
+  scan("sow",state.sows||[]);
   // 설정 묶음: 객체(할 일 체크·아침 점검·마감 등)는 안쪽 항목 하나씩 → 두 사람이 동시에 체크해도 서로 덮지 않음
   const seenK={};Object.keys(state).filter(k=>!SYNC_SKIP.includes(k)).forEach(k=>{const v=state[k];
     if(syObj(v))Object.keys(v).forEach(sub=>{const id=k+SUBK+sub,j=JSON.stringify(v[sub]),h=fnv(j);seenK[id]=1;if(S.key[id]!==h){S.key[id]=h;add("key",id,j)}});
@@ -60,7 +61,7 @@ async function syFlush1(){if(!syOn())return;SYST.busy=true;
   catch(e){SYST.err=t("보내기")+" · "+String(e.message||e)}finally{SYST.busy=false;sySave();syBadge()}}
 function syPull(full){return syQ(()=>syPull1(full))}
 async function syPull1(full){if(!syOn())return;SYST.busy=true;let changed=false;
-  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0)});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
+  try{const r=await syCall({a:"pull",token:SY.token,farm:syFarm(),since:full?0:(SY.cursor||0),from:(full||!SY.cursor)?arcCut():""});if(!r.ok){if(r.err==="auth")return syAuthLost();throw new Error("서버: "+r.err)}
     if(SY.replace){SY.replace=false;state.records=[];state.sows=[];SY.snap={rec:{},sow:{},key:{}}}
     const S=SY.snap,idx={rec:{},sow:{}};(state.records||[]).forEach((x,i)=>idx.rec[x.id]=i);(state.sows||[]).forEach((x,i)=>idx.sow[x.id]=i);
     const kill={rec:new Set(),sow:new Set()};
