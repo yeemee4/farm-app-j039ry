@@ -26,6 +26,7 @@ function delta(r){if(r.type==="_침")return -r.data.n;if(r.type==="재고")retur
 function semenOrder(){
   const tmr=addDays(TODAY,1);let n=0;
   activeSows().forEach(s=>{const i=statusOf(s);if(i.stage==="이유"){const d=diff(i.since,tmr);if(d>=4&&d<=7)n++}else if(i.stage==="재교배")n++});
+  n+=reguMateTomorrow();   // 레규 동기화 그룹: 정시 교배 첫날 전날, 그 그룹 두수도 더함(84)
   const doses=n*state.cfg.semenPerSow,stock=state.items.filter(x=>x.cat==="정액"&&!x.hidden).reduce((s,x)=>s+(stockOf(x).qty||0),0);
   return {n,doses,stock,order:Math.max(0,doses-stock)};
 }
@@ -39,7 +40,7 @@ function extraTodos(){
   return [
     {k:"bvax",t:"돈군 백신 (이번 주 · 누락)",items:bv,act:"bvax"},
     {k:"order",t:"정액 주문 (내일 교배 예정)",items:so.order>0?[{order:so,label:`${semenClock().txt} · 내일 교배 예정 ${so.n}두 × ${state.cfg.semenPerSow}${FARM.semen.unit} = ${so.doses}${FARM.semen.unit} · 재고 ${so.stock}${FARM.semen.unit} → ${so.order}${FARM.semen.unit} 주문`,sev:semenClock().sev}]:[],act:null},
-    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...fcTodos(),...devTodos(),...gfTodos(),...closeTodos(),...mate2Todos(),...hoTodos()
+    {k:"stock",t:"재고 부족",items:low,act:"stock"},...vaxTodos(),...feedTodos(),...amTodos(),...fcTodos(),...devTodos(),...gfTodos(),...closeTodos(),...mate2Todos(),...hoTodos(),...binEmptyTodos(),...reguTodos(),...reguMateTodos()
   ];
 }
 

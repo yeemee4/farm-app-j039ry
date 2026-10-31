@@ -37,6 +37,8 @@ function statusOf0(s){
   return {...st,parity,gilt,key,label,sub,cls,heat,d,plan:s.cullPlan};
 }
 function summary(r){const d=r.data;switch(r.type){
+  case "동기화":return `${t("발정동기화 시작")} · ${(d.sows||[]).length}${t("두")} · ${d.ml}mL · ${d.at}`;
+  case "레규급여":return `${t("레규메이트 급여")} ${d.day}${t("일째")} · ${d.n}${t("두")} · ${d.ml}mL · ${d.time}${d.off?" ⚠":""}`;
   case "폐사":return `${d.barn} ${t(d.stage)} ${t("폐사")} ${d.n}${t("두")} · ${t(d.cause)}${d.sow?` · ${d.sow}${t("의 복")}`:""}`;
   case "교배":return `${d.sow} ${t("교배")} (${t(d.round)}) · ${d.semen}`;
   case "임신확인":return `${d.sow} ${t(d.result)}`;

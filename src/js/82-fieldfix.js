@@ -127,8 +127,7 @@ function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=recsOf("사�
   if(R.some(r=>r.data.mode==="입고"&&r.createdAt>last.createdAt))return;
   let i=rd.length-1;while(i>0&&feedEmpty(f,rd[i-1].data.kg))i--;const since=rd[i].workDate,b=feedBin(f);
   out.push({emp:{f,name:b?b.name:`${f} ${t("포대")}`,since,days:diff(since,TODAY)+1},label:`${kDate(since)}${t("부터 비어 있음")} · ${t("입고됐는지 확인하고 입고를 기록하세요")}${diff(since,TODAY)>=1?" · "+t("사용량 학습에서 빠짐"):""}`,sev:"bad"})});return out}
-const _extraTodos0=extraTodos;
-extraTodos=function(){const a=_extraTodos0();let e=[];try{e=emptyFeeds()}catch(x){}return [...a,{k:"binempty",t:"사료 빈 비었음 · 입고 확인",items:e,act:null}]};
+function binEmptyTodos(){let e=[];try{e=emptyFeeds()}catch(x){}return [{k:"binempty",t:"사료 빈 비었음 · 입고 확인",items:e,act:null}]}
 if(!TODO_KINDS.some(x=>x[0]==="binempty"))TODO_KINDS.splice(3,0,["binempty","사료 빈 비었음 · 입고 확인"]);
 Object.assign(A,{empIn:v=>{closeSheet();openInput("사료",{fv:{kind:v,mode:"입고"}})}});
 

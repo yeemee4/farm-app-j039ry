@@ -51,7 +51,7 @@ function vHome(){
   h+=`</div></div><div class="proto">시제품 ${APP_VER} · 기록은 이 기기에만 저장됩니다</div>`;
   return h;
 }
-function itemShort(it){return it.emp?it.emp.name.replace(" 빈",""):it.fdv?it.fdv.f:it.fc2?(it.fc2.bin?it.fc2.bin.name.replace(" 빈",""):it.fc2.k):it.cm?kDate(it.cm.day).replace(/\s*\(.*\)/,"")+" "+L(it.cm.type):it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn}
+function itemShort(it){if(it.rgm||it.rg)return it.label.split(" · ")[0];const x=it.emp?it.emp.name.replace(" 빈",""):it.fdv?it.fdv.f:it.fc2?(it.fc2.bin?it.fc2.bin.name.replace(" 빈",""):it.fc2.k):it.cm?kDate(it.cm.day).replace(/\s*\(.*\)/,"")+" "+L(it.cm.type):it.ho?it.ho.text:it.am?t(it.am.barn):it.fc?bName(it.fc.b.k).replace(" 돈군","")+" "+it.fc.p.feed:it.feed?it.feed.f:it.ann?it.ann.name:it.lit?it.s.id:it.t?it.t.title:it.s?it.s.id:it.b?bName(it.b.k).replace(" 돈군","")+" "+it.v.p.name:it.item?it.item.name:it.order?`${t("정액 주문 (내일 교배 예정)").split(" (")[0]} ${it.order.order}`:it.day?it.day.barn:it.r.data.barn;return it.s&&reguMateSows().has(it.s.id)?x+"("+t("레규")+")":x}   // (레규) = 정시 교배 그룹 모돈(84)
 function todoBtn(x){
   const left=leftOf(x),fin=left===0;
   const who=(state.assign||{})[TODAY+"|"+x.k];const names=(who?`${t("담당")} ${who} · `:"")+x.items.map(itemShort).slice(0,5).join(", ")+(x.items.length>5?" …":"");
@@ -110,7 +110,7 @@ function vSows(){
   const cnt=k=>k==="발정관찰"?all.filter(x=>x.i.heat).length:k==="도태후보"?all.filter(x=>cullWhy(x.s)).length:all.filter(x=>matchStatus(x.s,x.i,k)).length;
   let h=`<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="input" data-v="도입">+ ${esc(L("도입"))}</button></div>`;
   h+=`<input type="search" id="sowQ" inputmode="numeric" pattern="[0-9]*" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
-  h+=`<div class="acts" style="margin:-4px 0 4px"><button class="act pri" type="button" data-a="tab" data-v="barnmap">🗺 ${t("돈사 배치도")} ›</button></div>`+sowTools();
+  h+=`<div class="acts" style="margin:-4px 0 4px"><button class="act pri" type="button" data-a="tab" data-v="breed">${t("번식")} ›</button><button class="act" type="button" data-a="tab" data-v="barnmap">🗺 ${t("돈사 배치도")} ›</button></div>`+sowTools();
   h+=`<div class="chips">${[["전체","전체"],["발정관찰","발정 관찰"],["도태후보","도태 후보"],...STATUS_KEYS].map(([k,l])=>`<button type="button" class="chip ${ui.sf===k?"on":""}" data-a="sf" data-v="${k}">${t(l)} ${cnt(k)}</button>`).join("")}</div>`;
   const list=all.filter(x=>(ui.sf==="발정관찰"?x.i.heat:ui.sf==="도태후보"?!!cullWhy(x.s):matchStatus(x.s,x.i,ui.sf))&&(!ui.sowLoc||ui.sowLoc==="전체"||x.s.loc===ui.sowLoc)&&sowMatch(x.s.id,ui.sowQ)!==null).sort((a,b)=>sowMatch(a.s.id,ui.sowQ)-sowMatch(b.s.id,ui.sowQ)||a.s.id.localeCompare(b.s.id));
   h+=`<div class="note">${ui.sf==="도태됨"?"도태된 모돈도 기록이 모두 보관되어 있습니다. 번호를 누르면 생애 기록을 볼 수 있습니다.":t("모돈을 누르면 상세 정보가 열립니다. 위치는 상세 화면에서 바꿉니다.")}</div>`;

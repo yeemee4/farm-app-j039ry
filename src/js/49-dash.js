@@ -1,9 +1,9 @@
 /* ================= v0.5 · 현황판 대시보드 (16:9 · 칸 켜기/끄기는 대표 설정) ================= */
 // 칸 목록: [키, 이름, 기본 켜짐]. 칸을 더하려면 여기에 한 줄 + DASH_P 에 그리는 함수 하나.
-const DASH_LIST=[["sows","모돈 상태",1],["feed","사료 잔량",1],["am","아침 점검",1],["dead","폐사 추이",1],["breed","이번 주 번식",1],["flow","돈군 흐름",1],["week2","이번 주 · 다음 주",1],["parity","산차 구성",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["memo","회의 메모",1],["kpi","지난달 성적",0],["npd","NPD 비생산일수",0]];
+const DASH_LIST=[["sows","모돈 상태",1],["feed","사료 잔량",1],["am","아침 점검",1],["dead","폐사 추이",1],["breed","이번 주 번식",1],["regu","동기화 그룹 (레규)",1],["flow","돈군 흐름",1],["week2","이번 주 · 다음 주",1],["parity","산차 구성",1],["fcr","사료효율 (FCR)",1],["barnmap","돈사 배치도",1],["barn","돈사 현황표",0],["todo","오늘 할 일",1],["memo","회의 메모",1],["kpi","지난달 성적",0],["npd","NPD 비생산일수",0]];
 const DASH_SIDE=["todo","memo"],DASH_STRIP=["kpi"];   // 오른쪽 열 · 맨 아래 띠
 const DASH_GOAL0={교배:5,분만:4,이유:4,임신확인:5};      // 주간 목표 기본값 (주 4복 기준)
-function dashCfg(){const d=state.dash=state.dash||{};if(!d.v2){d.v2=1;d.order=DASH_LIST.map(x=>x[0]);d.on=Object.fromEntries(DASH_LIST.map(x=>[x[0],!!x[2]]))}d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach(x=>{if(!d.order.includes(x[0]))d.order.push(x[0])});
+function dashCfg(){const d=state.dash=state.dash||{};if(!d.v2){d.v2=1;d.order=DASH_LIST.map(x=>x[0]);d.on=Object.fromEntries(DASH_LIST.map(x=>[x[0],!!x[2]]))}d.order=d.order||DASH_LIST.map(x=>x[0]);DASH_LIST.forEach((x,i)=>{if(!d.order.includes(x[0])){const p=i?d.order.indexOf(DASH_LIST[i-1][0]):-1;d.order.splice(p+1,0,x[0])}});   // 새 항목은 목록의 앞 항목 바로 뒤에
   d.on=d.on||{};DASH_LIST.forEach(x=>{if(!(x[0] in d.on))d.on[x[0]]=!!x[2]});d.goal={...DASH_GOAL0,...(d.goal||{})};return d}
 const DCOL=["#3987e5","#d95926","#199e70","#c98500","#d55181","#9085e9"];   // 검증한 색 순서 (어두운 배경)
 const DST={good:"#0ca30c",warn:"#fab219",crit:"#d03b3b"};
@@ -60,8 +60,9 @@ const DASH_P={
   memo:()=>{const D=boardDate(),memo=(state.memo||{})[D]||"";
     return [t("회의 메모"),`<button type="button" class="d-edit" data-a="memoEdit">${ui.memoEdit?t("닫기"):t("쓰기")}</button>`,ui.memoEdit?`<textarea id="memoEdit" aria-label="${t("회의 메모")}">${esc(memo)}</textarea><button type="button" class="d-edit" data-a="memoSave">${t("저장")}</button>`:`<div class="d-memo">${memo?esc(memo).replace(/\n/g,"<br>"):`<span class="d-mu">${t("메모가 없습니다. ‘쓰기’를 눌러 회의 내용을 남기세요.")}</span>`}</div>`]}
 };
-const DASH_GO={sows:"sows",breed:"stats",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
-function dashCard(k){const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy",parity:"parity",npd:"npd",fcr:"fcr"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
+const DASH_GO={sows:"sows",breed:"breed",regu:"breed",dead:"stats",kpi:"stats",flow:"batch",barn:"batch",feed:"drug",am:"morning",todo:"todo"};
+const DASH_MIN={};   // 항목별 "지금은 한 줄로 작게" 조건 (예: 84 레규 그룹 없음)
+function dashCard(k){if(DASH_MIN[k]&&DASH_MIN[k]())return `<section class="d-card dk-${k} d-min"><h3><button type="button" class="d-go" data-a="dashGo" data-v="${k}">${t(DASH_LIST.find(x=>x[0]===k)[1])} ›</button><small>${t("없음")}</small></h3></section>`;const [ti,sub,body]=DASH_P[k]();const cd={dead:"dead",feed:"feed",breed:"week",kpi:"psy",parity:"parity",npd:"npd",fcr:"fcr"}[k];return `<section class="d-card dk-${k}${cd?" cd-go":""}"${cd?` data-a="chDetail" data-v="${cd}"`:""}><h3>${DASH_GO[k]?`<button type="button" class="d-go" data-a="dashGo" data-v="${k}">${ti} ›</button>`:ti}<small>${sub}</small></h3>${body}</section>`}
 // 아이폰 가로(높이 500px 이하): 한 화면 3칸씩 옆으로 넘김
 const dashPhoneL=()=>matchMedia("(max-height:500px) and (orientation:landscape)").matches;
 
