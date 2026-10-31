@@ -6,7 +6,7 @@
 ## 파일 구조 (고칠 파일만 열 것)
 - `src/head.html`, `src/meta.html`, `src/body.html` — 문서 머리·뼈대
 - `src/css/NN-*.css` — 스타일 (번호 순서대로 합쳐짐, 뒤가 앞을 덮어씀)
-- `src/js/NN-*.js` — 스크립트 (번호 순서대로 합쳐짐, **뒤 파일이 같은 이름 함수를 다시 정의하면 그게 이김**: v0.2·v0.3 덮어쓰기 구조)
+- `src/js/NN-*.js` — 스크립트 (번호 순서대로 한 파일로 합쳐짐 · **함수 하나는 한 곳에서만 정의**, 아래 ‘코드 규칙’)
   - **05 farm — 농장마다 다른 값 전부(돈사·단계 주수·백신 프로그램·사료·정액·아침 점검·확인 필요 목록). 값 피드백은 여기만 고친다.**
   - 10 config(CFG·TYPES·QUICK) · 15 uikit(아이콘·라벨) · 20 sow(모돈 상태) · 22 forms · 30 views-core · 32 actions
   - 40~48 돈군·재고·모돈판·성적·TV현황판·약품 · 42b 돈사 배치도(FARM.layout m 단위 실제 비율, 교배사만 확정·나머지 가배치, 칸 버튼 = 정보·급여 수동 조정 state.gfOv·옮기기 s.stall, tab "barnmap", 휴대폰 기본 = 칸 목록형(모든 줄을 세로 기둥·1번 위·큰 버튼), PC·현황판 = 실제 비율, 현황판 칸 barnmap) · 모돈 기록 입력은 배치도로 고르기(vPickMap, 대상 강조, farm-pickmap) · BCS 배치도 입력(tab "bcsmap", 칸 누르고 점수 바로 저장) · 임신돈 급여표는 BCS 쪽(bcsHub) · 43 대리모·이유 보류 · 45 백신 엔진 · 47 사료·날씨 · 47c 사료 빈(규격표 톤→지름, 비담 비율: 반구 지붕·깔때기 높이=지름·원통은 규격 톤(지붕까지×0.65)에 맞춤, 게이지 0=배출구 1=지붕 꼭대기, 양쪽 게이지로 기울어진 면 입체 부피, 비중 가루 0.55 · 입고 전/후 게이지로 자동 보정, A형 양쪽 손잡이 확정, 게이지 5% 스냅) · 47d 사료 잔량 점검(매일 오전, 오늘 입력 [사료]=tab "feedchk", 할 일 feedchk, 마감 FARM.feed.checkBy 10:00) · 47e 사료 예측 학습(잔량 기록 사이 실제 사용량 ÷ 모델 예측 = 사료별 보정, 최근 가중, feedPlanDays 를 감싸 모든 계획에 적용, 설정 ‘다시 배우기’) · 47f 구간별 급여 점검(실제 ÷ 적정(기준표×두수, 보정 없이) 최근 7일, ±10% 적정·−20% 부족·+15% 과다, 할 일 feeddev, 근거 = chDetail "dev:사료") · 47g 임신돈 급여 가이드(모돈별 권장량 = 임신 일수 단계+BCS+초산+돈사 온도, FARM.gest, 임신사1·2동 자동 눈금·교배사 수동 바가지, tab "gfeed"·"gestset", 할 일 gfchg·bcsdue, 사료 계획 sowNeed 도 이 기준) · 47b 사료 계획(주수별 섭취량 FARM.feed.intake → 8주 필요량·빈별 주문일·주문량·구매 주기, 설정 tab "feedset") · **49 현황판 대시보드(칸 = DASH_LIST 한 줄 + DASH_P 함수 하나, 켜기/순서/주간 목표는 설정 › 현황판 항목)**
@@ -28,8 +28,18 @@
 - `docs/pigpeople-notes.md` — 돼지와사람(pigpeople.net) 기술동향 711건·칼럼 학습 노트(다른 세션에서 가져옴). 기준값·기능 근거로 참고(기사 번호 표기)
 - `tools/missing-tr.js` — 번역 빠진 문구 목록. 새 화면을 만든 뒤 돌려서 51 파일에 추가.
 
+## 코드 규칙 (2026-10-31 정리 · 덧대기 65곳 → 0)
+- **덮어쓰기 금지**: `x=function`·`const _x=x` 로 남의 함수를 감싸지 않는다. 고칠 함수를 직접 고친다. 다른 기능이 끼어들 자리는 아래 목록에 한 줄 등록.
+  - 화면 그리기: `render()` = `BEFORE_RENDER` → `drawView()` → `AFTER_RENDER`(등록 순서대로) · 저장 뒤: `AFTER_SAVE`(90 동기화) · 현황판 ‘없음’ 한 줄 카드: `DASH_MIN[k]`
+  - 설정 메뉴·설정 페이지·할 일 묶음·성적 지표·할 일 종류 같은 목록은 **정의한 곳의 목록에 직접** 넣는다(splice·push 로 나중에 끼우지 않음).
+  - 두 단계가 필요한 계산은 이름을 나눠 한 곳에: `rangeMetricsRaw`→`rangeMetrics`(NPD 더함), `feedPlanBase`→`feedPlanDays`(학습 보정), `vSowApp`↔`vSow`(현장 카드 전환).
+- **모양**: `.prettierrc`(120자). 고친 뒤 `node /opt/node-tools/node_modules/prettier/bin/prettier.cjs --write "src/js/*.js"`.
+- **결과 같음 확인**(정리·리팩터링 때): 고치기 전 `node tools/golden.js save /tmp/g.json` → 고친 뒤 `node tools/golden.js check /tmp/g.json` (화면 422개·계산 결과, 날짜·무작위 고정. 일부러 바꾼 화면만 달라야 함).
+- **속도**: 같은 화면 안 무거운 계산은 `memo(key,fn)`, 기록 종류별은 `recsOf(type)`(저장·그리기 때 비움).
+- 정리 전 코드 백업: 브랜치 `backup/before-refactor-2026-10-31`.
+
 ## 할 일 묶음 추가하는 법
-`extraTodos()`(40)의 반환 배열에 `{k,t,items,act}` 를 더한다. 항목 종류별로 `itemTarget`·`tdName`(20), `itemShort`·`openTodo` 그리기(60), 현황판 `ids`(46)에 한 줄씩. 날짜와 상관없이 한 번만 체크하는 묶음은 `tdKey`(20)의 목록에 k 추가.
+`extraTodos()`(40)의 반환 배열 끝에 그 기능의 `...xxxTodos()` 를 더한다(각 함수는 `[{k,t,items,act}]` 반환). 묶음 이름은 `TODO_KINDS`(41) 목록에 직접. 항목 종류별로 `itemTarget`·`tdName`(20), `itemShort`·`openTodo` 그리기(60), 현황판 `ids`(46)에 한 줄씩. 날짜와 상관없이 한 번만 체크하는 묶음은 `tdKey`(20)의 목록에 k 추가.
 
 ## 작업 순서 (시험용 → 본서버, 2026-10-30 결정)
 1. `src/` 수정 → `python3 tools/build.py` (= **test/index.html** 시험용) → `node tools/smoke.js $SCRATCH` (오류 0 확인)
