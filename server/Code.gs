@@ -194,6 +194,7 @@ function setupReguTrigger() {
 // ---------- 시간 알림: 앱이 만든 계획(key alarm§plan = [{id,at:"yyyy-MM-dd HH:mm",msg}]) 중 시각이 된 것을 한 번씩 보냄 ----------
 function alarmTick() { alarmCheck(new Date()); }
 function alarmCheck(now) {
+  if (!props().getProperty("DISCORD")) return;   // 디스코드 주소가 없으면 '보냄' 표시도 하지 않음(주소 넣은 뒤 보내지게)
   var p = props(), fmt = function (d) { return Utilities.formatDate(d, "Asia/Seoul", "yyyy-MM-dd HH:mm"); };
   var nowS = fmt(now), lo = fmt(new Date(now.getTime() - 3 * 3600000)), old = fmt(new Date(now.getTime() - 3 * 86400000)).slice(0, 10), msgs = [];
   dataRows().forEach(function (r) {
@@ -213,6 +214,7 @@ function alarmCheck(now) {
 }
 function reguTick() { reguCheck(new Date()); }
 function reguCheck(now) {
+  if (!props().getProperty("DISCORD")) return;
   var day = Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd"), hm = Utilities.formatDate(now, "Asia/Seoul", "HH:mm");
   var mins = function (x) { var p = String(x).split(":"); return Number(p[0]) * 60 + Number(p[1]); };
   var recs = dataRows().filter(function (r) { return r[1] === "rec" && Number(r[5]) !== 1; })
