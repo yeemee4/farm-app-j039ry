@@ -1153,7 +1153,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 11:47";
+const BUILD_AT="10-31 14:14";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -5309,7 +5309,7 @@ Object.assign(A,{
     try{let r=await syCall({a:"init",farm:syFarm(),accounts:A2});if(!r.ok)throw new Error(r.err);r=await syCall({a:"login",acc:a.id,ph:pinHash(a.id,a.pin),farm:syFarm()});if(!r.ok)throw new Error(r.err);
       SY.token=r.token;SY.acc=a.id;SY.farm=syFarm();SY.snap={rec:{},sow:{},key:{},acc:fnv(JSON.stringify(state.accounts))};SY.out={};SY.fresh=true;SY.cursor=0;sySave();ui.syHello=null;ui.syMsg={t:t("서버를 시작했습니다. 기록을 올리는 중…")};render();
       syDiff();syQ(()=>{}).then(()=>{ui.syMsg=syPending()?{t:`${t("아직 보낼 기록")} ${syPending()}${t("건")} · ${t("인터넷 연결 뒤 자동으로 이어서 보냅니다")}`,bad:1}:{t:t("올리기 완료")+" · "+(state.records||[]).length+t("건")};render()})}catch(e){ui.syMsg={t:t("실패")+": "+e.message,bad:1};render()}},
-  syJoin:async()=>{if(!confirm(t("서버 기록으로 이 휴대폰 기록을 바꿀까요?")))return;
+  syJoin:async(v,skip)=>{if(!skip&&!confirm(t("서버 기록으로 이 휴대폰 기록을 바꿀까요?")))return;
     try{const r=await syCall({a:"accounts"});if(!r.ok)throw new Error(r.err);state.accounts=r.accounts.map(a=>({...a,pin:PIN_MASK.repeat(a.pinLen||4)}));SY.farm=syFarm();SY.cursor=0;SY.snap={rec:{},sow:{},key:{}};SY.out={};SY.token=null;SY.join=true;sySave();
       ME=null;try{localStorage.removeItem(SKEY)}catch(e){}SYNC_MUTE=true;save();SYNC_MUTE=false;ui.syHello=null;tab="home";render();toast(t("내 계정을 고르고 PIN 을 넣으면 기록을 받아 옵니다"))}catch(e){ui.syMsg={t:t("실패")+": "+e.message,bad:1};render()}},
   syNow:()=>{syDiff();setTimeout(()=>syPull().then(()=>render()),1500)},
@@ -5341,6 +5341,23 @@ A.syLogin=()=>{ui.syLogin=true;render()};
 
 // 시험용 표시: 주황 띠 + 제목
 if(ENV==="test"){document.body.classList.add("env-test");const v=$("#hdVer");if(v)v.dataset.env="1"}
+
+// ---- 초대 링크: 앱주소#join=<서버 주소> → 열면 서버 연결·받기 자동, 받은 사람은 계정·PIN 만 (입장 키 화면을 거쳐도 유지) ----
+(()=>{const m=location.hash.match(/join=([^&]+)/);if(!m)return;try{sessionStorage.setItem("farm-join",decodeURIComponent(m[1]))}catch(e){}
+  const h=location.hash.replace(/&?join=[^&]+/,"");history.replaceState(null,"",location.pathname+location.search+(h.length>1?h:""))})();
+let syInvDone=false;function syInviteRun(){let u=null;try{u=sessionStorage.getItem("farm-join");sessionStorage.removeItem("farm-join")}catch(e){}
+  if(!u||!/^(https:\/\/script\.google\.com\/|http:\/\/localhost:)/.test(u)||(SY.url===u&&SY.token))return;SY.url=u;sySave();A.syJoin(null,true)}
+const _render90i=render;render=function(){const r=_render90i.apply(this,arguments);if(!syInvDone){syInvDone=true;setTimeout(syInviteRun,0)}return r};
+function syInviteUrl(){return location.origin+location.pathname+"#join="+encodeURIComponent(SY.url)}
+A.syInvite=()=>{const u=syInviteUrl();try{navigator.clipboard.writeText(u)}catch(e){}
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-a="scrim"><div class="sheet"><div class="sh-hd"><h2>${t("초대 링크")}</h2></div>
+  <p class="sow-meta">${t("링크를 복사했습니다. 그 사람에게만 따로 보내세요(단체방 금지). 열면 서버에 자동 연결되고, 자기 계정과 PIN 만 넣으면 됩니다. 현장에서는 아래 QR 을 휴대폰 카메라로 찍게 하세요.")}</p>
+  <div id="syQr" style="background:#fff;padding:12px;border-radius:12px;width:max-content;margin:12px auto"></div>
+  <button class="act pri" type="button" data-a="syInvCopy">${t("다시 복사")}</button></div></div>`;
+  const draw=()=>{try{new QRCode($("#syQr"),{text:u,width:220,height:220,correctLevel:QRCode.CorrectLevel.M})}catch(e){}};
+  if(window.QRCode)draw();else{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";sc.onload=draw;sc.onerror=()=>{const q=$("#syQr");if(q)q.textContent=t("QR 을 불러오지 못했습니다(인터넷 확인). 링크는 복사되었습니다.")};document.head.appendChild(sc)}};
+A.syInvCopy=()=>{try{navigator.clipboard.writeText(syInviteUrl());toast(t("복사했습니다"))}catch(e){prompt(t("복사하세요"),syInviteUrl())}};
+const _vSyncSet90i=vSyncSet;vSyncSet=function(){const h=_vSyncSet90i();return can("admin")&&SY.url&&SY.token?h.replace(`<div class="sec-t">${t("상태")}</div>`,`<div class="sec-t">${t("다른 휴대폰 초대")}</div><div class="panel"><p class="sow-meta">${t("링크나 QR 로 연결하면 계정·PIN 만 넣으면 됩니다.")}</p><button class="act pri" type="button" data-a="syInvite">📲 ${t("초대 링크·QR")}</button></div><div class="sec-t">${t("상태")}</div>`):h};
 // ---- 디스코드 시간 알림: 앱이 오늘 알림 계획(state.alarm.plan)을 만들어 서버로 동기화 → 서버 alarmTick(5분마다)이 시각이 되면 보냄 ----
 // 앱이 계산(할 일·일정·날씨 등 기존 로직 그대로) · 서버는 시각만 봄. 시험: state.alarm.test={day,at} → 그날 모든 알림을 그 시각에 + 기록 알림 예시
 const ALARM_T={todo:"07:30",wx:"07:30",semen1:"13:00",semen2:"15:30",eve:"18:00",close:"21:00"};
