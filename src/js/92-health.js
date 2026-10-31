@@ -25,7 +25,7 @@ setTimeout(() => {
   try {
     const H = health(),
       k = KEY + "-healthwarn";
-    if (H.warn.length && can("admin") && localStorage.getItem(k) !== TODAY) {
+    if (!IS_DEMO && H.warn.length && can("admin") && localStorage.getItem(k) !== TODAY) {
       localStorage.setItem(k, TODAY);
       toast("⚠ " + H.warn.join(" · ") + " · " + t("설정 › 데이터 상태"));
     }

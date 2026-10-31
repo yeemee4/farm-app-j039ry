@@ -118,7 +118,7 @@ const kTime = iso => {
 const localDateOf = iso => fmt(new Date(iso));
 
 /* ================= 저장 ================= */
-const KEY = ENV === "test" ? "farm-test-v3" : "farm-proto-v3"; // 시험용(test/)은 저장 공간 따로
+const KEY = ENV === "test" ? "farm-test-v3" : ENV === "demo" ? "farm-demo-v3" : "farm-proto-v3"; // 시험용(test/)·시연용(demo/)은 저장 공간 따로
 let state,
   storageOK = true;
 function load() {

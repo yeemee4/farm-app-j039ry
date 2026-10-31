@@ -25,7 +25,7 @@ syncLists();
 state.cfgSt = state.cfgSt || { ...CFG.st };
 state.tasks = state.tasks || [];
 state.todoLog = state.todoLog || {};
-gateOK().then(ok => (ok ? render() : renderGate()));
+(IS_DEMO ? Promise.resolve(true) : gateOK()).then(ok => (ok ? render() : renderGate()));   // 시연용은 입장 키 없음
 window.addEventListener("hashchange", () => {
   if (/key=/.test(location.hash)) gateOK().then(ok => (ok ? render() : renderGate(true)));
 });

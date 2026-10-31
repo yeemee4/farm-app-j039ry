@@ -3,7 +3,7 @@ function vLogin() {
   const L2 = ui.loginLang || "ko",
     sel = ui.loginId ? state.accounts.find(a => a.id === ui.loginId) : null,
     pin = ui.pin || "";
-  let h = `<div class="login-box"><div class="login-brand"><img src="logo.png" alt="비담농장" class="login-logo"><small class="ver">${APP_VER}</small></div>
+  let h = `<div class="login-box"><div class="login-brand">${IS_DEMO ? `<div class="demo-logo">☀ ${esc(FARM.name)}<small>${t("시연용 가상 농장")}</small></div>` : `<img src="logo.png" alt="비담농장" class="login-logo">`}<small class="ver">${APP_VER}</small></div>
     <div class="chips" style="justify-content:center;flex-wrap:wrap">${LANGS.map(([c, n]) => `<button type="button" class="chip ${L2 === c ? "on" : ""}" data-a="loginLang" data-v="${c}">${n}</button>`).join("")}</div>`;
   if (!sel) {
     h += `<h2 style="text-align:center;margin:8px 0 0">${t("이름을 고르세요")}</h2><div class="acclist">${state.accounts
@@ -57,12 +57,13 @@ function vSettings() {
   const menu = (k, ti, d) =>
       `<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`,
     tmenu = (k, ti, d) => menu(k, t(ti), t(d));
+  if (IS_DEMO) h += `<div class="panel"><b>☀ ${t("시연용 가상 농장")} · ${esc(FARM.name)}</b><div class="sow-meta">${t("마음껏 눌러 보세요. 입력한 것은 이 기기에만 남고, 아래 버튼으로 처음 상태로 돌아갑니다.")}</div><button class="act pri" type="button" data-a="demoReset">${t("시연 처음으로")}</button></div>`;
   h += `<div class="more">${menu("guide", t("앱 가이드"), "상황별 사용 방법")}${menu("hus", t("사양관리 가이드"), "임신기간, 포유, 온도, 급수 등 기본 기준")}</div>`;
   if (can("admin") && FARM.confirm.length)
     h += `<div class="sec-t">확인 필요 <span>${FARM.confirm.length}</span></div><div class="panel"><div class="note">아래 값은 임시로 넣어 두었습니다. 알려 주시면 바로 고칩니다.</div>${FARM.confirm.map(x => `<div class="setrow"><span>${esc(x)}</span></div>`).join("")}</div>`;
   if (can("admin")) {
     h += `<div class="sec-t">관리자 설정 <span>대표 계정에서만 보입니다</span></div><div class="more">
-      <button class="mitem" type="button" data-a="tab" data-v="setup"><span></span><span><b>📋 ${t("초기 등록")}</b><small>${t("본서버 첫 자료: 돈사 돌며 현장 카드 입력 → 기록 만들기")}</small></span><span>›</span></button><button class="mitem" type="button" data-a="setPage" data-v="sync"><span></span><span><b>☁ ${t("서버 연결")}</b><small>${SY.url ? (syOn() ? t("연결됨") : t("로그인 필요")) : t("구글 시트 서버 · 여러 휴대폰 동기화 · 디스코드 알림")}</small></span><span>›</span></button>${menu("accounts", "계정 관리", "직원 추가 · 권한 · 언어 · PIN · 정지")}
+      ${IS_DEMO ? "" : `<button class="mitem" type="button" data-a="tab" data-v="setup"><span></span><span><b>📋 ${t("초기 등록")}</b><small>${t("본서버 첫 자료: 돈사 돌며 현장 카드 입력 → 기록 만들기")}</small></span><span>›</span></button><button class="mitem" type="button" data-a="setPage" data-v="sync"><span></span><span><b>☁ ${t("서버 연결")}</b><small>${SY.url ? (syOn() ? t("연결됨") : t("로그인 필요")) : t("구글 시트 서버 · 여러 휴대폰 동기화 · 디스코드 알림")}</small></span><span>›</span></button>`}${menu("accounts", "계정 관리", "직원 추가 · 권한 · 언어 · PIN · 정지")}
       ${menu("lists", "목록·이름 관리", "돈사, 폐사 원인, 조치, 정액, 출하처, 도태 사유")}
       ${menu("todorank", "할 일 순서", "할 일 묶음의 우선순위 (위에서부터)")}
       ${menu("supply", "백신·주사침 준비물", "1병당 접종 두수, 주사침 규격·사용량")}
@@ -71,8 +72,8 @@ function vSettings() {
       ${menu("criteria", "기준값", "폐사 알림 기준, 무변동 기준, 돈사별 주 수, 백신 프로그램, 정액")}
       ${menu("bulk", "모돈 일괄 등록", "번호를 붙여 넣고 현재 상태와 날짜로 등록")}
       ${menu("binit", "돈군 초기 등록", "분만 주차별 현재 두수")}
-      ${menu("backup", "백업·복원", "기록을 복사해 두고 다시 붙여 넣기")}
-      ${menu("reset", "데이터 초기화", "우리 농장 초기값 · 예시 농장 · 빈 농장")}</div>`;
+      ${IS_DEMO ? "" : menu("backup", "백업·복원", "기록을 복사해 두고 다시 붙여 넣기")}
+      ${IS_DEMO ? "" : menu("reset", "데이터 초기화", "우리 농장 초기값 · 예시 농장 · 빈 농장")}</div>`;
     h += healthBox();
   }
   return h;

@@ -10,6 +10,7 @@ read = lambda p: open(p, encoding='utf-8').read()
 GATE = re.search(r'const GATE\s*=\s*"([0-9a-f]{64})"', read(os.path.join(ROOT, 'index.html'))).group(1)
 TAGS = '--no-tags' not in sys.argv          # 테스트 라벨(포스트잇) 기본 켜짐
 PROD = '--prod' in sys.argv              # 기본은 시험용(test/)
+DEMO = '--demo' in sys.argv              # 시연용 가상 농장(demo/) 만 만듦
 
 icons = {os.path.basename(p)[:-4]: read(p).strip() for p in sorted(glob.glob(src('icons', '*.svg')))}
 # 그림 아이콘(.png)이 있으면 .svg 보다 우선
@@ -60,7 +61,7 @@ def pc_css(css):
 css = pc_css(''.join(read(p) for p in sorted(glob.glob(src('css', '*.css')))))
 js = ''.join(read(p) for p in sorted(glob.glob(src('js', '*.js'))))
 js = js.replace('%GATE%', GATE)
-pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\nconst ENV=%s;\nconst BUILD_AT=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false', '"prod"' if PROD else '"test"', json.dumps(__import__('datetime').datetime.now(__import__('datetime').timezone(__import__('datetime').timedelta(hours=9))).strftime('%m-%d %H:%M')))
+pre = 'const ICON_SVG=%s;\nconst ICON_IMG=%s;\nconst ICON_CUT=%s;\nconst ICON_POLY=%s;\nconst BUILD_TAGS=%s;\nconst ENV=%s;\nconst BUILD_AT=%s;\n' % (json.dumps(icons, ensure_ascii=False), json.dumps(imgs, ensure_ascii=False), json.dumps(cuts, ensure_ascii=False), json.dumps(polys, ensure_ascii=False), 'true' if TAGS else 'false', '"demo"' if DEMO else '"prod"' if PROD else '"test"', json.dumps(__import__('datetime').datetime.now(__import__('datetime').timezone(__import__('datetime').timedelta(hours=9))).strftime('%m-%d %H:%M')))
 
 out = (read(src('head.html')) + read(src('meta.html')) + '<style>\n' + css + '</style>\n</head>\n<body>\n'
        + read(src('body.html')) + '<script>\n' + pre + js + '</script>\n</body>\n</html>\n')
@@ -73,6 +74,12 @@ def write(dest, html, depth):
         # 아이폰은 manifest 를 따로 기억해 루트(본서버)를 여는 일이 있어, 하위 폴더 앱은 manifest 연결을 빼고 추가할 때 주소를 그대로 쓰게 함
         html = re.sub(r'<link rel="manifest"[^>]*>\n?', '', html)
     open(os.path.join(ROOT, dest), 'w', encoding='utf-8').write(html)
+if DEMO:   # 시연용: 라벨 없음 · 제목·홈 화면 이름 햇살농장 · 초기 등록 앱 없음
+    out = re.sub(r'<title>.*?</title>', '<title>햇살농장 (시연)</title>', out, count=1)
+    out = out.replace('apple-mobile-web-app-title" content="비담농장"', 'apple-mobile-web-app-title" content="햇살농장 시연"', 1)
+    write('demo/index.html', out, 1)
+    print('built demo/index.html', len(out), 'bytes, tags', TAGS)
+    sys.exit(0)
 base = '' if PROD else 'test/'
 if not PROD:   # 시험용: 제목에 (테스트)
     out = re.sub(r'<title>(.*?)</title>', r'<title>\1 (테스트)</title>', out, count=1)

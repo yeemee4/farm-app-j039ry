@@ -34,7 +34,24 @@ Object.assign(A, {
     ui.loginLang = v;
     render();
   },
+  demoReset: () => {
+    if (!confirm(t("시연 농장을 처음 상태로 되돌릴까요?"))) return;
+    makeState("farm");
+    tab = "home";
+    ui.setPage = "main";
+    render();
+    toast(t("처음 상태로 되돌렸습니다"));
+  },
   loginPick: v => {
+    if (IS_DEMO) {   // 시연: PIN 없이 바로
+      ME = v;
+      try {
+        localStorage.setItem(SKEY, ME);
+      } catch (e) {}
+      tab = "home";
+      render();
+      return;
+    }
     ui.loginId = v;
     ui.pin = "";
     ui.pinErr = false;

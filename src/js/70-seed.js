@@ -1,7 +1,7 @@
 /* ================= v0.3 · 우리 농장 초기값 ================= */
 function baseState() {
   return {
-    accounts: [
+    accounts: FARM.accounts || [
       { id: "a1", name: "대표", role: "admin", pin: "9368", lang: "ko", active: true },
       { id: "a2", name: "조성훈 팀장", role: "leader", pin: "1234", lang: "ko", active: true },
       { id: "a3", name: "Nguyen", role: "worker", pin: "1111", lang: "vi", active: true },
@@ -44,7 +44,7 @@ const FARM_LISTS = () => ({
   cull: mkList(["번식장애(재발·공태)", "산자수 저조", "지제·다리 불량", "노산", "질병", "기타"])
 });
 // 예시 기록 만들기. 농장마다 다른 숫자는 FARM.seed(05·06) — 없으면 비담 값
-const SEED0 = { fw: 4, live: [10, 14], stillP: 0.45, mumP: 0.15, loss: 0.06, retP: 0.12, openP: 0.05, bpMax: 5, takeover: true, users: ["대표", "조성훈 팀장", "Nguyen", "Ram", "Sokha", "Somchai"], pig: [0.02, 0.015, 0.015, 0.015], feedIn: 1, prev: { far: 16, frate: 84, live: 12, wean: 10.9, psy: 24, msy: 21, surv: 89 } };
+const SEED0 = { fw: 4, live: [10, 14], stillP: 0.45, mumP: 0.15, loss: 0.06, retP: 0.12, openP: 0.05, bpMax: 5, wmi: [4, 8], days: 548, takeover: true, forward: false, n: 300, cullPar: 7, cullP: 0.06, users: ["대표", "조성훈 팀장", "Nguyen", "Ram", "Sokha", "Somchai"], pig: [0.02, 0.015, 0.015, 0.015], feedIn: 1, prev: { far: 16, frate: 84, live: 12, wean: 10.9, psy: 24, msy: 21, surv: 89 } };
 function seedFarm() {
   const S = { ...SEED0, ...(FARM.seed || {}) },
     q = n => Math.max(1, Math.round((n * S.fw) / 4));   // 비담(주 4복) 기준 두수를 이 농장 규모로
@@ -52,7 +52,7 @@ function seedFarm() {
   const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647,
     ri = (a, b) => a + Math.floor(rnd() * (b - a + 1)),
     pick = a => a[ri(0, a.length - 1)];
-  const H0 = addDays(TODAY, -548),
+  const H0 = addDays(TODAY, -S.days),
     TAKE = addDays(TODAY, -14),
     G = CFG.gest,
     wk0 = weekStart(TODAY),
@@ -121,7 +121,7 @@ function seedFarm() {
   const cycleBack = (id, M) => {
     let m = M;
     for (let n = 0; n < 6; n++) {
-      const W = addDays(m, -ri(4, 8)),
+      const W = addDays(m, -ri(S.wmi[0], S.wmi[1])),
         wd = ri(26, 28),
         F = addDays(W, -wd);
       if (F < addDays(H0, -40)) break;
@@ -148,69 +148,120 @@ function seedFarm() {
     sows.push({ id, baseParity: bp, loc, breed: FARM.breed });
     return id;
   };
-  // 분만사 30 = 분만 대기 8 + 포유 16 + 이유 직후 2 + 분만사에서 교배 4
-  for (let k = 0; k < q(8); k++) {
-    const id = mk("분만사"),
-      M = addDays(TODAY, -(100 + Math.round((k * 13) / (q(8) - 1)) + ri(0, 1)));
-    mate(id, M);
-    cycleBack(id, M);
-  }
-  for (let w = 0; w < 4; w++)
-    for (let k = 0; k < S.fw; k++) {
-      const back = diff(wk0, TODAY);
-      const F = addDays(wk0, -7 * w + (w === 0 ? ri(0, back) : ri(0, 6)));
-      if (F > TODAY) continue;
+  // 앞으로 돌려 만들기(시연 농장 FARM.seed.forward): 300두를 과거부터 하루씩 교배→임신→분만→이유→재교배, 늙거나 탈난 모돈은 도태·후보돈으로 채움 → 달마다 성적이 고르게
+  const simForward = () => {
+    const L0 = addDays(H0, -260), cyc = G + 27 + 7, ev = [];   // [날짜, 모돈, 할 일]
+    const st = {};   // 모돈별 산차·최근 일
+    const push = (d, id, k) => {   // 날짜 순서를 지키며 끼워 넣기
+      let i = ev.length;
+      while (i > 0 && ev[i - 1][0] > d) i--;
+      ev.splice(i, 0, [d, id, k]);
+    };
+    const newSow = (d, gilt) => {
+      const id = mk("교배사");
+      st[id] = { par: gilt ? 0 : ri(0, S.bpMax) };
+      if (gilt) add("도입", d, { sow: id, breed: FARM.breed, kind: "후보돈" });
+      return id;
+    };
+    for (let i = 0; i < S.n; i++) push(addDays(L0, Math.floor((i * cyc) / S.n)), newSow(L0, false), "mate");
+    ev.sort((a, b) => a[0].localeCompare(b[0]));
+    while (ev.length) {
+      const [d, id, k] = ev.shift();
+      if (d > TODAY) continue;
+      const o = st[id];
+      if (k === "mate") {
+        const x = rnd();
+        if (x < S.retP) { mate(id, d, false); add("임신확인", addDays(d, ri(19, 23)), { sow: id, result: "재발" }); push(addDays(d, ri(20, 23)), id, "mate") }
+        else if (x < S.retP + S.openP) { mate(id, d, false); add("임신확인", addDays(d, 28), { sow: id, result: "공태" }); push(addDays(d, ri(38, 45)), id, "mate") }
+        else { mate(id, d, true); push(addDays(d, G + ri(-1, 1)), id, "farrow") }
+      } else if (k === "farrow") {
+        const wd = ri(26, 28), W = addDays(d, wd);
+        farrow(id, d, W <= TODAY ? wd : null);
+        o.par++;
+        if (W <= TODAY) push(W, id, "wean");
+      } else if (k === "wean") {
+        // 도태: 높은 산차·가끔 다른 사유 → 같은 날 후보돈 도입(약 3주 순치 후 교배)
+        if ((o.par >= S.cullPar && rnd() < 0.6) || rnd() < S.cullP) {
+          add("도태", addDays(d, ri(1, 5)), { sow: id, reason: o.par >= S.cullPar ? "고산차" : pick(["번식 장애", "지제", "산자수 낮음"]) });
+          push(addDays(d, ri(18, 26)), newSow(d, true), "mate");
+        } else push(addDays(d, ri(S.wmi[0], S.wmi[1])), id, "mate");
+      }
+    }
+    // 산차: 기록 시작 전 분만은 baseParity 로 · 지금 있는 곳(배치도·모돈 탭): 오늘 상태로
+    sows.forEach(s => {
+      s.baseParity = st[s.id].par - recs.filter(r => r.type === "분만" && r.data.sow === s.id).length;
+      const R = recs.filter(r => r.data && r.data.sow === s.id).sort((a, b) => a.workDate.localeCompare(b.workDate)), last = R[R.length - 1];
+      if (!last) return;
+      const g = diff(last.workDate, TODAY);
+      s.loc = last.type === "분만" ? "분만사" : last.type === "이유" ? "교배사" : last.type === "교배" && g >= 100 ? "분만사" : last.type === "교배" && g >= 28 ? (g < 65 ? "임신사 1동" : "임신사 2동") : last.type === "임신확인" && R.filter(r => r.type === "교배").pop() && diff(R.filter(r => r.type === "교배").pop().workDate, TODAY) >= 28 ? (diff(R.filter(r => r.type === "교배").pop().workDate, TODAY) < 65 ? "임신사 1동" : diff(R.filter(r => r.type === "교배").pop().workDate, TODAY) >= 100 ? "분만사" : "임신사 2동") : "교배사";
+    });
+  };
+  if (S.forward) simForward();
+  else {
+    // 분만사 30 = 분만 대기 8 + 포유 16 + 이유 직후 2 + 분만사에서 교배 4
+    for (let k = 0; k < q(8); k++) {
       const id = mk("분만사"),
+        M = addDays(TODAY, -(100 + Math.round((k * 13) / (q(8) - 1)) + ri(0, 1)));
+      mate(id, M);
+      cycleBack(id, M);
+    }
+    for (let w = 0; w < 4; w++)
+      for (let k = 0; k < S.fw; k++) {
+        const back = diff(wk0, TODAY);
+        const F = addDays(wk0, -7 * w + (w === 0 ? ri(0, back) : ri(0, 6)));
+        if (F > TODAY) continue;
+        const id = mk("분만사"),
+          M = addDays(F, -G);
+        mate(id, M);
+        farrow(id, F, null);
+        cycleBack(id, M);
+      }
+    for (let k = 0; k < q(2); k++) {
+      const id = mk("분만사"),
+        W = addDays(TODAY, -ri(0, 2)),
+        F = addDays(W, -28),
         M = addDays(F, -G);
       mate(id, M);
-      farrow(id, F, null);
+      farrow(id, F, 28);
       cycleBack(id, M);
     }
-  for (let k = 0; k < q(2); k++) {
-    const id = mk("분만사"),
-      W = addDays(TODAY, -ri(0, 2)),
-      F = addDays(W, -28),
-      M = addDays(F, -G);
-    mate(id, M);
-    farrow(id, F, 28);
-    cycleBack(id, M);
-  }
-  for (let k = 0; k < q(4); k++) {
-    const id = mk("분만사"),
-      M = addDays(TODAY, -(3 + Math.round((k * 20) / q(4)) + ri(0, 2)));
-    mate(id, M, false);
-    cycleBack(id, M);
-  }
-  // 임신사 40 (교배 30~99일)
-  for (let w = 0; w < 10; w++)
-    for (let k = 0; k < S.fw; k++) {
-      const id = mk(w < 5 ? "임신사 1동" : "임신사 2동"),
-        M = addDays(TODAY, -(30 + 7 * w + Math.round((k * 7) / S.fw)));
+    for (let k = 0; k < q(4); k++) {
+      const id = mk("분만사"),
+        M = addDays(TODAY, -(3 + Math.round((k * 20) / q(4)) + ri(0, 2)));
+      mate(id, M, false);
+      cycleBack(id, M);
+    }
+    // 임신사 40 (교배 30~99일)
+    for (let w = 0; w < 10; w++)
+      for (let k = 0; k < S.fw; k++) {
+        const id = mk(w < 5 ? "임신사 1동" : "임신사 2동"),
+          M = addDays(TODAY, -(30 + 7 * w + Math.round((k * 7) / S.fw)));
+        mate(id, M);
+        cycleBack(id, M);
+      }
+    // 교배사 22 = 이유 후 대기 3 + 교배 후 확인 전 15 + 재발 3 + 공태 1
+    for (let k = 0; k < q(3); k++) {
+      const id = mk("교배사"),
+        W = addDays(TODAY, -(2 + (k % 3))),
+        F = addDays(W, -28),
+        M = addDays(F, -G);
       mate(id, M);
+      farrow(id, F, 28);
       cycleBack(id, M);
     }
-  // 교배사 22 = 이유 후 대기 3 + 교배 후 확인 전 15 + 재발 3 + 공태 1
-  for (let k = 0; k < q(3); k++) {
-    const id = mk("교배사"),
-      W = addDays(TODAY, -(2 + (k % 3))),
-      F = addDays(W, -28),
-      M = addDays(F, -G);
-    mate(id, M);
-    farrow(id, F, 28);
-    cycleBack(id, M);
-  }
-  for (let k = 0; k < q(15); k++) {
-    const id = mk("교배사"),
-      M = addDays(TODAY, -Math.round((k * 25) / q(15)));
-    mate(id, M, false);
-    cycleBack(id, M);
-  }
-  for (let k = 0; k < q(4); k++) {
-    const id = mk("교배사"),
-      M = addDays(TODAY, -ri(26, 40));
-    mate(id, M, false);
-    add("임신확인", addDays(M, ri(19, 24)), { sow: id, result: k < q(3) ? "재발" : "공태" });
-    cycleBack(id, M);
+    for (let k = 0; k < q(15); k++) {
+      const id = mk("교배사"),
+        M = addDays(TODAY, -Math.round((k * 25) / q(15)));
+      mate(id, M, false);
+      cycleBack(id, M);
+    }
+    for (let k = 0; k < q(4); k++) {
+      const id = mk("교배사"),
+        M = addDays(TODAY, -ri(26, 40));
+      mate(id, M, false);
+      add("임신확인", addDays(M, ri(19, 24)), { sow: id, result: k < q(3) ? "재발" : "공태" });
+      cycleBack(id, M);
+    }
   }
   // 이유 날짜가 미래가 되지 않게 · 확인 전 모돈의 미래 백신 제거
   for (let i = recs.length - 1; i >= 0; i--) if (recs[i].workDate > TODAY) recs.splice(i, 1);
@@ -272,6 +323,15 @@ function seedFarm() {
         bulk[bb].w += n * Math.max(25, Math.round(age * 0.62));
       }
     });
+  // 계속 키우는 농장: 기록 시작 전에 태어난 돈군도 기간 안에 출하(성적 MSY 가 앞쪽 몇 달 비지 않게)
+  if (!S.takeover) {
+    const wean = ((S.live[0] + S.live[1]) / 2) * (1 - 1.5 * S.loss),
+      surv = S.pig.reduce((x, r) => x * (1 - r), 1);
+    for (let k = addDays(weekStart(H0), -SH * 7); k < weekStart(H0); k = addDays(k, 7)) {
+      const ship = addDays(k, SH * 7 + ri(0, 4));
+      if (ship >= H0 && ship <= TODAY) add("출하", ship, { barn: "육성비육사", n: Math.round(S.fw * wean * surv * (0.95 + rnd() * 0.1)), kg: ri(113, 119), dest: rnd() < 0.8 ? "○○도축장" : "△△공판장" });
+    }
+  }
   Object.entries(bulk).forEach(([barn, v]) =>
     add("출하", TAKE, { barn, n: v.n, kg: Math.round(v.w / v.n), dest: "△△공판장 (인수 시 일괄 판매)", bulk: true })
   );
@@ -286,7 +346,7 @@ function seedFarm() {
   });
   // 사료 입고 · 약품
   const FK = [...FARM.feed.bins.map(b => [b.feed, 3000 * S.feedIn, 7000 * S.feedIn]), ...FARM.feed.bags.map(b => [b.feed, 200 * S.feedIn, 600 * S.feedIn])];
-  for (let d = 548; d >= 11; d -= ri(2, 4)) {
+  for (let d = S.days; d >= 11; d -= ri(2, 4)) {
     const f = pick(FK);
     add("사료", addDays(TODAY, -d), { kind: f[0], mode: "입고", kg: Math.round(ri(f[1], f[2]) / 100) * 100 });
   }

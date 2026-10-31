@@ -289,3 +289,8 @@ body:not(.mode-setup) .su-dock{bottom:calc(64px + env(safe-area-inset-bottom,0px
 .dock-tg{float:right;margin:-4px 0 0 8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif}
 .dock.hid>:not(.dock-hd){display:none!important}.dock.hid{padding-bottom:10px}
 body:has(.dock) .tagbtn{bottom:auto;top:calc(110px + env(safe-area-inset-top,0px))}
+
+/* 시연용(demo/) */
+body.env-demo::before{content:"☀ 시연용 가상 농장 · 실제 기록 아님";position:fixed;left:0;right:0;top:0;z-index:9999;background:#2E6A4E;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center;letter-spacing:.05em;pointer-events:none}
+body.env-demo .app{padding-top:20px}
+.demo-logo{font:800 34px/1.2 system-ui,sans-serif;color:var(--accent);text-align:center;padding:18px 0 6px}.demo-logo small{display:block;font:600 13px system-ui,sans-serif;color:var(--muted);margin-top:6px}

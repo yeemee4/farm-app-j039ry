@@ -37,7 +37,9 @@ function npdSegs() {
         )
         .map(r => [r.workDate, "fail"])
     ].sort((a, b) => a[0].localeCompare(b[0]));
-    const start = s.baseParity > 0 || (asc[0] && asc[0].type !== "교배") ? "0000" : mates[0] ? mates[0].workDate : null;
+    // 모돈 일수 시작: 이미 분만한 적 있으면 처음부터, 후보돈은 첫 교배부터(도입·BCS 기록은 셈에서 뺌 — 들어오기 전 날을 비생산일로 세지 않게)
+    const first = asc.find(r => r.type !== "도입" && r.type !== "BCS");
+    const start = s.baseParity > 0 || (first && first.type !== "교배") ? "0000" : mates[0] ? mates[0].workDate : null;
     if (start) m[s.id] = { start, end: cull ? cull.workDate : "9999", prod, ev };
   });
   NPDX = { key, m };

@@ -20,7 +20,7 @@ const DASH_LIST = [
 ];
 const DASH_SIDE = ["todo", "memo"],
   DASH_STRIP = ["kpi"]; // 오른쪽 열 · 맨 아래 띠
-const DASH_GOAL0 = { 교배: 5, 분만: 4, 이유: 4, 임신확인: 5 }; // 주간 목표 기본값 (주 4복 기준)
+const DASH_GOAL0 = FARM.weekGoal || { 교배: 5, 분만: 4, 이유: 4, 임신확인: 5 }; // 주간 목표 기본값 (주 4복 기준 · 시연 농장은 06) (주 4복 기준)
 function dashCfg() {
   const d = (state.dash = state.dash || {});
   if (!d.v2) {
