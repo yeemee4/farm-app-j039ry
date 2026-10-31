@@ -58,15 +58,16 @@ function todoBtn(x){
   return `<button class="todo ${fin?"alldone":""}" type="button" data-a="todo" data-v="${x.k}"><span class="bar" style="background:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--accent)"}"></span><span><b>${t(x.t)}</b><i class="tq" style="width:${x.items.length?(x.items.length-left)/x.items.length*100:0}%"></i><small>${fin?t("모두 완료")+" · ":""}${esc(names)}</small></span><span class="n" style="color:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--ink)"}">${fin?"✓":left}<small>/${x.items.length}</small></span></button>`;
 }
 function vTodo(){
-  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls();
+  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls(),must=todos.filter(x=>!todoIsCheck(x.k)),chk=todos.filter(x=>todoIsCheck(x.k));
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
   h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
-  h+=todos.length?`<div class="todolist">${todos.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
+  h+=must.length?`<div class="todolist">${must.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  if(chk.length)h+=`<div class="sec-t">${t("확인만")} <span>${t("퀘스트에 넣지 않음")}</span></div><div class="todolist tl-chk">${chk.map(todoBtn).join("")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
-  h+=`<div class="note">일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.</div>`;
-  h+=st.length?st.map(x=>`<div class="stall-it"><div style="min-width:0"><div class="sow-top" style="justify-content:flex-start;gap:8px"><button type="button" class="sow-no" data-a="sowd" data-v="${x.s.id}">${x.s.id}<span class="chev">›</span></button><span class="stage ${x.i.cls}">${x.i.label}</span></div><div class="why" style="color:${x.sev==="bad"?"var(--red)":"var(--amber)"}">${x.why}</div><div class="sow-loc">${t("현재")} ${x.s.loc} · ${x.i.sub}</div></div></div>`).join(""):`<div class="empty">기록이 멈춘 개체가 없습니다.</div>`;
-  return h;
-}
+  h+=`<div class="note">${t("일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.")}</div>`;
+  h+=st.length?st.map(x=>`<div class="stall-it"><div style="min-width:0"><div class="sow-top" style="justify-content:flex-start;gap:8px"><button type="button" class="sow-no" data-a="sowd" data-v="${x.s.id}">${x.s.id}<span class="chev">›</span></button><span class="stage ${x.i.cls}">${x.i.label}</span></div><div class="why" style="color:${x.sev==="bad"?"var(--red)":"var(--amber)"}">${x.why}</div><div class="sow-loc">${t("현재")} ${x.s.loc} · ${x.i.sub}</div></div></div>`).join(""):`<div class="empty">${t("기록이 멈춘 개체가 없습니다.")}</div>`;
+  return h}
 function openTodo(k){
   const x=buildTodos().find(q=>q.k===k);if(!x){closeSheet();return}
   const rows=x.items.map(it=>{const key=tdKey(k,itemTarget(it));return {it,key,log:tdLog(key)}}).sort((a,b)=>(a.log?1:0)-(b.log?1:0));

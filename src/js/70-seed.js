@@ -113,6 +113,12 @@ function seedFarmPost(){
   const oldest=liveBatches().slice(-1)[0],now=new Date().toISOString();
   if(oldest){const fin=addDays(oldest.k,state.cfg.stage.slice(0,-1).reduce((a,x)=>a+x[1],0)*7);
     state.tasks.push({id:newId(),src:null,title:"육성비육사 청소·소독·급이·급수 점검 (첫 입식 준비)",acts:["소독","환기 점검"],due:addDays(fin,-3),who:"조성훈 팀장",memo:`첫 입식 ${kDate(fin)} 주 · 육성비육사 비어 있음`,createdAt:now,user:"대표"})}
+
+  // 사료 빈 잔량 예시에 양쪽 게이지(기울기)
+  try{const R=recsOf("사료").filter(r=>r.data.mode==="빈 잔량"&&r.data.lL==null);
+  FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
+    const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
+    r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()
 }
 function upgradeDemo(st){const B=baseState();Object.assign(st,{v:7,lists:{barns:mkList(["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"]),causes:FARM_LISTS().causes,actions:FARM_LISTS().actions,semens:FARM_LISTS().semens,dests:FARM_LISTS().dests,cull:FARM_LISTS().cull},startDate:addDays(TODAY,-60),accounts:B.accounts,labels:B.labels,dayDec:{},mbatches:[]});st.cfg.deadOne=3;st.cfg.deadDay=3;return st}
 function makeState(kind,keep){

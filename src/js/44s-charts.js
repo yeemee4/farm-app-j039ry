@@ -25,7 +25,7 @@ function legendH(items){return `<div class="legend">${items.map(([c,l,dash])=>`<
 function hbarsH(rows,o={}){const mx=Math.max(1,...rows.map(r=>r.v));
   return `<div class="hbars">${rows.map(r=>`<div class="hb"><span class="hb-l">${esc(r.l)}</span><div class="hb-t"><div class="hb-f" style="width:${Math.max(2,r.v/mx*100)}%;background:${r.c||CC.a}" title="${esc(r.l)} ${r.txt||r.v}"></div></div><span class="hb-v">${r.txt||r.v}</span></div>`).join("")}</div>`}
 
-function vCharts(){return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${chartCards().map((c,i)=>`<div class="cd-go" data-a="chDetail" data-v="${CD_KEYS[i]}">${c}</div>`).join("")}</div>`}
+function vCharts(){const M=cardMap();return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${stCards().on.filter(k=>M[k]).map(k=>`<div class="cd-go" data-a="chDetail" data-v="${k}">${M[k]}</div>`).join("")}</div>`}
 function chartCards(){const C=[];
   const S=ui.st,P=statPeriod(),endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),M=months12(endYm),lab=M.map(([,m])=>m+t("월"));
   const mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),G=sGoal(),pick=k=>mm.map(v=>v?v[k]:null);

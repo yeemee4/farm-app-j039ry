@@ -19,7 +19,9 @@ function metrics(from,to){
 function hasRec(from,to){return state.records.some(r=>["분만","교배","이유","출하"].includes(r.type)&&r.workDate>=from&&r.workDate<=to)}
 function mergeM(a,b){if(!a)return b;if(!b)return a;const d=a.days+b.days,w=(k,ka,kb)=>{const x=a[k],y=b[k],wa=ka,wb=kb;if(x==null)return y;if(y==null)return x;return (x*wa+y*wb)/((wa+wb)||1)};
   return {days:d,far:a.far+b.far,mates:a.mates+b.mates,dead:a.dead+b.dead,ship:a.ship+b.ship,frate:w("frate",a.mates,b.mates),tot:w("tot",a.far,b.far),live:w("live",a.far,b.far),wean:w("wean",a.far,b.far),surv:w("surv",a.far,b.far),psy:w("psy",a.days,b.days),msy:w("msy",a.days,b.days),shipKg:w("shipKg",a.ship,b.ship),src:"mix"}}
-function rangeMetrics(from,to){
+// 기간 성적 + NPD(비생산일수, 44n). 안의 계산은 rangeMetricsRaw
+function rangeMetrics(f,to){const r=rangeMetricsRaw(f,to);if(r&&r.npd===undefined){try{const n=npdStat(f,to>TODAY?TODAY:to);r.npd=n?n.npd:null}catch(e){r.npd=null}}return r}
+function rangeMetricsRaw(from,to){
   if(to>TODAY)to=TODAY;if(from>to)return null;
   const S0=state.startDate;
   if(S0&&from<S0&&to>=S0){const a=metrics(S0,to),b=rangeMetrics(from,addDays(S0,-1));return mergeM(a,b&&b.src==="man"?b:null)}

@@ -14,9 +14,11 @@ function wxLine(){wxLoad();if(!WX||!WX.current)return `<div class="bd-wx">${FARM
 function wxHome(){wxLoad();const al=wxAlerts(0).replace(/bd-al wx/g,"wxal");return al?`<div class="wxcard">${al}</div>`:""}
 // 상단 주차 옆 짧은 날씨
 function wxShort(){wxLoad();if(!WX||!WX.current)return "";const c=WX.current,d=wxDay(0);return ` · ${t(WXC(c.weather_code))} ${Math.round(c.temperature_2m)}℃ (${d.min}~${d.max}℃)`}
-function wxAlerts(day){const d=wxDay(day||0),W=FARM.wx;if(!d)return "";const a=[];
+function wxAlerts(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d)return "";const a=[];
   if(d.max>=W.hot)a.push(`${t("폭염")} ${d.max}℃ · ${t("환기·급수·쿨링 점검")}`);
-  if(d.min<=W.cold)a.push(`${t("한파")} ${d.min}℃ · ${t("보온·급수관 동파 점검")}`);
+  else if(n&&n.max>=W.hot)a.push(`${t("내일 폭염")} ${n.max}℃ · ${t("오늘 쿨링·급수 미리 점검")}`);
+  if(n&&n.min<=W.cold&&d.min>W.cold)a.push(`${t("내일 영하 진입")} ${n.min}℃ · ${t("급수관 동파·보온 미리 점검")}`);
+  if(d.min<=W.freeze)a.push(`${t("한파")} ${d.min}℃ · ${t("급수 확인·보온")}`);
   if(d.wind>=W.wind)a.push(`${t("강풍")} ${Math.round(d.wind/3.6)}m/s · ${t("커튼·문·지붕 점검")}`);
   return a.map(x=>`<div class="bd-al wx">${x}</div>`).join("")}
 // 화면을 켜 두기만 해도 10분마다 새로 받기 (받으면 render)

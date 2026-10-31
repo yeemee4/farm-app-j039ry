@@ -9,13 +9,23 @@ function hoTodos(){const L=(state.handover||[]).filter(h=>h.due<=REF),items=L.fi
 function hoBox(){return `<div class="panel ho"><div class="row2"><input type="text" id="hoText" placeholder="${t("인계 메모 (예: 내일 아침 6-008 분만 확인)")}" aria-label="${t("인계 메모")}"><button class="act pri" type="button" data-a="hoAdd">${t("내일로")}</button></div></div>`}
 // 20. 도태 후보 (기준은 대표 설정)
 const CULL0={parity:7,returns:2,low:9};
-function cullRule(){return {...CULL0,...(state.cullRule||{})}}
-function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[];
-  if(i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);if(i.returns>=R.returns)w.push(`${t("재발·공태")} ${i.returns}${t("회")}`);
-  const fs=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
-  if(fs.length===2&&fs.every(r=>r.data.live<=R.low))w.push(`${t("실산")} ${fs.map(r=>r.data.live).join("·")}`);
-  return w.length?w.join(" · "):null}
-function cullRuleSet(){const R=cullRule();return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터")}</span></div><div class="panel">${[["parity","산차 이상"],["returns","재발·공태 횟수 이상"],["low","최근 2복 실산 이하"]].map(([k,l])=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`).join("")}</div>`}
+// 도태 후보 기준 기본값(대표 설정에서 바꿈)
+const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
+function cullRule(){const r={...CULL1,...(state.cullRule||{})};return r}
+function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
+  const F=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
+  if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
+  if(F.length>=2){const dy=F.filter(r=>isDys(r)).length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
+  if(st.stage==="이유"&&diff(st.since,TODAY)>=R.anest)w.push(`${t("무발정")} ${diff(st.since,TODAY)}${t("일")}`);
+  if((st.stage==="재교배"||st.stage==="이유")&&st.since&&diff(st.since,TODAY)>=R.open)w.push(`${t("비생산")} ${diff(st.since,TODAY)}${t("일")}`);
+  if(st.returns>=R.returns)w.push(`${t("재발·공태")} ${st.returns}${t("회")}`);
+  if(R.parity&&i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);
+  if(s.cullFlag)w.push(t(s.cullFlag));
+  return w.length?[...new Set(w)].join(" · "):null}
+function cullRuleSet(){const R=cullRule(),row=(k,l,u)=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`;
+  return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터 · 배치도 ⚠")}</span></div><div class="panel">
+    ${row("low","최근 2산 총산 이하 (두)")}${row("dys","난산 비율 이상 (%)")}${row("still","사산 몇 두 이상이면 난산 (분만 입력 때 자동)")}${row("anest","무발정: 이유 후 교배 없이 (일 이상)")}${row("open","비생산(이유·재발 후) 기간 (일 이상)")}${row("returns","재발·공태 횟수 이상 (난임)")}${row("parity","산차 이상 (0 = 안 봄)")}
+    <div class="note">${t("지제(다리)·외상 같은 문제는 모돈 상세 › 도태 계획 세우기에서 사유를 골라 표시합니다.")}</div></div>`}
 // 22. 주간 달력: 이번 주 + 다음 주 예정
 function calEvents(){const ev={},add=(d,k,txt)=>{(ev[d]=ev[d]||[]).push([k,txt])},w0=weekStart(TODAY),end=addDays(w0,13);
   activeSows().forEach(s=>{const i=statusOf(s);

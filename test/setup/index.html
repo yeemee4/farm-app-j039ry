@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 01:12";
+const BUILD_AT="11-01 01:24";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -1755,7 +1755,7 @@ function vTimeline(){
   return h;
 }
 /* ================= 토스트 ================= */
-let tt;function toast(m){$("#toastRoot").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>$("#toastRoot").innerHTML="",3000)}
+let tt;function toast(m){$("#toastRoot").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>$("#toastRoot").innerHTML="",2400)}
 
 /* ================= 동작 ================= */
 const A={
@@ -1908,6 +1908,11 @@ function extraTodos(){
   ];
 }
 
+// 저장 알림: 화면 가운데, 연속 입력 중(15초 안 재저장)이면 짧게(첫 문장만·2초)
+let lastSaveAt=0;
+// 할 일: 꼭 할 일(오늘 손으로 하는 작업) / 확인만(살펴보고 판단) — 퀘스트 달성률은 꼭 할 일만
+const TODO_CHECK0=["feeddev","bcsdue","feedchg","stock","withdraw","cull"];
+function todoIsCheck(k){const o=(state.todoMust||{})[k];return o===undefined?TODO_CHECK0.includes(k):o==="check"}
 /* ================= v0.5 · 할 일 우선순위 · 퀘스트 달성률 · 백신 준비물 ================= */
 // 할 일 묶음 기본 순위 (대표 설정 › 할 일 순서에서 바꿈)
 const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["feedchk","사료 잔량 점검"],["feeddev","사료 급여 점검"],["gfchg","임신돈 급여량 변경"],["bcsdue","BCS 측정"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
@@ -1916,8 +1921,8 @@ const TODO_SORTS=[["rank","우선순위"],["urgent","급한 순"],["count","남�
 function sortTodos(a,mode){const r=todoRank(),ri=x=>{const i=r.indexOf(x.k);return i<0?99:i},sv={bad:0,warn:1,ok:2},m=mode||ui.todoSort||"rank";
   return [...a].sort((x,y)=>m==="urgent"?sv[x.sev]-sv[y.sev]||ri(x)-ri(y):m==="count"?leftOf(y)-leftOf(x)||ri(x)-ri(y):ri(x)-ri(y))}
 // 퀘스트 달성률
-function questStat(todos){const tot=todos.reduce((s,x)=>s+x.items.length,0),left=todos.reduce((s,x)=>s+leftOf(x),0);return {tot,done:tot-left,pct:tot?Math.round((tot-left)/tot*100):100}}
-function questHead(todos){const q=questStat(todos);
+function questStat(todos){const tot=todos.reduce((s,x)=>s+bTot(x),0),left=todos.reduce((s,x)=>s+bLeft(x),0);return {tot,done:tot-left,pct:tot?Math.round((tot-left)/tot*100):100}}
+function questHead(todos){todos=todos.filter(x=>!todoIsCheck(x.k));const q=questStat(todos);
   return `<div class="quest"><div class="q-top"><b>${t("오늘의 퀘스트")}</b><span><b>${q.done}</b> / ${q.tot} · ${q.pct}%</span></div><div class="q-bar"><i style="width:${q.pct}%"></i></div></div>`}
 function todoSortBar(){return `<div class="sowtools"><label class="sel"><span>${t("정렬")}</span><select data-ch="todoSort" aria-label="${t("정렬")}">${TODO_SORTS.map(([k,l])=>`<option value="${k}" ${(ui.todoSort||"rank")===k?"selected":""}>${t(l)}</option>`).join("")}</select></label></div>`}
 document.addEventListener("change",e=>{if(e.target.dataset&&e.target.dataset.ch==="todoSort"){ui.todoSort=e.target.value;render()}});
@@ -1940,7 +1945,8 @@ function supplyCard(todos){const x=todaySupplies(todos);if(!x.rows.length)return
 
 // ---- 대표 설정: 할 일 순서 · 백신·주사침 준비물 ----
 function vTodoRankSet(){const r=todoRank(),nm=Object.fromEntries(TODO_KINDS);
-  return `<div class="pagehd"><h2>${t("할 일 순서")}</h2></div><div class="note">${t("위에 있을수록 할 일 목록에서 먼저 나옵니다. 작업자는 할 일 화면에서 ‘급한 순’ 등으로 바꿔 볼 수도 있습니다.")}</div><div class="panel">${r.map((k,i)=>`<div class="setrow"><span><b>${i+1}.</b> ${t(nm[k]||k)}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="-1" ${i===0?"disabled":""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="1" ${i===r.length-1?"disabled":""} aria-label="아래로">▼</button></span></div>`).join("")}</div>`}
+  return `<div class="pagehd"><h2>${t("할 일 순서")}</h2></div><div class="note">${t("위에 있을수록 할 일 목록에서 먼저 나옵니다. 작업자는 할 일 화면에서 ‘급한 순’ 등으로 바꿔 볼 수도 있습니다.")}</div><div class="note">${t("‘꼭’ = 오늘 퀘스트(달성률)에 들어가는 작업 · ‘확인만’ = 할 일 아래 칸에 따로 보이고 달성률에서 뺌. 눌러서 바꿉니다.")}</div><div class="panel">${r.map((k,i)=>`<div class="setrow"><span><b>${i+1}.</b> ${t(nm[k]||k)}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn ${todoIsCheck(k)?"":"on"}" type="button" data-a="tdMust" data-v="${k}">${todoIsCheck(k)?t("확인만"):t("꼭")}</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="-1" ${i===0?"disabled":""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="1" ${i===r.length-1?"disabled":""} aria-label="아래로">▼</button></span></div>`).join("")}</div>`}
+Object.assign(A,{tdMust:v=>{const m=state.todoMust=state.todoMust||{};m[v]=todoIsCheck(v)?"must":"check";save();render()}});
 function vSupplySet(){const S=supCfg();
   let h=`<div class="pagehd"><h2>${t("백신·주사침 준비물")}</h2></div><div class="note">${t("할 일의 백신 두수로 ‘오늘 준비물’(병 수·주사침 수)을 계산합니다. 접종을 기록하면 백신과 주사침 재고에서 자동으로 빠집니다.")}</div>`;
   h+=`<div class="sec-t">${t("1병당 접종 두수")}</div><div class="panel">${Object.keys(S.dose).map(p=>`<div class="setrow"><span>${esc(p)}</span><div class="stepper"><button type="button" data-a="supDose" data-v="${esc(p)}" data-k="-10" aria-label="줄이기">−</button><input type="number" value="${S.dose[p]}" readonly aria-label="${esc(p)}"><button type="button" data-a="supDose" data-v="${esc(p)}" data-k="10" aria-label="늘리기">+</button></div></div>`).join("")}</div>`;
@@ -1959,7 +1965,7 @@ document.addEventListener("change",e=>{const k=e.target.dataset&&e.target.datase
 // 주사침 재고: 모돈 백신 기록 n두 → n/sowPer 개, 돈군 백신 → 두수/penHeads 개
 function needleUse(it,r){const S=supCfg();if(it.name==="주사침(모돈용)"&&r.type==="백신")return 1/S.sowPer;if(it.name==="주사침(자돈용)"&&r.type==="돈군백신")return (r.data.n||0)/S.penHeads;return 0}
 // 홈 맨 위: 오늘의 퀘스트 반원 게이지
-function questGauge(todos){const q=questStat(todos),r=52,L=Math.PI*r,p=q.pct/100;
+function questGauge(todos){todos=todos.filter(x=>!todoIsCheck(x.k));const q=questStat(todos),r=52,L=Math.PI*r,p=q.pct/100;
   return `<button type="button" class="qgauge" data-a="tab" data-v="todo" data-tagme="1"><svg viewBox="0 0 132 76" aria-label="${t("오늘의 퀘스트")} ${q.pct}%"><path d="M14 70a52 52 0 0 1 104 0" fill="none" stroke="var(--grid)" stroke-width="12" stroke-linecap="round"/><path d="M14 70a52 52 0 0 1 104 0" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${L*p} ${L}"/><text x="66" y="62" text-anchor="middle" class="qg-n">${q.pct}%</text></svg><span><h3>${t("오늘의 퀘스트")}</h3><p><b class="big">${q.done}</b> / ${q.tot} ${t("완료")} · ${t("남은")} ${q.tot-q.done}</p></span></button>`}
 // ---- 디자인 테마 ----
 const SKINS=[["","기본","지금 디자인"],["clean","클린 라이트","연회색 바탕 · 흰 카드 · 파랑 (삼쩜삼·토스)"],["night","나이트","짙은 남색 · 보라 (알라미)"],["fresh","프레시 그린","흰 바탕 · 초록 · 진한 칩 (네이버페이)"],["sport","스포츠 다크","검정 · 민트 · 굵은 글씨 (플랜핏)"],["soft","소프트 파스텔","아이보리 · 분홍 · 둥근 모서리 (로고)"]];
@@ -1971,7 +1977,10 @@ Object.assign(A,{skin:v=>{try{localStorage.setItem("farm-skin",v)}catch(e){}rend
 function vMyDesign(){const s=mySkin(),i=iconStyle();return `<div class="f"><span class="lb">${t("화면 디자인")} <small class="sow-meta">${t("이 기기에만 적용")}</small></span><div class="chipwrap">${SKINS.map(([k,n])=>`<button type="button" class="chip wrap ${s===k?"on":""}" data-a="skin" data-v="${k}">${t(n)}</button>`).join("")}</div></div><div class="f"><span class="lb">${t("입력 아이콘")}</span><div class="chipwrap">${ICON_STYLES.map(([k,n])=>`<button type="button" class="chip wrap ${i===k?"on":""}" data-a="icostyle" data-v="${k}">${t(n)}</button>`).join("")}</div></div>`}
 // ---- 저장 후 5초 '되돌리기' ----
 let undoT=null;
-function undoToast(m,ids){ui.undo={ids,loc:ui.undoLoc||{}};ui.undoLoc=null;$("#toastRoot").innerHTML=`<div class="toast undo" role="status"><span>${esc(m)}</span><button type="button" data-a="undo">${t("되돌리기")}</button></div>`;clearTimeout(undoT);undoT=setTimeout(()=>{$("#toastRoot").innerHTML="";ui.undo=null},5000)}
+function undoToast(m,ids){const now=Date.now(),busy=now-lastSaveAt<15000;lastSaveAt=now;
+  ui.undo={ids,loc:ui.undoLoc||{}};ui.undoLoc=null;const msg=busy?String(m).split(/ · |\. /)[0]:m;
+  $("#toastRoot").innerHTML=`<div class="toast undo ${busy?"short":""}" role="status"><span>${esc(msg)}</span><button type="button" data-a="undo">${t("되돌리기")}</button></div>`;
+  clearTimeout(undoT);undoT=setTimeout(()=>{$("#toastRoot").innerHTML="";ui.undo=null},busy?2500:4500)}
 // ---- 아침 점검: 남은 돈사 모두 이상 없음 ----
 // ---- 백신: 남은 모돈 한꺼번에 접종 기록 ----
 Object.assign(A,{
@@ -2114,9 +2123,18 @@ function stallLook(s,b){const i=statusOf(s),st=sowState(s.id),g=typeof gestFeed=
   else if(c==="gilt"){ph=t("후보돈");nx=t("교배 대기")}
   else {ph=`${l1}${l2?" "+l2+t("일"):""}`;nx=t("재교배 대기")}
   const b2=typeof lastBCS==="function"?lastBCS(s.id,TODAY):null,cull=typeof cullWhy==="function"&&!!cullWhy(s);
-  return {c,l1,l2,ph,nx,par:i.gilt?0:i.parity,bcs:b2?b2.score:null,cull,kg:g?g.kg:null,ov:g&&g.ov,live:st.stage==="포유"?st.live:null}}
+  const lk={c,l1,l2,ph,nx,par:i.gilt?0:i.parity,bcs:b2?b2.score:null,cull,kg:g?g.kg:null,ov:g&&g.ov,live:st.stage==="포유"?st.live:null};
+if(lk.c==="heat")lk.ph=`${t("교배 대기")} · ${t("이유")} ${diff(st.since,TODAY)}${t("일")}`;
+  else if(lk.c==="mate"){const gd=diff(st.mate,TODAY);lk.ph=gd>=CFG.returnCheck[0]?`${t("진단 대기")} · ${gd}${t("일")}`:`${t("교배 후")} ${gd}${t("일")}`}
+  else if(lk.c==="gilt")lk.ph=`${t("후보")} · ${t("교배 대기")}`;
+  else if(lk.c==="ret")lk.ph=`${t("재교배 대기")}${st.since?" · "+diff(st.since,TODAY)+t("일"):""}`;
+  const C=bmCfg();
+  if(!C.status)lk.ph="";
+  lk.iss=(bmIssues()[s.id]||[]).slice();
+  if(C.iss.heat&&i.heat)lk.iss.push(["🔥","발정 관찰"]);
+  return lk}
 // 칸 오른쪽 값: 급여 / 다음 일정 / 산차·BCS
-function stallVal(lk){const m=ui.bmInfo||"feed";if(m==="next")return lk.nx;if(m==="par")return `${lk.par?lk.par+t("산"):t("후보")} · BCS ${lk.bcs||"-"}`;return lk.live?`${t("새끼")} ${lk.live}${t("두")}`:lk.kg?`${t("급여")} ${lk.kg.toFixed(1)}kg${lk.ov?"*":""}`:""}
+function stallVal(lk){const m=ui.bmInfo||bmCfg().third;if(m==="none")return "";if(m==="next")return lk.nx;if(m==="par")return `${lk.par?lk.par+t("산"):t("후보")} · BCS ${lk.bcs||"-"}`;return lk.live?`${t("새끼")} ${lk.live}${t("두")}`:lk.kg?`${t("급여")} ${lk.kg.toFixed(1)}kg${lk.ov?"*":""}`:""}
 // ---- 시계 방향 입식 순서: 첫 입구에서 시작해 돈사 중심 둘레로 시계 방향 ----
 function doorsOf(b){const L=barnLayout(b);return L.doors||(L.door?[{x:L.door.x,y:L.door.y,dir:"left"}]:[])}
 function clockOrder(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];const cx=L.w/2,cy=L.h/2,d=doorsOf(b)[0]||{x:cx,y:L.h},a0=Math.atan2(d.y-cy,d.x-cx),T=2*Math.PI;
@@ -2254,7 +2272,9 @@ function metrics(from,to){
 function hasRec(from,to){return state.records.some(r=>["분만","교배","이유","출하"].includes(r.type)&&r.workDate>=from&&r.workDate<=to)}
 function mergeM(a,b){if(!a)return b;if(!b)return a;const d=a.days+b.days,w=(k,ka,kb)=>{const x=a[k],y=b[k],wa=ka,wb=kb;if(x==null)return y;if(y==null)return x;return (x*wa+y*wb)/((wa+wb)||1)};
   return {days:d,far:a.far+b.far,mates:a.mates+b.mates,dead:a.dead+b.dead,ship:a.ship+b.ship,frate:w("frate",a.mates,b.mates),tot:w("tot",a.far,b.far),live:w("live",a.far,b.far),wean:w("wean",a.far,b.far),surv:w("surv",a.far,b.far),psy:w("psy",a.days,b.days),msy:w("msy",a.days,b.days),shipKg:w("shipKg",a.ship,b.ship),src:"mix"}}
-function rangeMetrics(from,to){
+// 기간 성적 + NPD(비생산일수, 44n). 안의 계산은 rangeMetricsRaw
+function rangeMetrics(f,to){const r=rangeMetricsRaw(f,to);if(r&&r.npd===undefined){try{const n=npdStat(f,to>TODAY?TODAY:to);r.npd=n?n.npd:null}catch(e){r.npd=null}}return r}
+function rangeMetricsRaw(from,to){
   if(to>TODAY)to=TODAY;if(from>to)return null;
   const S0=state.startDate;
   if(S0&&from<S0&&to>=S0){const a=metrics(S0,to),b=rangeMetrics(from,addDays(S0,-1));return mergeM(a,b&&b.src==="man"?b:null)}
@@ -2525,7 +2545,7 @@ function legendH(items){return `<div class="legend">${items.map(([c,l,dash])=>`<
 function hbarsH(rows,o={}){const mx=Math.max(1,...rows.map(r=>r.v));
   return `<div class="hbars">${rows.map(r=>`<div class="hb"><span class="hb-l">${esc(r.l)}</span><div class="hb-t"><div class="hb-f" style="width:${Math.max(2,r.v/mx*100)}%;background:${r.c||CC.a}" title="${esc(r.l)} ${r.txt||r.v}"></div></div><span class="hb-v">${r.txt||r.v}</span></div>`).join("")}</div>`}
 
-function vCharts(){return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${chartCards().map((c,i)=>`<div class="cd-go" data-a="chDetail" data-v="${CD_KEYS[i]}">${c}</div>`).join("")}</div>`}
+function vCharts(){const M=cardMap();return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${stCards().on.filter(k=>M[k]).map(k=>`<div class="cd-go" data-a="chDetail" data-v="${k}">${M[k]}</div>`).join("")}</div>`}
 function chartCards(){const C=[];
   const S=ui.st,P=statPeriod(),endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),M=months12(endYm),lab=M.map(([,m])=>m+t("월"));
   const mm=M.map(([y,m])=>rangeMetrics(...monthRange(y,m))),G=sGoal(),pick=k=>mm.map(v=>v?v[k]:null);
@@ -2565,7 +2585,8 @@ function chartCards(){const C=[];
   cut();C.push(parityCard(),npdCard(),fcrCard());return C}
 /* ===== 성적 TV 화면 (16:9 한 화면 · 성적 › 📺 TV로 보기) ===== */
 const STV_KPI=["psy","msy","frate","live","wean","surv","dead","ship"];
-function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P.cmp?rangeMetrics(P.cmp[0],P.cmp[1]):null,now=new Date(),G=sGoal();
+function vStatsTV(){STV_KPI.splice(0,STV_KPI.length,...stKpi().on.slice(0,8));   // 첫 줄 숫자 = 성적 항목 앞 8개
+  const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P.cmp?rangeMetrics(P.cmp[0],P.cmp[1]):null,now=new Date(),G=sGoal();
   const nav=S.mode==="월"||S.mode==="분기"?`<button type="button" data-a="stNav" data-v="-1" aria-label="${t("이전")}">‹</button><b>${esc(P.label)}</b><button type="button" data-a="stNav" data-v="1" aria-label="${t("다음")}">›</button>`:`<b>${esc(P.label)}</b>`;
   let h=`<div class="stv"><header class="stv-top"><div class="stv-ttl"><h2>${t("성적")}</h2><div class="stv-nav">${nav}</div></div><div class="stv-ctl">${["월","분기","연간"].map(m=>`<button type="button" class="${S.mode===m?"on":""}" data-a="stMode" data-v="${m}">${t(m==="월"?"월간":m)}</button>`).join("")}<span class="stv-clock">${pad(now.getHours())}:${pad(now.getMinutes())}</span><button type="button" data-a="tvMode">${t("TV 끄기")}</button></div></header>`;
   h+=`<div class="stv-kpi">${STV_KPI.map(k=>{const m=MET.find(x=>x[0]===k),[,l,u,dp,dir]=m,v=cur?cur[k]:null,c=cmp?cmp[k]:null,g=k==="psy"||k==="msy"?G[k]:null;let dl="";
@@ -2573,9 +2594,9 @@ function vStatsTV(){const S=ui.st,P=statPeriod(),cur=rangeMetrics(P.f,P.t),cmp=P
     return `<div class="stv-k${g&&okv(v)?(v>=g?" ok":" lo"):""}${S.metric===k?" sel":""}" data-a="stMetric" data-v="${k}" role="button" tabindex="0"><small>${t(l)}</small><b>${fmtV(v,dp)}<i>${t(u)}</i></b>${dl}${g?`<em>${t("목표")} ${g}</em>`:""}</div>`}).join("")}</div>`;
   // 8칸: 그래프 6 + 고른 지표 월별 추이 + 재고두수 실사 (칸을 누르면 상세 그래프·기록 표)
   const md=MET.find(m=>m[0]===S.metric)||MET[7],endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),pts=months12(endYm).map(([y,m])=>{const v=rangeMetrics(...monthRange(y,m));return {y,m,v:v?v[md[0]]:null,src:v?v.src:null}});
-  const C=chartCards();C[7]=C[8];C.length=8;C[6]=`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`;
-  const z=ui.stvZ;
-  return h+`<div class="stv-grid${z!=null?" zoom":""}">${C.map((c,i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${i===6?"trend":i===7?"parity":CD_KEYS[i]}">${c}</div>`).join("")}</div></div>`}
+  // 칸 = 대표 설정 › 성적 항목 순서의 그래프 앞 6개 + 월별 추이 + 7번째
+  const M=cardMap(),ks=stCards().on.filter(k=>M[k]).slice(0,7),cells=[...ks.slice(0,6).map(k=>[k,M[k]]),["trend",`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`],...ks.slice(6,7).map(k=>[k,M[k]])],z=ui.stvZ;
+  return h+`<div class="stv-grid${z!=null?" zoom":""}">${cells.map(([k,c],i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${k}">${c}</div>`).join("")}</div></div>`}
 Object.assign(A,{stvZoom:v=>{ui.stvZ=ui.stvZ===+v?null:+v;render()}});
 /* ================= v0.4 · 백신 엔진 (모돈·후보돈·연간·복별 처치) ================= */
 // 기록 이름 → 재고 품목 이름들
@@ -2707,9 +2728,11 @@ function wxLine(){wxLoad();if(!WX||!WX.current)return `<div class="bd-wx">${FARM
 function wxHome(){wxLoad();const al=wxAlerts(0).replace(/bd-al wx/g,"wxal");return al?`<div class="wxcard">${al}</div>`:""}
 // 상단 주차 옆 짧은 날씨
 function wxShort(){wxLoad();if(!WX||!WX.current)return "";const c=WX.current,d=wxDay(0);return ` · ${t(WXC(c.weather_code))} ${Math.round(c.temperature_2m)}℃ (${d.min}~${d.max}℃)`}
-function wxAlerts(day){const d=wxDay(day||0),W=FARM.wx;if(!d)return "";const a=[];
+function wxAlerts(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d)return "";const a=[];
   if(d.max>=W.hot)a.push(`${t("폭염")} ${d.max}℃ · ${t("환기·급수·쿨링 점검")}`);
-  if(d.min<=W.cold)a.push(`${t("한파")} ${d.min}℃ · ${t("보온·급수관 동파 점검")}`);
+  else if(n&&n.max>=W.hot)a.push(`${t("내일 폭염")} ${n.max}℃ · ${t("오늘 쿨링·급수 미리 점검")}`);
+  if(n&&n.min<=W.cold&&d.min>W.cold)a.push(`${t("내일 영하 진입")} ${n.min}℃ · ${t("급수관 동파·보온 미리 점검")}`);
+  if(d.min<=W.freeze)a.push(`${t("한파")} ${d.min}℃ · ${t("급수 확인·보온")}`);
   if(d.wind>=W.wind)a.push(`${t("강풍")} ${Math.round(d.wind/3.6)}m/s · ${t("커튼·문·지붕 점검")}`);
   return a.map(x=>`<div class="bd-al wx">${x}</div>`).join("")}
 // 화면을 켜 두기만 해도 10분마다 새로 받기 (받으면 render)
@@ -2890,7 +2913,11 @@ function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binP
   g+=`<path d="${o}" fill="${bg}"/><polygon class="bv-fill" clip-path="url(#bc${id})" points="-30,${yAt(-30)} 150,${yAt(150)} 150,${P.B+4} -30,${P.B+4}" fill="url(#bh${id})"/>`;
   g+=`<path d="${o}" fill="none" stroke="${ink}" stroke-width="${big?2.2:2.8}" stroke-linejoin="round"/>`;
   [P.top,P.top+P.cyl].forEach(y=>g+=`<line x1="${P.x0}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="${ink}" stroke-width="1.3" opacity=".45"/>`);
-  return g}
+  const svg=g;
+// 왼쪽 아래 ‘정면 ↗’: 게이지 왼쪽·오른쪽 = 정면에서 볼 때 기준
+  const k=big?1:2,fs=6.5*k,x0=Math.max(1,P.x0-10),y0=P.B+2,x1=x0+4*k,y1=y0-fs-3*k,L=8*k,ax=x1+L,ay=y1-L,ux=Math.SQRT1_2,uy=-Math.SQRT1_2,h=5*k,w=3.5*k;
+  const tip=`${ax},${ay} ${ax-ux*h-uy*w},${ay-uy*h+ux*w} ${ax-ux*h+uy*w},${ay-uy*h-ux*w}`;
+  return svg+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`}
 function vFeedBins(){const T=feedTable();
   return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),[lL,lR]=binLevels(b,Math.min(x.kg||0,cap)),P=binPx(b);
     return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}
@@ -3825,15 +3852,16 @@ function todoBtn(x){
   return `<button class="todo ${fin?"alldone":""}" type="button" data-a="todo" data-v="${x.k}"><span class="bar" style="background:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--accent)"}"></span><span><b>${t(x.t)}</b><i class="tq" style="width:${x.items.length?(x.items.length-left)/x.items.length*100:0}%"></i><small>${fin?t("모두 완료")+" · ":""}${esc(names)}</small></span><span class="n" style="color:${fin?"var(--accent)":x.sev==="bad"?"var(--red)":x.sev==="warn"?"var(--amber)":"var(--ink)"}">${fin?"✓":left}<small>/${x.items.length}</small></span></button>`;
 }
 function vTodo(){
-  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls();
+  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls(),must=todos.filter(x=>!todoIsCheck(x.k)),chk=todos.filter(x=>todoIsCheck(x.k));
   let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
   h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
-  h+=todos.length?`<div class="todolist">${todos.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
+  h+=must.length?`<div class="todolist">${must.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  if(chk.length)h+=`<div class="sec-t">${t("확인만")} <span>${t("퀘스트에 넣지 않음")}</span></div><div class="todolist tl-chk">${chk.map(todoBtn).join("")}</div>`;
   h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
-  h+=`<div class="note">일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.</div>`;
-  h+=st.length?st.map(x=>`<div class="stall-it"><div style="min-width:0"><div class="sow-top" style="justify-content:flex-start;gap:8px"><button type="button" class="sow-no" data-a="sowd" data-v="${x.s.id}">${x.s.id}<span class="chev">›</span></button><span class="stage ${x.i.cls}">${x.i.label}</span></div><div class="why" style="color:${x.sev==="bad"?"var(--red)":"var(--amber)"}">${x.why}</div><div class="sow-loc">${t("현재")} ${x.s.loc} · ${x.i.sub}</div></div></div>`).join(""):`<div class="empty">기록이 멈춘 개체가 없습니다.</div>`;
-  return h;
-}
+  h+=`<div class="note">${t("일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.")}</div>`;
+  h+=st.length?st.map(x=>`<div class="stall-it"><div style="min-width:0"><div class="sow-top" style="justify-content:flex-start;gap:8px"><button type="button" class="sow-no" data-a="sowd" data-v="${x.s.id}">${x.s.id}<span class="chev">›</span></button><span class="stage ${x.i.cls}">${x.i.label}</span></div><div class="why" style="color:${x.sev==="bad"?"var(--red)":"var(--amber)"}">${x.why}</div><div class="sow-loc">${t("현재")} ${x.s.loc} · ${x.i.sub}</div></div></div>`).join(""):`<div class="empty">${t("기록이 멈춘 개체가 없습니다.")}</div>`;
+  return h}
 function openTodo(k){
   const x=buildTodos().find(q=>q.k===k);if(!x){closeSheet();return}
   const rows=x.items.map(it=>{const key=tdKey(k,itemTarget(it));return {it,key,log:tdLog(key)}}).sort((a,b)=>(a.log?1:0)-(b.log?1:0));
@@ -4419,6 +4447,12 @@ function seedFarmPost(){
   const oldest=liveBatches().slice(-1)[0],now=new Date().toISOString();
   if(oldest){const fin=addDays(oldest.k,state.cfg.stage.slice(0,-1).reduce((a,x)=>a+x[1],0)*7);
     state.tasks.push({id:newId(),src:null,title:"육성비육사 청소·소독·급이·급수 점검 (첫 입식 준비)",acts:["소독","환기 점검"],due:addDays(fin,-3),who:"조성훈 팀장",memo:`첫 입식 ${kDate(fin)} 주 · 육성비육사 비어 있음`,createdAt:now,user:"대표"})}
+
+  // 사료 빈 잔량 예시에 양쪽 게이지(기울기)
+  try{const R=recsOf("사료").filter(r=>r.data.mode==="빈 잔량"&&r.data.lL==null);
+  FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
+    const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
+    r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()
 }
 function upgradeDemo(st){const B=baseState();Object.assign(st,{v:7,lists:{barns:mkList(["교배사","임신사 1동","임신사 2동","분만사 1동","분만사 2동","자돈사 1동","자돈사 2동","육성사","비육사 1동","비육사 2동","비육사 3동"]),causes:FARM_LISTS().causes,actions:FARM_LISTS().actions,semens:FARM_LISTS().semens,dests:FARM_LISTS().dests,cull:FARM_LISTS().cull},startDate:addDays(TODAY,-60),accounts:B.accounts,labels:B.labels,dayDec:{},mbatches:[]});st.cfg.deadOne=3;st.cfg.deadDay=3;return st}
 function makeState(kind,keep){
@@ -4458,13 +4492,23 @@ function hoTodos(){const L=(state.handover||[]).filter(h=>h.due<=REF),items=L.fi
 function hoBox(){return `<div class="panel ho"><div class="row2"><input type="text" id="hoText" placeholder="${t("인계 메모 (예: 내일 아침 6-008 분만 확인)")}" aria-label="${t("인계 메모")}"><button class="act pri" type="button" data-a="hoAdd">${t("내일로")}</button></div></div>`}
 // 20. 도태 후보 (기준은 대표 설정)
 const CULL0={parity:7,returns:2,low:9};
-function cullRule(){return {...CULL0,...(state.cullRule||{})}}
-function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[];
-  if(i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);if(i.returns>=R.returns)w.push(`${t("재발·공태")} ${i.returns}${t("회")}`);
-  const fs=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)).slice(0,2);
-  if(fs.length===2&&fs.every(r=>r.data.live<=R.low))w.push(`${t("실산")} ${fs.map(r=>r.data.live).join("·")}`);
-  return w.length?w.join(" · "):null}
-function cullRuleSet(){const R=cullRule();return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터")}</span></div><div class="panel">${[["parity","산차 이상"],["returns","재발·공태 횟수 이상"],["low","최근 2복 실산 이하"]].map(([k,l])=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`).join("")}</div>`}
+// 도태 후보 기준 기본값(대표 설정에서 바꿈)
+const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
+function cullRule(){const r={...CULL1,...(state.cullRule||{})};return r}
+function cullWhy(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
+  const F=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
+  if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
+  if(F.length>=2){const dy=F.filter(r=>isDys(r)).length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
+  if(st.stage==="이유"&&diff(st.since,TODAY)>=R.anest)w.push(`${t("무발정")} ${diff(st.since,TODAY)}${t("일")}`);
+  if((st.stage==="재교배"||st.stage==="이유")&&st.since&&diff(st.since,TODAY)>=R.open)w.push(`${t("비생산")} ${diff(st.since,TODAY)}${t("일")}`);
+  if(st.returns>=R.returns)w.push(`${t("재발·공태")} ${st.returns}${t("회")}`);
+  if(R.parity&&i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);
+  if(s.cullFlag)w.push(t(s.cullFlag));
+  return w.length?[...new Set(w)].join(" · "):null}
+function cullRuleSet(){const R=cullRule(),row=(k,l,u)=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`;
+  return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터 · 배치도 ⚠")}</span></div><div class="panel">
+    ${row("low","최근 2산 총산 이하 (두)")}${row("dys","난산 비율 이상 (%)")}${row("still","사산 몇 두 이상이면 난산 (분만 입력 때 자동)")}${row("anest","무발정: 이유 후 교배 없이 (일 이상)")}${row("open","비생산(이유·재발 후) 기간 (일 이상)")}${row("returns","재발·공태 횟수 이상 (난임)")}${row("parity","산차 이상 (0 = 안 봄)")}
+    <div class="note">${t("지제(다리)·외상 같은 문제는 모돈 상세 › 도태 계획 세우기에서 사유를 골라 표시합니다.")}</div></div>`}
 // 22. 주간 달력: 이번 주 + 다음 주 예정
 function calEvents(){const ev={},add=(d,k,txt)=>{(ev[d]=ev[d]||[]).push([k,txt])},w0=weekStart(TODAY),end=addDays(w0,13);
   activeSows().forEach(s=>{const i=statusOf(s);
@@ -4690,35 +4734,8 @@ Object.assign(A,{
     const set=(k,v)=>{if(v)s[k]=v;else delete s[k]};set("birth",p.birth);set("src",p.src);set("firstMate",p.fm);_peSave0()}
 });
 /* ================= v0.5 · 1월 시뮬레이션 개선 (2026-10-30) ================= */
-// 저장 알림: 화면 가운데, 연속 입력 중(15초 안 재저장)이면 짧게(첫 문장만·2초)
-let lastSaveAt=0;
-toast=function(m){$("#toastRoot").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>$("#toastRoot").innerHTML="",2400)};
-undoToast=function(m,ids){const now=Date.now(),busy=now-lastSaveAt<15000;lastSaveAt=now;
-  ui.undo={ids,loc:ui.undoLoc||{}};ui.undoLoc=null;const msg=busy?String(m).split(/ · |\. /)[0]:m;
-  $("#toastRoot").innerHTML=`<div class="toast undo ${busy?"short":""}" role="status"><span>${esc(msg)}</span><button type="button" data-a="undo">${t("되돌리기")}</button></div>`;
-  clearTimeout(undoT);undoT=setTimeout(()=>{$("#toastRoot").innerHTML="";ui.undo=null},busy?2500:4500)};
-// 할 일: 꼭 할 일(오늘 손으로 하는 작업) / 확인만(살펴보고 판단) — 퀘스트 달성률은 꼭 할 일만
-const TODO_CHECK0=["feeddev","bcsdue","feedchg","stock","withdraw","cull"];
-function todoIsCheck(k){const o=(state.todoMust||{})[k];return o===undefined?TODO_CHECK0.includes(k):o==="check"}
-const _questHead0=questHead;
-questHead=function(todos){return _questHead0(todos.filter(x=>!todoIsCheck(x.k)))};
-vTodo=function(){
-  const todos=myTodoFilter(sortTodos(buildTodos())),st=stalls(),must=todos.filter(x=>!todoIsCheck(x.k)),chk=todos.filter(x=>todoIsCheck(x.k));
-  let h=`<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
-  h+=questHead(todos)+myTodoBar()+todoSortBar()+supplyCard(todos)+hoBox();
-  h+=`<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
-  h+=must.length?`<div class="todolist">${must.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
-  if(chk.length)h+=`<div class="sec-t">${t("확인만")} <span>${t("퀘스트에 넣지 않음")}</span></div><div class="todolist tl-chk">${chk.map(todoBtn).join("")}</div>`;
-  h+=`<div class="sec-t">${t("장기 무변동 개체")} <span>${st.length}</span></div>`;
-  h+=`<div class="note">${t("일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.")}</div>`;
-  h+=st.length?st.map(x=>`<div class="stall-it"><div style="min-width:0"><div class="sow-top" style="justify-content:flex-start;gap:8px"><button type="button" class="sow-no" data-a="sowd" data-v="${x.s.id}">${x.s.id}<span class="chev">›</span></button><span class="stage ${x.i.cls}">${x.i.label}</span></div><div class="why" style="color:${x.sev==="bad"?"var(--red)":"var(--amber)"}">${x.why}</div><div class="sow-loc">${t("현재")} ${x.s.loc} · ${x.i.sub}</div></div></div>`).join(""):`<div class="empty">${t("기록이 멈춘 개체가 없습니다.")}</div>`;
-  return h};
-// 대표 설정 › 할 일 순서: 묶음마다 [꼭]/[확인] 전환
-const _vTodoRankSet0=vTodoRankSet;
-vTodoRankSet=function(){let h=_vTodoRankSet0();
-  return h.replace(/<span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="tdRank" data-v="([a-z0-9]+)"/g,(m,k)=>`<span class="row2" style="gap:6px;flex:none"><button class="sbtn ${todoIsCheck(k)?"":"on"}" type="button" data-a="tdMust" data-v="${k}">${todoIsCheck(k)?t("확인만"):t("꼭")}</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}"`)
-    .replace('</div><div class="panel">',`</div><div class="note">${t("‘꼭’ = 오늘 퀘스트(달성률)에 들어가는 작업 · ‘확인만’ = 할 일 아래 칸에 따로 보이고 달성률에서 뺌. 눌러서 바꿉니다.")}</div><div class="panel">`)};
-Object.assign(A,{tdMust:v=>{const m=state.todoMust=state.todoMust||{};m[v]=todoIsCheck(v)?"must":"check";save();render()}});
+
+
 // 주말·공휴일 앞날: 아침 점검을 다 마치면 바로 사료 주문 알림
 function preNoDeliv(d=TODAY){return dow(d)===5||noDeliv(addDays(d,1))}
 function feedOrderPop(){if(ui.foPop===TODAY)return;const P=amProg();if(P.done<P.all||!preNoDeliv())return;
@@ -4730,31 +4747,9 @@ function feedOrderPop(){if(ui.foPop===TODAY)return;const P=amProg();if(P.done<P.
     <div class="acts">${g.length?`<button class="act pri" type="button" data-a="todo" data-v="feedord">${t("사료 주문 할 일")} ›</button>`:""}<button class="act" type="button" data-a="tab" data-v="feedchk">${t("사료 잔량 점검")} ›</button></div></div></div></div>`}
 ["amAllOk","amSave"].forEach(k=>{const f0=A[k];A[k]=(...a)=>{const r=f0(...a);setTimeout(feedOrderPop,250);return r}});
 // 날씨 경고: 영하권 진입 전날 · 37℃ 이상(전날부터) · 혹한 · 강풍
-wxAlerts=function(day){const d=wxDay(day||0),n=wxDay((day||0)+1),W=FARM.wx;if(!d)return "";const a=[];
-  if(d.max>=W.hot)a.push(`${t("폭염")} ${d.max}℃ · ${t("환기·급수·쿨링 점검")}`);
-  else if(n&&n.max>=W.hot)a.push(`${t("내일 폭염")} ${n.max}℃ · ${t("오늘 쿨링·급수 미리 점검")}`);
-  if(n&&n.min<=W.cold&&d.min>W.cold)a.push(`${t("내일 영하 진입")} ${n.min}℃ · ${t("급수관 동파·보온 미리 점검")}`);
-  if(d.min<=W.freeze)a.push(`${t("한파")} ${d.min}℃ · ${t("급수 확인·보온")}`);
-  if(d.wind>=W.wind)a.push(`${t("강풍")} ${Math.round(d.wind/3.6)}m/s · ${t("커튼·문·지붕 점검")}`);
-  return a.map(x=>`<div class="bd-al wx">${x}</div>`).join("")};
 
 // 도태 후보 기준 (대표 결정 2026-10-30): 최근 2산 총산 ≤9 · 난산 비율 ≥30% · 사산이 모돈군 평균보다 20%↑ · 무발정·장기 NPD · 반복 재발(난임) · 고산차
-const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
-cullRule=function(){const r={...CULL1,...(state.cullRule||{})};return r};
-cullWhy=function(s){const i=statusOf(s);if(i.key==="도태됨"||i.gilt)return null;const R=cullRule(),w=[],st=sowState(s.id);
-  const F=recsOf("분만").filter(r=>r.data.sow===s.id).sort((a,b)=>b.workDate.localeCompare(a.workDate)),tot=r=>(+r.data.live||0)+(+r.data.still||0)+(+r.data.mum||0);
-  if(F.length>=2&&F.slice(0,2).every(r=>tot(r)<=R.low))w.push(`${t("총산")} ${F.slice(0,2).map(tot).join("·")}`);
-  if(F.length>=2){const dy=F.filter(r=>isDys(r)).length;if(dy/F.length*100>=R.dys)w.push(`${t("난산")} ${dy}/${F.length}${t("산")}`)}
-  if(st.stage==="이유"&&diff(st.since,TODAY)>=R.anest)w.push(`${t("무발정")} ${diff(st.since,TODAY)}${t("일")}`);
-  if((st.stage==="재교배"||st.stage==="이유")&&st.since&&diff(st.since,TODAY)>=R.open)w.push(`${t("비생산")} ${diff(st.since,TODAY)}${t("일")}`);
-  if(st.returns>=R.returns)w.push(`${t("재발·공태")} ${st.returns}${t("회")}`);
-  if(R.parity&&i.parity>=R.parity)w.push(`${i.parity}${t("산")}`);
-  if(s.cullFlag)w.push(t(s.cullFlag));
-  return w.length?[...new Set(w)].join(" · "):null};
-cullRuleSet=function(){const R=cullRule(),row=(k,l,u)=>`<div class="setrow"><span>${t(l)}</span><div class="stepper"><button type="button" data-a="cullR" data-v="${k}" data-k="-1">−</button><input type="number" value="${R[k]}" readonly><button type="button" data-a="cullR" data-v="${k}" data-k="1">+</button></div></div>`;
-  return `<div class="sec-t">${t("도태 후보 기준")} <span>${t("모돈 탭 ‘도태 후보’ 필터 · 배치도 ⚠")}</span></div><div class="panel">
-    ${row("low","최근 2산 총산 이하 (두)")}${row("dys","난산 비율 이상 (%)")}${row("still","사산 몇 두 이상이면 난산 (분만 입력 때 자동)")}${row("anest","무발정: 이유 후 교배 없이 (일 이상)")}${row("open","비생산(이유·재발 후) 기간 (일 이상)")}${row("returns","재발·공태 횟수 이상 (난임)")}${row("parity","산차 이상 (0 = 안 봄)")}
-    <div class="note">${t("지제(다리)·외상 같은 문제는 모돈 상세 › 도태 계획 세우기에서 사유를 골라 표시합니다.")}</div></div>`};
+
 Object.assign(A,{cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};const step=v==="dys"?5*Number(el.dataset.k):Number(el.dataset.k);r[v]=Math.max(0,cullRule()[v]+step);save();render()}});
 
 // ---- 배치도 칸: 현장 말 상태 + 이슈(할 일) 아이콘 · 대표 설정 › 배치도 칸 정보 ----
@@ -4764,17 +4759,6 @@ function bmCfg(){const o=state.bmShow||{};return {status:o.status!==false,third:
 let BMI=null;function bmIssues(){const k=TODAY+"|"+state.records.length+"|"+JSON.stringify(state.todoLog||{}).length;if(BMI&&BMI.k===k)return BMI.m;const m={},C=bmCfg();
   try{buildTodos().forEach(g=>{const d=BM_ISS.find(x=>x[0]===g.k);if(!d||!C.iss[g.k])return;g.items.forEach(it=>{const id=it.s&&it.s.id;if(!id)return;if(it.lit&&tdLog(tdKey("lit",it.lit)))return;(m[id]=m[id]||[]);if(!m[id].some(x=>x[1]===d[2]))m[id].push([d[1],d[2]])})})}catch(e){}
   BMI={k,m};return m}
-const _stallLook0=stallLook;
-stallLook=function(s,b){const lk=_stallLook0(s,b),st=sowState(s.id),i=statusOf(s);
-  if(lk.c==="heat")lk.ph=`${t("교배 대기")} · ${t("이유")} ${diff(st.since,TODAY)}${t("일")}`;
-  else if(lk.c==="mate"){const gd=diff(st.mate,TODAY);lk.ph=gd>=CFG.returnCheck[0]?`${t("진단 대기")} · ${gd}${t("일")}`:`${t("교배 후")} ${gd}${t("일")}`}
-  else if(lk.c==="gilt")lk.ph=`${t("후보")} · ${t("교배 대기")}`;
-  else if(lk.c==="ret")lk.ph=`${t("재교배 대기")}${st.since?" · "+diff(st.since,TODAY)+t("일"):""}`;
-  const C=bmCfg();if(!C.status)lk.ph="";
-  lk.iss=(bmIssues()[s.id]||[]).slice();if(C.iss.heat&&i.heat)lk.iss.push(["🔥","발정 관찰"]);
-  return lk};
-const _stallVal0=stallVal;
-stallVal=function(lk){const m=ui.bmInfo||bmCfg().third;if(m==="none")return "";const o=ui.bmInfo;ui.bmInfo=m;const v=_stallVal0(lk);ui.bmInfo=o;return v};
 function vBmShowSet(){const C=bmCfg();
   return `<div class="pagehd"><h2>${t("배치도 칸 정보")}</h2></div><div class="note">${t("배치도 칸(스톨)마다 보일 정보를 고릅니다. 작업자 화면에도 그대로 적용됩니다.")}</div>
   <div class="sec-t">${t("둘째 줄 · 지금 상태")}</div><div class="panel"><div class="setrow"><span>${t("교배 대기 · 진단 대기 · 임신 ○일 · 분만 D-○ · 포유 ○일")}</span><button class="sbtn ${C.status?"on":""}" type="button" data-a="bmShow" data-v="status">${C.status?t("보임"):t("숨김")}</button></div></div>
@@ -4786,19 +4770,11 @@ Object.assign(A,{bmShow:v=>{const o=state.bmShow=state.bmShow||{};o[v]=!bmCfg()[
 
 // ---- 성적 · 성적 TV 항목 (대표 설정 › 성적 항목: 켜기·끄기·순서) · NPD 는 TV 첫 줄 맨 끝 ----
 if(!MET.some(m=>m[0]==="npd"))MET.push(["npd","NPD 비생산일수","일",1,-1]);
-const _rangeMetrics0=rangeMetrics;
-rangeMetrics=function(f,to){const r=_rangeMetrics0(f,to);if(r&&r.npd===undefined){try{const n=npdStat(f,to>TODAY?TODAY:to);r.npd=n?n.npd:null}catch(e){r.npd=null}}return r};
 const ST_KPI0=["psy","msy","frate","live","wean","surv","dead","npd"],ST_CARD0=["psy","litter","week","dead","cause","feed","parity","grade","count","npd","fcr"];
 function stOrd(k,all,def){const o=(state.stOrder||{})[k],off=new Set(((state.stOrder||{})[k+"Off"])||all.filter(x=>!def.includes(x)));const L=(o||def).filter(x=>all.includes(x));all.forEach(x=>{if(!L.includes(x))L.push(x)});return {L,off,on:L.filter(x=>!off.has(x))}}
 const stKpi=()=>stOrd("kpi",MET.map(m=>m[0]),ST_KPI0),stCards=()=>stOrd("cards",CD_KEYS,ST_CARD0);
 function cardMap(){const C=chartCards(),m={};CD_KEYS.forEach((k,i)=>m[k]=C[i]);return m}
-vCharts=function(){const M=cardMap();return `<div class="sec-t">${t("성적 분석 그래프")} <span>${t("점에 손가락을 대면 값이 보입니다")}</span></div><div class="chartgrid">${stCards().on.filter(k=>M[k]).map(k=>`<div class="cd-go" data-a="chDetail" data-v="${k}">${M[k]}</div>`).join("")}</div>`};
-const _vStatsTV0=vStatsTV;
-vStatsTV=function(){STV_KPI.splice(0,STV_KPI.length,...stKpi().on.slice(0,8));
-  const h=_vStatsTV0(),cut=h.indexOf('<div class="stv-grid');if(cut<0)return h;
-  const S=ui.st,md=MET.find(m=>m[0]===S.metric)||MET[7],endYm=S.mode==="월"?S.ym:TODAY.slice(0,7),pts=months12(endYm).map(([y,m])=>{const v=rangeMetrics(...monthRange(y,m));return {y,m,v:v?v[md[0]]:null,src:v?v.src:null}});
-  const M=cardMap(),ks=stCards().on.filter(k=>M[k]).slice(0,7),cells=[...ks.slice(0,6).map(k=>[k,M[k]]),["trend",`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`],...ks.slice(6,7).map(k=>[k,M[k]])],z=ui.stvZ;
-  return h.slice(0,cut)+`<div class="stv-grid${z!=null?" zoom":""}">${cells.map(([k,c],i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${k}">${c}</div>`).join("")}</div></div>`};
+
 function vStatSet(){const K=stKpi(),C=stCards(),nmK=Object.fromEntries(MET.map(m=>[m[0],m[1]]));
   const ed=(key,o,nm,note)=>`<div class="panel">${o.L.map((k,i)=>{const on=!o.off.has(k),pos=o.on.indexOf(k);return `<div class="setrow"><span>${on?`<b>${pos+1}.</b> `:""}${t(nm[k]||k)}${note&&on?note(pos):""}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn ${on?"on":""}" type="button" data-a="stOn" data-v="${key}|${k}">${on?t("보임"):t("숨김")}</button><button class="sbtn" type="button" data-a="stMv" data-v="${key}|${k}" data-k="-1" ${i===0?"disabled":""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="stMv" data-v="${key}|${k}" data-k="1" ${i===o.L.length-1?"disabled":""} aria-label="아래로">▼</button></span></div>`}).join("")}</div>`;
   return `<div class="pagehd"><h2>${t("성적 항목")}</h2></div><div class="note">${t("성적 탭과 성적 TV에 보일 항목과 순서를 정합니다. 현황판 칸은 ‘현황판 항목 · 목표’에서 정합니다.")}</div>
@@ -4809,7 +4785,6 @@ Object.assign(A,{
   stOn:v=>{const [key,k]=v.split("|"),o=key==="kpi"?stKpi():stCards(),S=state.stOrder=state.stOrder||{};const off=new Set(o.off);off.has(k)?off.delete(k):off.add(k);S[key+"Off"]=[...off];S[key]=o.L;save();render()},
   stMv:(v,el)=>{const [key,k]=v.split("|"),o=key==="kpi"?stKpi():stCards(),L=o.L.slice(),i=L.indexOf(k),j=i+Number(el.dataset.k);if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];const S=state.stOrder=state.stOrder||{};S[key]=L;S[key+"Off"]=[...o.off];save();render()},
   stReset:()=>{state.stOrder={};save();render()}});
-const _questGauge0=questGauge;questGauge=function(todos){return _questGauge0(todos.filter(x=>!todoIsCheck(x.k)))};
 
 // ---- 사료 빈 바닥: 학습 제외 + 비는 순간부터 입고 기록 때까지 매일 '입고 확인' (꼭 할 일) ----
 function feedEmpty(f,kg){if(kg==null)return false;const b=feedBin(f);return b?kg<=Math.max(100,binCap(b)*.03):kg<=0}
@@ -4835,16 +4810,7 @@ A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=promp
   a.pin=n;save();render();toast(`${a.name} PIN ${t("을 바꿨습니다")}`)};
 
 // 예시 데이터: 빈 잔량 기록에 양쪽 게이지(기울기)도 넣기 → 현황판·사료 화면 빈이 기울어진 면으로 보임
-const _seedFarmPost0=seedFarmPost;
-seedFarmPost=function(){_seedFarmPost0();try{const R=recsOf("사료").filter(r=>r.data.mode==="빈 잔량"&&r.data.lL==null);
-  FARM.feed.bins.forEach((b,bi)=>{let td=[.06,-.05,.08,-.04][bi%4];R.filter(r=>r.data.kind===b.feed).forEach(r=>{td=Math.max(-.1,Math.min(.1,td+(Math.random()-.5)*.03));
-    const tv=Math.max(0,Math.min(b.cap,r.data.kg))/1000/binDens(b),f=m=>binVol(b,Math.max(0,Math.min(1,m-td)),Math.max(0,Math.min(1,m+td)));let a=-.2,c=1.2;for(let k=0;k<22;k++){const m=(a+c)/2;f(m)<tv?a=m:c=m}const m=(a+c)/2;
-    r.data.lL=+Math.max(0,Math.min(1,m-td)).toFixed(3);r.data.lR=+Math.max(0,Math.min(1,m+td)).toFixed(3);r.data.gauge="잔량"})})}catch(e){}save()};
 // 빈 그림 왼쪽 아래 ‘정면 ↗’: 게이지 왼쪽·오른쪽 = 정면에서 볼 때 기준
-const _binSvg0=binSvg;
-binSvg=function(b,...a){const g=_binSvg0(b,...a),P=binPx(b),k=a[4]?1:2,fs=6.5*k,x0=Math.max(1,P.x0-10),y0=P.B+2,x1=x0+4*k,y1=y0-fs-3*k,L=8*k,ax=x1+L,ay=y1-L,ux=Math.SQRT1_2,uy=-Math.SQRT1_2,h=5*k,w=3.5*k;
-  const tip=`${ax},${ay} ${ax-ux*h-uy*w},${ay-uy*h+ux*w} ${ax-ux*h+uy*w},${ay-uy*h-ux*w}`;
-  return g+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`};
 
 // ---- 현황판 TV: 카드 내용이 잘리지 않게 (빈 칸 수만큼 긴 카드를 세로 두 칸 → 그래도 넘치면 내용을 카드 크기에 맞게 줄임) ----
 function dashFit(){if(tab!=="board")return;document.querySelectorAll(".dash .d-todo").forEach(x=>x.classList.add("ascroll"));
@@ -4885,7 +4851,6 @@ function bundleKey(k,it){
 function bLeft(x){if(x.k==="pending")return x.items.length?1:0;const s=new Set();x.items.forEach(it=>{if(!tdLog(tdKey(x.k,itemTarget(it))))s.add(bundleKey(x.k,it))});return s.size}
 function bTot(x){return new Set(x.items.map(it=>bundleKey(x.k,it))).size}
 navBadge=(nb=>function(k){if(k==="todo")return buildTodos().reduce((s,x)=>s+bLeft(x),0)+(stalls().length?1:0);return nb(k)})(navBadge);
-questStat=function(todos){const tot=todos.reduce((s,x)=>s+bTot(x),0),left=todos.reduce((s,x)=>s+bLeft(x),0);return {tot,done:tot-left,pct:tot?Math.round((tot-left)/tot*100):100}};
 
 // ---- TV 에서 카드를 눌러 다른 화면으로 가면: 구석에 ‘📺 TV로 돌아가기’ (누르면 그 TV 화면으로 바로) ----
 dashLeave=(f=>function(){if(document.body.classList.contains("tv"))ui.tvBack=tab;return f()})(dashLeave);

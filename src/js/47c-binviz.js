@@ -44,7 +44,11 @@ function binSvg(b,id,lL,lR,col,big,ink="var(--ink)",bg="var(--bg)"){const P=binP
   g+=`<path d="${o}" fill="${bg}"/><polygon class="bv-fill" clip-path="url(#bc${id})" points="-30,${yAt(-30)} 150,${yAt(150)} 150,${P.B+4} -30,${P.B+4}" fill="url(#bh${id})"/>`;
   g+=`<path d="${o}" fill="none" stroke="${ink}" stroke-width="${big?2.2:2.8}" stroke-linejoin="round"/>`;
   [P.top,P.top+P.cyl].forEach(y=>g+=`<line x1="${P.x0}" x2="${P.x1}" y1="${y}" y2="${y}" stroke="${ink}" stroke-width="1.3" opacity=".45"/>`);
-  return g}
+  const svg=g;
+// 왼쪽 아래 ‘정면 ↗’: 게이지 왼쪽·오른쪽 = 정면에서 볼 때 기준
+  const k=big?1:2,fs=6.5*k,x0=Math.max(1,P.x0-10),y0=P.B+2,x1=x0+4*k,y1=y0-fs-3*k,L=8*k,ax=x1+L,ay=y1-L,ux=Math.SQRT1_2,uy=-Math.SQRT1_2,h=5*k,w=3.5*k;
+  const tip=`${ax},${ay} ${ax-ux*h-uy*w},${ay-uy*h+ux*w} ${ax-ux*h+uy*w},${ay-uy*h-ux*w}`;
+  return svg+`<g class="bv-front" aria-hidden="true"><line x1="${x1}" y1="${y1}" x2="${ax-ux*h*.8}" y2="${ay-uy*h*.8}" stroke="currentColor" stroke-width="${1.8*k}" stroke-linecap="round"/><polygon points="${tip}" fill="currentColor"/><text x="${x0}" y="${y0}" style="font-size:${fs}px;font-weight:800;fill:currentColor">${t("정면")}</text></g>`}
 function vFeedBins(){const T=feedTable();
   return `<div class="sec-t">${t("사료 빈")} <span>${t("빈을 누르면 게이지로 잔량 기록")}</span></div><div class="bins">${FARM.feed.bins.map((b,i)=>{const x=T.find(r=>r.f===b.feed)||{},cap=b.cap,f=x.kg==null?0:Math.min(1,x.kg/cap),[lL,lR]=binLevels(b,Math.min(x.kg||0,cap)),P=binPx(b);
     return `<button type="button" class="bin" data-a="binOpen" data-v="${i}"><svg viewBox="0 ${P.B-238} 120 242" aria-hidden="true">${binSvg(b,"m"+i,lL,lR,binCol(x.days))}</svg><b>${esc(b.name)}</b><small>${esc(b.feed)} · ${binCfg(b).spec}t</small><span>${x.kg==null?t("기록 필요"):`${(x.kg/1000).toFixed(1)}t <small>${Math.round(f*100)}%</small>`}</span><em style="color:${binCol(x.days)}">${x.days==null?"—":x.days+t("일분")}</em></button>`}).join("")}</div>`}

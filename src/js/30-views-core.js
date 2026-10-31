@@ -151,5 +151,5 @@ function vTimeline(){
   return h;
 }
 /* ================= 토스트 ================= */
-let tt;function toast(m){$("#toastRoot").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>$("#toastRoot").innerHTML="",3000)}
+let tt;function toast(m){$("#toastRoot").innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(tt);tt=setTimeout(()=>$("#toastRoot").innerHTML="",2400)}
 

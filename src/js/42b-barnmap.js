@@ -27,9 +27,18 @@ function stallLook(s,b){const i=statusOf(s),st=sowState(s.id),g=typeof gestFeed=
   else if(c==="gilt"){ph=t("후보돈");nx=t("교배 대기")}
   else {ph=`${l1}${l2?" "+l2+t("일"):""}`;nx=t("재교배 대기")}
   const b2=typeof lastBCS==="function"?lastBCS(s.id,TODAY):null,cull=typeof cullWhy==="function"&&!!cullWhy(s);
-  return {c,l1,l2,ph,nx,par:i.gilt?0:i.parity,bcs:b2?b2.score:null,cull,kg:g?g.kg:null,ov:g&&g.ov,live:st.stage==="포유"?st.live:null}}
+  const lk={c,l1,l2,ph,nx,par:i.gilt?0:i.parity,bcs:b2?b2.score:null,cull,kg:g?g.kg:null,ov:g&&g.ov,live:st.stage==="포유"?st.live:null};
+if(lk.c==="heat")lk.ph=`${t("교배 대기")} · ${t("이유")} ${diff(st.since,TODAY)}${t("일")}`;
+  else if(lk.c==="mate"){const gd=diff(st.mate,TODAY);lk.ph=gd>=CFG.returnCheck[0]?`${t("진단 대기")} · ${gd}${t("일")}`:`${t("교배 후")} ${gd}${t("일")}`}
+  else if(lk.c==="gilt")lk.ph=`${t("후보")} · ${t("교배 대기")}`;
+  else if(lk.c==="ret")lk.ph=`${t("재교배 대기")}${st.since?" · "+diff(st.since,TODAY)+t("일"):""}`;
+  const C=bmCfg();
+  if(!C.status)lk.ph="";
+  lk.iss=(bmIssues()[s.id]||[]).slice();
+  if(C.iss.heat&&i.heat)lk.iss.push(["🔥","발정 관찰"]);
+  return lk}
 // 칸 오른쪽 값: 급여 / 다음 일정 / 산차·BCS
-function stallVal(lk){const m=ui.bmInfo||"feed";if(m==="next")return lk.nx;if(m==="par")return `${lk.par?lk.par+t("산"):t("후보")} · BCS ${lk.bcs||"-"}`;return lk.live?`${t("새끼")} ${lk.live}${t("두")}`:lk.kg?`${t("급여")} ${lk.kg.toFixed(1)}kg${lk.ov?"*":""}`:""}
+function stallVal(lk){const m=ui.bmInfo||bmCfg().third;if(m==="none")return "";if(m==="next")return lk.nx;if(m==="par")return `${lk.par?lk.par+t("산"):t("후보")} · BCS ${lk.bcs||"-"}`;return lk.live?`${t("새끼")} ${lk.live}${t("두")}`:lk.kg?`${t("급여")} ${lk.kg.toFixed(1)}kg${lk.ov?"*":""}`:""}
 // ---- 시계 방향 입식 순서: 첫 입구에서 시작해 돈사 중심 둘레로 시계 방향 ----
 function doorsOf(b){const L=barnLayout(b);return L.doors||(L.door?[{x:L.door.x,y:L.door.y,dir:"left"}]:[])}
 function clockOrder(b){const L=barnLayout(b),S=stallsOf(b);if(!L)return [];const cx=L.w/2,cy=L.h/2,d=doorsOf(b)[0]||{x:cx,y:L.h},a0=Math.atan2(d.y-cy,d.x-cx),T=2*Math.PI;
