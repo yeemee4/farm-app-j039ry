@@ -12,4 +12,3 @@ function vStatsTV(){STV_KPI.splice(0,STV_KPI.length,...stKpi().on.slice(0,8));  
   // 칸 = 대표 설정 › 성적 항목 순서의 그래프 앞 6개 + 월별 추이 + 7번째
   const M=cardMap(),ks=stCards().on.filter(k=>M[k]).slice(0,7),cells=[...ks.slice(0,6).map(k=>[k,M[k]]),["trend",`<div class="card"><h3>${t("월별 추이")} · ${t(md[1])}<small>${t("위 숫자를 누르면 바뀝니다")}</small></h3>${lineSvg(pts,md)}</div>`],...ks.slice(6,7).map(k=>[k,M[k]])],z=ui.stvZ;
   return h+`<div class="stv-grid${z!=null?" zoom":""}">${cells.map(([k,c],i)=>z!=null&&z!==i?"":`<div class="stv-c" data-a="chDetail" data-v="${k}">${c}</div>`).join("")}</div></div>`}
-Object.assign(A,{stvZoom:v=>{ui.stvZ=ui.stvZ===+v?null:+v;render()}});

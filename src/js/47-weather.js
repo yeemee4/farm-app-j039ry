@@ -7,8 +7,6 @@ function wxLoad(){if(Date.now()-wxAt<WX_EVERY)return;wxAt=Date.now();
     .then(r=>r.json()).then(d=>{WX=d;try{localStorage.setItem("farm-wx",JSON.stringify({d,at:wxAt}))}catch(e){}render()}).catch(()=>{})}
 const WXC=c=>c===0?"맑음":c<=3?"구름":c<=48?"안개":c<=67?"비":c<=77?"눈":c<=82?"소나기":c<=86?"눈":"뇌우";
 function wxDay(i){const d=WX&&WX.daily;return d?{max:Math.round(d.temperature_2m_max[i]),min:Math.round(d.temperature_2m_min[i]),wind:Math.round(d.wind_speed_10m_max[i]),code:d.weather_code[i]}:null}
-function wxLine(){wxLoad();if(!WX||!WX.current)return `<div class="bd-wx">${FARM.place} · ${t("날씨 불러오는 중")}</div>`;
-  const c=WX.current,d=wxDay(0);return `<div class="bd-wx">${FARM.place} ${t(WXC(c.weather_code))} <b>${Math.round(c.temperature_2m)}℃</b> · ${d.min}~${d.max}℃ · ${t("바람")} ${Math.round(c.wind_speed_10m/3.6)}m/s</div>`}
 // 홈 맨 위 날씨 한 줄 (+ 경고)
 // 홈: 경고가 있는 날만 카드
 function wxHome(){wxLoad();const al=wxAlerts(0).replace(/bd-al wx/g,"wxal");return al?`<div class="wxcard">${al}</div>`:""}

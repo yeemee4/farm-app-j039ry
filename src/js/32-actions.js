@@ -11,7 +11,6 @@ const A={
   loc:(v,el)=>{const s=state.sows.find(x=>x.id===el.dataset.sow);if(!s||s.loc===v)return;if(!confirm(`${s.id} ${t("모돈을")} ${t(v)}${t("(으)로 변경하시겠습니까?")}`))return;moveSow(el.dataset.sow,v);keepScroll(()=>{render();reopen()})},
   sf:(v)=>{ui.sf=v;render()},
   tlf:(v)=>{ui.tlFilter=v;render()},
-  sdays:(v)=>{ui.statsDays=Number(v);render()},
   cday:(v)=>{const n=addDays(ui.closeDay,Number(v));if(n<=TODAY){ui.closeDay=n;render()}},
   zero:(v)=>{(state.zero[ui.closeDay]=state.zero[ui.closeDay]||{})[v]=true;save();render()},
   unzero:(v)=>{if(state.zero[ui.closeDay])delete state.zero[ui.closeDay][v];save();render()},
@@ -62,10 +61,7 @@ const A={
   cullCancel:()=>{const id=ui.cull&&ui.cull.id;ui.cull=null;if(id)keepScroll(()=>openSowDetail(id))},
   // 설정
   who:(v)=>{state.user=v;save();render()},
-  stStep:(v,el)=>{const k=el.dataset.k;state.cfgSt[k]=Math.max(1,state.cfgSt[k]+Number(v));save();render()},
-  resetAsk:()=>{ui.resetAsk=true;render()},
-  resetNo:()=>{ui.resetAsk=false;render()},
-  reset:()=>{state=seed();save();ui.resetAsk=false;go("home");toast("예시 데이터로 되돌렸습니다")}
+  stStep:(v,el)=>{const k=el.dataset.k;state.cfgSt[k]=Math.max(1,state.cfgSt[k]+Number(v));save();render()}
 };
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-a]");if(!el)return;

@@ -5,7 +5,7 @@ const TODO_CHECK0=["feeddev","bcsdue","feedchg","stock","withdraw","cull"];
 function todoIsCheck(k){const o=(state.todoMust||{})[k];return o===undefined?TODO_CHECK0.includes(k):o==="check"}
 /* ================= v0.5 · 할 일 우선순위 · 퀘스트 달성률 · 백신 준비물 ================= */
 // 할 일 묶음 기본 순위 (대표 설정 › 할 일 순서에서 바꿈)
-const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["feedchk","사료 잔량 점검"],["feeddev","사료 급여 점검"],["gfchg","임신돈 급여량 변경"],["bcsdue","BCS 측정"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
+const TODO_KINDS=[["pending","폐사 조치 판단 대기"],["handover","인계 메모"],["closemiss","기록 누락"],["binempty","사료 빈 비었음 · 입고 확인"],["regu","레규메이트 급여 (발정동기화)"],["regumate","정시 교배 (레규 동기화 그룹)"],["feedchk","사료 잔량 점검"],["feeddev","사료 급여 점검"],["gfchg","임신돈 급여량 변경"],["bcsdue","BCS 측정"],["task","폐사 후 조치"],["am","아침 점검"],["farrow","분만 예정"],["movein","분만사 입식"],["lit","복별 처치 (1일·3일)"],["svax","모돈·후보돈 백신"],["bvax","돈군 백신"],["annual","연간 일괄 백신"],["mate2","2차 교배"],["mate","교배 대상"],["remate","재교배 대기"],["ret","재발·임신 확인"],["wean","이유 예정"],["order","정액 주문"],["feedord","사료 주문"],["feedchg","사료 변경"],["stock","재고 부족"],["withdraw","휴약 종료 예정"],["cull","도태 예정"]];
 function todoRank(){const r=state.todoRank=state.todoRank||TODO_KINDS.map(x=>x[0]);TODO_KINDS.forEach(x=>{if(!r.includes(x[0]))r.push(x[0])});return r}
 const TODO_SORTS=[["rank","우선순위"],["urgent","급한 순"],["count","남은 개수 많은 순"]];
 function sortTodos(a,mode){const r=todoRank(),ri=x=>{const i=r.indexOf(x.k);return i<0?99:i},sv={bad:0,warn:1,ok:2},m=mode||ui.todoSort||"rank";
@@ -76,8 +76,8 @@ function undoToast(m,ids){const now=Date.now(),busy=now-lastSaveAt<15000;lastSav
 // ---- 백신: 남은 모돈 한꺼번에 접종 기록 ----
 Object.assign(A,{
   undo:()=>{const U=ui.undo;if(!U)return;state.records=state.records.filter(r=>!U.ids.includes(r.id));Object.entries(U.loc).forEach(([s,l])=>{const sw=state.sows.find(x=>x.id===s);if(sw)sw.loc=l});ui.undo=null;save();clearTimeout(undoT);$("#toastRoot").innerHTML="";render();toast(t("되돌렸습니다"))},
-  amAllOk:()=>{const D=amDay(TODAY),left=FARM.morning.route.filter(r=>!D[r.barn]);if(!left.length)return;if(!confirm(`${left.map(r=>t(r.barn)).join(", ")} — ${t("모두 이상 없음으로 저장할까요?")}`))return;
-    left.forEach(r=>D[r.barn]={time:nowHM(),temp:"",bad:[],memo:"",user:state.user,at:new Date().toISOString(),bulk:true});save();toast(t("저장했습니다"));render()},
+  amAllOk:()=>{const D=amDay(TODAY),left=FARM.morning.route.filter(r=>!D[r.barn]);if(!left.length){setTimeout(feedOrderPop,250)/* 아침 점검 끝 → 주말·휴일 앞날이면 사료 주문 팝업(82) */;return}if(!confirm(`${left.map(r=>t(r.barn)).join(", ")} — ${t("모두 이상 없음으로 저장할까요?")}`)){setTimeout(feedOrderPop,250)/* 아침 점검 끝 → 주말·휴일 앞날이면 사료 주문 팝업(82) */;return}
+    left.forEach(r=>D[r.barn]={time:nowHM(),temp:"",bad:[],memo:"",user:state.user,at:new Date().toISOString(),bulk:true});save();toast(t("저장했습니다"));render();setTimeout(feedOrderPop,250)/* 아침 점검 끝 → 주말·휴일 앞날이면 사료 주문 팝업(82) */},
   vaxAll:()=>{const g=buildTodos().find(x=>x.k==="svax");if(!g||!g.items.length)return;if(!confirm(`${g.items.length}${t("두")} — ${t("오늘 접종으로 한꺼번에 기록할까요?")}`))return;
     const ids=g.items.map(it=>addRecord("백신",TODAY,{sow:it.s.id,kind:"백신",name:it.vx.name}).id);save();closeSheet();render();undoToast(`${t("모돈 백신")} ${ids.length}${t("두")} ${t("저장했습니다")}`,ids)}
 });

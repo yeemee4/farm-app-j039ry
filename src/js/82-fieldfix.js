@@ -10,7 +10,6 @@ function feedOrderPop(){if(ui.foPop===TODAY)return;const P=amProg();if(P.done<P.
     <div class="warnbox" style="display:block"><b>${esc(why)}</b><br>${t("오전")} ${FARM.feed.orderCut} ${t("전에 주문해야 연휴 동안 사료가 떨어지지 않습니다.")}</div>
     ${g.length?`<div class="panel">${g.map(it=>`<div class="setrow"><span><b>${esc(it.feed.f)}</b></span><span class="sow-meta" style="color:${it.sev==="bad"?"var(--red)":"var(--amber)"}">${esc(it.label)}</span></div>`).join("")}</div>`:`<div class="note" style="color:var(--good)">✓ ${t("지금 재고로 휴일을 넘길 수 있습니다. 주문할 사료가 없습니다.")}</div>`}
     <div class="acts">${g.length?`<button class="act pri" type="button" data-a="todo" data-v="feedord">${t("사료 주문 할 일")} ›</button>`:""}<button class="act" type="button" data-a="tab" data-v="feedchk">${t("사료 잔량 점검")} ›</button></div></div></div></div>`}
-["amAllOk","amSave"].forEach(k=>{const f0=A[k];A[k]=(...a)=>{const r=f0(...a);setTimeout(feedOrderPop,250);return r}});
 // 날씨 경고: 영하권 진입 전날 · 37℃ 이상(전날부터) · 혹한 · 강풍
 
 // 도태 후보 기준 (대표 결정 2026-10-30): 최근 2산 총산 ≤9 · 난산 비율 ≥30% · 사산이 모돈군 평균보다 20%↑ · 무발정·장기 NPD · 반복 재발(난임) · 고산차
@@ -34,7 +33,6 @@ Object.assign(A,{bmShow:v=>{const o=state.bmShow=state.bmShow||{};o[v]=!bmCfg()[
   bmIss:v=>{const o=state.bmShow=state.bmShow||{};o.iss=o.iss||{};o.iss[v]=!bmCfg().iss[v];BMI=null;save();render()}});
 
 // ---- 성적 · 성적 TV 항목 (대표 설정 › 성적 항목: 켜기·끄기·순서) · NPD 는 TV 첫 줄 맨 끝 ----
-if(!MET.some(m=>m[0]==="npd"))MET.push(["npd","NPD 비생산일수","일",1,-1]);
 const ST_KPI0=["psy","msy","frate","live","wean","surv","dead","npd"],ST_CARD0=["psy","litter","week","dead","cause","feed","parity","grade","count","npd","fcr"];
 function stOrd(k,all,def){const o=(state.stOrder||{})[k],off=new Set(((state.stOrder||{})[k+"Off"])||all.filter(x=>!def.includes(x)));const L=(o||def).filter(x=>all.includes(x));all.forEach(x=>{if(!L.includes(x))L.push(x)});return {L,off,on:L.filter(x=>!off.has(x))}}
 const stKpi=()=>stOrd("kpi",MET.map(m=>m[0]),ST_KPI0),stCards=()=>stOrd("cards",CD_KEYS,ST_CARD0);
@@ -59,15 +57,11 @@ function emptyFeeds(){const out=[];feedKinds().forEach(f=>{const R=recsOf("사�
   let i=rd.length-1;while(i>0&&feedEmpty(f,rd[i-1].data.kg))i--;const since=rd[i].workDate,b=feedBin(f);
   out.push({emp:{f,name:b?b.name:`${f} ${t("포대")}`,since,days:diff(since,TODAY)+1},label:`${kDate(since)}${t("부터 비어 있음")} · ${t("입고됐는지 확인하고 입고를 기록하세요")}${diff(since,TODAY)>=1?" · "+t("사용량 학습에서 빠짐"):""}`,sev:"bad"})});return out}
 function binEmptyTodos(){let e=[];try{e=emptyFeeds()}catch(x){}return [{k:"binempty",t:"사료 빈 비었음 · 입고 확인",items:e,act:null}]}
-if(!TODO_KINDS.some(x=>x[0]==="binempty"))TODO_KINDS.splice(3,0,["binempty","사료 빈 비었음 · 입고 확인"]);
 Object.assign(A,{empIn:v=>{closeSheet();openInput("사료",{fv:{kind:v,mode:"입고"}})}});
 
 // 분만: 사산이 기준 두수(기본 4) 이상이면 난산으로 자동 기록 (새벽 분만 1~2두 사산은 사고로 봄)
 const stillDys=()=>cullRule().still;
 function isDys(r){return (r.data.ease&&r.data.ease!=="정상")||(+r.data.still||0)>=stillDys()}
-(()=>{const F=FORMS["분만"];if(!F||F.f.some(f=>f.k==="_dys"))return;const i=F.f.findIndex(f=>f.k==="_t");
-  F.f.splice(i+1,0,{k:"_dys",t:"calc",l:"난산 판정 (자동)",calc:d=>(+d.still||0)>=stillDys()?`⚠ ${t("사산")} ${d.still}${t("두")} → ${t("난산으로 기록")}`:`${t("사산")} ${stillDys()}${t("두 이상이면 난산")}`});
-  const p0=F.pre;F.pre=(d,wd,s)=>{if(p0)p0(d,wd,s);if((+d.still||0)>=stillDys()&&(!d.ease||d.ease==="정상")){d.ease="난산";d.dysAuto=true}}})();
 
 // 대표: 계정마다 PIN 바로 바꾸기 (예전: 0000 으로 초기화만)
 A.accPin=v=>{const a=state.accounts.find(x=>x.id===v);if(!a)return;const p=prompt(`${a.name} — ${t("새 PIN (숫자 4~6자리)")}`,"");if(p===null)return;const n=p.trim();

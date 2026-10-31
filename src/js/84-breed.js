@@ -1,7 +1,7 @@
 /* ================= 번식 탭: 번식 사이클 한 화면 (위 = 오늘 할 일, 아래 = 목표·성적) =================
    사이클 띠(단계별 두수, 누르면 그 단계 목록) · 오늘 번식 할 일 묶음 · 다음 2주 일정 · 이번 주 목표 · 최근 90일 성적 */
 const BR_STAGES=[["후보","후보돈"],["발정대기","발정 대기"],["재발공태","재발·공태"],["확인전","교배·확인 전"],["임신","임신"],["분만임박","분만 임박"],["포유","포유"]];
-const BR_TODO=["mate2","mate","remate","ret","movein","farrow","wean","order"];
+const BR_TODO=["regumate","regu","mate2","mate","remate","ret","movein","farrow","wean","order"];
 const BR_EV=["교배","임신확인","분만","이유"];
 // 최근 90일 성적: 첫 교배(같은 발정 3일 안은 하나) → 결과(임신·재발·공태·유산) · 재귀일수 · 정액별
 function breedStats(days=90){const from=addDays(TODAY,-days),R=[...state.records].sort((a,b)=>a.workDate.localeCompare(b.workDate)),by={};
@@ -58,8 +58,6 @@ function reguSows(){const s=new Set();reguBatches().filter(b=>b.on).forEach(b=>b
 // 할 일: 오늘 아직 안 먹인 동기화 묶음 (꼭 할 일)
 function reguTodos(){let it=[];try{it=reguBatches().filter(b=>b.on&&!b.todayFed).map(b=>({rg:b.r.id,label:`${b.day}/${b.d.days}${t("일째")} · ${b.d.sows.length}${t("두")} · ${t("1두")} ${b.d.ml}mL · ${b.d.at}${b.miss.length?` · ${t("빠진 날")} ${b.miss.length}${t("일")}`:""}`,sev:b.miss.length||nowHM()>addMin(b.d.at,reguCfg().late)?"bad":"warn"}))}catch(e){}
   return [{k:"regu",t:"레규메이트 급여 (발정동기화)",items:it,act:null}]}
-if(!TODO_KINDS.some(x=>x[0]==="regu"))TODO_KINDS.splice(4,0,["regu","레규메이트 급여 (발정동기화)"]);
-BR_TODO.unshift("regu");
 function addMin(hm,m){const [h,mm]=hm.split(":").map(Number),x=h*60+mm+m;return `${String(Math.floor(x/60)%24).padStart(2,"0")}:${String(x%60).padStart(2,"0")}`}
 function vRegu(){const B=reguBatches(),C=reguCfg();
   let h=`<div class="sec-t">${t("발정동기화 (레규메이트)")} <span><button type="button" class="linkbtn" data-a="reguNew">+ ${t("동기화 시작")}</button></span></div>`;
@@ -114,8 +112,6 @@ function reguMateDue(){const out=[];reguGroups().forEach(g=>reguMating(g.data).f
   const done=recsOf("교배").some(r=>r.data.rg===g.id&&r.data.session===m.n);if(!done)out.push({g,m})}));return out}
 function reguMateTodos(){let it=[];try{it=reguMateDue().map(({g,m})=>({rgm:g.id+"|"+m.n,label:`${t("동기화 그룹 교배")} (${t("레규")}) ${m.n}/4${t("회")} · ${g.data.sows.length}${t("두")} · ${m.time}`,sev:nowHM()>=m.time?"bad":"warn"}))}catch(e){}
   return [{k:"regumate",t:"정시 교배 (레규 동기화 그룹)",items:it,act:null}]}
-if(!TODO_KINDS.some(x=>x[0]==="regumate"))TODO_KINDS.splice(5,0,["regumate","정시 교배 (레규 동기화 그룹)"]);
-BR_TODO.unshift("regumate");
 // 기존 교배 대상에도 보이되, 정시 교배 날(4·5일째) 앞뒤의 같은 모돈이면 (레규)
 function reguMateSows(){const s=new Set();reguGroups().forEach(g=>{const M=reguMating(g.data);if(TODAY>=addDays(M[0].date,-3)&&TODAY<=M[3].date)g.data.sows.forEach(x=>s.add(x))});return s}
 // 정액: 정시 교배 첫날 전날, 그 그룹 두수도 내일 교배 예정에 더함 (1두 2팩 = 4회분)

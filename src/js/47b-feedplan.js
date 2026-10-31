@@ -80,11 +80,6 @@ function bagOrders(P){const G=P.filter(o=>o.bag&&o.kg!=null&&o.avg4>0);if(!G.len
 function feedOrderToday(){const P=feedPlan(),T=bulkTrucks(P),out=[];const t0=T[0];
   if(t0&&t0.order<=TODAY)t0.items.forEach(it=>out.push({...it.o,qty:it.q,arrive:t0.arrive,weekend:t0.weekend,short:t0.short&&t0.short.includes(it.o.f)?1:0,truck:t0}));
   const b0=bagOrders(P)[0];if(b0&&b0.order<=TODAY)b0.items.forEach(it=>out.push({...it.o,qtyBags:it.q,arrive:b0.arrive,weekend:b0.weekend,short:b0.short&&b0.short.includes(it.o.f)?1:0}));return out}
-function fpBars(P){const C=["#2a78d6","#eb6834","#199e70","#c98500","#9085e9","#d55181","#4fa3b8","#6b7684"],W=8,mx=Math.max(1,...[...Array(W).keys()].map(w=>P.reduce((s,o)=>s+o.wk[w],0)));
-  const H=170,BW=100/W;let g=`<svg viewBox="0 0 400 ${H+24}" class="chart" role="img" aria-label="8주 사료 필요량">`;
-  for(let w=0;w<W;w++){let y=H;P.forEach((o,i)=>{const h=o.wk[w]/mx*(H-16);if(h<=0)return;y-=h;g+=`<rect x="${w*50+8}" y="${y}" width="34" height="${h}" fill="${C[i%C.length]}"><title>${t("주")} ${w+1} · ${esc(o.f)} ${Math.round(o.wk[w]).toLocaleString()}kg</title></rect>`});
-    const tot=P.reduce((s,o)=>s+o.wk[w],0);g+=`<text x="${w*50+25}" y="${y-4}" text-anchor="middle">${(tot/1000).toFixed(1)}t</text><text x="${w*50+25}" y="${H+16}" text-anchor="middle">${w?`+${w}${t("주")}`:t("이번 주")}</text>`}
-  return g+`</svg>`+legendH(P.map((o,i)=>[C[i%C.length],o.f]))}
 // 사료마다 한 줄 카드: 다음 주문일 · 하루 필요량(지금→4주 후) · 8주 흐름(사료마다 따로 눈금) · 권장 주문
 function fpSpark(wk){const mx=Math.max(...wk)||1,lo=Math.min(...wk)*.7,W=8*12,flat=mx-lo<1e-6;return `<svg viewBox="0 0 ${W} 26" class="fp-sp" role="img" aria-label="${t("8주 흐름")}">${wk.map((v,i)=>{const h=flat?14:4+(v-lo)/(mx-lo)*20;return `<rect x="${i*12+1}" y="${26-h}" width="9" height="${h}" rx="1.5" fill="${i?"var(--c-a)":"var(--ink)"}" opacity="${i?.55:.9}"><title>${i?"+"+i+t("주"):t("이번 주")} ${Math.round(v).toLocaleString()}kg</title></rect>`}).join("")}</svg>`}
 function fpCard(o){const lead=FARM.feed.leadDays,safe=FARM.feed.orderDays,d4=o.wk[4]/7,ch=o.d0?Math.round((d4-o.d0)/o.d0*100):0;
@@ -96,7 +91,6 @@ function fpCard(o){const lead=FARM.feed.leadDays,safe=FARM.feed.orderDays,d4=o.w
     <div class="fp-2"><span>${t("하루")} <b>${Math.round(o.d0).toLocaleString()}kg</b> → ${t("4주 후")} ${Math.round(d4).toLocaleString()}kg ${ch?`<i class="${ch>0?"up":"dn"}">${ch>0?"▲":"▼"}${Math.abs(ch)}%</i>`:""}</span>${fpSpark(o.wk)}</div>
     <div class="fp-3">${now?now+"<br>":""}${rec}</div>${arrive}${learnTag(o.f)}</div>`}
 // 주문일이 2일 안쪽인 빈끼리 한 번에 주문
-function fpGroups(B){const L=B.filter(o=>o.orderBy&&o.kg!=null).sort((a,b)=>a.orderBy.localeCompare(b.orderBy)),g=[];L.forEach(o=>{const last=g[g.length-1],d=o.orderBy<TODAY?TODAY:o.orderBy;if(last&&diff(last.d,d)<=2)last.L.push(o);else g.push({d,L:[o]})});return g}
 function vFeedPlan(){const P=feedPlan().filter(o=>o.avg4>0);if(!P.length)return "";const B=P.filter(o=>o.bin),G=P.filter(o=>!o.bin),lead=FARM.feed.leadDays,safe=FARM.feed.orderDays;
   let h=`<div class="sec-t">${t("벌크 사료 (빈)")} <span>${t("새 사료는")} ${FARM.feed.freshDays}${t("일 안에 소진")}</span>${can("admin")?`<button type="button" data-a="tab" data-v="feedset">${t("기준")} ›</button>`:""}</div>`;
   const TR2=bulkTrucks(P);ui.trucks=TR2;

@@ -31,5 +31,5 @@ Object.assign(A,{
   amOpen:v=>{const x=amDay(TODAY)[v];ui.am={barn:v,time:x?x.time:nowHM(),temp:x?x.temp:"",water:x?x.water:"",bad:x?[...x.bad]:[],memo:x?x.memo:""};render()},
   amBad:v=>{const O=ui.am;O.time=$("#amTime").value;O.temp=$("#amTemp").value;O.water=$("#amWater").value;O.memo=$("#amMemo").value;O.bad=O.bad.includes(v)?O.bad.filter(x=>x!==v):[...O.bad,v];keepScroll(render)},
   amCancel:()=>{ui.am=null;render()},
-  amSave:()=>{const O=ui.am;amDay(TODAY)[O.barn]={time:$("#amTime").value||nowHM(),temp:$("#amTemp").value,water:$("#amWater").value,bad:O.bad,memo:$("#amMemo").value.trim(),user:state.user,at:new Date().toISOString()};ui.am=null;save();toast(t("저장했습니다"));render()}
+  amSave:()=>{const O=ui.am;amDay(TODAY)[O.barn]={time:$("#amTime").value||nowHM(),temp:$("#amTemp").value,water:$("#amWater").value,bad:O.bad,memo:$("#amMemo").value.trim(),user:state.user,at:new Date().toISOString()};ui.am=null;save();toast(t("저장했습니다"));render();setTimeout(feedOrderPop,250)/* 아침 점검 끝 → 주말·휴일 앞날이면 사료 주문 팝업(82) */}
 });

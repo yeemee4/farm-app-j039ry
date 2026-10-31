@@ -8,7 +8,6 @@ function hoTodos(){const L=(state.handover||[]).filter(h=>h.due<=REF),items=L.fi
   return [{k:"handover",t:"인계 메모",items,act:null}]}
 function hoBox(){return `<div class="panel ho"><div class="row2"><input type="text" id="hoText" placeholder="${t("인계 메모 (예: 내일 아침 6-008 분만 확인)")}" aria-label="${t("인계 메모")}"><button class="act pri" type="button" data-a="hoAdd">${t("내일로")}</button></div></div>`}
 // 20. 도태 후보 (기준은 대표 설정)
-const CULL0={parity:7,returns:2,low:9};
 // 도태 후보 기준 기본값(대표 설정에서 바꿈)
 const CULL1={low:9,dys:30,still:4,anest:21,open:60,returns:2,parity:9};
 function cullRule(){const r={...CULL1,...(state.cullRule||{})};return r}

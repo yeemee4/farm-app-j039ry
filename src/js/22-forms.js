@@ -13,9 +13,10 @@ const FORMS={
   임신확인:{sow:{multi:true,target:true,filter:(i,wd)=>i.stage==="교배"&&diff(i.mate,wd)>=CFG.returnCheck[0]},
     f:[{k:"result",l:"결과",t:"chips",o:["임신","재발","공태","유산"],def:"임신"}]},
   분만:{sow:{multi:false,target:true,filter:(i,wd)=>(i.stage==="임신"||i.stage==="교배")&&diff(i.mate,wd)>=CFG.gest-10},
-    f:[{k:"live",l:"실산",t:"step",def:12,min:0},{k:"still",l:"사산",t:"step",def:0,min:0},{k:"mum",l:"미라",t:"step",def:0,min:0},{k:"_t",t:"calc",l:"총산 (자동)",calc:d=>(+d.live||0)+(+d.still||0)+(+d.mum||0)},{k:"ease",l:"분만 상태 (선택)",t:"chips",opt:true,o:["정상","난산","조력 분만"]},{k:"oxy",l:"옥시토신 (선택)",t:"chips",opt:true,o:["안 씀","씀"]},{k:"start",l:"분만 시작 시각 (선택)",t:"text",opt:true,ph:"예: 03:20"}],
+    f:[{k:"live",l:"실산",t:"step",def:12,min:0},{k:"still",l:"사산",t:"step",def:0,min:0},{k:"mum",l:"미라",t:"step",def:0,min:0},{k:"_t",t:"calc",l:"총산 (자동)",calc:d=>(+d.live||0)+(+d.still||0)+(+d.mum||0)},{k:"_dys",t:"calc",l:"난산 판정 (자동)",calc:d=>(+d.still||0)>=stillDys()?`⚠ ${t("사산")} ${d.still}${t("두")} → ${t("난산으로 기록")}`:`${t("사산")} ${stillDys()}${t("두 이상이면 난산")}`},{k:"ease",l:"분만 상태 (선택)",t:"chips",opt:true,o:["정상","난산","조력 분만"]},{k:"oxy",l:"옥시토신 (선택)",t:"chips",opt:true,o:["안 씀","씀"]},{k:"start",l:"분만 시작 시각 (선택)",t:"text",opt:true,ph:"예: 03:20"}],
     warn:(d,wd,s)=>{const i=sowState(s);if(i.mate){const g=diff(i.mate,wd);if(g<108||g>120)return `${s}번은 교배 후 ${g}일째입니다. 보통 ${CFG.gest}일 전후에 분만합니다.`}
-      if(d.live+d.still+d.mum>22)return "총산이 22두를 넘습니다. 숫자를 확인해 주세요.";return null}},
+      if(d.live+d.still+d.mum>22)return "총산이 22두를 넘습니다. 숫자를 확인해 주세요.";return null},
+    pre:d=>{if((+d.still||0)>=stillDys()&&(!d.ease||d.ease==="정상")){d.ease="난산";d.dysAuto=true}}},   // 사산 많으면 자동 난산(기준 82 stillDys)
   이유:{sow:{multi:false,target:true,filter:(i,wd)=>i.stage==="포유"&&diff(i.farrow,wd||TODAY)>=CFG.weanDay-7},
     f:[{k:"n",l:"이유두수",t:"step",def:11,min:0},{k:"_to",l:"자돈 옮길 곳 (같이 기록)",t:"chips",o:()=>["그대로",...BARNS.filter(b=>b!=="분만사")],def:"인큐베이터"},{k:"_loc",l:"모돈 옮길 곳 (같이 기록)",t:"chips",o:()=>["그대로",...SOW_LOCS.filter(b=>b!=="분만사")],def:"교배사"},{k:"_d",t:"calc",l:"포유일수 (자동)",calc:(d,wd,s)=>{const i=s?sowState(s):null;return i&&i.farrow?diff(i.farrow,wd)+"일":"-"}}],
     warn:(d,wd,s)=>{const i=sowState(s);if(i.stage!=="포유")return `${s}번은 지금 포유 중이 아닙니다(${t(statusOf(state.sows.find(x=>x.id===s)).label)}). 그래도 이유로 기록할까요?`;if(i.live&&d.n>i.live+(i.foster||0)+2)return `${s}번은 실산 ${i.live}두인데 이유두수가 ${d.n}두입니다. 양자를 받았다면 그대로 저장하세요.`;return null},
