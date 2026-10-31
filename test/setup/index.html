@@ -1163,7 +1163,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 02:32";
+const BUILD_AT="11-01 02:41";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -1499,17 +1499,20 @@ FARM.iconStyle = "pic"; // 기본 아이콘 스타일
 const IS_DEMO = ENV === "demo";
 if (IS_DEMO) {
   // 줄 n개 × 칸 m개 배치도(m 단위). vertical = 세로 줄
+  // 줄 rows개 × 칸 per개 배치도(m 단위): 두 줄씩 마주 보고(가운데 통로), 짝끼리는 등을 맞댐. vertical = 세로 줄
   const grid = (rows, per, vertical) => {
-    const cw = 0.6, cd = 2.2, gap = 1.2, len = per * cw + 0.8, R = [];
+    const cw = 0.6, cd = 2.2, gap = 1.2, len = per * cw + 0.8, R = [], areas = [];
     for (let i = 0; i < rows; i++) {
-      const off = 0.4 + i * (cd + (i % 2 ? gap : 0.2)) + Math.floor(i / 2) * 0;
-      R.push(vertical ? { id: "ABCDEFGH"[i], x: off, y: 0.4, n: per, cw, cd, v: 1, from: "bottom", head: i % 2 ? "left" : "right" }
-                      : { id: "ABCDEFGH"[i], x: 0.4, y: off, n: per, cw, cd, from: "left", head: i % 2 ? "up" : "down" });
+      const off = 0.4 + i * cd + Math.ceil(i / 2) * gap, id = "ABCDEFGH"[i];
+      R.push(vertical ? { id, x: off, y: 0.4, n: per, cw, cd, v: 1, from: "bottom", head: i % 2 ? "left" : "right" }
+                      : { id, x: 0.4, y: off, n: per, cw, cd, from: "left", head: i % 2 ? "up" : "down" });
+      if (i % 2 === 0 && i + 1 < rows) { const a0 = off + cd; areas.push(vertical ? { x: a0, y: 0.2, w: gap, h: len, l: "통로", aisle: 1 } : { x: 0.2, y: a0, w: len, h: gap, l: "통로", aisle: 1 }) }
     }
-    const span = 0.4 + rows * cd + Math.ceil(rows / 2) * gap + rows * 0.1;
-    return vertical ? { sure: true, w: span, h: len + 1, rows: R, areas: [], doors: [{ x: span / 2, y: len + 1, dir: "up" }] }
-                    : { sure: true, w: len + 1, h: span, rows: R, areas: [], doors: [{ x: 0, y: span / 2, dir: "right" }] };
+    const span = 0.8 + rows * cd + Math.ceil((rows - 1) / 2) * gap;
+    return vertical ? { sure: true, w: span, h: len + 0.4, rows: R, areas, doors: [{ x: span / 2, y: len + 0.4, dir: "up" }] }
+                    : { sure: true, w: len + 0.4, h: span, rows: R, areas, doors: [{ x: 0, y: span / 2, dir: "right" }] };
   };
+
   Object.assign(FARM, {
     name: "햇살농장",
     place: "충남 홍성 (가상)",
@@ -1520,8 +1523,8 @@ if (IS_DEMO) {
     goal: { psy: 28, msy: 25, npd: 30, fcr: 2.9, fcrB: 2.6 },
     weekGoal: { 교배: 15, 분만: 13, 이유: 13, 임신확인: 14 },
     layout: { 교배사: grid(4, 18), "임신사 1동": grid(4, 17, 1), "임신사 2동": grid(4, 17, 1), 분만사: grid(4, 25) },
-    seed: { fw: 13, live: [11, 15], stillP: 0.3, mumP: 0.08, loss: 0.075, retP: 0.12, openP: 0.04, wmi: [4, 7], days: 395, takeover: false, forward: true, n: 300, cullPar: 7, cullP: 0.05,
-      users: ["대표", "김민수 팀장", "Nguyen", "Ram", "Sokha"], pig: [0.012, 0.01, 0.01, 0.01], feedIn: 3.25,
+    seed: { fw: 13, live: [11, 15], stillP: 0.3, mumP: 0.08, loss: 0.07, retP: 0.11, openP: 0.04, wmi: [4, 6], days: 395, takeover: false, forward: true, mateWk: 15, warm: 300, lateP: 0.18, giltWait: [40, 60], cullPar: 7, cullP: 0.04,
+      users: ["대표", "김민수 팀장", "Nguyen", "Ram", "Sokha"], pig: [0.035, 0.025, 0.02, 0.022], feedIn: 3.25,
       prev: { far: 16, frate: 88, live: 13, wean: 12, psy: 27, msy: 24, surv: 91 } },
     accounts: [
       { id: "a1", name: "대표", role: "admin", pin: "0000", lang: "ko", active: true },
@@ -11644,6 +11647,8 @@ function drawView() {
   syncLists();
   $("#hdDate").textContent = kDate(TODAY) + " · W" + isoWeek(TODAY).w + wxShort();
   $("#hdVer").textContent = APP_VER;
+  const h1 = $(".hd h1");
+  if (h1 && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.textContent = FARM.name + " ";   // 시연 농장 이름도
   $("#whoName").textContent = `${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v = $("#view");
@@ -13133,7 +13138,7 @@ const FARM_LISTS = () => ({
   cull: mkList(["번식장애(재발·공태)", "산자수 저조", "지제·다리 불량", "노산", "질병", "기타"])
 });
 // 예시 기록 만들기. 농장마다 다른 숫자는 FARM.seed(05·06) — 없으면 비담 값
-const SEED0 = { fw: 4, live: [10, 14], stillP: 0.45, mumP: 0.15, loss: 0.06, retP: 0.12, openP: 0.05, bpMax: 5, wmi: [4, 8], days: 548, takeover: true, forward: false, n: 300, cullPar: 7, cullP: 0.06, users: ["대표", "조성훈 팀장", "Nguyen", "Ram", "Sokha", "Somchai"], pig: [0.02, 0.015, 0.015, 0.015], feedIn: 1, prev: { far: 16, frate: 84, live: 12, wean: 10.9, psy: 24, msy: 21, surv: 89 } };
+const SEED0 = { fw: 4, live: [10, 14], stillP: 0.45, mumP: 0.15, loss: 0.06, retP: 0.12, openP: 0.05, bpMax: 5, wmi: [4, 8], days: 548, takeover: true, forward: false, mateWk: 15, warm: 300, lateP: 0.1, giltWait: [18, 26], cullPar: 7, cullP: 0.06, users: ["대표", "조성훈 팀장", "Nguyen", "Ram", "Sokha", "Somchai"], pig: [0.02, 0.015, 0.015, 0.015], feedIn: 1, prev: { far: 16, frate: 84, live: 12, wean: 10.9, psy: 24, msy: 21, surv: 89 } };
 function seedFarm() {
   const S = { ...SEED0, ...(FARM.seed || {}) },
     q = n => Math.max(1, Math.round((n * S.fw) / 4));   // 비담(주 4복) 기준 두수를 이 농장 규모로
@@ -13142,7 +13147,7 @@ function seedFarm() {
     ri = (a, b) => a + Math.floor(rnd() * (b - a + 1)),
     pick = a => a[ri(0, a.length - 1)];
   const H0 = addDays(TODAY, -S.days),
-    TAKE = addDays(TODAY, -14),
+    TAKE = S.takeover ? addDays(TODAY, -14) : TODAY,   // 비담: 2주 전 인수 · 계속 키우는 농장은 오늘까지
     G = CFG.gest,
     wk0 = weekStart(TODAY),
     recs = [],
@@ -13239,50 +13244,48 @@ function seedFarm() {
   };
   // 앞으로 돌려 만들기(시연 농장 FARM.seed.forward): 300두를 과거부터 하루씩 교배→임신→분만→이유→재교배, 늙거나 탈난 모돈은 도태·후보돈으로 채움 → 달마다 성적이 고르게
   const simForward = () => {
-    const L0 = addDays(H0, -260), cyc = G + 27 + 7, ev = [];   // [날짜, 모돈, 할 일]
-    const st = {};   // 모돈별 산차·최근 일
-    const push = (d, id, k) => {   // 날짜 순서를 지키며 끼워 넣기
-      let i = ev.length;
-      while (i > 0 && ev[i - 1][0] > d) i--;
-      ev.splice(i, 0, [d, id, k]);
-    };
-    const newSow = (d, gilt) => {
-      const id = mk("교배사");
-      st[id] = { par: gilt ? 0 : ri(0, S.bpMax) };
-      if (gilt) add("도입", d, { sow: id, breed: FARM.breed, kind: "후보돈" });
+    // 주간 배치: 매주 화요일 앞뒤로 교배 목표(S.mateWk)만큼 — 이유·재발·공태로 돌아온 모돈 먼저, 모자라면 후보돈(처음 21주는 기존 모돈 입식)
+    const T = S.mateWk, L0 = weekStart(addDays(H0, -S.warm)), due = {}, st = {}, culled = {};
+    const wk = d => weekStart(d), dueAt = (w, id) => (due[w] = due[w] || []).push(id);
+    const newSow = (w, n) => {
+      const id = mk("교배사"), old = n < 21;   // 처음 21주: 기존 모돈(산차 0~5) · 그 뒤: 후보돈 도입
+      st[id] = { par: old ? ri(0, S.bpMax) : 0 };
+      if (!old) add("도입", addDays(w, -ri(S.giltWait[0], S.giltWait[1])), { sow: id, breed: FARM.breed, kind: "후보돈" });
       return id;
     };
-    for (let i = 0; i < S.n; i++) push(addDays(L0, Math.floor((i * cyc) / S.n)), newSow(L0, false), "mate");
-    ev.sort((a, b) => a[0].localeCompare(b[0]));
-    while (ev.length) {
-      const [d, id, k] = ev.shift();
-      if (d > TODAY) continue;
-      const o = st[id];
-      if (k === "mate") {
-        const x = rnd();
-        if (x < S.retP) { mate(id, d, false); add("임신확인", addDays(d, ri(19, 23)), { sow: id, result: "재발" }); push(addDays(d, ri(20, 23)), id, "mate") }
-        else if (x < S.retP + S.openP) { mate(id, d, false); add("임신확인", addDays(d, 28), { sow: id, result: "공태" }); push(addDays(d, ri(38, 45)), id, "mate") }
-        else { mate(id, d, true); push(addDays(d, G + ri(-1, 1)), id, "farrow") }
-      } else if (k === "farrow") {
-        const wd = ri(26, 28), W = addDays(d, wd);
-        farrow(id, d, W <= TODAY ? wd : null);
+    for (let w = L0, n = 0; w <= TODAY; w = addDays(w, 7), n++) {
+      const L = (due[w] || []).splice(0);
+      while (L.length < T) L.push(newSow(w, n));
+      // 재발·공태는 주마다 정해진 비율만큼(무작위로 몰리지 않게)
+      const nR = Math.floor(L.length * S.retP + rnd()), nO = Math.floor(L.length * S.openP + rnd()), ord = L.map(() => rnd()), rank = L.map((_, i) => ord.filter(v => v < ord[i]).length);
+      L.forEach((id, li) => {
+        const d = addDays(w, ri(0, 5)), o = st[id], x = rank[li] < nR ? 0 : rank[li] < nR + nO ? S.retP : 1;   // 월~토에 고루
+        if (d > TODAY) return;
+        if (x < S.retP) { mate(id, d, false); add("임신확인", addDays(d, ri(19, 23)), { sow: id, result: "재발" }); dueAt(addDays(w, 21), id); return }
+        if (x < S.retP + S.openP) { mate(id, d, false); add("임신확인", addDays(d, 28), { sow: id, result: "공태" }); dueAt(addDays(w, 42), id); return }
+        mate(id, d, true);
+        const F = addDays(d, G + ri(-1, 1));
+        if (F > TODAY) return;
+        const W = addDays(F, ri(26, 28));
+        farrow(id, F, W <= TODAY ? diff(F, W) : null);
         o.par++;
-        if (W <= TODAY) push(W, id, "wean");
-      } else if (k === "wean") {
-        // 도태: 높은 산차·가끔 다른 사유 → 같은 날 후보돈 도입(약 3주 순치 후 교배)
+        if (W > TODAY) return;
         if ((o.par >= S.cullPar && rnd() < 0.6) || rnd() < S.cullP) {
-          add("도태", addDays(d, ri(1, 5)), { sow: id, reason: o.par >= S.cullPar ? "고산차" : pick(["번식 장애", "지제", "산자수 낮음"]) });
-          push(addDays(d, ri(18, 26)), newSow(d, true), "mate");
-        } else push(addDays(d, ri(S.wmi[0], S.wmi[1])), id, "mate");
-      }
+          const cd = addDays(W, ri(1, 5));
+          add("도태", cd, { sow: id, reason: o.par >= S.cullPar ? "고산차" : pick(["번식 장애", "지제", "산자수 낮음"]) });
+          culled[id] = cd;
+        } else dueAt(wk(addDays(W, 5 + (rnd() < S.lateP ? 7 * ri(1, 3) : 0))), id);   // 일부는 발정이 늦게 옴(1~3주)
+      });
     }
-    // 산차: 기록 시작 전 분만은 baseParity 로 · 지금 있는 곳(배치도·모돈 탭): 오늘 상태로
+    // 기록 시작 전에 도태된 모돈은 목록에서 뺌 · 산차: 기록 시작 전 분만은 baseParity · 지금 있는 곳: 오늘 상태로
+    for (let i = sows.length - 1; i >= 0; i--) if (culled[sows[i].id] && culled[sows[i].id] < H0) sows.splice(i, 1);
     sows.forEach(s => {
       s.baseParity = st[s.id].par - recs.filter(r => r.type === "분만" && r.data.sow === s.id).length;
-      const R = recs.filter(r => r.data && r.data.sow === s.id).sort((a, b) => a.workDate.localeCompare(b.workDate)), last = R[R.length - 1];
+      const R = recs.filter(r => r.data && r.data.sow === s.id && r.type !== "BCS" && r.type !== "백신").sort((a, b) => a.workDate.localeCompare(b.workDate)),
+        last = R[R.length - 1], m = R.filter(r => r.type === "교배").pop();
       if (!last) return;
-      const g = diff(last.workDate, TODAY);
-      s.loc = last.type === "분만" ? "분만사" : last.type === "이유" ? "교배사" : last.type === "교배" && g >= 100 ? "분만사" : last.type === "교배" && g >= 28 ? (g < 65 ? "임신사 1동" : "임신사 2동") : last.type === "임신확인" && R.filter(r => r.type === "교배").pop() && diff(R.filter(r => r.type === "교배").pop().workDate, TODAY) >= 28 ? (diff(R.filter(r => r.type === "교배").pop().workDate, TODAY) < 65 ? "임신사 1동" : diff(R.filter(r => r.type === "교배").pop().workDate, TODAY) >= 100 ? "분만사" : "임신사 2동") : "교배사";
+      const g = m ? diff(m.workDate, TODAY) : 0;
+      s.loc = last.type === "분만" ? "분만사" : last.type === "이유" || last.type === "도입" || last.type === "도태" ? "교배사" : g >= 107 ? "분만사" : g >= 65 ? "임신사 2동" : g >= 28 ? "임신사 1동" : "교배사";
     });
   };
   if (S.forward) simForward();
@@ -13401,7 +13404,16 @@ function seedFarm() {
         }
       }
       if (!old) return;
-      if (!S.takeover && ship > TODAY) return;   // 계속 키우는 농장: 아직 출하 전
+      if (!S.takeover) {   // 계속 키우는 농장: 주 2~3회 나눠 출하(아직 출하 전이면 그대로 둠)
+        const parts = [0.4, 0.35, 0.25];
+        let left = n;
+        parts.forEach((f, pi) => {
+          const sd = addDays(k, SH * 7 + pi * 3 + ri(0, 1)), m = pi === 2 ? left : Math.round(n * f);
+          left -= m;
+          if (sd <= TODAY && m > 0) add("출하", sd, { barn: fb, n: m, kg: ri(113, 119), dest: rnd() < 0.8 ? "○○도축장" : "△△공판장" });
+        });
+        return;
+      }
       if (ship <= TAKE)
         add("출하", ship, { barn: fb, n, kg: ri(113, 119), dest: rnd() < 0.8 ? "○○도축장" : "△△공판장" });
       else {
@@ -13417,8 +13429,11 @@ function seedFarm() {
     const wean = ((S.live[0] + S.live[1]) / 2) * (1 - 1.5 * S.loss),
       surv = S.pig.reduce((x, r) => x * (1 - r), 1);
     for (let k = addDays(weekStart(H0), -SH * 7); k < weekStart(H0); k = addDays(k, 7)) {
-      const ship = addDays(k, SH * 7 + ri(0, 4));
-      if (ship >= H0 && ship <= TODAY) add("출하", ship, { barn: "육성비육사", n: Math.round(S.fw * wean * surv * (0.95 + rnd() * 0.1)), kg: ri(113, 119), dest: rnd() < 0.8 ? "○○도축장" : "△△공판장" });
+      const n = Math.round(S.fw * wean * surv * (0.97 + rnd() * 0.06));
+      [0.4, 0.35, 0.25].forEach((f, pi) => {
+        const sd = addDays(k, SH * 7 + pi * 3 + ri(0, 1));
+        if (sd >= H0 && sd <= TODAY) add("출하", sd, { barn: "육성비육사", n: Math.round(n * f), kg: ri(113, 119), dest: rnd() < 0.8 ? "○○도축장" : "△△공판장" });
+      });
     }
   }
   Object.entries(bulk).forEach(([barn, v]) =>
@@ -13483,7 +13498,7 @@ function seedFarm() {
     assign: {},
     lists: FARM_LISTS(),
     startDate: H0,
-    batchCut: cut,
+    batchCut: S.takeover ? cut : null,   // 비담: 인수 전 돈군은 현재 두수에서 뺌
     takeover: TAKE,
     ...B,
     mbatches: [4, 5, 6, 7, 8, 9, 10, 11].map(w => ({
@@ -13706,7 +13721,7 @@ function seedFarmPost() {
   // 육성비육사 첫 입식 준비 할 일
   const oldest = liveBatches().slice(-1)[0],
     now = new Date().toISOString();
-  if (oldest) {
+  if (oldest && (FARM.seed || {}).takeover !== false) {
     const fin = addDays(oldest.k, state.cfg.stage.slice(0, -1).reduce((a, x) => a + x[1], 0) * 7);
     state.tasks.push({
       id: newId(),

@@ -45,6 +45,8 @@ function drawView() {
   syncLists();
   $("#hdDate").textContent = kDate(TODAY) + " · W" + isoWeek(TODAY).w + wxShort();
   $("#hdVer").textContent = APP_VER;
+  const h1 = $(".hd h1");
+  if (h1 && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.textContent = FARM.name + " ";   // 시연 농장 이름도
   $("#whoName").textContent = `${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v = $("#view");
