@@ -277,3 +277,9 @@ body.mode-setup .tabs,body.mode-setup #pcBtn{display:none!important}body.mode-se
 .su-dock .su-pad{margin:4px 0}.su-dock .su-pad button{height:54px}.su-dock .su-end{position:static;padding:4px 0 0}.su-dock .su-disp.sm{margin:2px 0;min-height:28px;font-size:18px}
 body:not(.mode-setup) .su-dock{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
 .bv-front{color:var(--muted);opacity:.9}
+/* 번식 탭 */
+.br-cycle{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}.br-cycle::-webkit-scrollbar{display:none}
+.br-cycle button{flex:1 0 auto;min-width:72px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);position:relative}
+.br-cycle button:not(:last-child)::after{content:"›";position:absolute;right:-6px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.br-cycle b{font-size:22px;font-weight:800}.br-cycle span{font-size:12px;color:var(--muted);white-space:nowrap}.br-cycle button.on{border-color:var(--accent);background:var(--accent-soft)}
+.linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;padding:0;cursor:pointer}

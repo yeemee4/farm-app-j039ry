@@ -823,6 +823,12 @@ body.mode-setup .tabs,body.mode-setup #pcBtn{display:none!important}body.mode-se
 .su-dock .su-pad{margin:4px 0}.su-dock .su-pad button{height:54px}.su-dock .su-end{position:static;padding:4px 0 0}.su-dock .su-disp.sm{margin:2px 0;min-height:28px;font-size:18px}
 body:not(.mode-setup) .su-dock{bottom:calc(64px + env(safe-area-inset-bottom,0px))}
 .bv-front{color:var(--muted);opacity:.9}
+/* 번식 탭 */
+.br-cycle{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}.br-cycle::-webkit-scrollbar{display:none}
+.br-cycle button{flex:1 0 auto;min-width:72px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);position:relative}
+.br-cycle button:not(:last-child)::after{content:"›";position:absolute;right:-6px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.br-cycle b{font-size:22px;font-weight:800}.br-cycle span{font-size:12px;color:var(--muted);white-space:nowrap}.br-cycle button.on{border-color:var(--accent);background:var(--accent-soft)}
+.linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;padding:0;cursor:pointer}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1143,7 +1149,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 10:03";
+const BUILD_AT="10-31 10:08";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -3654,6 +3660,7 @@ Object.assign(TR,{"앱 보기":["Xem app","एप दृश्य","មើលក
 Object.assign(TR,{"꼭 할 일":["Việc phải làm","गर्नैपर्ने काम","ការងារត្រូវធ្វើ","งานที่ต้องทำ"],"확인만":["Chỉ kiểm tra","हेर्ने मात्र","ពិនិត្យតែប៉ុណ្ណោះ","ตรวจดูเท่านั้น"],"퀘스트에 넣지 않음":["Không tính vào nhiệm vụ","क्वेस्टमा नगन्ने","មិនរាប់ក្នុងបេសកកម្ម","ไม่นับในภารกิจ"],"일정 기간 기록 변화가 없는 모돈입니다. 기록이 빠졌는지 확인해 주세요. 기준 일수는 설정에서 바꿀 수 있습니다.":["Nái lâu không có ghi chép mới. Hãy kiểm tra xem có sót không.","लामो समयदेखि रेकर्ड नभएका माउ। छुटेको छ कि हेर्नुहोस्।","មេជ្រូកគ្មានកំណត់ត្រាយូរ។ សូមពិនិត្យ។","แม่สุกรที่ไม่มีบันทึกนาน กรุณาตรวจสอบ"],"기록이 멈춘 개체가 없습니다.":["Không có con nào bị dừng ghi chép.","रेकर्ड रोकिएको कुनै छैन।","គ្មានទេ។","ไม่มี"],"복":["ổ","ब्याँत","ក្រុម","ครอก"],"평균":["TB","औसत","មធ្យម","เฉลี่ย"],"진단 대기":["Chờ khám thai","जाँच पर्खँदै","រង់ចាំពិនិត្យ","รอตรวจท้อง"],"교배 대기":["Chờ phối","मिलन पर्खँदै","រង់ចាំបង្កាត់","รอผสม"],"재교배 대기":["Chờ phối lại","फेरि मिलन पर्खँदै","រង់ចាំបង្កាត់ម្តងទៀត","รอผสมซ้ำ"]});
 Object.assign(TR,{"난산 판정 (자동)":["Đẻ khó (tự động)","कठिन ब्याँत (स्वतः)","ពិបាកកើត (ស្វ័យប្រវត្តិ)","คลอดยาก (อัตโนมัติ)"],"난산으로 기록":["ghi là đẻ khó","कठिन ब्याँत भनेर","កត់ថាពិបាកកើត","บันทึกเป็นคลอดยาก"],"두 이상이면 난산":["con trở lên = đẻ khó","वा बढी = कठिन ब्याँत","ឡើង = ពិបាកកើត","ตัวขึ้นไป = คลอดยาก"]});
 Object.assign(TR,{"묶음":["việc","समूह","ក្រុម","กลุ่ม"],"TV로 돌아가기":["Về màn hình TV","TV मा फर्कनुहोस्","ត្រឡប់ទៅ TV","กลับไปหน้าจอ TV"]});
+Object.assign(TR,{"번식":["Sinh sản","प्रजनन","បង្កាត់ពូជ","การผสมพันธุ์"],"오늘 번식 할 일":["Việc sinh sản hôm nay","आजको प्रजनन काम","ការងារបង្កាត់ថ្ងៃនេះ","งานผสมพันธุ์วันนี้"],"오늘 번식 할 일이 없습니다.":["Hôm nay không có việc sinh sản.","आज प्रजनन काम छैन।","ថ្ងៃនេះគ្មានការងារបង្កាត់។","วันนี้ไม่มีงานผสมพันธุ์"],"다음 2주 일정":["Lịch 2 tuần tới","अर्को २ हप्ता","២សប្តាហ៍ខាងមុខ","2 สัปดาห์ถัดไป"],"이번 주 목표":["Mục tiêu tuần","यो हप्ताको लक्ष्य","គោលដៅសប្តាហ៍","เป้าหมายสัปดาห์นี้"],"번식 성적":["Kết quả sinh sản","प्रजनन नतिजा","លទ្ធផលបង្កាត់","ผลการผสมพันธุ์"],"최근 90일":["90 ngày qua","पछिल्लो ९० दिन","៩០ថ្ងៃចុងក្រោយ","90 วันล่าสุด"],"수태율":["Tỷ lệ đậu thai","गर्भ दर","អត្រាមានផ្ទៃពោះ","อัตราผสมติด"],"재귀 일수":["Ngày lên giống lại","फेरि बाली दिन","ថ្ងៃត្រឡប់","วันกลับสัด"],"이유 → 교배":["Cai sữa → phối","छुटाउने → मिलन","ផ្តាច់ → បង្កាត់","หย่านม → ผสม"],"복당 실산":["Sơ sinh sống/ổ","जीवित/ब्याँत","រស់/ក្រុម","มีชีวิต/ครอก"],"복 판정":["ổ đã xác định","ब्याँत निर्णय","ក្រុមបានវាយ","ครอกที่ตัดสินแล้ว"],"교배·확인 전":["Đã phối, chờ khám","मिलन, जाँच अघि","បង្កាត់ មុនពិនិត្យ","ผสมแล้ว รอตรวจ"],"교배 → 임신 → 분만 → 이유 사이클 한 화면":["Chu kỳ phối → mang thai → đẻ → cai sữa","मिलन → गर्भ → ब्याँत → छुटाउने","វដ្តបង្កាត់ → ផ្ទៃពោះ → កើត → ផ្តាច់","รอบ ผสม → ตั้งท้อง → คลอด → หย่านม"]});
 /* ================= v0.3 · 목록·계정·권한 ================= */
 const SEMENS=["듀록 정액","요크셔 정액","랜드레이스 정액","자연교배"],DESTS=["○○도축장","△△공판장"];
 const LISTDEF={barns:["돈사",BARNS],causes:["폐사 원인",CAUSES],actions:["조치 종류",ACTIONS],semens:["정액·교배 방법",SEMENS],dests:["출하처",DESTS],cull:["도태 사유",CULL_REASONS]};
@@ -3746,7 +3753,7 @@ function render(){
   $("#whoName").textContent=`${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v=$("#view");v.className="v-"+tab;
-  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet,barnmap:vBarnMap,bcsmap:vBcsMap,setup:()=>suGuard(vSetup)(),suwalk:()=>suGuard(vSuWalk)(),sureview:()=>suGuard(vSuReview)()};
+  const V={home:vHome,todo:vTodo,sows:vSows,batch:vBatch,drug:vDrug,stats:vStats,board:vDash,tl:vTimeline,close:vClose,settings:vSettings,more:vMore,input:vInput,sow:vSow,morning:vMorning,count:vCount,cal:vCal,feedset:vFeedSet,feedchk:vFeedCheck,gfeed:vGestFeed,gestset:vGestSet,barnmap:vBarnMap,bcsmap:vBcsMap,breed:vBreed,setup:()=>suGuard(vSetup)(),suwalk:()=>suGuard(vSuWalk)(),sureview:()=>suGuard(vSuReview)()};
   v.innerHTML=V[tab]();
   const dl=$("#feedList");if(dl)dl.innerHTML=feedNames().map(n=>`<option value="${esc(n)}">`).join("");
 }
@@ -4998,6 +5005,56 @@ if(typeof MODE!=="undefined"&&MODE==="setup"){document.body.classList.add("mode-
   const _go1=go;go=function(v){if(!OK.includes(v))v="setup";return _go1(v)};
   const _r3=render;render=function(){if(me()&&!OK.includes(tab))tab="setup";if(tab==="settings"&&!["accounts","binit","sync","main"].includes(ui.setPage||"main"))ui.setPage="main";if(tab==="settings"&&(ui.setPage||"main")==="main")tab="setup";return _r3()};
   const _vs=vSetup;vSetup=function(){return _vs().replace(`<button class="back" type="button" data-a="tab" data-v="settings">‹ ${t("설정")}</button>`,`<a class="back" href="../">${t("본 앱 열기")} ›</a>`)};}
+/* ================= 번식 탭: 번식 사이클 한 화면 (위 = 오늘 할 일, 아래 = 목표·성적) =================
+   사이클 띠(단계별 두수, 누르면 그 단계 목록) · 오늘 번식 할 일 묶음 · 다음 2주 일정 · 이번 주 목표 · 최근 90일 성적 */
+const BR_STAGES=[["후보","후보돈"],["발정대기","발정 대기"],["재발공태","재발·공태"],["확인전","교배·확인 전"],["임신","임신"],["분만임박","분만 임박"],["포유","포유"]];
+const BR_TODO=["mate2","mate","remate","ret","movein","farrow","wean","order"];
+const BR_EV=["교배","임신확인","분만","이유"];
+// 최근 90일 성적: 첫 교배(같은 발정 3일 안은 하나) → 결과(임신·재발·공태·유산) · 재귀일수 · 정액별
+function breedStats(days=90){const from=addDays(TODAY,-days),R=[...state.records].sort((a,b)=>a.workDate.localeCompare(b.workDate)),by={};
+  R.forEach(r=>{const s=r.data&&r.data.sow;if(s&&BR_EV.concat("임신확인").includes(r.type))(by[s]=by[s]||[]).push(r)});
+  const M=[],ret=[];let lv=0,nf=0;
+  Object.values(by).forEach(L=>{let last=null,lastW=null;L.forEach(r=>{
+    if(r.type==="이유")lastW=r.workDate;
+    if(r.type==="교배"){if(last&&diff(last.d,r.workDate)<=3)return;last={d:r.workDate,semen:r.data.semen||"-",res:null};if(r.workDate>=from&&diff(r.workDate,TODAY)>=25)M.push(last);
+      if(lastW&&r.workDate>=from&&diff(lastW,r.workDate)<=60)ret.push(diff(lastW,r.workDate));lastW=null}
+    else if(r.type==="임신확인"&&last&&!last.res)last.res=r.data.result==="임신"?"임신":"사고";
+    else if(r.type==="분만"&&last){if(!last.res)last.res="임신";if(r.workDate>=from){lv+=+r.data.live||0;nf++}}})});
+  const done=M.filter(m=>m.res),ok=done.filter(m=>m.res==="임신").length,sem={};
+  done.forEach(m=>{const o=sem[m.semen]=sem[m.semen]||{n:0,ok:0};o.n++;if(m.res==="임신")o.ok++});
+  console.assert(ok<=done.length&&done.length<=M.length,"breedStats");
+  return {n:done.length,rate:done.length?ok/done.length*100:null,ret:ret.length?ret.reduce((a,b)=>a+b,0)/ret.length:null,live:nf?lv/nf:null,sem}}
+function vBreed(){const S=activeSows().map(s=>[s,statusOf(s)]),cnt=k=>S.filter(([,i])=>i.key===k).length,sel=ui.brStage||"";
+  let h=`<div class="pagehd"><h2>${t("번식")}</h2></div>`;
+  // 1. 사이클 띠
+  h+=`<div class="br-cycle">${BR_STAGES.map(([k,l])=>`<button type="button" class="${sel===k?"on":""}" data-a="brStage" data-v="${k}"><b>${cnt(k)}</b><span>${t(l)}</span></button>`).join("")}</div>`;
+  // 2. 고른 단계의 모돈
+  if(sel){const L=S.filter(([,i])=>i.key===sel);h+=`<div class="sec-t">${t((BR_STAGES.find(x=>x[0]===sel)||[])[1]||sel)} <span>${L.length}${t("두")} · <button type="button" class="linkbtn" data-a="brStage" data-v="">${t("닫기")}</button></span></div><div class="sowtiles">${L.map(([s,i])=>sowTile(s,i)).join("")||`<div class="empty">${t("없음")}</div>`}</div>`}
+  // 3. 오늘 번식 할 일
+  const td=buildTodos().filter(x=>BR_TODO.includes(x.k)&&x.items.length);
+  h+=`<div class="sec-t">${t("오늘 번식 할 일")} <span>${td.reduce((s,x)=>s+bLeft(x),0)}${t("묶음")}</span></div>`;
+  h+=td.length?`<div class="todolist">${td.map(todoBtn).join("")}</div>`:`<div class="empty">${t("오늘 번식 할 일이 없습니다.")}</div>`;
+  // 4. 다음 2주 일정 (번식만)
+  const {ev}=calEvents(),days=Object.keys(ev).filter(d=>d>=TODAY).sort().map(d=>[d,ev[d].filter(([k])=>BR_EV.includes(k))]).filter(x=>x[1].length);
+  h+=`<div class="sec-t">${t("다음 2주 일정")} <span><button type="button" class="linkbtn" data-a="tab" data-v="cal">${t("주간 달력")} ›</button></span></div><div class="panel br-days">${days.map(([d,E])=>{const c={};E.forEach(([k])=>c[k]=(c[k]||0)+1);
+    return `<div class="setrow"><span><b>${kDate(d)}</b></span><span class="sow-meta">${Object.entries(c).map(([k,n])=>`${t(L(k))} ${n}`).join(" · ")}</span></div>`}).join("")||`<div class="empty">${t("없음")}</div>`}</div>`;
+  // 5. 이번 주 목표 (현황판 카드와 같은 그림)
+  h+=`<div class="sec-t">${t("이번 주 목표")}</div><div class="panel">${DASH_P.breed()[2]}</div>`;
+  // 6. 최근 90일 성적
+  const B=breedStats(),f1=v=>v==null?"-":v.toFixed(1);
+  h+=`<div class="sec-t">${t("번식 성적")} <span>${t("최근 90일")}</span></div><div class="kv kv4">
+    <div><small>${t("수태율")}</small><b>${B.rate==null?"-":Math.round(B.rate)+"%"}</b><small>${B.n}${t("복 판정")}</small></div>
+    <div><small>${t("재귀 일수")}</small><b>${f1(B.ret)}${t("일")}</b><small>${t("이유 → 교배")}</small></div>
+    <div><small>${t("복당 실산")}</small><b>${f1(B.live)}</b><small>${t("두")}</small></div>
+    <div><small>${t("재발·공태")}</small><b>${cnt("재발공태")}</b><small>${t("지금")}</small></div></div>`;
+  const sem=Object.entries(B.sem).sort((a,b)=>b[1].n-a[1].n);
+  if(sem.length)h+=`<div class="panel">${sem.map(([k,o])=>`<div class="setrow"><span>${esc(k)}</span><span><b>${Math.round(o.ok/o.n*100)}%</b> <small class="sow-meta">${o.ok}/${o.n}${t("복")}</small></span></div>`).join("")}</div>`;
+  return h}
+Object.assign(A,{brStage:v=>{ui.brStage=ui.brStage===v?"":v;render()}});
+// 들어가는 곳: 더보기 · 모돈 탭 위 · 현황판 ‘이번 주 번식’
+DASH_GO.breed="breed";
+const _vMore1=vMore;vMore=function(){return _vMore1().replace('<button class="mitem" type="button" data-a="tab" data-v="stats">',`<button class="mitem" type="button" data-a="tab" data-v="breed"><span class="ic" style="background:var(--accent-soft);color:var(--accent)"></span><span><b>${t("번식")}</b><small>${t("교배 → 임신 → 분만 → 이유 사이클 한 화면")}</small></span><span>›</span></button><button class="mitem" type="button" data-a="tab" data-v="stats">`)};
+const _vSows1=vSows;vSows=function(){return _vSows1().replace(`data-a="tab" data-v="barnmap">`,`data-a="tab" data-v="breed">${t("번식")} ›</button><button class="act" type="button" data-a="tab" data-v="barnmap">`)};
 /* ================= v0.6 · 구글 시트 서버 동기화 =================
    켜는 곳: 설정 › 서버 연결 (대표). 서버 = server/Code.gs (Apps Script 웹 앱).
    방식: save() 할 때마다 1.2초 뒤 '바뀐 것만' 골라(기록·모돈은 한 건씩, 나머지 설정은 키별) 보낼 목록에 넣고 보냄.
