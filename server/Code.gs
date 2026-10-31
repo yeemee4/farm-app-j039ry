@@ -176,9 +176,29 @@ function discord(msgs) {
 // ---------- 레규메이트 급여 늦음 알림 (30분마다 자동 실행) ----------
 // 처음 한 번: Apps Script 편집기 위쪽 함수 목록에서 setupReguTrigger 를 고르고 ▶ 실행 (권한 허용)
 var REGU_STEPS = [60, 240, 480, 660];   // 정한 시각에서 1·4·8·11시간 (앱 84-breed.js 와 같은 규칙)
+// 자동 실행 켜기(한 번만): 레규 급여 확인 30분마다 · 시간 알림 5분마다
 function setupReguTrigger() {
-  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === "reguTick") ScriptApp.deleteTrigger(t); });
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (["reguTick", "alarmTick"].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger("reguTick").timeBased().everyMinutes(30).create();
+  ScriptApp.newTrigger("alarmTick").timeBased().everyMinutes(5).create();
+}
+
+// ---------- 시간 알림: 앱이 만든 계획(key alarm§plan = [{id,at:"yyyy-MM-dd HH:mm",msg}]) 중 시각이 된 것을 한 번씩 보냄 ----------
+function alarmTick() { alarmCheck(new Date()); }
+function alarmCheck(now) {
+  var p = props(), fmt = function (d) { return Utilities.formatDate(d, "Asia/Seoul", "yyyy-MM-dd HH:mm"); };
+  var nowS = fmt(now), lo = fmt(new Date(now.getTime() - 3 * 3600000)), old = fmt(new Date(now.getTime() - 3 * 86400000)).slice(0, 10), msgs = [];
+  dataRows().forEach(function (r) {
+    if (r[1] !== "key" || String(r[2]) !== "alarm\u00a7plan" || Number(r[5]) === 1) return;
+    var L; try { L = JSON.parse(String(r[3])); } catch (e) { return; }
+    (L || []).forEach(function (a) {
+      if (!a || !a.at || !a.msg || a.at > nowS || a.at < lo) return;   // 3시간 넘게 지난 건 안 보냄(밤새 쌓인 것 폭탄 방지)
+      var k = "al|" + r[0] + "|" + a.id; if (p.getProperty(k)) return;
+      p.setProperty(k, "1"); msgs.push(a.msg + "\n");
+    });
+  });
+  p.getKeys().forEach(function (k) { if (k.indexOf("al|") === 0 && k.split("|")[2] < old) p.deleteProperty(k); });
+  if (msgs.length) discord(msgs);
 }
 function reguTick() { reguCheck(new Date()); }
 function reguCheck(now) {

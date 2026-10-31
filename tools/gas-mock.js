@@ -12,7 +12,7 @@ function Sheet(name){const d=[];let mc=26;return {name,d,getLastRow:()=>d.length
     clearContent:()=>{for(let i=0;i<nr;i++)for(let j=0;j<nc;j++)if(d[r-1+i])d[r-1+i][c-1+j]=""}})}}
 const ctx={SpreadsheetApp:{getActive:()=>({getSheetByName:n=>sheets[n]||null,insertSheet:n=>(sheets[n]=Sheet(n))})},
   ContentService:{MimeType:{JSON:"json"},createTextOutput:s=>({s,setMimeType(){return this}})},
-  PropertiesService:{getScriptProperties:()=>({getProperty:k=>props[k]??null,setProperty:(k,v)=>{props[k]=String(v)},deleteProperty:k=>{delete props[k]}})},
+  PropertiesService:{getScriptProperties:()=>({getKeys:()=>Object.keys(props),getProperty:k=>props[k]??null,setProperty:(k,v)=>{props[k]=String(v)},deleteProperty:k=>{delete props[k]}})},
   LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},Utilities:{getUuid:()=>crypto.randomUUID(),formatDate:(d,tz,f)=>{const P=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d).map(x=>[x.type,x.value]));return f.replace("yyyy",P.year).replace("MM",P.month).replace("dd",P.day).replace("HH",P.hour).replace("mm",P.minute)}},
   UrlFetchApp:{fetch:(u,o)=>{discord.push(JSON.parse(o.payload).content);return {}}},console};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,"../server/Code.gs"),"utf8"),ctx);return {ctx,sheets,props,discord}}
