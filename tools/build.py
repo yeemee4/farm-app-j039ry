@@ -59,13 +59,9 @@ def write(dest, html, depth):
     for f in ('manifest.webmanifest', 'icon-192.png', 'apple-touch-icon.png', 'icon-512.png', 'logo.png'):
         html = html.replace('href="%s"' % f, 'href="%s%s"' % (up, f)).replace('src="%s"' % f, 'src="%s%s"' % (up, f))
     os.makedirs(os.path.dirname(os.path.join(ROOT, dest)) or ROOT, exist_ok=True)
-    if depth:   # 하위 폴더 앱은 자기 manifest (홈 화면에 추가하면 그 폴더 주소가 열리게 · 루트 것을 쓰면 본서버가 열림)
-        m = json.load(open(os.path.join(ROOT, 'manifest.webmanifest'), encoding='utf-8'))
-        nm = re.search(r'<title>(.*?)</title>', html).group(1)
-        m.update(name=nm, short_name=nm.replace('비담농장 ', '').replace('(테스트)', '테스트').strip() or nm, start_url='./', id='./', scope='./')
-        m['icons'] = [dict(i, src=up + i['src']) for i in m['icons']]
-        json.dump(m, open(os.path.join(ROOT, os.path.dirname(dest), 'manifest.webmanifest'), 'w', encoding='utf-8'), ensure_ascii=False)
-        html = html.replace('href="%smanifest.webmanifest"' % up, 'href="manifest.webmanifest"')
+    if depth:
+        # 아이폰은 manifest 를 따로 기억해 루트(본서버)를 여는 일이 있어, 하위 폴더 앱은 manifest 연결을 빼고 추가할 때 주소를 그대로 쓰게 함
+        html = re.sub(r'<link rel="manifest"[^>]*>\n?', '', html)
     open(os.path.join(ROOT, dest), 'w', encoding='utf-8').write(html)
 base = '' if PROD else 'test/'
 if not PROD:   # 시험용: 제목에 (테스트)
