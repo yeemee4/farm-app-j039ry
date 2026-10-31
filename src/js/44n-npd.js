@@ -14,7 +14,8 @@ function npdSegs(){const key=state.records.length+"|"+state.sows.length+"|"+TODA
     const start=s.baseParity>0||(asc[0]&&asc[0].type!=="교배")?"0000":mates[0]?mates[0].workDate:null;
     if(start)m[s.id]={start,end:cull?cull.workDate:"9999",prod,ev}});
   NPDX={key,m};return m}
-function npdStat(f,t){const M=npdSegs(),R={wei:0,fail:0,other:0},per=[];let npd=0,sd=0;
+function npdStat(f,t){return memo("npd|"+f+"|"+t,()=>npdStat0(f,t))}
+function npdStat0(f,t){const M=npdSegs(),R={wei:0,fail:0,other:0},per=[];let npd=0,sd=0;
   Object.entries(M).forEach(([id,o])=>{const a=o.start>f?o.start:f,b=o.end<t?o.end:t;if(a>b)return;let n=0;const rs={wei:0,fail:0,other:0};
     for(let d=a;d<=b;d=addDays(d,1)){sd++;if(o.prod.some(([x,y])=>d>=x&&d<y))continue;let why="other";for(const [ed,k] of o.ev){if(ed<=d)why=k;else break}n++;rs[why]++}
     npd+=n;NPD_R.forEach(([k])=>R[k]+=rs[k]);if(n)per.push({id,n,...rs})});

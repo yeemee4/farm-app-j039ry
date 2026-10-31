@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 19:22";
+const BUILD_AT="10-31 19:27";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -1884,7 +1884,7 @@ const itemNames=cat=>state.items.filter(i=>!i.hidden&&i.cat===cat).map(i=>i.name
 const itemById=id=>state.items.find(i=>i.id===id);
 const itemId=name=>(state.items.find(i=>i.name===name)||{}).id;
 function stockRecs(it){return memo("sr|"+it.id,()=>stockRecs0(it))}
-function stockRecs0(it){if(/^주사침/.test(it.name))return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||needleUse(it,r)>0).map(r=>r.type==="재고"?r:{...r,type:"_침",data:{n:needleUse(it,r)}});return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
+function stockRecs0(it){if(/^주사침/.test(it.name))return state.records.filter(r=>(r.type==="재고"&&r.data.item===it.id)||needleUse(it,r)>0).map(r=>r.type==="재고"?r:{...r,type:"_침",data:{n:needleUse(it,r)}});return memo("stc",()=>state.records.filter(r=>["재고","돈군백신","백신","교배","약품"].includes(r.type))).filter(r=>(r.type==="재고"&&r.data.item===it.id)||(r.type==="돈군백신"&&[].concat(r.data.prod).includes(it.name))||(r.type==="백신"&&vaxProds(r.data.name).includes(it.name))||(r.type==="교배"&&r.data.semen===it.name)||(r.type==="약품"&&r.data.name===it.name))}
 function delta(r){if(r.type==="_침")return -r.data.n;if(r.type==="재고")return r.data.mode==="입고"?r.data.qty:r.data.mode==="사용"?-r.data.qty:0;if(r.type==="돈군백신")return -r.data.n;if(r.type==="약품")return -(r.data.qty||1);return -1}
 function semenOrder(){
   const tmr=addDays(TODAY,1);let n=0;
@@ -2457,7 +2457,8 @@ function npdSegs(){const key=state.records.length+"|"+state.sows.length+"|"+TODA
     const start=s.baseParity>0||(asc[0]&&asc[0].type!=="교배")?"0000":mates[0]?mates[0].workDate:null;
     if(start)m[s.id]={start,end:cull?cull.workDate:"9999",prod,ev}});
   NPDX={key,m};return m}
-function npdStat(f,t){const M=npdSegs(),R={wei:0,fail:0,other:0},per=[];let npd=0,sd=0;
+function npdStat(f,t){return memo("npd|"+f+"|"+t,()=>npdStat0(f,t))}
+function npdStat0(f,t){const M=npdSegs(),R={wei:0,fail:0,other:0},per=[];let npd=0,sd=0;
   Object.entries(M).forEach(([id,o])=>{const a=o.start>f?o.start:f,b=o.end<t?o.end:t;if(a>b)return;let n=0;const rs={wei:0,fail:0,other:0};
     for(let d=a;d<=b;d=addDays(d,1)){sd++;if(o.prod.some(([x,y])=>d>=x&&d<y))continue;let why="other";for(const [ed,k] of o.ev){if(ed<=d)why=k;else break}n++;rs[why]++}
     npd+=n;NPD_R.forEach(([k])=>R[k]+=rs[k]);if(n)per.push({id,n,...rs})});
