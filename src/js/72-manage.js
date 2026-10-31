@@ -46,6 +46,5 @@ function vCal(){const {ev,w0}=calEvents(),O=ui.calOpen;
 Object.assign(A,{
   myTodo:v=>{ui.myTodo=v==="1";render()},
   hoAdd:()=>{const v=($("#hoText").value||"").trim();if(!v)return;(state.handover=state.handover||[]).push({id:newId(),text:v,due:addDays(TODAY,1),user:state.user,at:new Date().toISOString()});save();render();toast(t("내일 할 일로 넘겼습니다"))},
-  cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};r[v]=Math.max(0,cullRule()[v]+Number(el.dataset.k));save();render()},
   calOpen:v=>{ui.calOpen=ui.calOpen===v?null:v;render()}
 });

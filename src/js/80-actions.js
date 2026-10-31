@@ -12,7 +12,8 @@ Object.assign(A,{
   loginLang:v=>{ui.loginLang=v;render()},
   loginPick:v=>{ui.loginId=v;ui.pin="";ui.pinErr=false;render()},
   loginBack:()=>{ui.loginId=null;ui.pin="";ui.pinErr=false;render()},
-  pinKey:v=>{const a=state.accounts.find(x=>x.id===ui.loginId);ui.pinErr=false;ui.pin=(ui.pin||"")+v;
+  pinKey:v=>{if(SY.url)return syPinKey(v);   // 서버 연결 중이면 서버에서 확인(90)
+    const a=state.accounts.find(x=>x.id===ui.loginId);ui.pinErr=false;ui.pin=(ui.pin||"")+v;
     if(ui.pin.length>=a.pin.length){if(ui.pin===a.pin){ME=a.id;try{localStorage.setItem(SKEY,ME)}catch(e){}ui.pin="";ui.loginId=null;tab="home";ui.setPage="main";render();window.scrollTo(0,0)}else{ui.pin="";ui.pinErr=true}}
     if(!me())render()},
   pinDel:()=>{ui.pin=(ui.pin||"").slice(0,-1);render()},
@@ -24,7 +25,6 @@ Object.assign(A,{
   goSettings:()=>{ui.setPage="main";go("settings")},
   accRole:v=>{const a=state.accounts.find(x=>x.id===v);if(a.id===ME){toast("내 권한은 바꿀 수 없습니다");return}const o=["worker","leader","admin"];a.role=o[(o.indexOf(a.role)+1)%3];save();render()},
   accLang:v=>{const a=state.accounts.find(x=>x.id===v),o=LANGS.map(l=>l[0]);a.lang=o[(o.indexOf(a.lang)+1)%o.length];save();render()},
-  accPin:v=>{const a=state.accounts.find(x=>x.id===v);a.pin="0000";save();render();toast(`${a.name} PIN을 0000으로 초기화했습니다`)},
   accActive:v=>{const a=state.accounts.find(x=>x.id===v);a.active=!a.active;save();render()},
   naOpen:()=>{ui.newAcc={role:"worker",lang:"vi"};render()},
   naRole:v=>{ui.newAcc.name=$("#naName").value;ui.newAcc.pin=$("#naPin").value;ui.newAcc.role=v;render()},
@@ -86,6 +86,8 @@ function peKeep(){const a=$("#peIntro"),b=$("#peMemo"),c=$("#peId");if(a)ui.pe.i
 Object.assign(A,{
   tab:v=>{closeSheet();if(v==="settings")ui.setPage="main";go(v)},
   peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId),nid=ui.pe.id||s.id;
+    {const set=(k,v)=>{if(v)s[k]=v;else delete s[k]};set("birth",ui.pe.birth);set("src",ui.pe.src);set("firstMate",ui.pe.fm)}   // 현장 카드 머리(81)
+   
     if(nid!==s.id){if(state.sows.some(x=>x.id===nid)){toast("이미 있는 번호입니다");return}
       state.records.forEach(r=>{if(r.data&&r.data.sow===s.id)r.data.sow=nid});s.id=nid;ui.sowId=nid}
     s.breed=ui.pe.breed;s.baseParity=ui.pe.bp;if(ui.pe.intro)s.intro=ui.pe.intro;s.memo=(ui.pe.memo||"").trim();ui.pe=null;save();render();toast("기본 정보를 저장했습니다")}

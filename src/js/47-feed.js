@@ -4,10 +4,7 @@ const feedBag=f=>FARM.feed.bags.find(b=>b.feed===f);
 const feedBin=f=>FARM.feed.bins.find(b=>b.feed===f);
 function pigFeeds(day){return FARM.feed.piglet.filter(p=>day>=p.from&&day<p.to)}
 // 지금 하루 사용량(kg) 추정
-function feedUse(){const u={},U=FARM.feed.use,add=(f,n)=>u[f]=(u[f]||0)+n;
-  activeSows().forEach(s=>{const i=statusOf(s);add(i.stage==="포유"?"포유모돈":"임신모돈",i.stage==="포유"?U.포유모돈:U.임신모돈)});
-  liveBatches().forEach(b=>{const d=diff(b.k,REF),n=bHeads(b,Math.floor(d/7));pigFeeds(d).forEach(p=>add(p.feed,n*(U[p.feed]||0)))});
-  return u}
+
 // 재고 = 마지막 잔량 + 이후 입고 − 추정 사용
 function feedStock(f,use){const rs=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
   const base=[...rs].reverse().find(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량");if(!base)return {kg:null,use,days:null};

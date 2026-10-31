@@ -1,7 +1,5 @@
 /* ================= 동작 ================= */
 const A={
-  tab:(v)=>{closeSheet();go(v)},
-  goSettings:()=>go("settings"),
   goClose:(v)=>{tab="close";ui.closeDay=v;render();window.scrollTo(0,0)},
   sowFilter:(v)=>{ui.sf=v;go("sows")},
   input:(v,el)=>openInput(v,{sow:el.dataset.sow,date:el.dataset.date,batch:el.dataset.batch,vax:el.dataset.vax,item:el.dataset.item,vname:el.dataset.vname,round:el.dataset.round}),
@@ -28,8 +26,6 @@ const A={
     if(v==="임신"){const i=sowState(s);m+=` · 분만 예정 ${kDate(addDays(i.mate,CFG.gest))}`;if(wasGilt)m+=" · 모돈으로 편입"}
     toast(m);keepScroll(()=>{render();reopen()})},
   movein:(v)=>{moveSow(v,"분만사");keepScroll(()=>{render();reopen()})},
-  judge:(v)=>{const r=state.records.find(x=>x.id===v);if(r)openInput("폐사",{date:r.workDate,dec:null})},
-  // 입력 페이지
   fv:(v,el)=>{const I=ui.in,k=el.dataset.k;I.fv[k]=v;I.warn=null;
     if(I.type==="사료"&&k==="_lvl"){const b=feedBin(I.fv.kind),g=feedBag(I.fv.kind);I.fv.kg=b?Math.round(b.cap*({"¼":.25,"½":.5,"¾":.75,"가득":1}[v]||0)):g?parseInt(v)*g.kg:I.fv.kg;if(I.fv.mode==="입고"&&b)I.fv.mode="빈 잔량"}
     if(I.type==="폐사"&&k==="barn")I.fv.stage=FARM.stageOf[v]||"모돈";   // 돈사 → 단계 자동 (바꿀 수 있음)
@@ -50,18 +46,11 @@ const A={
   edit:(v)=>{const r=state.records.find(x=>x.id===v);if(!r)return;const I=ui.in;
     I.editId=v;I.date=r.workDate;I.fv={...defaults(r.type),...r.data};if(r.type==="도입")I.fv.sowid=r.data.sow;I.sel=r.data.sow&&FORMS[r.type].sow?[r.data.sow]:[];I.warn=null;render();window.scrollTo({top:0,behavior:"smooth"})},
   editCancel:()=>{const I=ui.in;I.editId=null;I.fv=defaults(I.type);I.sel=[];render()},
-  decNone:(v)=>{const r=state.records.find(x=>x.id===v);r.data.decision="none";save();render();toast("조치 필요 없음으로 기록했습니다")},
-  decNeed:(v)=>{const r=state.records.find(x=>x.id===v);ui.dec={id:v,acts:[...(REC[r.data.cause]||[])],when:"오늘 중",who:state.user,memo:""};render()},
   decAct:(v)=>{const D=ui.dec;D.memo=($("#decMemo")||{}).value||D.memo;D.acts=D.acts.includes(v)?D.acts.filter(a=>a!==v):[...D.acts,v];render()},
   decWhen:(v)=>{ui.dec.memo=($("#decMemo")||{}).value||ui.dec.memo;ui.dec.when=v;render()},
   decWho:(v)=>{ui.dec.memo=($("#decMemo")||{}).value||ui.dec.memo;ui.dec.who=v;render()},
   decCancel:()=>{ui.dec=null;render()},
   decReset:(v)=>{const r=state.records.find(x=>x.id===v);delete r.data.decision;save();render()},
-  decSave:()=>{const D=ui.dec,r=state.records.find(x=>x.id===D.id);if(!D.acts.length)return;
-    const due=D.when==="내일"?addDays(TODAY,1):D.when==="모레"?addDays(TODAY,2):TODAY;
-    const t={id:newId(),src:r.id,title:`${r.data.barn} ${r.data.stage} ${r.data.cause}`,acts:D.acts,due,who:D.who,memo:(($("#decMemo")||{}).value||"").trim(),createdAt:new Date().toISOString(),user:state.user};
-    state.tasks.push(t);r.data.decision=t.id;ui.dec=null;save();render();toast(`할 일에 추가했습니다 · ${D.when} · ${D.who}`)},
-  // 도태
   cullPlan:(v)=>{ui.cull={id:v,step:"plan",reason:CULL_REASONS[0],date:addDays(TODAY,7)};keepScroll(()=>openSowDetail(v))},
   cullReason:(v)=>{const d=$("#cullDate");if(d)ui.cull.date=d.value||ui.cull.date;ui.cull.reason=v;keepScroll(()=>openSowDetail(ui.cull.id))},
   cullPlanSave:(v)=>{const s=state.sows.find(x=>x.id===v),d=$("#cullDate");s.cullPlan={reason:ui.cull.reason,date:(d&&d.value)||ui.cull.date};ui.cull=null;save();render();keepScroll(()=>openSowDetail(v));toast("도태 계획을 저장했습니다. 예정일 7일 전부터 할 일에 나옵니다.")},

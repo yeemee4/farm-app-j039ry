@@ -51,15 +51,14 @@ function seedPost(){
   state.items.forEach(it=>state.records.push({id:newId(),type:"재고",workDate:d2,createdAt:new Date(toUTC(d2)+8*36e5).toISOString(),user:"김OO",data:{item:it.id,mode:"실사",qty:qty[it.id]}}));
 }
 const boardDate=()=>ui.boardDay||(new Date().getHours()>=18?addDays(TODAY,1):TODAY);
-function peKeep(){const a=$("#peIntro"),b=$("#peMemo");if(a)ui.pe.intro=a.value;if(b)ui.pe.memo=b.value}
+
 Object.assign(A,{
   sowRf:v=>{ui.sowRf=v;render()},
   editRec:v=>{const r=state.records.find(x=>x.id===v);if(!r)return;openInput(r.type,{date:r.workDate});A.edit(v)},
-  peOpen:()=>{const s=state.sows.find(x=>x.id===ui.sowId);ui.pe={breed:s.breed||"LYD",bp:s.baseParity,intro:s.intro||"",memo:s.memo||""};render()},
+  peOpen:()=>{const s=state.sows.find(x=>x.id===ui.sowId);ui.pe={breed:s.breed||"LYD",bp:s.baseParity,intro:s.intro||"",memo:s.memo||"",birth:s.birth||"",src:s.src||"",fm:s.firstMate||""};render()},   // birth·src·fm = 현장 카드 머리(81)
   peBreed:v=>{peKeep();ui.pe.breed=v;render()},
   pePar:v=>{peKeep();ui.pe.bp=Math.max(0,ui.pe.bp+Number(v));render()},
   peCancel:()=>{ui.pe=null;render()},
-  peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId);s.breed=ui.pe.breed;s.baseParity=ui.pe.bp;if(ui.pe.intro)s.intro=ui.pe.intro;s.memo=ui.pe.memo.trim();ui.pe=null;save();render();toast("기본 정보를 저장했습니다")},
   stMode:v=>{ui.st.mode=v;if(v!=="기간"&&ui.st.cmp==="none")ui.st.cmp="prev";render()},
   stNav:v=>{const S=ui.st,n=Number(v);
     if(S.mode==="월"){let [y,m]=S.ym.split("-").map(Number);m+=n;if(m<1){m=12;y--}if(m>12){m=1;y++}const ym=`${y}-${pad(m)}`;if(ym<=TODAY.slice(0,7))S.ym=ym}

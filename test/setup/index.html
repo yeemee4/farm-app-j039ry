@@ -1158,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 01:32";
+const BUILD_AT="11-01 01:36";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -1760,8 +1760,6 @@ let tt;function toast(m){$("#toastRoot").innerHTML=`<div class="toast" role="sta
 
 /* ================= 동작 ================= */
 const A={
-  tab:(v)=>{closeSheet();go(v)},
-  goSettings:()=>go("settings"),
   goClose:(v)=>{tab="close";ui.closeDay=v;render();window.scrollTo(0,0)},
   sowFilter:(v)=>{ui.sf=v;go("sows")},
   input:(v,el)=>openInput(v,{sow:el.dataset.sow,date:el.dataset.date,batch:el.dataset.batch,vax:el.dataset.vax,item:el.dataset.item,vname:el.dataset.vname,round:el.dataset.round}),
@@ -1788,8 +1786,6 @@ const A={
     if(v==="임신"){const i=sowState(s);m+=` · 분만 예정 ${kDate(addDays(i.mate,CFG.gest))}`;if(wasGilt)m+=" · 모돈으로 편입"}
     toast(m);keepScroll(()=>{render();reopen()})},
   movein:(v)=>{moveSow(v,"분만사");keepScroll(()=>{render();reopen()})},
-  judge:(v)=>{const r=state.records.find(x=>x.id===v);if(r)openInput("폐사",{date:r.workDate,dec:null})},
-  // 입력 페이지
   fv:(v,el)=>{const I=ui.in,k=el.dataset.k;I.fv[k]=v;I.warn=null;
     if(I.type==="사료"&&k==="_lvl"){const b=feedBin(I.fv.kind),g=feedBag(I.fv.kind);I.fv.kg=b?Math.round(b.cap*({"¼":.25,"½":.5,"¾":.75,"가득":1}[v]||0)):g?parseInt(v)*g.kg:I.fv.kg;if(I.fv.mode==="입고"&&b)I.fv.mode="빈 잔량"}
     if(I.type==="폐사"&&k==="barn")I.fv.stage=FARM.stageOf[v]||"모돈";   // 돈사 → 단계 자동 (바꿀 수 있음)
@@ -1810,18 +1806,11 @@ const A={
   edit:(v)=>{const r=state.records.find(x=>x.id===v);if(!r)return;const I=ui.in;
     I.editId=v;I.date=r.workDate;I.fv={...defaults(r.type),...r.data};if(r.type==="도입")I.fv.sowid=r.data.sow;I.sel=r.data.sow&&FORMS[r.type].sow?[r.data.sow]:[];I.warn=null;render();window.scrollTo({top:0,behavior:"smooth"})},
   editCancel:()=>{const I=ui.in;I.editId=null;I.fv=defaults(I.type);I.sel=[];render()},
-  decNone:(v)=>{const r=state.records.find(x=>x.id===v);r.data.decision="none";save();render();toast("조치 필요 없음으로 기록했습니다")},
-  decNeed:(v)=>{const r=state.records.find(x=>x.id===v);ui.dec={id:v,acts:[...(REC[r.data.cause]||[])],when:"오늘 중",who:state.user,memo:""};render()},
   decAct:(v)=>{const D=ui.dec;D.memo=($("#decMemo")||{}).value||D.memo;D.acts=D.acts.includes(v)?D.acts.filter(a=>a!==v):[...D.acts,v];render()},
   decWhen:(v)=>{ui.dec.memo=($("#decMemo")||{}).value||ui.dec.memo;ui.dec.when=v;render()},
   decWho:(v)=>{ui.dec.memo=($("#decMemo")||{}).value||ui.dec.memo;ui.dec.who=v;render()},
   decCancel:()=>{ui.dec=null;render()},
   decReset:(v)=>{const r=state.records.find(x=>x.id===v);delete r.data.decision;save();render()},
-  decSave:()=>{const D=ui.dec,r=state.records.find(x=>x.id===D.id);if(!D.acts.length)return;
-    const due=D.when==="내일"?addDays(TODAY,1):D.when==="모레"?addDays(TODAY,2):TODAY;
-    const t={id:newId(),src:r.id,title:`${r.data.barn} ${r.data.stage} ${r.data.cause}`,acts:D.acts,due,who:D.who,memo:(($("#decMemo")||{}).value||"").trim(),createdAt:new Date().toISOString(),user:state.user};
-    state.tasks.push(t);r.data.decision=t.id;ui.dec=null;save();render();toast(`할 일에 추가했습니다 · ${D.when} · ${D.who}`)},
-  // 도태
   cullPlan:(v)=>{ui.cull={id:v,step:"plan",reason:CULL_REASONS[0],date:addDays(TODAY,7)};keepScroll(()=>openSowDetail(v))},
   cullReason:(v)=>{const d=$("#cullDate");if(d)ui.cull.date=d.value||ui.cull.date;ui.cull.reason=v;keepScroll(()=>openSowDetail(ui.cull.id))},
   cullPlanSave:(v)=>{const s=state.sows.find(x=>x.id===v),d=$("#cullDate");s.cullPlan={reason:ui.cull.reason,date:(d&&d.value)||ui.cull.date};ui.cull=null;save();render();keepScroll(()=>openSowDetail(v));toast("도태 계획을 저장했습니다. 예정일 7일 전부터 할 일에 나옵니다.")},
@@ -2695,10 +2684,7 @@ const feedBag=f=>FARM.feed.bags.find(b=>b.feed===f);
 const feedBin=f=>FARM.feed.bins.find(b=>b.feed===f);
 function pigFeeds(day){return FARM.feed.piglet.filter(p=>day>=p.from&&day<p.to)}
 // 지금 하루 사용량(kg) 추정
-function feedUse(){const u={},U=FARM.feed.use,add=(f,n)=>u[f]=(u[f]||0)+n;
-  activeSows().forEach(s=>{const i=statusOf(s);add(i.stage==="포유"?"포유모돈":"임신모돈",i.stage==="포유"?U.포유모돈:U.임신모돈)});
-  liveBatches().forEach(b=>{const d=diff(b.k,REF),n=bHeads(b,Math.floor(d/7));pigFeeds(d).forEach(p=>add(p.feed,n*(U[p.feed]||0)))});
-  return u}
+
 // 재고 = 마지막 잔량 + 이후 입고 − 추정 사용
 function feedStock(f,use){const rs=recsOf("사료").filter(r=>r.data.kind===f).sort((a,b)=>a.workDate.localeCompare(b.workDate));
   const base=[...rs].reverse().find(r=>r.data.mode==="빈 잔량"||r.data.mode==="잔량");if(!base)return {kg:null,use,days:null};
@@ -3157,15 +3143,14 @@ function seedPost(){
   state.items.forEach(it=>state.records.push({id:newId(),type:"재고",workDate:d2,createdAt:new Date(toUTC(d2)+8*36e5).toISOString(),user:"김OO",data:{item:it.id,mode:"실사",qty:qty[it.id]}}));
 }
 const boardDate=()=>ui.boardDay||(new Date().getHours()>=18?addDays(TODAY,1):TODAY);
-function peKeep(){const a=$("#peIntro"),b=$("#peMemo");if(a)ui.pe.intro=a.value;if(b)ui.pe.memo=b.value}
+
 Object.assign(A,{
   sowRf:v=>{ui.sowRf=v;render()},
   editRec:v=>{const r=state.records.find(x=>x.id===v);if(!r)return;openInput(r.type,{date:r.workDate});A.edit(v)},
-  peOpen:()=>{const s=state.sows.find(x=>x.id===ui.sowId);ui.pe={breed:s.breed||"LYD",bp:s.baseParity,intro:s.intro||"",memo:s.memo||""};render()},
+  peOpen:()=>{const s=state.sows.find(x=>x.id===ui.sowId);ui.pe={breed:s.breed||"LYD",bp:s.baseParity,intro:s.intro||"",memo:s.memo||"",birth:s.birth||"",src:s.src||"",fm:s.firstMate||""};render()},   // birth·src·fm = 현장 카드 머리(81)
   peBreed:v=>{peKeep();ui.pe.breed=v;render()},
   pePar:v=>{peKeep();ui.pe.bp=Math.max(0,ui.pe.bp+Number(v));render()},
   peCancel:()=>{ui.pe=null;render()},
-  peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId);s.breed=ui.pe.breed;s.baseParity=ui.pe.bp;if(ui.pe.intro)s.intro=ui.pe.intro;s.memo=ui.pe.memo.trim();ui.pe=null;save();render();toast("기본 정보를 저장했습니다")},
   stMode:v=>{ui.st.mode=v;if(v!=="기간"&&ui.st.cmp==="none")ui.st.cmp="prev";render()},
   stNav:v=>{const S=ui.st,n=Number(v);
     if(S.mode==="월"){let [y,m]=S.ym.split("-").map(Number);m+=n;if(m<1){m=12;y--}if(m>12){m=1;y++}const ym=`${y}-${pad(m)}`;if(ym<=TODAY.slice(0,7))S.ym=ym}
@@ -4533,7 +4518,6 @@ function vCal(){const {ev,w0}=calEvents(),O=ui.calOpen;
 Object.assign(A,{
   myTodo:v=>{ui.myTodo=v==="1";render()},
   hoAdd:()=>{const v=($("#hoText").value||"").trim();if(!v)return;(state.handover=state.handover||[]).push({id:newId(),text:v,due:addDays(TODAY,1),user:state.user,at:new Date().toISOString()});save();render();toast(t("내일 할 일로 넘겼습니다"))},
-  cullR:(v,el)=>{const r=state.cullRule=state.cullRule||{};r[v]=Math.max(0,cullRule()[v]+Number(el.dataset.k));save();render()},
   calOpen:v=>{ui.calOpen=ui.calOpen===v?null:v;render()}
 });
 /* ===== PC 화면 (설정 › 화면 배치 · 상단 📱/🖥 버튼, 이 기기에만 저장) =====
@@ -4574,7 +4558,8 @@ Object.assign(A,{
   loginLang:v=>{ui.loginLang=v;render()},
   loginPick:v=>{ui.loginId=v;ui.pin="";ui.pinErr=false;render()},
   loginBack:()=>{ui.loginId=null;ui.pin="";ui.pinErr=false;render()},
-  pinKey:v=>{const a=state.accounts.find(x=>x.id===ui.loginId);ui.pinErr=false;ui.pin=(ui.pin||"")+v;
+  pinKey:v=>{if(SY.url)return syPinKey(v);   // 서버 연결 중이면 서버에서 확인(90)
+    const a=state.accounts.find(x=>x.id===ui.loginId);ui.pinErr=false;ui.pin=(ui.pin||"")+v;
     if(ui.pin.length>=a.pin.length){if(ui.pin===a.pin){ME=a.id;try{localStorage.setItem(SKEY,ME)}catch(e){}ui.pin="";ui.loginId=null;tab="home";ui.setPage="main";render();window.scrollTo(0,0)}else{ui.pin="";ui.pinErr=true}}
     if(!me())render()},
   pinDel:()=>{ui.pin=(ui.pin||"").slice(0,-1);render()},
@@ -4586,7 +4571,6 @@ Object.assign(A,{
   goSettings:()=>{ui.setPage="main";go("settings")},
   accRole:v=>{const a=state.accounts.find(x=>x.id===v);if(a.id===ME){toast("내 권한은 바꿀 수 없습니다");return}const o=["worker","leader","admin"];a.role=o[(o.indexOf(a.role)+1)%3];save();render()},
   accLang:v=>{const a=state.accounts.find(x=>x.id===v),o=LANGS.map(l=>l[0]);a.lang=o[(o.indexOf(a.lang)+1)%o.length];save();render()},
-  accPin:v=>{const a=state.accounts.find(x=>x.id===v);a.pin="0000";save();render();toast(`${a.name} PIN을 0000으로 초기화했습니다`)},
   accActive:v=>{const a=state.accounts.find(x=>x.id===v);a.active=!a.active;save();render()},
   naOpen:()=>{ui.newAcc={role:"worker",lang:"vi"};render()},
   naRole:v=>{ui.newAcc.name=$("#naName").value;ui.newAcc.pin=$("#naPin").value;ui.newAcc.role=v;render()},
@@ -4648,6 +4632,8 @@ function peKeep(){const a=$("#peIntro"),b=$("#peMemo"),c=$("#peId");if(a)ui.pe.i
 Object.assign(A,{
   tab:v=>{closeSheet();if(v==="settings")ui.setPage="main";go(v)},
   peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId),nid=ui.pe.id||s.id;
+    {const set=(k,v)=>{if(v)s[k]=v;else delete s[k]};set("birth",ui.pe.birth);set("src",ui.pe.src);set("firstMate",ui.pe.fm)}   // 현장 카드 머리(81)
+   
     if(nid!==s.id){if(state.sows.some(x=>x.id===nid)){toast("이미 있는 번호입니다");return}
       state.records.forEach(r=>{if(r.data&&r.data.sow===s.id)r.data.sow=nid});s.id=nid;ui.sowId=nid}
     s.breed=ui.pe.breed;s.baseParity=ui.pe.bp;if(ui.pe.intro)s.intro=ui.pe.intro;s.memo=(ui.pe.memo||"").trim();ui.pe=null;save();render();toast("기본 정보를 저장했습니다")}
@@ -4723,14 +4709,10 @@ function vSow(){
   return head+seg+loc+vSowCard(s)+`<div class="acts">${ed}</div>`+form;
 }
 /* 기본 정보에 생년월일·구입처·초교배예정일 추가 */
-const _peOpen0=A.peOpen,_peSave0=A.peSave;
 Object.assign(A,{
   sowView:v=>{try{localStorage.setItem("farm-sowcard",v)}catch(e){}ui.pe=null;render()},
   scPg:v=>{const [id,p]=v.split("|");ui.scPg={id,p:+p};render()},
-  peOpen:()=>{_peOpen0();const s=state.sows.find(x=>x.id===ui.sowId);Object.assign(ui.pe,{birth:s.birth||"",src:s.src||"",fm:s.firstMate||""});render()},
   scEdit:()=>A.peOpen(),
-  peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId),p=ui.pe;if(!s||!p)return;
-    const set=(k,v)=>{if(v)s[k]=v;else delete s[k]};set("birth",p.birth);set("src",p.src);set("firstMate",p.fm);_peSave0()}
 });
 /* ================= v0.5 · 1월 시뮬레이션 개선 (2026-10-30) ================= */
 
@@ -5252,8 +5234,8 @@ addEventListener("online",()=>{if(syOn())syFlush().then(()=>syPull())});
 AFTER_RENDER.push(syBadge);
 
 // ---- 로그인: 서버 연결 중이면 PIN 을 서버에서 확인 (한 번 성공한 계정은 오프라인에서도 이 휴대폰에서 로그인) ----
-const _pinKey0=A.pinKey;
-A.pinKey=v=>{if(!SY.url)return _pinKey0(v);const a=state.accounts.find(x=>x.id===ui.loginId);if(!a)return;ui.pinErr=false;ui.pin=(ui.pin||"")+v;
+// 서버 연결 중 PIN: 서버에서 확인(80 pinKey 가 SY.url 이면 이쪽으로)
+function syPinKey(v){const a=state.accounts.find(x=>x.id===ui.loginId);if(!a)return;ui.pinErr=false;ui.pin=(ui.pin||"")+v;
   const need=a.pinLen||(a.pin||"").length||4;if(ui.pin.length<need){render();return}
   const pin=ui.pin,ph=pinHash(a.id,pin);ui.pin="";
   const ok=tok=>{ME=a.id;try{localStorage.setItem(SKEY,ME)}catch(e){}SY.ph[a.id]=ph;if(tok)SY.token=tok;SY.acc=a.id;sySave();ui.loginId=null;tab="home";ui.setPage="main";render();window.scrollTo(0,0);if(syOn())syFlush().then(()=>syPull())};

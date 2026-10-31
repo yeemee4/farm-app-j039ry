@@ -68,12 +68,8 @@ function vSow(){
   return head+seg+loc+vSowCard(s)+`<div class="acts">${ed}</div>`+form;
 }
 /* 기본 정보에 생년월일·구입처·초교배예정일 추가 */
-const _peOpen0=A.peOpen,_peSave0=A.peSave;
 Object.assign(A,{
   sowView:v=>{try{localStorage.setItem("farm-sowcard",v)}catch(e){}ui.pe=null;render()},
   scPg:v=>{const [id,p]=v.split("|");ui.scPg={id,p:+p};render()},
-  peOpen:()=>{_peOpen0();const s=state.sows.find(x=>x.id===ui.sowId);Object.assign(ui.pe,{birth:s.birth||"",src:s.src||"",fm:s.firstMate||""});render()},
   scEdit:()=>A.peOpen(),
-  peSave:()=>{peKeep();const s=state.sows.find(x=>x.id===ui.sowId),p=ui.pe;if(!s||!p)return;
-    const set=(k,v)=>{if(v)s[k]=v;else delete s[k]};set("birth",p.birth);set("src",p.src);set("firstMate",p.fm);_peSave0()}
 });

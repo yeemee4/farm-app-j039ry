@@ -99,8 +99,8 @@ addEventListener("online",()=>{if(syOn())syFlush().then(()=>syPull())});
 AFTER_RENDER.push(syBadge);
 
 // ---- 로그인: 서버 연결 중이면 PIN 을 서버에서 확인 (한 번 성공한 계정은 오프라인에서도 이 휴대폰에서 로그인) ----
-const _pinKey0=A.pinKey;
-A.pinKey=v=>{if(!SY.url)return _pinKey0(v);const a=state.accounts.find(x=>x.id===ui.loginId);if(!a)return;ui.pinErr=false;ui.pin=(ui.pin||"")+v;
+// 서버 연결 중 PIN: 서버에서 확인(80 pinKey 가 SY.url 이면 이쪽으로)
+function syPinKey(v){const a=state.accounts.find(x=>x.id===ui.loginId);if(!a)return;ui.pinErr=false;ui.pin=(ui.pin||"")+v;
   const need=a.pinLen||(a.pin||"").length||4;if(ui.pin.length<need){render();return}
   const pin=ui.pin,ph=pinHash(a.id,pin);ui.pin="";
   const ok=tok=>{ME=a.id;try{localStorage.setItem(SKEY,ME)}catch(e){}SY.ph[a.id]=ph;if(tok)SY.token=tok;SY.acc=a.id;sySave();ui.loginId=null;tab="home";ui.setPage="main";render();window.scrollTo(0,0);if(syOn())syFlush().then(()=>syPull())};
