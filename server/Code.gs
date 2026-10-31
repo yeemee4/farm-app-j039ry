@@ -10,7 +10,7 @@
  *   sessions : token | acc | farm | role | at
  *   log      : at | acc | action | n
  */
-var VER = 1;
+var VER = 3;
 var SS = function () { return SpreadsheetApp.getActive(); };
 var HEAD = {
   data: ["farm", "k", "id", "j", "u", "del", "by", "at"],
@@ -24,6 +24,22 @@ function sh(name) {
   return s;
 }
 function rows(name) { var s = sh(name), n = s.getLastRow(); return n < 2 ? [] : s.getRange(2, 1, n - 1, HEAD[name].length).getValues(); }
+// 시트 칸 하나는 5만 자까지 → 긴 j 는 9번째 칸부터 이어서 저장(앞에 "~" 를 붙여 숫자·수식으로 바뀌지 않게)
+var CH = 45000;
+function dataRows() {
+  var s = sh("data"), n = s.getLastRow(), w = Math.max(8, s.getLastColumn()); if (n < 2) return [];
+  return s.getRange(2, 1, n - 1, w).getValues().map(function (r) {
+    var row = r.slice(0, 8), more = r.slice(8).filter(function (x) { return x !== ""; });
+    if (more.length) row[3] = String(row[3]) + more.map(function (x) { return String(x).slice(1); }).join("");
+    return row;
+  });
+}
+function cells(row, w) {
+  var j = row[3], out = row.slice(0, 8);
+  if (typeof j === "string" && j.length > CH) { out[3] = j.slice(0, CH); for (var i = CH; i < j.length; i += CH) out.push("~" + j.slice(i, i + CH)); }
+  while (out.length < w) out.push("");
+  return out;
+}
 function out(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 function nowIso() { return new Date().toISOString(); }
 function props() { return PropertiesService.getScriptProperties(); }
@@ -108,7 +124,7 @@ var API = {
     var S = session(q.token); if (!S) return { ok: false, err: "auth" };
     var R = (q.rows || []).filter(function (r) { return r.k && r.id && canFarm(S, r.farm); });
     if (!R.length) return { ok: true, n: 0, cursor: Number(props().getProperty("SEQ") || 0) };
-    var s = sh("data"), D = rows("data"), idx = {};
+    var s = sh("data"), D = dataRows(), idx = {};
     D.forEach(function (r, i) { idx[r[0] + "|" + r[1] + "|" + r[2]] = i; });
     var base = nextSeq(R.length), at = nowIso(), app = [], msgs = [];
     R.forEach(function (r, n) {
@@ -118,8 +134,11 @@ var API = {
       if (r.n && !r.del) msgs.push(r.n);
     });
     // 바뀐 기존 행만 다시 쓰기 · 새 행은 한 번에 붙이기
-    D.forEach(function (r, i) { if (r.dirty) s.getRange(i + 2, 1, 1, 8).setValues([r.slice(0, 8)]); });
-    if (app.length) s.getRange(s.getLastRow() + 1, 1, app.length, 8).setValues(app);
+    var W = Math.max(8, s.getLastColumn());
+    D.concat(app).forEach(function (r) { if (r.dirty || app.indexOf(r) >= 0) W = Math.max(W, cells(r, 0).length); });
+    if (W > s.getMaxColumns()) s.insertColumnsAfter(s.getMaxColumns(), W - s.getMaxColumns());
+    D.forEach(function (r, i) { if (r.dirty) s.getRange(i + 2, 1, 1, W).setValues([cells(r, W)]); });
+    if (app.length) s.getRange(s.getLastRow() + 1, 1, app.length, W).setValues(app.map(function (r) { return cells(r, W); }));
     if (msgs.length) discord(msgs);
     logA(S.acc, "push", R.length);
     return { ok: true, n: R.length, cursor: base + R.length };
@@ -130,7 +149,7 @@ var API = {
     var S = session(q.token); if (!S) return { ok: false, err: "auth" };
     var since = Number(q.since || 0), farm = q.farm;
     if (!canFarm(S, farm)) return { ok: false, err: "farm" };
-    var L = rows("data").filter(function (r) { return r[0] === farm && Number(r[4]) > since; })
+    var L = dataRows().filter(function (r) { return r[0] === farm && Number(r[4]) > since; })
       .map(function (r) { return { k: r[1], id: String(r[2]), j: r[3], u: Number(r[4]), del: Number(r[5]) === 1, by: r[6] }; });
     var acc = accList().map(pubAcc);
     return { ok: true, rows: L, cursor: Number(props().getProperty("SEQ") || 0), accounts: acc, discord: !!props().getProperty("DISCORD") };
@@ -165,7 +184,7 @@ function reguTick() { reguCheck(new Date()); }
 function reguCheck(now) {
   var day = Utilities.formatDate(now, "Asia/Seoul", "yyyy-MM-dd"), hm = Utilities.formatDate(now, "Asia/Seoul", "HH:mm");
   var mins = function (x) { var p = String(x).split(":"); return Number(p[0]) * 60 + Number(p[1]); };
-  var recs = rows("data").filter(function (r) { return r[1] === "rec" && Number(r[5]) !== 1; })
+  var recs = dataRows().filter(function (r) { return r[1] === "rec" && Number(r[5]) !== 1; })
     .map(function (r) { try { return typeof r[3] === "string" ? JSON.parse(r[3]) : null; } catch (e) { return null; } }).filter(Boolean);
   var fed = {}; recs.forEach(function (r) { if (r.type === "레규급여" && r.workDate === day) fed[r.data.batch] = 1; });
   var p = props(), msgs = [];
