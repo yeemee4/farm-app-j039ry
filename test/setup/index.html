@@ -829,6 +829,11 @@ body:not(.mode-setup) .su-dock{bottom:calc(64px + env(safe-area-inset-bottom,0px
 .br-cycle b{font-size:22px;font-weight:800}.br-cycle span{font-size:12px;color:var(--muted);white-space:nowrap}.br-cycle button.on{border-color:var(--accent);background:var(--accent-soft)}
 .linkbtn{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;padding:0;cursor:pointer}
 #reguBand{display:block;width:100%;border:0;background:var(--red);color:#fff;font:700 14px/1.3 var(--body,inherit);padding:10px 14px;text-align:left;cursor:pointer}
+/* 아래 고정 입력 칸 접기 */
+.dock-hd::after{content:"";display:block;clear:both}
+.dock-tg{float:right;margin:-4px 0 0 8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 12px;font:600 13px system-ui,sans-serif}
+.dock.hid>:not(.dock-hd){display:none!important}.dock.hid{padding-bottom:10px}
+body:has(.dock) .tagbtn{bottom:auto;top:calc(110px + env(safe-area-inset-top,0px))}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1153,7 +1158,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="10-31 15:04";
+const BUILD_AT="10-31 15:20";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER="v0.6";
@@ -5412,6 +5417,13 @@ function alarmTestBox(){const T=(state.alarm||{}).test,on=T&&T.day===TODAY;
   <div class="setrow"><span>${t("보낼 시각")}</span><input id="alAt" type="time" value="${on?T.at:"11:45"}"></div>
   <button class="act pri" type="button" data-a="alTest">${on?t("다시 예약"):t("시험 예약")}</button> ${on?`<button class="act" type="button" data-a="alTestOff">${t("시험 끄기")}</button> <b>${t("예약됨")} ${T.at}</b>`:""}</div>`}
 const _vSyncSet91=vSyncSet;vSyncSet=function(){return _vSyncSet91()+(can("admin")&&SY.token?alarmTestBox():"")};
+// ---- 입력 화면 아래 고정 칸(.dock) 접기/펴기: 화면을 가릴 때 머리줄만 남김 · 이 휴대폰에 기억 ----
+let dockHid=(()=>{try{return localStorage.getItem(KEY+"-dockhid")==="1"}catch(e){return false}})();
+A.dockTg=()=>{dockHid=!dockHid;try{localStorage.setItem(KEY+"-dockhid",dockHid?"1":"")}catch(e){}dockApply()};
+function dockApply(){document.querySelectorAll(".dock").forEach(d=>{d.classList.toggle("hid",dockHid);const h=d.querySelector(".dock-hd");if(!h)return;
+  let b=h.querySelector(".dock-tg");if(!b){b=document.createElement("button");b.type="button";b.className="dock-tg";b.dataset.a="dockTg";h.appendChild(b)}
+  b.textContent=dockHid?"▲ "+t("펼치기"):"▼ "+t("접기")})}
+const _render91d=render;render=function(){const r=_render91d.apply(this,arguments);try{dockApply()}catch(e){}return r};
 /* ================= 입장 키 (링크를 받은 사람만) ================= */
 const GATE="cbfad02f9ed2a8d1e08d8f74f5303e9eb93637d47f82ab6f1c15871cf8dd0481";
 async function sha(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}

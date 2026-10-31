@@ -44,3 +44,10 @@ function alarmTestBox(){const T=(state.alarm||{}).test,on=T&&T.day===TODAY;
   <div class="setrow"><span>${t("보낼 시각")}</span><input id="alAt" type="time" value="${on?T.at:"11:45"}"></div>
   <button class="act pri" type="button" data-a="alTest">${on?t("다시 예약"):t("시험 예약")}</button> ${on?`<button class="act" type="button" data-a="alTestOff">${t("시험 끄기")}</button> <b>${t("예약됨")} ${T.at}</b>`:""}</div>`}
 const _vSyncSet91=vSyncSet;vSyncSet=function(){return _vSyncSet91()+(can("admin")&&SY.token?alarmTestBox():"")};
+// ---- 입력 화면 아래 고정 칸(.dock) 접기/펴기: 화면을 가릴 때 머리줄만 남김 · 이 휴대폰에 기억 ----
+let dockHid=(()=>{try{return localStorage.getItem(KEY+"-dockhid")==="1"}catch(e){return false}})();
+A.dockTg=()=>{dockHid=!dockHid;try{localStorage.setItem(KEY+"-dockhid",dockHid?"1":"")}catch(e){}dockApply()};
+function dockApply(){document.querySelectorAll(".dock").forEach(d=>{d.classList.toggle("hid",dockHid);const h=d.querySelector(".dock-hd");if(!h)return;
+  let b=h.querySelector(".dock-tg");if(!b){b=document.createElement("button");b.type="button";b.className="dock-tg";b.dataset.a="dockTg";h.appendChild(b)}
+  b.textContent=dockHid?"▲ "+t("펼치기"):"▼ "+t("접기")})}
+const _render91d=render;render=function(){const r=_render91d.apply(this,arguments);try{dockApply()}catch(e){}return r};
