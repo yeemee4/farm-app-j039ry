@@ -90,7 +90,15 @@ var API = {
   login: function (q) {
     var a = accList().filter(function (x) { return x.id === q.acc; })[0];
     if (!a || !a.active) return { ok: false, err: "no account" };
-    if (!q.ph || a.ph !== q.ph) { logA(q.acc, "login-fail"); return { ok: false, err: "pin" }; }
+    // PIN 대입 막기: 5번 틀리면 그 계정 15분 잠금 + 디스코드 경고
+    var P = props(), fk = "fail|" + a.id, F = JSON.parse(P.getProperty(fk) || '{"n":0,"until":0}');
+    if (F.until > Date.now()) return { ok: false, err: "locked", min: Math.ceil((F.until - Date.now()) / 60000) };
+    if (!q.ph || a.ph !== q.ph) {
+      logA(q.acc, "login-fail"); F.n++;
+      if (F.n >= 5) { F = { n: 0, until: Date.now() + 15 * 60000 }; discord(["⚠ [" + (a.farm || "") + "] " + a.name + " 계정 PIN 5번 틀림 → 15분 잠금"]); }
+      P.setProperty(fk, JSON.stringify(F)); return { ok: false, err: "pin" };
+    }
+    if (F.n) P.deleteProperty(fk);
     var tk = newToken(), farm = a.role === "admin" ? "*" : (a.farm || q.farm);
     sh("sessions").appendRow([tk, a.id, farm, a.role, nowIso()]);
     logA(a.id, "login");

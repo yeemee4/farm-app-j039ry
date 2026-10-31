@@ -95,7 +95,7 @@ A.pinKey=v=>{if(!SY.url)return _pinKey0(v);const a=state.accounts.find(x=>x.id==
   const pin=ui.pin,ph=pinHash(a.id,pin);ui.pin="";
   const ok=tok=>{ME=a.id;try{localStorage.setItem(SKEY,ME)}catch(e){}SY.ph[a.id]=ph;if(tok)SY.token=tok;SY.acc=a.id;sySave();ui.loginId=null;tab="home";ui.setPage="main";render();window.scrollTo(0,0);if(syOn())syFlush().then(()=>syPull())};
   if(!navigator.onLine&&SY.ph[a.id]===ph){ok(null);return}
-  syCall({a:"login",acc:a.id,ph,farm:syFarm()}).then(r=>{if(r.ok)ok(r.token);else{ui.pinErr=true;render()}}).catch(()=>{if(SY.ph[a.id]===ph)ok(null);else{ui.pinErr=true;toast(t("서버에 연결할 수 없습니다. 이 휴대폰에서 처음 로그인하는 계정은 인터넷이 필요합니다."));render()}})};
+  syCall({a:"login",acc:a.id,ph,farm:syFarm()}).then(r=>{if(r.ok)ok(r.token);else{if(r.err==="locked")toast(t("PIN 을 5번 틀려 잠겼습니다")+` · ${r.min}${t("분 뒤 다시")}`);ui.pinErr=true;render()}}).catch(()=>{if(SY.ph[a.id]===ph)ok(null);else{ui.pinErr=true;toast(t("서버에 연결할 수 없습니다. 이 휴대폰에서 처음 로그인하는 계정은 인터넷이 필요합니다."));render()}})};
 
 // ---- 설정 › 서버 연결 ----
 function vSyncSet(){const n=syPending(),me0=me();
@@ -115,7 +115,7 @@ function vSyncSet(){const n=syPending(),me0=me();
 Object.assign(A,{
   syHello:async()=>{const u=($("#syUrl").value||"").trim();if(!/^(https:\/\/script\.google(usercontent)?\.com\/|http:\/\/localhost:)/.test(u)){ui.syMsg={t:t("Apps Script 웹 앱 주소(https://script.google.com/…/exec)를 넣어 주세요."),bad:1};render();return}
     SY.url=u;sySave();try{const r=await syCall({a:"hello"});ui.syHello=r;ui.syMsg={t:r.empty?t("연결됨 · 서버가 비어 있음(처음 설치)"):t("연결됨 · 기록이 있는 서버")};}catch(e){ui.syMsg={t:t("연결 실패")+": "+e.message,bad:1}}render()},
-  syOff:()=>{if(!confirm(t("서버 연결을 끊을까요? 이 휴대폰의 기록은 그대로 남습니다.")))return;SY={snap:{rec:{},sow:{},key:{}},out:{},ph:{}};sySave();ui.syHello=null;ui.syMsg=null;render()},
+  syOff:()=>{if(!confirm(t("서버 연결을 끊을까요? 이 휴대폰의 기록은 그대로 남습니다.")))return;try{localStorage.setItem(SYNC_KEY+"-noauto","1")}catch(e){}SY={snap:{rec:{},sow:{},key:{}},out:{},ph:{}};sySave();ui.syHello=null;ui.syMsg=null;render()},
   syInit:async()=>{const a=me();if(!a||a.role!=="admin"||!a.pin||a.pin.includes(PIN_MASK)){toast(t("대표 계정으로 로그인한 상태에서 하세요"));return}
     // 공개 저장소에 적힌 기본 PIN 그대로면 서버를 열지 않음 (누구나 로그인할 수 있으므로)
     const DEF=["9368","1234","1111","2222","3333","4444","0000"],weak=state.accounts.filter(x=>x.active!==false&&DEF.includes(x.pin));
@@ -174,3 +174,8 @@ A.syInvite=()=>{const u=syInviteUrl();try{navigator.clipboard.writeText(u)}catch
   if(window.QRCode)draw();else{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";sc.onload=draw;sc.onerror=()=>{const q=$("#syQr");if(q)q.textContent=t("QR 을 불러오지 못했습니다(인터넷 확인). 링크는 복사되었습니다.")};document.head.appendChild(sc)}};
 A.syInvCopy=()=>{try{navigator.clipboard.writeText(syInviteUrl());toast(t("복사했습니다"))}catch(e){prompt(t("복사하세요"),syInviteUrl())}};
 const _vSyncSet90i=vSyncSet;vSyncSet=function(){const h=_vSyncSet90i();return can("admin")&&SY.url&&SY.token?h.replace(`<div class="sec-t">${t("상태")}</div>`,`<div class="sec-t">${t("다른 휴대폰 초대")}</div><div class="panel"><p class="sow-meta">${t("링크나 QR 로 연결하면 계정·PIN 만 넣으면 됩니다.")}</p><button class="act pri" type="button" data-a="syInvite">📲 ${t("초대 링크·QR")}</button></div><div class="sec-t">${t("상태")}</div>`):h};
+
+// ---- 기본 서버 주소: 처음 여는 휴대폰은 이 서버에 자동 연결(초대 링크와 같은 흐름) · 서버는 PIN 5번 틀리면 15분 잠금 · '연결 끊기' 한 휴대폰은 다시 자동 연결 안 함 ----
+const SY_DEFAULT=ENV==="test"?"https://script.google.com/macros/s/AKfycbwUKfh-wktSt7jGSdZzTUsVqWKtyotbpZetw3THeBdFOTtzc2OuKCe6eCPugxNUSRL-og/exec":"";
+(()=>{let no=null;try{no=localStorage.getItem(SYNC_KEY+"-noauto")}catch(e){}
+  if(SY_DEFAULT&&!SY.url&&!no&&location.protocol!=="file:")try{if(!sessionStorage.getItem("farm-join"))sessionStorage.setItem("farm-join",SY_DEFAULT)}catch(e){}})();
