@@ -200,3 +200,6 @@ body.tv .d-wk h4{font-size:1.7vh}body.tv .d-wk b{font-size:1.8vh}body.tv .d-wk s
 .d-ctl .d-pg{min-width:3.2em}.d-ctl .d-pg.on{background:var(--accent);color:#fff}
 body.tv .d-bin svg{max-width:6vh}
 .d-wk>div{flex-direction:row;align-items:baseline;gap:8px;padding:3px 0}.d-wk b{flex:none;min-width:5.2em}.d-wk span{white-space:nowrap;overflow:hidden;min-width:0}
+/* 동기화 그룹(레규) 카드 */
+.dk-regu .rg-bars{gap:4px;align-content:start}.dk-regu .rg-h{font-weight:700;margin-top:6px}.dk-regu .d-mu{font-size:12.5px;line-height:1.45}
+body.tv .dk-regu .rg-h{font-size:18px}body.tv .dk-regu .d-mu{font-size:14px}
