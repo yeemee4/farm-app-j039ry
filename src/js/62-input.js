@@ -111,3 +111,10 @@ function sowPickGroups(c){const I=ui.in,q=I.q.trim(),fold=I.fold=I.fold||{},all=
     const open=fold[l]!==undefined?!fold[l]:l===DONE?false:(!!q||c.list.length<=24||hasSel||(sub&&tg>0));
     return `<div class="spg"><button type="button" class="spg-h ${open?"open":""}" data-a="pickFold" data-v="${esc(l)}" data-open="${open?1:0}"><span>${open?"▾":"▸"} ${esc(t(l))}</span><small>${sub&&tg?`${t("대상")} ${tg} · `:""}${L.length}${t("두")}</small></button>${open?`<div class="sowpick sp4">${L.map(x=>`<button type="button" class="${I.sel.includes(x.s.id)?"on":""} ${x.done?"done":""} ${x.target&&sub?"tg":""}" data-a="pick" data-v="${x.s.id}"><b>${x.s.id}</b><small>${x.i.sub}${x.i.heat?" ♦":""}</small></button>`).join("")}</div>`:""}</div>`}).join("")}
 Object.assign(A,{pickFold:(v,el)=>{const f=ui.in.fold=ui.in.fold||{};f[v]=el.dataset.open==="1";render()}});
+// ---- 입력 화면 아래 고정 칸(.dock) 접기/펴기: 화면을 가릴 때 머리줄만 남김 · 이 휴대폰에 기억 ----
+let dockHid=(()=>{try{return localStorage.getItem(KEY+"-dockhid")==="1"}catch(e){return false}})();
+A.dockTg=()=>{dockHid=!dockHid;try{localStorage.setItem(KEY+"-dockhid",dockHid?"1":"")}catch(e){}dockApply()};
+function dockApply(){document.querySelectorAll(".dock").forEach(d=>{d.classList.toggle("hid",dockHid);const h=d.querySelector(".dock-hd");if(!h)return;
+  let b=h.querySelector(".dock-tg");if(!b){b=document.createElement("button");b.type="button";b.className="dock-tg";b.dataset.a="dockTg";h.appendChild(b)}
+  b.textContent=dockHid?"▲ "+t("펼치기"):"▼ "+t("접기")})}
+const _render62d=render;render=function(){const r=_render62d.apply(this,arguments);try{dockApply()}catch(e){}return r};

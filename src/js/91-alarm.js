@@ -8,7 +8,7 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   let T=[];try{T=buildTodos().filter(x=>x.items&&x.items.length)}catch(e){}
   add("todo",ALARM_T.todo,T.length?"📋 오늘 할 일\n"+T.map(x=>`• ${t(x.t)} ${x.items.length}건: ${list(x.items.map(sh).filter(Boolean))}`).join("\n"):"","📋 오늘 할 일\n• 교배 대상 2건: 6-001, 6-002");
   // 2 아침: 날씨 경고 (오늘·내일)
-  let w="";try{w=[wxAlerts(0),wxAlerts(1)].filter(Boolean).join(" / ")}catch(e){}
+  let w0="",w1="";try{w0=wxAlerts(0);w1=wxAlerts(1)}catch(e){}const w=[w0,w1].filter(Boolean).join(" / ");
   add("wx",ALARM_T.wx,w?"🌡 날씨 경고: "+w:"","🌡 날씨 경고: 내일 최저 −2℃ 영하 진입 · 물 얼지 않게 점검");
   // 3 정액 주문 (마감 16:00)
   let so={};try{so=semenOrder()}catch(e){}
@@ -17,7 +17,6 @@ function alarmPlan(){const A=state.alarm||{},T0=A.test&&A.test.day===TODAY?A.tes
   // 4 저녁: 내일 일정 (분만·이유·교배·임신확인·백신·입식)
   const tm=addDays(TODAY,1);let ev=[];try{ev=(calEvents(tm).ev||{})[tm]||[]}catch(e){}
   const g={};ev.forEach(([k,v])=>(g[k]=g[k]||[]).push(v));
-  let w1="";try{w1=wxAlerts(1)}catch(e){}
   add("eve",ALARM_T.eve,(ev.length||w1)?"📅 내일 일정"+(w1?"\n🌡 "+w1:"")+"\n"+Object.keys(g).map(k=>`• ${L(k)} ${g[k].length}: ${list(g[k])}`).join("\n"):"","📅 내일 일정\n• 분만 1: 6-004");
   // 5 마감: 오늘 기록 누락
   let cm=[];try{cm=closeMiss(TODAY)}catch(e){}
@@ -44,10 +43,3 @@ function alarmTestBox(){const T=(state.alarm||{}).test,on=T&&T.day===TODAY;
   <div class="setrow"><span>${t("보낼 시각")}</span><input id="alAt" type="time" value="${on?T.at:"11:45"}"></div>
   <button class="act pri" type="button" data-a="alTest">${on?t("다시 예약"):t("시험 예약")}</button> ${on?`<button class="act" type="button" data-a="alTestOff">${t("시험 끄기")}</button> <b>${t("예약됨")} ${T.at}</b>`:""}</div>`}
 const _vSyncSet91=vSyncSet;vSyncSet=function(){return _vSyncSet91()+(can("admin")&&SY.token?alarmTestBox():"")};
-// ---- 입력 화면 아래 고정 칸(.dock) 접기/펴기: 화면을 가릴 때 머리줄만 남김 · 이 휴대폰에 기억 ----
-let dockHid=(()=>{try{return localStorage.getItem(KEY+"-dockhid")==="1"}catch(e){return false}})();
-A.dockTg=()=>{dockHid=!dockHid;try{localStorage.setItem(KEY+"-dockhid",dockHid?"1":"")}catch(e){}dockApply()};
-function dockApply(){document.querySelectorAll(".dock").forEach(d=>{d.classList.toggle("hid",dockHid);const h=d.querySelector(".dock-hd");if(!h)return;
-  let b=h.querySelector(".dock-tg");if(!b){b=document.createElement("button");b.type="button";b.className="dock-tg";b.dataset.a="dockTg";h.appendChild(b)}
-  b.textContent=dockHid?"▲ "+t("펼치기"):"▼ "+t("접기")})}
-const _render91d=render;render=function(){const r=_render91d.apply(this,arguments);try{dockApply()}catch(e){}return r};
