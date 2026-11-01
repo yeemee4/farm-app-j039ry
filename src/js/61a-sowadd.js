@@ -78,7 +78,7 @@ function vSowAdd() {
         .join("")}</div>`
     );
   if (W.step === "stall") {
-    const z = ui.saZ || 60;
+    const z = fitZ(barnLayout(W.b)) * (ui.saK || 1);
     return (
       hd("barn", esc(t(W.b))) +
       `<div class="su-q">${t("이 모돈의 칸을 누르세요")}</div><div class="bm-head"><span>${t("모돈이 있는 칸은 번호가 보입니다 · 누르면 그 카드를 고칩니다")}</span><span class="bm-z"><button type="button" class="sbtn" data-a="saZoom" data-v="-15" style="min-width:48px;min-height:40px;font-size:20px" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="saZoom" data-v="15" style="min-width:48px;min-height:40px;font-size:20px" aria-label="${t("확대")}">＋</button></span></div><div class="bm-wrap">${vBarnSvg(W.b, z, 0, "iniStall")}</div>`
@@ -177,7 +177,7 @@ Object.assign(A, {
     window.scrollTo(0, 0);
   },
   saZoom: v => {
-    ui.saZ = Math.max(20, Math.min(120, (ui.saZ || 60) + +v));
+    ui.saK = Math.max(1, Math.min(4, (ui.saK || 1) + (+v > 0 ? 0.5 : -0.5)));
     render();
   },
   iniStall: v => {

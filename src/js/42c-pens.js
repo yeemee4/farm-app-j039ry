@@ -3,7 +3,7 @@
    배치도 탭에서 모돈 돈사와 같은 칩으로 고름 · act 를 주면 방을 눌러 고르기(돈군 추가) */
 const PEN_BARNS = () => Object.keys(FARM.pens || {});
 // 배율: 처음엔 휴대폰 폭에 맞춤, ＋－ 로 키움(ui.penZ = 맞춤의 몇 배)
-const penZ = b => Math.max(8, Math.floor((Math.min(innerWidth, 720) - 50) / (FARM.pens[b].w + 1.2)) * (ui.penZ || 1));
+const penZ = b => fitZ(FARM.pens[b]) * (ui.penZ || 1);
 function pensOf(b) {
   const L = FARM.pens[b],
     P = [];
@@ -48,7 +48,7 @@ function vPenMap(b) {
 }
 Object.assign(A, {
   penZoom: v => {
-    ui.penZ = Math.max(1, Math.min(4, (ui.penZ || 1) + +v));
+    ui.penZ = Math.max(1, Math.min(4, (ui.penZ || 1) + (+v > 0 ? 0.5 : -0.5)));
     render();
   },
   penTap: v => {

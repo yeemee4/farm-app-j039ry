@@ -32,6 +32,17 @@ function barnLayout(b) {
 }
 // 칸 번호: 숫자만(n1 부터 줄을 따라 +1) · n1 없는 줄(가배치 auto)은 예전처럼 줄 이름+번호
 const stallNo = (r, k) => (r.n1 ? String(r.n1 + k) : r.id + (k + 1));
+// 배치도 배율: 처음엔 돈사 전체가 한 화면(폭·높이)에 들어오게, ＋－ 는 그 몇 배(대표 요청 2026-11-01)
+const fitZ = L =>
+  Math.max(
+    6,
+    Math.floor(
+      Math.min(
+        (Math.min(innerWidth, 900) - 60) / (L.w + (L.annex ? L.annex.w : 0) + 1.2),
+        (innerHeight * 0.62) / (L.h + 1.2)
+      )
+    )
+  );
 function stallsOf(b) {
   const L = barnLayout(b);
   if (!L) return [];
@@ -507,7 +518,7 @@ function bcsSheet(b, sid) {
 function vBarnMap() {
   const B = [...BM_BARNS(), ...PEN_BARNS()], // 돈군 돈사(42c)도 같은 칩으로
     b = ui.bm && B.includes(ui.bm) ? ui.bm : B[0],
-    z = ui.bmZ || 60,
+    z = FARM.pens[b] ? 1 : fitZ(barnLayout(b)) * (ui.bmK || 1), // 돈군 돈사는 vPenMap 이 따로 맞춤
     L = barnLayout(b),
     { S, occ, over } = barnOcc(b),
     n = Object.keys(occ).length,
@@ -639,7 +650,7 @@ Object.assign(A, {
     render();
   },
   bmZoom: v => {
-    ui.bmZ = Math.max(30, Math.min(120, (ui.bmZ || 60) + Number(v)));
+    ui.bmK = Math.max(1, Math.min(4, (ui.bmK || 1) + (Number(v) > 0 ? 0.5 : -0.5)));
     render();
   },
   bmMove: v => {
