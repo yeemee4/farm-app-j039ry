@@ -27,6 +27,7 @@
 - `tools/smoke.js` — `FARM_PIN=<대표PIN> node tools/smoke.js <폴더>` 전 탭·입력 화면 열어서 오류 점검 + 스크린샷.
 - `tools/probe.js` — `node tools/probe.js '<JS 식>'` 예시 데이터 상태에서 값 확인(화면 캡처 없이).
 - `docs/pigpeople-notes.md` — 돼지와사람(pigpeople.net) 기술동향 711건·칼럼 학습 노트(다른 세션에서 가져옴). 기준값·기능 근거로 참고(기사 번호 표기)
+- `tools/test-calc.js` — 핵심 계산 정답 시험(오늘 2026-11-02 월 고정): 사료 배송 달력·벌크 이송차·포대(4종 같은 날 바닥, 넘치면 오래 버티는 사료부터 줄임)·PSY·분만율·NPD·도태 후보를 손계산 정답과 비교. PSY·MSY 분모 = 그 기간 평균 모돈 수 avgSows(NPD 와 같은 셈). 계산을 고치면 돌린다.
 - `tools/missing-tr.js` — 번역 빠진 문구 목록. 새 화면을 만든 뒤 돌려서 51 파일에 추가.
 
 ## 코드 규칙 (2026-10-31 정리 · 덧대기 65곳 → 0)

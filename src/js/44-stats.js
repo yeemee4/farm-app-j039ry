@@ -49,7 +49,7 @@ function metrics(from, to) {
     return f ? f.data.live : null;
   };
   const pairs = wn.map(w => [w.data.n, liveOf(w)]).filter(p => p[1]);
-  const sows = activeSows().filter(s => !statusOf(s).gilt).length || 1;
+  const sows = avgSows(from, to) || activeSows().filter(s => !statusOf(s).gilt).length || 1;
   const shipN = ship.reduce((s, r) => s + r.data.n, 0);
   return {
     days,
@@ -67,6 +67,17 @@ function metrics(from, to) {
     shipKg: shipN ? ship.reduce((s, r) => s + r.data.n * r.data.kg, 0) / shipN : null,
     src: "rec"
   };
+}
+// 그 기간 평균 모돈 수 = 모돈 일수 ÷ 기간 일수 (경산돈은 처음부터, 후보돈은 첫 교배부터, 도태돈은 도태일까지 — NPD 와 같은 셈)
+// 지금 모돈 수로 나누면 나중에 도태·입식할 때마다 지난 PSY·MSY 가 바뀜
+function avgSows(from, to) {
+  let sd = 0;
+  Object.values(npdSegs()).forEach(o => {
+    const a = o.start > from ? o.start : from,
+      b = o.end < to ? o.end : to;
+    if (a <= b) sd += diff(a, b) + 1;
+  });
+  return sd / (diff(from, to) + 1);
 }
 function hasRec(from, to) {
   return state.records.some(

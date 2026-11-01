@@ -325,7 +325,7 @@ function bagOrders(P) {
     const fut = (gi, days) => G[gi].need.slice(j, j + days).reduce((a, b) => a + b, 0) || G[gi].avg4 * days;
     let q = G.map((o, gi) => Math.max(0, Math.ceil((fut(gi, 14) - Math.max(0, stock(gi, j))) / o.bag.kg))),
       cap = G.map((o, gi) => Math.max(0, Math.floor((fut(gi, F.bagFresh) - Math.max(0, stock(gi, j))) / o.bag.kg)));
-    q = q.map((v, i) => Math.min(v, Math.max(cap[i], v)));
+    q = q.map((v, i) => Math.min(v, cap[i]));
     let tot = q.reduce((a, b) => a + b, 0);
     for (let g = 0; tot < F.bagAim && g < 200; g++) {
       const i = G.map((o, gi) => ({ gi, r: (q[gi] * o.bag.kg + Math.max(0, stock(gi, j))) / (o.avg4 || 1) }))
@@ -345,8 +345,11 @@ function bagOrders(P) {
       tot++;
       over = true;
     }
+    // 최대 포 수를 넘으면 가장 오래 버티는 사료부터 줄임 → 4종이 비슷한 날 바닥나 다음 주문이 늦어짐
     while (tot > F.bagMax) {
-      const i = q.indexOf(Math.max(...q));
+      const i = G.map((o, gi) => ({ gi, r: (q[gi] * o.bag.kg + Math.max(0, stock(gi, j))) / (o.avg4 || 1) }))
+        .filter(x => q[x.gi] > 0)
+        .sort((a, b) => b.r - a.r)[0].gi;
       q[i]--;
       tot--;
     }

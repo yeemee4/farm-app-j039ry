@@ -1163,7 +1163,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 12:44";
+const BUILD_AT="11-01 13:38";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -5053,7 +5053,7 @@ function metrics(from, to) {
     return f ? f.data.live : null;
   };
   const pairs = wn.map(w => [w.data.n, liveOf(w)]).filter(p => p[1]);
-  const sows = activeSows().filter(s => !statusOf(s).gilt).length || 1;
+  const sows = avgSows(from, to) || activeSows().filter(s => !statusOf(s).gilt).length || 1;
   const shipN = ship.reduce((s, r) => s + r.data.n, 0);
   return {
     days,
@@ -5071,6 +5071,17 @@ function metrics(from, to) {
     shipKg: shipN ? ship.reduce((s, r) => s + r.data.n * r.data.kg, 0) / shipN : null,
     src: "rec"
   };
+}
+// 그 기간 평균 모돈 수 = 모돈 일수 ÷ 기간 일수 (경산돈은 처음부터, 후보돈은 첫 교배부터, 도태돈은 도태일까지 — NPD 와 같은 셈)
+// 지금 모돈 수로 나누면 나중에 도태·입식할 때마다 지난 PSY·MSY 가 바뀜
+function avgSows(from, to) {
+  let sd = 0;
+  Object.values(npdSegs()).forEach(o => {
+    const a = o.start > from ? o.start : from,
+      b = o.end < to ? o.end : to;
+    if (a <= b) sd += diff(a, b) + 1;
+  });
+  return sd / (diff(from, to) + 1);
 }
 function hasRec(from, to) {
   return state.records.some(
@@ -7163,7 +7174,7 @@ function bagOrders(P) {
     const fut = (gi, days) => G[gi].need.slice(j, j + days).reduce((a, b) => a + b, 0) || G[gi].avg4 * days;
     let q = G.map((o, gi) => Math.max(0, Math.ceil((fut(gi, 14) - Math.max(0, stock(gi, j))) / o.bag.kg))),
       cap = G.map((o, gi) => Math.max(0, Math.floor((fut(gi, F.bagFresh) - Math.max(0, stock(gi, j))) / o.bag.kg)));
-    q = q.map((v, i) => Math.min(v, Math.max(cap[i], v)));
+    q = q.map((v, i) => Math.min(v, cap[i]));
     let tot = q.reduce((a, b) => a + b, 0);
     for (let g = 0; tot < F.bagAim && g < 200; g++) {
       const i = G.map((o, gi) => ({ gi, r: (q[gi] * o.bag.kg + Math.max(0, stock(gi, j))) / (o.avg4 || 1) }))
@@ -7183,8 +7194,11 @@ function bagOrders(P) {
       tot++;
       over = true;
     }
+    // 최대 포 수를 넘으면 가장 오래 버티는 사료부터 줄임 → 4종이 비슷한 날 바닥나 다음 주문이 늦어짐
     while (tot > F.bagMax) {
-      const i = q.indexOf(Math.max(...q));
+      const i = G.map((o, gi) => ({ gi, r: (q[gi] * o.bag.kg + Math.max(0, stock(gi, j))) / (o.avg4 || 1) }))
+        .filter(x => q[x.gi] > 0)
+        .sort((a, b) => b.r - a.r)[0].gi;
       q[i]--;
       tot--;
     }
