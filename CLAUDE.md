@@ -42,6 +42,9 @@
 ## 할 일 묶음 추가하는 법
 `extraTodos()`(40)의 반환 배열 끝에 그 기능의 `...xxxTodos()` 를 더한다(각 함수는 `[{k,t,items,act}]` 반환). 묶음 이름은 `TODO_KINDS`(41) 목록에 직접. 항목 종류별로 `itemTarget`·`tdName`(20), `itemShort`·`openTodo` 그리기(60), 현황판 `ids`(46)에 한 줄씩. 날짜와 상관없이 한 번만 체크하는 묶음은 `tdKey`(20)의 목록에 k 추가.
 
+## 집중 대상 (대표 요청 2026-11-01)
+- **시험용 앱(비담농장)에 집중.** 시연 앱(demo/ · 06-demo · 햇살농장)은 대표가 먼저 꺼내기 전까지 언급·제안·점검하지 않는다.
+
 ## 작업 순서 (시험용 → 본서버, 2026-10-30 결정)
 1. `src/` 수정 → `python3 tools/build.py` (= **test/index.html** 시험용) → `node tools/smoke.js $SCRATCH` (오류 0 확인)
 2. 사용자가 "업로드해" → 커밋·푸시(main). **시험용만 바뀜**: https://yeemee4.github.io/farm-app-j039ry/test/ (주황 ‘테스트’ 띠, 저장 공간 farm-test-*, 예시 데이터)
