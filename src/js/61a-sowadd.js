@@ -24,7 +24,19 @@ const SA_TOP = [
   ["firstMate", "초교배예정일"]
 ];
 const saLocs = () => [...BM_BARNS(), ...SOW_LOCS.filter(l => !BM_BARNS().includes(l))];
-const saNo = v => (v ? `${FARM.sowPrefix || "6-"}${String(+v).padStart(3, "0")}` : "");
+// 모돈 번호 = 연도 끝자리-001~999 (2026년 6-001~6-999, 2027년 7-001~7-999). 칸에는 ‘6-0’이 미리 들어 있고 지울 수 있음
+const saYr = () => TODAY.slice(3, 4);
+function saFmt(v) {
+  const d = String(v || "").replace(/\D/g, "");
+  if (d.length < 2) return d;
+  let r = d.slice(1);
+  if (r.length > 3) r = r.replace(/^0+(?=\d{3})/, "").slice(0, 3);
+  return d[0] + "-" + r;
+}
+function saNo(v) {
+  const m = /^(\d)-(\d{1,3})$/.exec(saFmt(v));
+  return m && +m[2] > 0 ? `${m[1]}-${m[2].padStart(3, "0")}` : "";
+}
 // 지금 칸에 있는 모돈(초기 등록 카드 또는 앱 모돈)
 function saAt(b, st) {
   const c = Object.values(suS().cards).find(x => x.barn === b && x.stall === st);
@@ -75,7 +87,7 @@ function vSowAdd() {
   if (W.step === "no")
     return (
       hd(BM_BARNS().includes(W.b) ? "stall" : "barn", `${esc(t(W.b))}${W.st ? " " + esc(W.st) : ""}`) +
-      `<div class="su-q">${t("모돈 번호는?")}</div><div class="sa-no"><span>${esc(FARM.sowPrefix || "6-")}0</span><input id="saNo" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="${esc(W.no || "")}" placeholder="01" autofocus aria-label="${t("모돈 번호")}"></div><div class="note">${t("숫자만 · 예: 85 → 6-085")}</div><button class="act pri" type="button" data-a="saNoOk" style="width:100%;padding:14px">${t("다음")} ›</button>`
+      `<div class="su-q">${t("모돈 번호는?")}</div><div class="sa-no"><input id="saNo" type="text" inputmode="numeric" maxlength="6" value="${esc(W.no || saYr() + "-0")}" aria-label="${t("모돈 번호")}"></div><div class="note">${t("이어서 숫자만 · 예: 6-0 다음 85 → 6-085 · 6-001 ~ 6-999")}</div><button class="act pri" type="button" data-a="saNoOk" style="width:100%;padding:14px">${t("다음")} ›</button>`
     );
   // 카드
   const c = W.d,
@@ -119,6 +131,11 @@ BEFORE_RENDER.push(() => {
     ui.sa = null;
   }
 });
+// 번호 칸을 누르면 글자 끝에 커서(‘6-0’ 뒤에 바로 이어서 입력)
+document.addEventListener("focusin", e => {
+  const x = e.target;
+  if (x.id === "saNo") setTimeout(() => x.setSelectionRange(x.value.length, x.value.length), 0);
+});
 document.addEventListener("input", e => {
   const x = e.target;
   if (!ui.sa || !x.dataset) return;
@@ -132,7 +149,7 @@ document.addEventListener("input", e => {
   } else if (x.dataset.sat) {
     ui.sa.d[x.dataset.sat] = x.value;
     ui.sa.dirty = true;
-  } else if (x.id === "saNo") x.value = x.value.replace(/\D/g, "");
+  } else if (x.id === "saNo") x.value = saFmt(x.value);
 });
 document.addEventListener("change", e => {
   const x = e.target;
@@ -167,16 +184,16 @@ Object.assign(A, {
     const [b, st] = v.split("|"),
       id = saAt(b, st);
     ui.sa.st = st;
-    ui.sa.no = id ? String(+id.replace(/\D/g, "").slice(-3)) : "";
+    ui.sa.no = id || "";
     ui.sa.step = "no";
     render();
     window.scrollTo(0, 0);
   },
   saNoOk: () => {
-    const v = ($("#saNo") || {}).value || "";
-    if (!v) return toast(t("모돈 번호를 넣어 주세요"));
-    const id = saNo(v),
-      s = state.sows.find(x => x.id === id);
+    const v = ($("#saNo") || {}).value || "",
+      id = saNo(v);
+    if (!id) return toast(t("번호를 6-001 ~ 6-999 처럼 넣어 주세요"));
+    const s = state.sows.find(x => x.id === id);
     if (s && state.records.some(r => r.data && r.data.sow === id && !r.data.setup))
       return toast(t("이미 앱에 기록이 있는 모돈입니다. 모돈 상세에서 고쳐 주세요."));
     ui.sa.no = v;

@@ -299,7 +299,7 @@ body.env-demo .app{padding-top:20px}
 .sa-barns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
 .sa-barns .act{padding:18px 8px;font-size:17px;font-weight:700}
 .sa-no{display:flex;align-items:center;justify-content:center;gap:4px;font-size:40px;font-weight:800;margin:14px 0 6px}
-.sa-no input{width:120px;font-size:40px;font-weight:800;text-align:left;border:0;border-bottom:3px solid var(--accent);background:none;color:var(--ink);padding:0}
+.sa-no input{width:220px;font-size:44px;font-weight:800;text-align:center;letter-spacing:.04em;border:0;border-bottom:3px solid var(--accent);background:none;color:var(--ink);padding:0}
 .sa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .sa-tb{min-width:660px}
 .sa-tb .sc-l{width:84px;font-size:11.5px;letter-spacing:0}
