@@ -255,22 +255,22 @@ FARM.gfeed = {
     교배사: { mode: "manual", unit: "바가지", kgPer: null }
   }
 };
-// 돈사 배치도 (단위 m · 실제 비율). sure:false = 그림 받기 전 가배치. 줄: 칸 수 n, 칸 폭 cw·깊이 cd, from = 1번 위치, head = 급이조 방향
+// 돈사 배치도 (단위 m · 실제 비율). sure:false = 그림 받기 전 가배치. 줄: 칸 수 n, 칸 폭 cw·깊이 cd, from = 이 줄 첫 칸 쪽, n1 = 그 칸 번호(줄을 따라 +1), head = 급이조 방향
+// 칸 번호는 숫자만(A·B 안 씀) · 대표가 그림에 적은 순서(2026-11-01): 한 줄 끝에서 다음 줄로 ㄹ자로 이어짐 · 교배사 작은 방은 없앰
 FARM.layout = {
   교배사: {
     sure: true,
     w: 8,
     h: 8.1,
     rows: [
-      { id: "A", x: 0.2, y: 1.7, n: 11, cw: 0.6, cd: 2.2, from: "right", head: "down" },
-      { id: "B", x: 0.2, y: 4.9, n: 11, cw: 0.6, cd: 2.2, from: "right", head: "up" }
+      { id: "A", x: 0.2, y: 1.7, n: 11, cw: 0.6, cd: 2.2, from: "left", n1: 12, head: "down" },
+      { id: "B", x: 0.2, y: 4.9, n: 11, cw: 0.6, cd: 2.2, from: "right", n1: 1, head: "up" }
     ],
     areas: [
       { x: 0.2, y: 0.2, w: 7.6, h: 1.2, l: "위쪽 공간 (확인 필요)" },
       { x: 0.2, y: 3.9, w: 7.8, h: 1, l: "가운데 통로", aisle: 1 }
     ],
-    door: { x: 8, y: 4.4 },
-    annex: { x: 8, y: 0, w: 2.5, h: 3, l: "작은 방" }
+    door: { x: 8, y: 4.4 }
   },
   // 임신사 1동: 세로 2줄 × 20칸(=40칸). 아래 가운데·오른쪽 위 입구. 급이조는 가운데 통로 쪽(확인 필요), 1번 = 아래쪽(입구 쪽)
   "임신사 1동": {
@@ -278,8 +278,8 @@ FARM.layout = {
     w: 8.1,
     h: 13.9,
     rows: [
-      { id: "A", x: 1, y: 0.4, n: 20, cw: 0.6, cd: 2.2, v: 1, from: "bottom", head: "right" },
-      { id: "B", x: 4.4, y: 0.4, n: 20, cw: 0.6, cd: 2.2, v: 1, from: "bottom", head: "left" }
+      { id: "A", x: 1, y: 0.4, n: 20, cw: 0.6, cd: 2.2, v: 1, from: "bottom", n1: 1, head: "right" },
+      { id: "B", x: 4.4, y: 0.4, n: 20, cw: 0.6, cd: 2.2, v: 1, from: "top", n1: 21, head: "left" }
     ],
     areas: [
       { x: 3.2, y: 0.2, w: 1.2, h: 13.6, l: "가운데 통로", aisle: 1 },
@@ -292,18 +292,19 @@ FARM.layout = {
   }, // 임신사 2동: 위쪽 군사방(돈군 · 위 입구) + 아래 세로 2줄 × 10칸(=20칸), 둘레 통로, 아래 입구
   // 임신사 2동 (수정): 위쪽 띠(군사방으로 보임 · 확인 필요) + 세로 2줄 × 10칸(=20칸), 넓은 가운데 통로, 아래 입구
   "임신사 2동": {
+    // 대표 요청(2026-11-01): 좌우·아래 통로 폭을 절반 넘게 줄임(2m·1.9m → 0.8m)
     sure: true,
-    w: 11.4,
-    h: 9.2,
+    w: 9,
+    h: 8.1,
     rows: [
-      { id: "A", x: 2, y: 1.3, n: 10, cw: 0.6, cd: 2.2, v: 1, from: "bottom", head: "right" },
-      { id: "B", x: 7.2, y: 1.3, n: 10, cw: 0.6, cd: 2.2, v: 1, from: "bottom", head: "left" }
+      { id: "A", x: 0.8, y: 1.3, n: 10, cw: 0.6, cd: 2.2, v: 1, from: "bottom", n1: 1, head: "right" },
+      { id: "B", x: 6, y: 1.3, n: 10, cw: 0.6, cd: 2.2, v: 1, from: "top", n1: 11, head: "left" }
     ],
     areas: [
-      { x: 2, y: 0, w: 7.4, h: 1.3, l: "군사방 (확인 필요)", stage: "군사방" },
-      { x: 4.2, y: 1.3, w: 3, h: 7.7, l: "통로", aisle: 1 }
+      { x: 0.8, y: 0, w: 7.4, h: 1.3, l: "군사방 (확인 필요)", stage: "군사방" },
+      { x: 3, y: 1.3, w: 3, h: 6.6, l: "통로", aisle: 1 }
     ],
-    doors: [{ x: 5.7, y: 9.2, dir: "up" }]
+    doors: [{ x: 4.5, y: 8.1, dir: "up" }]
   },
   // 분만사: 자돈 공간은 생략하고 모돈틀(0.6×2.2)만 · 가로 2줄 × 15칸(=30칸) · 입구 좌우(통로 양끝). 줄·칸 수는 그림 받으면 확정
   분만사: {
@@ -311,8 +312,8 @@ FARM.layout = {
     w: 11,
     h: 6.4,
     rows: [
-      { id: "A", x: 1, y: 0.4, n: 15, cw: 0.6, cd: 2.2, from: "left", head: "down" },
-      { id: "B", x: 1, y: 3.8, n: 15, cw: 0.6, cd: 2.2, from: "left", head: "up" }
+      { id: "A", x: 1, y: 0.4, n: 15, cw: 0.6, cd: 2.2, from: "left", n1: 1, head: "down" },
+      { id: "B", x: 1, y: 3.8, n: 15, cw: 0.6, cd: 2.2, from: "right", n1: 16, head: "up" }
     ],
     areas: [{ x: 0, y: 2.6, w: 11, h: 1.2, l: "통로", aisle: 1 }],
     doors: [
@@ -322,14 +323,14 @@ FARM.layout = {
   }
 };
 // 돈군 돈사 배치도 (단위 m · 대표 그림 2026-11-01을 앱이 직접 그림). 방 = 돈군이 들어가는 칸(펜). 방 크기는 두수로 짐작(확인 필요)
-// rows: 방 줄(n 개, 방 폭 pw·깊이 ph, v = 세로로 쌓임), 번호는 줄마다 위에서부터(확인 필요) · 모돈 배치도(FARM.layout)와 따로
+// rows: 방 줄(n 개, 방 폭 pw·깊이 ph, v = 세로로 쌓임, from·n1 = 첫 방 쪽·번호) · 번호는 대표가 그림에 적은 순서(2026-11-01) · 모돈 배치도(FARM.layout)와 따로
 FARM.pens = {
   // 인큐베이터: 방 6개 세로 한 줄, 오른쪽 통로, 오른쪽 아래 입구 · 방당 30~35두
   인큐베이터: {
     w: 5.4,
     h: 13.6,
     head: 33,
-    rows: [{ id: "", x: 0.2, y: 0.2, n: 6, pw: 3.6, ph: 2.2, v: 1 }],
+    rows: [{ id: "A", x: 0.2, y: 0.2, n: 6, pw: 3.6, ph: 2.2, v: 1, from: "bottom", n1: 1 }],
     areas: [{ x: 3.8, y: 0.2, w: 1.4, h: 13.2, l: "통로", aisle: 1 }],
     doors: [{ x: 4.6, y: 13.6, dir: "up" }]
   },
@@ -339,8 +340,8 @@ FARM.pens = {
     h: 16.4,
     head: 29,
     rows: [
-      { id: "A", x: 1.2, y: 1.4, n: 5, pw: 3, ph: 3, v: 1 },
-      { id: "B", x: 4.2, y: 1.4, n: 5, pw: 3, ph: 3, v: 1 }
+      { id: "A", x: 1.2, y: 1.4, n: 5, pw: 3, ph: 3, v: 1, from: "bottom", n1: 1 },
+      { id: "B", x: 4.2, y: 1.4, n: 5, pw: 3, ph: 3, v: 1, from: "top", n1: 6 }
     ],
     areas: [
       { x: 0, y: 0, w: 8.4, h: 1.4, l: "통로", aisle: 1 },
@@ -358,7 +359,7 @@ FARM.pens = {
     w: 8.4,
     h: 10.7,
     head: 100,
-    rows: [{ id: "", x: 1.1, y: 0.6, n: 1, pw: 6.2, ph: 5.7, v: 1 }],
+    rows: [{ id: "A", x: 1.1, y: 0.6, n: 1, pw: 6.2, ph: 5.7, v: 1, n1: 1 }],
     areas: [{ x: 0, y: 6.3, w: 8.4, h: 4.4, l: "빈 바닥", aisle: 1 }],
     doors: [
       { x: 7.8, y: 0, dir: "down" },
@@ -372,8 +373,8 @@ FARM.pens = {
     h: 34,
     head: 29,
     rows: [
-      { id: "A", x: 1.5, y: 0.8, n: 9, pw: 6, ph: 3.6, v: 1 },
-      { id: "B", x: 7.5, y: 0.8, n: 9, pw: 6, ph: 3.6, v: 1 }
+      { id: "A", x: 1.5, y: 0.8, n: 9, pw: 6, ph: 3.6, v: 1, from: "bottom", n1: 1 },
+      { id: "B", x: 7.5, y: 0.8, n: 9, pw: 6, ph: 3.6, v: 1, from: "top", n1: 10 }
     ],
     areas: [
       { x: 0, y: 0, w: 1.5, h: 34, l: "통로", aisle: 1 },

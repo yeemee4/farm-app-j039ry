@@ -11,9 +11,9 @@ function pensOf(b) {
   L.rows.forEach(r => {
     for (let k = 0; k < r.n; k++)
       P.push({
-        id: r.id + (k + 1),
+        id: String((r.n1 || 1) + k),
         x: r.v ? r.x : r.x + k * r.pw,
-        y: r.v ? r.y + k * r.ph : r.y,
+        y: r.v ? r.y + (r.from === "bottom" ? r.n - 1 - k : k) * r.ph : r.y,
         w: r.pw,
         h: r.ph
       });
@@ -34,7 +34,7 @@ function vPenSvg(b, z, act) {
       x = k && liveBatches().find(y => y.k === k),
       cx = M(p.x + p.w / 2),
       cy = M(p.y + p.h / 2);
-    g += `<g class="pen ${x ? "on" : ""}" data-a="${act || "penTap"}" data-v="${esc(b)}|${p.id}" role="button" tabindex="0"><rect x="${M(p.x) + 2}" y="${M(p.y) + 2}" width="${M(p.w) - 4}" height="${M(p.h) - 4}" rx="6"/><text x="${cx}" y="${cy - (x ? 6 : -6)}" class="pen-no">${p.id}${t("방")}</text>${x ? `<text x="${cx}" y="${cy + 16}" class="pen-in">${esc(bName(x.k).replace(" 돈군", ""))} · ${bHeads(x, bAge(x))}${t("두")}</text>` : ""}</g>`;
+    g += `<g class="pen ${x ? "on" : ""}" data-a="${act || "penTap"}" data-v="${esc(b)}|${p.id}" role="button" tabindex="0"><rect x="${M(p.x) + 2}" y="${M(p.y) + 2}" width="${M(p.w) - 4}" height="${M(p.h) - 4}" rx="6"/><text x="${cx}" y="${cy - (x ? 6 : -6)}" class="pen-no" style="font-size:${Math.round(Math.min(M(p.w), M(p.h)) * 0.32)}px">${p.id}${t("방")}</text>${x ? `<text x="${cx}" y="${cy + 16}" class="pen-in">${esc(bName(x.k).replace(" 돈군", ""))} · ${bHeads(x, bAge(x))}${t("두")}</text>` : ""}</g>`;
   });
   return g + bmDoors(L, M, z, 0) + `</svg>`;
 }

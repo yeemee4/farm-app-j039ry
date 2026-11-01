@@ -30,6 +30,8 @@ function barnLayout(b) {
     door: { x: W, y: 0.6 + cd + ai / 2 }
   };
 }
+// 칸 번호: 숫자만(n1 부터 줄을 따라 +1) · n1 없는 줄(가배치 auto)은 예전처럼 줄 이름+번호
+const stallNo = (r, k) => (r.n1 ? String(r.n1 + k) : r.id + (k + 1));
 function stallsOf(b) {
   const L = barnLayout(b);
   if (!L) return [];
@@ -38,10 +40,10 @@ function stallsOf(b) {
     for (let k = 0; k < r.n; k++) {
       if (r.v) {
         const y = r.from === "bottom" ? r.y + (r.n - 1 - k) * r.cw : r.y + k * r.cw;
-        S.push({ id: r.id + (k + 1), x: r.x, y, w: r.cd, h: r.cw, head: r.head, v: 1 });
+        S.push({ id: stallNo(r, k), row: r.id, x: r.x, y, w: r.cd, h: r.cw, head: r.head, v: 1 });
       } else {
         const x = r.from === "right" ? r.x + (r.n - 1 - k) * r.cw : r.x + k * r.cw;
-        S.push({ id: r.id + (k + 1), x, y: r.y, w: r.cw, h: r.cd, head: r.head });
+        S.push({ id: stallNo(r, k), row: r.id, x, y: r.y, w: r.cw, h: r.cd, head: r.head });
       }
     }
   });
@@ -317,8 +319,8 @@ function rowColumns(b) {
   return L.rows
     .map(r => ({
       r,
-      S: S.filter(x => x.id.startsWith(r.id) && /^\d+$/.test(x.id.slice(r.id.length))).sort(
-        (a, c) => +a.id.slice(r.id.length) - +c.id.slice(r.id.length)
+      S: S.filter(x => x.row === r.id).sort(
+        (a, c) => parseInt(a.id.replace(/\D/g, "")) - parseInt(c.id.replace(/\D/g, ""))
       ),
       key: r.v ? r.x : r.y
     }))
@@ -393,7 +395,7 @@ function vBarnList(b, mode) {
     `<div class="bl" style="--cols:${C.length}">` +
     C.map(
       (c, ci) =>
-        `${ci ? `<div class="bl-aisle">${DE.top ? `<i>▲<br>${t("입구")}</i>` : "<i></i>"}<span>${t("통로")}</span>${DE.bot ? `<i>${t("입구")}<br>▼</i>` : "<i></i>"}</div>` : ""}<div class="bl-col"><div class="bl-h"><b>${c.r.id}${t("줄")}</b><small>${rowHint(c.r, L)}</small></div>${c.S.map(
+        `${ci ? `<div class="bl-aisle">${DE.top ? `<i>▲<br>${t("입구")}</i>` : "<i></i>"}<span>${t("통로")}</span>${DE.bot ? `<i>${t("입구")}<br>▼</i>` : "<i></i>"}</div>` : ""}<div class="bl-col"><div class="bl-h"><b>${c.S.length ? c.S[0].id + "~" + c.S[c.S.length - 1].id : ""}</b><small>${rowHint(c.r, L)}</small></div>${c.S.map(
           x => {
             const o = occ[x.id],
               lk = o ? stallLook(o.s, b) : null,
