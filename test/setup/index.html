@@ -839,6 +839,32 @@ body:has(.dock) .tagbtn{bottom:auto;top:calc(110px + env(safe-area-inset-top,0px
 body.env-demo::before{content:"☀ 시연용 가상 농장 · 실제 기록 아님";position:fixed;left:0;right:0;top:0;z-index:9999;background:#2E6A4E;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center;letter-spacing:.05em;pointer-events:none}
 body.env-demo .app{padding-top:20px}
 .demo-logo{font:800 34px/1.2 system-ui,sans-serif;color:var(--accent);text-align:center;padding:18px 0 6px}.demo-logo small{display:block;font:600 13px system-ui,sans-serif;color:var(--muted);margin-top:6px}
+
+/* 할 일 '걷는 순서' 보기 (41r) — 큰 글씨·아이콘·오른쪽 동그라미 체크 */
+.rt-view{margin:0 0 10px}
+.rt-hd{background:var(--surface);border-radius:16px;padding:12px 14px;margin:0 0 10px;font-size:14px;color:var(--muted)}
+.rt-hd b{font-size:20px;color:var(--ink)}
+.rt-bar{height:10px;border-radius:5px;background:var(--grid);margin-top:8px;overflow:hidden}
+.rt-bar i{display:block;height:100%;background:var(--accent)}
+.rt-barn{background:var(--surface);border-radius:18px;padding:6px 10px;margin:0 0 10px}
+.rt-bh{display:flex;align-items:center;gap:8px;padding:6px 2px 8px}
+.rt-bh b{font-size:18px;flex:1}
+.rt-no{width:28px;height:28px;border-radius:14px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.rt-cnt{background:var(--amber-soft);color:var(--amber);font-weight:800;border-radius:12px;padding:2px 10px}
+.rt-cnt.ok{background:var(--accent-soft);color:var(--accent)}
+.rt-row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:6px 0}
+.rt-main{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:4px 2px;text-align:left;color:var(--ink);font:inherit}
+.rt-main .ic{width:44px;height:44px;flex:none}
+.rt-tx{display:flex;flex-direction:column;min-width:0}
+.rt-tx b{font-size:17px;overflow-wrap:anywhere}
+.rt-tx span{font-size:15px;font-weight:700}
+.rt-tx small{color:var(--muted);font-size:12.5px}
+.rt-ck{width:44px;height:44px;border-radius:22px;border:3px solid var(--line);background:none;flex:none;font-size:20px;font-weight:900;color:#fff}
+.rt-row.done{opacity:.5}
+.rt-ck.on{background:var(--accent);border-color:var(--accent)}
+.rt-pick{display:flex;padding:10px 4px;border-bottom:1px solid var(--line)}
+.rt-pick b{font-size:16px}
+.rt-pick.done{opacity:.5}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1163,7 +1189,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 13:38";
+const BUILD_AT="11-01 13:53";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -2744,7 +2770,7 @@ function statusCounts() {
 }
 let ctx = null;
 const reopen = () => {
-  if (ctx && ctx.k === "todo") openTodo(ctx.v);
+  if (ctx && ctx.k === "todo") openTodo(ctx.v, ctx.b);
   else if (ctx && ctx.k === "sow") openSowDetail(ctx.v);
 };
 function closeSheet() {
@@ -2761,38 +2787,37 @@ function keepScroll(fn) {
   if (n) n.scrollTop = y;
   window.scrollTo(0, wy);
 }
+// 할 일 완료 체크 기록: '조치' 기록 + todoLog (할 일 창 체크 칸 · 걷는 순서 보기 41r 가 함께 씀)
+function tdMark(key, task, target, sow, memo = "") {
+  state.todoLog = state.todoLog || {};
+  const id = newId(),
+    now = new Date().toISOString();
+  state.records.push({
+    id,
+    type: "조치",
+    workDate: TODAY,
+    createdAt: now,
+    user: state.user,
+    data: { task, target, memo, ...(sow ? { sow } : {}) }
+  });
+  state.todoLog[key] = { memo, user: state.user, at: now, rec: id };
+  delete ui.memo[key];
+}
+function tdUnmark(key) {
+  const log = (state.todoLog || {})[key];
+  if (!log) return;
+  state.records = state.records.filter(r => r.id !== log.rec);
+  ui.memo[key] = log.memo;
+  delete state.todoLog[key];
+}
 function toggleTodo(t) {
   const key = t.dataset.tdk;
-  state.todoLog = state.todoLog || {};
   const m = [...document.querySelectorAll("[data-tdm]")].find(e => e.dataset.tdm === key);
   const memo = (m ? m.value : "").trim();
   if (t.checked) {
-    const id = newId(),
-      now = new Date().toISOString();
-    state.records.push({
-      id,
-      type: "조치",
-      workDate: TODAY,
-      createdAt: now,
-      user: state.user,
-      data: {
-        task: t.dataset.tdt,
-        target: t.dataset.tdtarget,
-        memo,
-        ...(t.dataset.tdsow ? { sow: t.dataset.tdsow } : {})
-      }
-    });
-    state.todoLog[key] = { memo, user: state.user, at: now, rec: id };
-    delete ui.memo[key];
+    tdMark(key, t.dataset.tdt, t.dataset.tdtarget, t.dataset.tdsow, memo);
     toast("조치 완료로 기록했습니다");
-  } else {
-    const log = state.todoLog[key];
-    if (log) {
-      state.records = state.records.filter(r => r.id !== log.rec);
-      ui.memo[key] = log.memo;
-    }
-    delete state.todoLog[key];
-  }
+  } else tdUnmark(key);
   save();
   keepScroll(() => {
     render();
@@ -3999,6 +4024,174 @@ Object.assign(A, {
     closeSheet();
     render();
     undoToast(`${t("모돈 백신")} ${ids.length}${t("두")} ${t("저장했습니다")}`, ids);
+  }
+});
+/* ===== 할 일 '걷는 순서' 보기 (2026-11-01 대표 선택: A안 · 묶어서 한 번에 체크) =====
+   할 일을 돈사를 걷는 순서(FARM.barns → 그 밖 위치 → 사료 빈 → 사무실)로 묶는다. 한 줄 = 그 돈사의 같은 종류 일.
+   줄을 누르면 그 돈사 것만 걸러 기존 할 일 창(openTodo(k, barn)), 오른쪽 동그라미 = 완료 체크(여러 두면 고르는 창, 기본 전부).
+   보기 선택은 휴대폰마다(localStorage farm-todoview), 처음엔 작업자 = 걷는 순서, 대표·팀장 = 종류별 */
+const RT_FEED = "사료 빈",
+  RT_ETC = "사무실 · 기타";
+// 할 일 종류 → [아이콘 종류, 짧은 이름]
+const RT_KIND = {
+  pending: ["폐사", "폐사 조치 판단"],
+  handover: ["특이사항", "인계 메모"],
+  closemiss: ["특이사항", "기록 누락"],
+  binempty: ["사료", "빈 입고 확인"],
+  regu: ["약품", "레규메이트 급여"],
+  regumate: ["교배", "정시 교배"],
+  feedchk: ["사료", "사료 잔량 점검"],
+  feeddev: ["사료", "급여 점검"],
+  gfchg: ["사료", "급여량 변경"],
+  bcsdue: ["BCS", "BCS"],
+  task: ["폐사", "폐사 후 조치"],
+  am: ["특이사항", "아침 점검"],
+  farrow: ["분만", "분만"],
+  movein: ["이동", "분만사 입식"],
+  lit: ["약품", "복별 처치"],
+  svax: ["백신", "백신"],
+  bvax: ["돈군백신", "돈군 백신"],
+  annual: ["백신", "일괄 백신"],
+  mate2: ["교배", "2차 교배"],
+  mate: ["교배", "교배"],
+  remate: ["교배", "재교배"],
+  ret: ["임신확인", "임신 확인"],
+  wean: ["이유", "이유"],
+  order: ["재고", "정액 주문"],
+  feedord: ["사료", "사료 주문"],
+  feedchg: ["사료", "사료 변경"],
+  stock: ["재고", "재고 부족"],
+  withdraw: ["약품", "휴약 종료"],
+  cull: ["도태", "도태"]
+};
+// 체크 칸이 없는 일(기록하면 저절로 없어짐) → 동그라미도 할 일 창을 연다
+const RT_NOCK = ["pending", "am", "feedchk", "regu", "regumate", "closemiss"];
+function todoView() {
+  if (ui.todoView) return ui.todoView;
+  let v = null;
+  try {
+    v = localStorage.getItem("farm-todoview");
+  } catch (e) {}
+  return v || ((me() || {}).role === "worker" ? "route" : "kind");
+}
+function routeBarn(it, k) {
+  if (it.rg || it.rgm) return "교배사";
+  if (it.s) return it.s.loc || RT_ETC;
+  if (it.b) return stagePlan(bAge(it.b));
+  if (it.fc) return stagePlan(bAge(it.fc.b));
+  if (it.am) return it.am.barn;
+  if (it.feed || it.fc2 || it.emp || it.fdv || k === "feedord") return RT_FEED;
+  if (it.t) return FARM.barns.find(b => (it.t.title || "").includes(b)) || RT_ETC; // 폐사 후 조치: 제목에 든 돈사
+  if (!it.pending && it.r && it.r.data && it.r.data.barn) return it.r.data.barn;
+  return RT_ETC;
+}
+function routeGroups(todos) {
+  const B = {};
+  todos.forEach(x =>
+    x.items.forEach(it => {
+      const g = (B[routeBarn(it, x.k)] = B[routeBarn(it, x.k)] || {});
+      (g[x.k] = g[x.k] || { x, items: [] }).items.push(it);
+    })
+  );
+  const other = Object.keys(B)
+    .filter(b => !FARM.barns.includes(b) && b !== RT_FEED && b !== RT_ETC)
+    .sort();
+  return [...FARM.barns, ...other, RT_FEED, RT_ETC].filter(b => B[b]).map(b => ({ b, rows: Object.values(B[b]) }));
+}
+const rtLeft = r =>
+  RT_NOCK.includes(r.x.k) ? r.items.length : r.items.filter(it => !tdLog(tdKey(r.x.k, itemTarget(it)))).length;
+const rtPlain = s => String(s || "").replace(/<[^>]+>/g, "");
+function rtRow(r, b) {
+  const k = r.x.k,
+    [ic, nm] = RT_KIND[k] || ["조치", r.x.t],
+    n = r.items.length,
+    left = rtLeft(r),
+    done = !left && !RT_NOCK.includes(k),
+    ids = r.items.map(itemShort),
+    shown = ids.slice(0, 6).join(" · ") + (n > 6 ? ` … (${n})` : ""),
+    sub = n === 1 ? rtPlain(r.items[0].label) : left < n ? `${n - left}/${n} ${t("완료")}` : `${n}${t("건")}`,
+    v = esc(k + "|" + b);
+  return `<div class="rt-row${done ? " done" : ""}"><button type="button" class="rt-main" data-a="rtOpen" data-v="${v}">${icon(ic)}<span class="rt-tx"><b>${esc(shown)}</b><span>${esc(t(nm))}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</span></button><button type="button" class="rt-ck${done ? " on" : ""}" data-a="rtCk" data-v="${v}" aria-label="${t("완료")}">${done ? "✓" : ""}</button></div>`;
+}
+function vTodoRoute(todos) {
+  const G = routeGroups(todos),
+    rows = G.flatMap(g => g.rows),
+    tot = rows.reduce((s, r) => s + r.items.length, 0),
+    left = rows.reduce((s, r) => s + rtLeft(r), 0);
+  let h = `<div class="rt-hd"><span><b>${tot - left}/${tot}</b> ${t("완료")} · ${t("돈사")} ${G.length}${t("곳")}</span><div class="rt-bar"><i style="width:${tot ? ((tot - left) / tot) * 100 : 0}%"></i></div></div>`;
+  if (!G.length) return h + `<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
+  G.forEach((g, i) => {
+    const gl = g.rows.reduce((s, r) => s + rtLeft(r), 0);
+    h += `<div class="rt-barn"><div class="rt-bh"><span class="rt-no">${i + 1}</span><b>${esc(t(g.b))}</b><span class="rt-cnt${gl ? "" : " ok"}">${gl || "✓"}</span></div>${g.rows.map(r => rtRow(r, g.b)).join("")}</div>`;
+  });
+  return h;
+}
+function rtItems(k, b) {
+  const x = buildTodos().find(q => q.k === k);
+  return x ? { x, items: x.items.filter(it => routeBarn(it, k) === b) } : null;
+}
+// 여러 두 묶음 체크: 안 끝난 것은 기본 전부 선택, 빼고 싶은 것만 누름
+function rtSheet(k, b) {
+  const r = rtItems(k, b);
+  if (!r) return;
+  const nm = (RT_KIND[k] || [0, r.x.t])[1],
+    rows = r.items
+      .map(it => {
+        const key = tdKey(k, itemTarget(it)),
+          log = tdLog(key);
+        return `<label class="ckbox rt-pick${log ? " done" : ""}"><input type="checkbox" data-rtk="${esc(key)}" ${log ? "checked disabled" : "checked"}><span><b>${esc(itemShort(it))}</b> ${log ? `· ${t("완료")} ${esc(log.user)}` : `<small>${esc(rtPlain(it.label))}</small>`}</span></label>`;
+      })
+      .join("");
+  ctx = null;
+  $("#sheetRoot").innerHTML =
+    `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(nm))}"><div class="sh-hd"><h2>${esc(t(nm))} · ${esc(t(b))}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><div class="note">${t("끝낸 것만 체크된 채로 두고 완료를 누르세요.")}</div>${rows}<div class="acts"><button class="act pri" type="button" data-a="rtDone" data-v="${esc(k + "|" + b)}" style="flex:1;padding:14px">✓ ${t("완료")}</button><button class="act" type="button" data-a="rtOpen" data-v="${esc(k + "|" + b)}">${t("자세히 · 기록 입력")} ›</button></div></div></div></div>`;
+}
+Object.assign(A, {
+  tdView: v => {
+    ui.todoView = v;
+    try {
+      localStorage.setItem("farm-todoview", v);
+    } catch (e) {}
+    render();
+  },
+  rtOpen: v => {
+    const i = v.indexOf("|");
+    openTodo(v.slice(0, i), v.slice(i + 1));
+  },
+  rtCk: v => {
+    const i = v.indexOf("|"),
+      k = v.slice(0, i),
+      b = v.slice(i + 1),
+      r = rtItems(k, b);
+    if (!r || !r.items.length) return;
+    if (RT_NOCK.includes(k)) return openTodo(k, b);
+    if (r.items.length > 1) return rtSheet(k, b);
+    const it = r.items[0],
+      key = tdKey(k, itemTarget(it));
+    if (tdLog(key)) tdUnmark(key);
+    else tdMark(key, r.x.t, tdName(it), it.s && it.s.id);
+    save();
+    render();
+    toast(tdLog(key) ? t("조치 완료로 기록했습니다") : t("완료를 취소했습니다"));
+  },
+  rtDone: v => {
+    const i = v.indexOf("|"),
+      k = v.slice(0, i),
+      r = rtItems(k, v.slice(i + 1));
+    if (!r) return;
+    const on = new Set([...document.querySelectorAll("[data-rtk]:checked:not(:disabled)")].map(e => e.dataset.rtk));
+    let n = 0;
+    r.items.forEach(it => {
+      const key = tdKey(k, itemTarget(it));
+      if (on.has(key) && !tdLog(key)) {
+        tdMark(key, r.x.t, tdName(it), it.s && it.s.id);
+        n++;
+      }
+    });
+    save();
+    closeSheet();
+    render();
+    if (n) toast(`${n}${t("건")} ${t("조치 완료로 기록했습니다")}`);
   }
 });
 /* ================= v0.2 · 모돈 현황판 ================= */
@@ -9908,6 +10101,23 @@ function t(s) {
 /* ================= v0.4 · 추가 번역 (초안 · 현장 확인 전) ================= */
 // 새 문구는 여기에만 추가: "한국어":[베트남어, 네팔어, 캄보디아어, 태국어]
 Object.assign(TR, {
+  "폐사 조치 판단": ["Xử lý heo chết", "मृत्यु निर्णय", "សម្រេចលើជ្រូកងាប់", "ตัดสินใจเรื่องหมูตาย"],
+  "빈 입고 확인": ["Kiểm tra nhập silo", "साइलो भराइ जाँच", "ពិនិត្យការបញ្ចូលស៊ីឡូ", "ตรวจรับอาหารเข้าไซโล"],
+  "급여량 변경": ["Đổi lượng ăn", "दाना मात्रा परिवर्तन", "ប្ដូរបរិមាណចំណី", "เปลี่ยนปริมาณอาหาร"],
+  "분만사 입식": ["Chuyển vào chuồng đẻ", "सुत्केरी घरमा सार्ने", "ផ្ទេរចូលទ្រុងសម្រាល", "ย้ายเข้าเล้าคลอด"],
+  "복별 처치": ["Xử lý heo con theo ổ", "बच्चा उपचार", "ព្យាបាលកូនជ្រូកតាមសំបុក", "ทำลูกหมูรายครอก"],
+  "일괄 백신": ["Tiêm vắc-xin đồng loạt", "सामूहिक खोप", "វ៉ាក់សាំងរួម", "วัคซีนพร้อมกันทั้งฟาร์ม"],
+  "재교배": ["Phối lại", "पुनः मिलन", "បង្កាត់ម្ដងទៀត", "ผสมซ้ำ"],
+  "정액 주문": ["Đặt tinh", "वीर्य अर्डर", "កុម្ម៉ង់ទឹកកាម", "สั่งน้ำเชื้อ"],
+  "사료 변경": ["Đổi cám", "दाना परिवर्तन", "ប្ដូរចំណី", "เปลี่ยนอาหาร"],
+  "휴약 종료": ["Hết thời gian ngưng thuốc", "औषधि रोक्ने अवधि अन्त्य", "ផុតរយៈពេលឈប់ថ្នាំ", "ครบระยะหยุดยา"],
+  "종류별": ["Theo loại", "प्रकार अनुसार", "តាមប្រភេទ", "ตามประเภท"],
+  "🚶 걷는 순서": ["🚶 Theo đường đi", "🚶 हिँड्ने क्रम", "🚶 តាមផ្លូវដើរ", "🚶 ตามเส้นทางเดิน"],
+  "끝낸 것만 체크된 채로 두고 완료를 누르세요.": ["Chỉ để dấu tích ở việc đã xong rồi bấm Xong.", "सकिएको मात्र चिन्ह राखेर सकियो थिच्नुहोस्।", "ទុកសញ្ញាធីកតែលើការងាររួច ហើយចុច រួចរាល់។", "ติ๊กไว้เฉพาะงานที่เสร็จแล้ว แล้วกดเสร็จ"],
+  "자세히 · 기록 입력": ["Chi tiết · Ghi chép", "विस्तार · रेकर्ड", "លម្អិត · កត់ត្រា", "รายละเอียด · บันทึก"],
+  "조치 완료로 기록했습니다": ["Đã ghi là hoàn thành", "सम्पन्न भनी रेकर्ड गरियो", "បានកត់ត្រាថារួចរាល់", "บันทึกว่าเสร็จแล้ว"],
+  "완료를 취소했습니다": ["Đã hủy hoàn thành", "सम्पन्न रद्द गरियो", "បានបោះបង់ការរួចរាល់", "ยกเลิกการเสร็จแล้ว"],
+  "사무실 · 기타": ["Văn phòng · Khác", "कार्यालय · अन्य", "ការិយាល័យ · ផ្សេងៗ", "สำนักงาน · อื่นๆ"],
   "이름 바꾸기": ["Đổi tên", "नाम बदल्नु", "ប្ដូរឈ្មោះ", "เปลี่ยนชื่อ"],
   "새 이름": ["Tên mới", "नयाँ नाम", "ឈ្មោះថ្មី", "ชื่อใหม่"],
   "이름을 바꿨습니다": ["Đã đổi tên", "नाम बदलियो", "បានប្ដូរឈ្មោះ", "เปลี่ยนชื่อแล้ว"],
@@ -11679,7 +11889,7 @@ function drawView() {
   $("#hdDate").textContent = kDate(TODAY) + " · W" + isoWeek(TODAY).w + wxShort();
   $("#hdVer").textContent = APP_VER;
   const h1 = $(".hd h1");
-  if (h1 && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.textContent = FARM.name + " ";   // 시연 농장 이름도
+  if (h1 && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.textContent = FARM.name + " "; // 시연 농장 이름도
   $("#whoName").textContent = `${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v = $("#view");
@@ -11844,7 +12054,17 @@ function vTodo() {
     st = stalls(),
     must = todos.filter(x => !todoIsCheck(x.k)),
     chk = todos.filter(x => todoIsCheck(x.k));
-  let h = `<div class="pagehd"><h2>${t("할 일")}</h2></div>`;
+  const view = todoView();
+  let h = `<div class="pagehd"><h2>${t("할 일")}</h2></div><div class="seg rt-view" role="group" aria-label="${t("보기")}">${[
+    ["kind", "종류별"],
+    ["route", "🚶 걷는 순서"]
+  ]
+    .map(
+      ([v, l]) =>
+        `<button type="button" class="${view === v ? "on" : ""}" data-a="tdView" data-v="${v}">${t(l)}</button>`
+    )
+    .join("")}</div>`;
+  if (view === "route") return h + myTodoBar() + hoBox() + vTodoRoute(todos) + supplyCard(todos);
   h += questHead(todos) + myTodoBar() + todoSortBar() + supplyCard(todos) + hoBox();
   h += `<div class="sec-t">${t("꼭 할 일")} <span>${must.reduce((s, x) => s + bLeft(x), 0)}${t("묶음")}</span></div>`;
   h += must.length
@@ -11864,9 +12084,11 @@ function vTodo() {
     : `<div class="empty">${t("기록이 멈춘 개체가 없습니다.")}</div>`;
   return h;
 }
-function openTodo(k) {
-  const x = buildTodos().find(q => q.k === k);
-  if (!x) {
+// barn: 걷는 순서 보기(41r)에서 열면 그 돈사 것만
+function openTodo(k, barn) {
+  const x0 = buildTodos().find(q => q.k === k),
+    x = x0 && barn ? { ...x0, items: x0.items.filter(it => routeBarn(it, k) === barn) } : x0;
+  if (!x || !x.items.length) {
     closeSheet();
     return;
   }
@@ -11944,10 +12166,10 @@ function openTodo(k) {
       });
     })
     .join("");
-  ctx = { k: "todo", v: k };
+  ctx = { k: "todo", v: k, b: barn };
   const who = (state.assign || {})[TODAY + "|" + k];
   $("#sheetRoot").innerHTML =
-    `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(x.t))}"><div class="sh-hd"><h2 style="flex-wrap:wrap">${t(x.t)} ${x.k === "pending" ? "" : `<span class="prog">${done}/${rows.length} ${t("완료")}</span>`}${can("assign") ? `<button type="button" class="sbtn" data-a="assign" data-v="${TODAY}|${k}">${who ? t("담당") + " " + who : t("담당 지정")}</button>` : who ? `<span class="sbtn">${t("담당")} ${who}</span>` : ""}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${x.k === "svax" && rows.length ? `<button class="act pri" type="button" data-a="vaxAll" style="width:100%;padding:12px">💉 ${t("남은 모돈 한꺼번에 접종 기록")} (${rows.length}${t("두")})</button>` : ""}${x.k === "pending" ? "" : `<div class="note">${t("조치를 마치면 체크하고 한 줄로 적어 두세요. 체크한 내용은 타임라인에 남습니다.")}</div>`}${items}</div></div></div>`;
+    `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(x.t))}"><div class="sh-hd"><h2 style="flex-wrap:wrap">${t(x.t)}${barn ? " · " + esc(t(barn)) : ""} ${x.k === "pending" ? "" : `<span class="prog">${done}/${rows.length} ${t("완료")}</span>`}${can("assign") ? `<button type="button" class="sbtn" data-a="assign" data-v="${TODAY}|${k}">${who ? t("담당") + " " + who : t("담당 지정")}</button>` : who ? `<span class="sbtn">${t("담당")} ${who}</span>` : ""}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${x.k === "svax" && rows.length && !barn ? `<button class="act pri" type="button" data-a="vaxAll" style="width:100%;padding:12px">💉 ${t("남은 모돈 한꺼번에 접종 기록")} (${rows.length}${t("두")})</button>` : ""}${x.k === "pending" ? "" : `<div class="note">${t("조치를 마치면 체크하고 한 줄로 적어 두세요. 체크한 내용은 타임라인에 남습니다.")}</div>`}${items}</div></div></div>`;
 }
 function vSows() {
   const all = state.sows.map(s => ({ s, i: statusOf(s) }));
