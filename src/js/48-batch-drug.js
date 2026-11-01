@@ -245,6 +245,7 @@ Object.assign(A, {
     });
     state.prevYear = state.prevYear || {};
     state.prevYear[ui.pyf.ym] = o;
+    ui.initDirty = false; // 초기 입력(65) 저장 안 함 표시 지움
     save();
     render();
     toast(`${ui.pyf.ym} 성적을 저장했습니다`);

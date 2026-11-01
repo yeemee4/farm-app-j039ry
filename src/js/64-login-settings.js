@@ -34,7 +34,7 @@ function vSettings() {
   if (P === "guide") return back + vGuide();
   if (P === "hus") return back + vHusbandry();
   if (P !== "main" && !can("admin")) return back;
-  if (P === "init") return back + vInit();
+  if (P === "init") return vInit(); // 자기 뒤로 버튼(저장 안 한 것 묻기)
   if (P === "accounts") return back + vAccounts();
   if (P === "lists") return back + vLists();
   if (P === "labels") return back + vLabels();

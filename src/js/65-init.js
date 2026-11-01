@@ -36,8 +36,7 @@ function initStock() {
 }
 function initBody(k) {
   if (k === "acc") return vAccounts();
-  if (k === "sow")
-    return `<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="setup" style="flex:1;padding:14px">📋 ${t("초기 등록")} (${t("현장 카드")})</button></div><div class="sec-t">${t("또는 번호 목록 붙여 넣기")}</div>${vBulk()}`;
+  if (k === "sow") return "";
   if (k === "batch") return vBatchInit();
   if (k === "feed")
     return `<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="feedchk" style="flex:1;padding:14px">${t("사료 잔량 입력")} ›</button></div>`;
@@ -53,22 +52,40 @@ function initBody(k) {
     : `<div class="empty">${t("확인할 것이 없습니다.")}</div>`;
 }
 function vInit() {
+  // 처음엔 고르는 메뉴(대표 요청: 모돈 정보 입력, 돈군 정보 입력 … 중 고름) → 고른 화면 하나
+  if (ui.initStep == null || ui.initStep < 0)
+    return `<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button><h2>${t("초기 입력")}</h2></div><div class="note">${t("넣을 것을 고르세요. 넣은 것은 ✓ 표시됩니다.")}</div><div class="more">${INIT_STEPS.map(
+      ([k, l, d], i) =>
+        `<button class="mitem" type="button" data-a="${k === "sow" ? "initSow" : "initGo"}" data-v="${i}"><span class="su-n ${initDone(k) ? "ok" : ""}">${initDone(k) ? "✓" : i + 1}</span><span><b>${t(l)}</b><small>${t(d)}</small></span><span>›</span></button>`
+    ).join("")}</div>`;
   const n = Math.min(Math.max(ui.initStep || 0, 0), INIT_STEPS.length - 1),
-    [k, ti, d] = INIT_STEPS[n],
-    done = INIT_STEPS.filter(([x]) => initDone(x)).length;
-  let h = `<div class="pagehd"><h2>${t("초기 입력")}</h2></div>`;
-  h += `<div class="panel"><div class="sow-top"><b>${done} / ${INIT_STEPS.length} ${t("완료")}</b></div><div class="prog-bar"><i style="width:${(done / INIT_STEPS.length) * 100}%"></i></div><div class="chipwrap" style="margin-top:8px">${INIT_STEPS.map(([x, l], i) => `<button type="button" class="chip wrap ${i === n ? "on" : ""}" data-a="initGo" data-v="${i}">${initDone(x) ? "✓ " : ""}${i + 1}. ${t(l)}</button>`).join("")}</div></div>`;
+    [k, ti, d] = INIT_STEPS[n];
+  let h = `<div class="pagehd"><button class="back" type="button" data-a="initGo" data-v="-1">‹ ${t("초기 입력")}</button><h2>${t(ti)}</h2></div>`;
   h += `<div class="sec-t">${n + 1}. ${t(ti)} ${initDone(k) ? `<span style="color:var(--accent)">✓</span>` : ""}</div><div class="note">${t(d)}</div>`;
   h += initBody(k);
-  h += `<div class="acts" style="margin-top:14px"><button class="act" type="button" data-a="initGo" data-v="${n - 1}" ${n === 0 ? "disabled" : ""}>‹ ${t("이전")}</button>${n < INIT_STEPS.length - 1 ? `<button class="act pri" type="button" data-a="initGo" data-v="${n + 1}" style="flex:1">${t("다음")}: ${t(INIT_STEPS[n + 1][1])} ›</button>` : `<button class="act pri" type="button" data-a="setPage" data-v="main" style="flex:1">${t("끝")}</button>`}</div>`;
+  if (!["stock", "past"].includes(k))
+    h += `<div class="note">${t("이 화면은 바꾸는 즉시 저장됩니다.")}</div><button class="act pri" type="button" data-a="initGo" data-v="-1" style="width:100%;padding:14px">${t("저장하고 돌아가기")}</button>`;
   return h;
 }
+// 재고·지난 성적 칸에 쓰고 저장 안 한 채 나가면 묻기
+document.addEventListener("input", e => {
+  if (e.target.dataset && (e.target.dataset.ist || e.target.dataset.py)) ui.initDirty = true;
+});
 Object.assign(A, {
   initGo: v => {
+    if (ui.initDirty && confirm(t("저장하지 않은 내용이 있습니다. 저장할까요?"))) {
+      if (document.querySelector("[data-ist]")) A.initStock();
+      else if (document.querySelector("[data-py]")) A.pySave();
+    }
+    ui.initDirty = false;
     ui.initStep = +v;
     ui.pyf = null;
     render();
     window.scrollTo(0, 0);
+  },
+  initSow: () => {
+    tab = "sows";
+    A.sowAdd();
   },
   initStock: () => {
     let n = 0;
@@ -78,6 +95,7 @@ Object.assign(A, {
       n++;
     });
     if (!n) return toast(t("넣은 수량이 없습니다"));
+    ui.initDirty = false;
     save();
     render();
     toast(`${n}${t("개 품목 수량을 저장했습니다")}`);

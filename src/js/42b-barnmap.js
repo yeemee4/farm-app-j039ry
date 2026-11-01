@@ -218,10 +218,11 @@ function nextIn(b, k = 3) {
   }
   return out;
 }
-function vBarnSvg(b, z, mini) {
+function vBarnSvg(b, z, mini, act) {
+  // act: 칸을 눌렀을 때 동작(기본 stall = 칸 정보 · iniStall = 모돈 추가 위치 고르기 61a)
   const L = barnLayout(b);
   if (!L) return "";
-  const NX = nextIn(b),
+  const NX = act ? [] : nextIn(b),
     { S, occ } = barnOcc(b),
     M = v => v * z,
     ext = L.annex ? L.annex.w : 0,
@@ -271,7 +272,7 @@ function vBarnSvg(b, z, mini) {
           ? [M(x.x + x.w - 0.16), M(x.y) + 2, M(0.16), M(x.h) - 4]
           : [M(x.x), M(x.y) + 2, M(0.16), M(x.h) - 4]
         : [M(x.x) + 2, hy, M(x.w) - 4, M(0.16)];
-    g += `<g class="bm-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""}" ${mini ? "" : `data-a="stall" data-v="${esc(b)}|${x.id}" role="button" tabindex="0"`}><rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}"/><rect x="${tr[0]}" y="${tr[1]}" width="${tr[2]}" height="${tr[3]}" class="bm-tr"/>`;
+    g += `<g class="bm-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""}" ${mini ? "" : `data-a="${act || "stall"}" data-v="${esc(b)}|${x.id}" role="button" tabindex="0"`}><rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}"/><rect x="${tr[0]}" y="${tr[1]}" width="${tr[2]}" height="${tr[3]}" class="bm-tr"/>`;
     const ni = NX.indexOf(x.id);
     if (ni >= 0)
       g += `<rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}" class="bm-next"/>${mini ? "" : `<text x="${cx}" y="${M(x.y + x.h / 2) + (x.v ? 4 : 22)}" class="bm-nx">${"①②③"[ni]}</text>`}`;
@@ -352,12 +353,12 @@ function vBarnList(b, mode) {
   const L = barnLayout(b),
     { occ } = barnOcc(b),
     C = rowColumns(b),
-    NX = mode === "bcs" ? [] : nextIn(b),
+    NX = mode === "bcs" || mode === "init" ? [] : nextIn(b),
     DE = doorEnds(b),
     due = mode === "bcs" && typeof bcsDue === "function" ? new Set(bcsDue().map(x => x.s.id)) : new Set();
   const mini = `<div class="bl-mini">${vBarnSvg(b, 9, 1)}<div><b>${t("입구")} ${doorsOf(b).length}${t("곳")}</b><span>${DE.top ? `▲ ${t("목록 위쪽 끝")}` : ""}${DE.top && DE.bot ? " · " : ""}${DE.bot ? `▼ ${t("목록 아래쪽 끝")}` : ""}</span>${mode ? "" : NX.length ? `<span class="bl-nxt">${t("다음 입식")}: ${NX.map((x, i) => "①②③"[i] + " " + x).join(" · ")}</span>` : `<span>${t("빈 칸 없음")}</span>`}<small>${mode ? "" : t("시계 방향 순서 · 입구에서 시작")}</small></div></div>`;
   let h =
-    mode === "pick"
+    mode === "pick" || mode === "init" // init = 설정 › 초기 입력 › 모돈: 아무 칸이나 눌러 고름(65)
       ? ""
       : mode === "bcs"
         ? `<div class="note bl-how">${t("칸을 누르고 점수를 고르면 바로 저장됩니다. 측정 시점은 모돈 상태로 자동.")}</div>` +
@@ -394,7 +395,7 @@ function vBarnList(b, mode) {
             const ni = NX.indexOf(x.id),
               bc = mode === "bcs" && o ? bcsInfo(o.s, due) : null,
               pk = mode === "pick" && o ? pickInfo(o.s) : null;
-            return `<button type="button" class="bl-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""} ${ni >= 0 ? "next" : ""} ${bc ? bc.cls : ""} ${pk ? pk.cls : ""}" data-a="${mode === "bcs" ? (o ? "bcsTap" : "") : mode === "pick" ? (o ? "pick" : "") : "stall"}" data-v="${mode === "pick" && o ? o.s.id : esc(b) + "|" + x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o ? `<b>${esc(o.s.id)}${lk.cull ? ' <small class="bl-cull">⚠</small>' : ""}</b><span>${esc(lk.ph)}</span><em>${bc ? bc.txt : pk ? pk.txt : esc(stallVal(lk))}</em>${!mode && lk.iss && lk.iss.length ? `<u class="bl-iss">${lk.iss.map(x => `<i title="${esc(t(x[1]))}">${x[0]}</i>`).join("")}</u>` : ""}` : `<span class="bl-em">${ni >= 0 ? `${"①②③"[ni]} ${t("다음 입식")}` : t("빈 칸")}</span>`}</button>`;
+            return `<button type="button" class="bl-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""} ${ni >= 0 ? "next" : ""} ${bc ? bc.cls : ""} ${pk ? pk.cls : ""}" data-a="${mode === "init" ? "iniStall" : mode === "bcs" ? (o ? "bcsTap" : "") : mode === "pick" ? (o ? "pick" : "") : "stall"}" data-v="${mode === "pick" && o ? o.s.id : esc(b) + "|" + x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o ? `<b>${esc(o.s.id)}${lk.cull ? ' <small class="bl-cull">⚠</small>' : ""}</b><span>${esc(lk.ph)}</span><em>${bc ? bc.txt : pk ? pk.txt : esc(stallVal(lk))}</em>${!mode && lk.iss && lk.iss.length ? `<u class="bl-iss">${lk.iss.map(x => `<i title="${esc(t(x[1]))}">${x[0]}</i>`).join("")}</u>` : ""}` : `<span class="bl-em">${ni >= 0 ? `${"①②③"[ni]} ${t("다음 입식")}` : t("빈 칸")}</span>`}</button>`;
           }
         ).join("")}</div>`
     ).join("") +

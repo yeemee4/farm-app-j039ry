@@ -839,6 +839,21 @@ body:has(.dock) .tagbtn{bottom:auto;top:calc(110px + env(safe-area-inset-top,0px
 body.env-demo::before{content:"☀ 시연용 가상 농장 · 실제 기록 아님";position:fixed;left:0;right:0;top:0;z-index:9999;background:#2E6A4E;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center;letter-spacing:.05em;pointer-events:none}
 body.env-demo .app{padding-top:20px}
 .demo-logo{font:800 34px/1.2 system-ui,sans-serif;color:var(--accent);text-align:center;padding:18px 0 6px}.demo-logo small{display:block;font:600 13px system-ui,sans-serif;color:var(--muted);margin-top:6px}
+
+/* 모돈 탭 › + 모돈 추가 (61a): 돈사 버튼 · 번호 · 현황판 표에 바로 입력 */
+.sa-barns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+.sa-barns .act{padding:18px 8px;font-size:17px;font-weight:700}
+.sa-no{display:flex;align-items:center;justify-content:center;gap:4px;font-size:40px;font-weight:800;margin:14px 0 6px}
+.sa-no input{width:120px;font-size:40px;font-weight:800;text-align:left;border:0;border-bottom:3px solid var(--accent);background:none;color:var(--ink);padding:0}
+.sa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sa-tb{min-width:660px}
+.sa-tb .sc-l{width:84px;font-size:11.5px;letter-spacing:0}
+.sa-tb td{padding:0;position:relative}
+.sa-in{width:100%;height:34px;border:0;background:transparent;text-align:center;font-size:15px;font-weight:700;color:var(--ink);padding:0 1px}
+.sa-in:focus{outline:2px solid var(--accent);background:var(--accent-soft)}
+.sa-tb td small{position:absolute;right:1px;bottom:0;font-size:8px;color:var(--muted)}
+.sowcard .sc-info select,.sowcard .sc-info input{width:100%;font-size:13px;font-weight:700;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink)}
+.sa-save{margin-top:12px}
 /* ===== v0.5 현황판 대시보드 ===== */
 .dash{--bg:#0E1411;--sf:#17201B;--ln:#2A3630;--fg:#EEF3EF;--mu:#9DB0A5;--tr:#22302a;background:var(--bg);color:var(--fg);border-radius:16px;padding:14px;display:grid;gap:12px;grid-template-columns:1fr;grid-template-areas:"top" "main" "side" "strip"}
 .dash.has-side{grid-template-columns:minmax(0,1fr) minmax(300px,24%);grid-template-areas:"top top" "main side" "strip side"}
@@ -1163,7 +1178,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 15:34";
+const BUILD_AT="11-01 17:38";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -4429,10 +4444,11 @@ function nextIn(b, k = 3) {
   }
   return out;
 }
-function vBarnSvg(b, z, mini) {
+function vBarnSvg(b, z, mini, act) {
+  // act: 칸을 눌렀을 때 동작(기본 stall = 칸 정보 · iniStall = 모돈 추가 위치 고르기 61a)
   const L = barnLayout(b);
   if (!L) return "";
-  const NX = nextIn(b),
+  const NX = act ? [] : nextIn(b),
     { S, occ } = barnOcc(b),
     M = v => v * z,
     ext = L.annex ? L.annex.w : 0,
@@ -4482,7 +4498,7 @@ function vBarnSvg(b, z, mini) {
           ? [M(x.x + x.w - 0.16), M(x.y) + 2, M(0.16), M(x.h) - 4]
           : [M(x.x), M(x.y) + 2, M(0.16), M(x.h) - 4]
         : [M(x.x) + 2, hy, M(x.w) - 4, M(0.16)];
-    g += `<g class="bm-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""}" ${mini ? "" : `data-a="stall" data-v="${esc(b)}|${x.id}" role="button" tabindex="0"`}><rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}"/><rect x="${tr[0]}" y="${tr[1]}" width="${tr[2]}" height="${tr[3]}" class="bm-tr"/>`;
+    g += `<g class="bm-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""}" ${mini ? "" : `data-a="${act || "stall"}" data-v="${esc(b)}|${x.id}" role="button" tabindex="0"`}><rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}"/><rect x="${tr[0]}" y="${tr[1]}" width="${tr[2]}" height="${tr[3]}" class="bm-tr"/>`;
     const ni = NX.indexOf(x.id);
     if (ni >= 0)
       g += `<rect x="${M(x.x)}" y="${M(x.y)}" width="${M(x.w)}" height="${M(x.h)}" class="bm-next"/>${mini ? "" : `<text x="${cx}" y="${M(x.y + x.h / 2) + (x.v ? 4 : 22)}" class="bm-nx">${"①②③"[ni]}</text>`}`;
@@ -4563,12 +4579,12 @@ function vBarnList(b, mode) {
   const L = barnLayout(b),
     { occ } = barnOcc(b),
     C = rowColumns(b),
-    NX = mode === "bcs" ? [] : nextIn(b),
+    NX = mode === "bcs" || mode === "init" ? [] : nextIn(b),
     DE = doorEnds(b),
     due = mode === "bcs" && typeof bcsDue === "function" ? new Set(bcsDue().map(x => x.s.id)) : new Set();
   const mini = `<div class="bl-mini">${vBarnSvg(b, 9, 1)}<div><b>${t("입구")} ${doorsOf(b).length}${t("곳")}</b><span>${DE.top ? `▲ ${t("목록 위쪽 끝")}` : ""}${DE.top && DE.bot ? " · " : ""}${DE.bot ? `▼ ${t("목록 아래쪽 끝")}` : ""}</span>${mode ? "" : NX.length ? `<span class="bl-nxt">${t("다음 입식")}: ${NX.map((x, i) => "①②③"[i] + " " + x).join(" · ")}</span>` : `<span>${t("빈 칸 없음")}</span>`}<small>${mode ? "" : t("시계 방향 순서 · 입구에서 시작")}</small></div></div>`;
   let h =
-    mode === "pick"
+    mode === "pick" || mode === "init" // init = 설정 › 초기 입력 › 모돈: 아무 칸이나 눌러 고름(65)
       ? ""
       : mode === "bcs"
         ? `<div class="note bl-how">${t("칸을 누르고 점수를 고르면 바로 저장됩니다. 측정 시점은 모돈 상태로 자동.")}</div>` +
@@ -4605,7 +4621,7 @@ function vBarnList(b, mode) {
             const ni = NX.indexOf(x.id),
               bc = mode === "bcs" && o ? bcsInfo(o.s, due) : null,
               pk = mode === "pick" && o ? pickInfo(o.s) : null;
-            return `<button type="button" class="bl-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""} ${ni >= 0 ? "next" : ""} ${bc ? bc.cls : ""} ${pk ? pk.cls : ""}" data-a="${mode === "bcs" ? (o ? "bcsTap" : "") : mode === "pick" ? (o ? "pick" : "") : "stall"}" data-v="${mode === "pick" && o ? o.s.id : esc(b) + "|" + x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o ? `<b>${esc(o.s.id)}${lk.cull ? ' <small class="bl-cull">⚠</small>' : ""}</b><span>${esc(lk.ph)}</span><em>${bc ? bc.txt : pk ? pk.txt : esc(stallVal(lk))}</em>${!mode && lk.iss && lk.iss.length ? `<u class="bl-iss">${lk.iss.map(x => `<i title="${esc(t(x[1]))}">${x[0]}</i>`).join("")}</u>` : ""}` : `<span class="bl-em">${ni >= 0 ? `${"①②③"[ni]} ${t("다음 입식")}` : t("빈 칸")}</span>`}</button>`;
+            return `<button type="button" class="bl-st ${lk ? "c-" + lk.c : "empty"} ${o && o.auto ? "auto" : ""} ${sel ? "sel" : ""} ${ni >= 0 ? "next" : ""} ${bc ? bc.cls : ""} ${pk ? pk.cls : ""}" data-a="${mode === "init" ? "iniStall" : mode === "bcs" ? (o ? "bcsTap" : "") : mode === "pick" ? (o ? "pick" : "") : "stall"}" data-v="${mode === "pick" && o ? o.s.id : esc(b) + "|" + x.id}"><i class="bl-id">${x.id.slice(c.r.id.length)}</i>${o ? `<b>${esc(o.s.id)}${lk.cull ? ' <small class="bl-cull">⚠</small>' : ""}</b><span>${esc(lk.ph)}</span><em>${bc ? bc.txt : pk ? pk.txt : esc(stallVal(lk))}</em>${!mode && lk.iss && lk.iss.length ? `<u class="bl-iss">${lk.iss.map(x => `<i title="${esc(t(x[1]))}">${x[0]}</i>`).join("")}</u>` : ""}` : `<span class="bl-em">${ni >= 0 ? `${"①②③"[ni]} ${t("다음 입식")}` : t("빈 칸")}</span>`}</button>`;
           }
         ).join("")}</div>`
     ).join("") +
@@ -8808,6 +8824,7 @@ Object.assign(A, {
     });
     state.prevYear = state.prevYear || {};
     state.prevYear[ui.pyf.ym] = o;
+    ui.initDirty = false; // 초기 입력(65) 저장 안 함 표시 지움
     save();
     render();
     toast(`${ui.pyf.ym} 성적을 저장했습니다`);
@@ -11684,7 +11701,7 @@ function drawView() {
   $("#hdDate").textContent = kDate(TODAY) + " · W" + isoWeek(TODAY).w + wxShort();
   $("#hdVer").textContent = APP_VER;
   const h1 = $(".hd h1");
-  if (h1 && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.textContent = FARM.name + " ";   // 시연 농장 이름도
+  if (h1 && h1.firstChild && h1.firstChild.nodeType === 3) h1.firstChild.textContent = FARM.name + " "; // 시연 농장 이름도
   $("#whoName").textContent = `${m.name} · ${t(ROLE[m.role])}`;
   renderTabs();
   const v = $("#view");
@@ -11955,6 +11972,7 @@ function openTodo(k) {
     `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(x.t))}"><div class="sh-hd"><h2 style="flex-wrap:wrap">${t(x.t)} ${x.k === "pending" ? "" : `<span class="prog">${done}/${rows.length} ${t("완료")}</span>`}${can("assign") ? `<button type="button" class="sbtn" data-a="assign" data-v="${TODAY}|${k}">${who ? t("담당") + " " + who : t("담당 지정")}</button>` : who ? `<span class="sbtn">${t("담당")} ${who}</span>` : ""}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd">${x.k === "svax" && rows.length ? `<button class="act pri" type="button" data-a="vaxAll" style="width:100%;padding:12px">💉 ${t("남은 모돈 한꺼번에 접종 기록")} (${rows.length}${t("두")})</button>` : ""}${x.k === "pending" ? "" : `<div class="note">${t("조치를 마치면 체크하고 한 줄로 적어 두세요. 체크한 내용은 타임라인에 남습니다.")}</div>`}${items}</div></div></div>`;
 }
 function vSows() {
+  if (ui.sa) return vSowAdd(); // + 모돈 추가 진행 중(61a)
   const all = state.sows.map(s => ({ s, i: statusOf(s) }));
   const cnt = k =>
     k === "발정관찰"
@@ -11962,7 +11980,7 @@ function vSows() {
       : k === "도태후보"
         ? all.filter(x => cullWhy(x.s)).length
         : all.filter(x => matchStatus(x.s, x.i, k)).length;
-  let h = `<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="input" data-v="도입">+ ${esc(L("도입"))}</button></div>`;
+  let h = `<div class="pagehd" style="justify-content:space-between"><h2>${t("모돈")}</h2><button class="act pri" type="button" data-a="sowAdd">+ ${t("모돈 추가")}</button></div>`;
   h += `<input type="search" id="sowQ" inputmode="numeric" pattern="[0-9]*" placeholder="${t("모돈번호 검색")}" value="${esc(ui.sowQ)}" aria-label="${t("모돈번호 검색")}">`;
   h +=
     `<div class="acts" style="margin:-4px 0 4px"><button class="act pri" type="button" data-a="tab" data-v="breed">${t("번식")} ›</button><button class="act" type="button" data-a="tab" data-v="barnmap">🗺 ${t("돈사 배치도")} ›</button></div>` +
@@ -12061,6 +12079,207 @@ document.addEventListener("change", e => {
   if (k === "sowSort" || k === "sowLoc") {
     ui[k] = e.target.value;
     render();
+  }
+});
+/* ===== 모돈 탭 › + 모돈 추가 (대표 그림 2026-11-01) =====
+   돈사 고르기 → 배치도(확대·축소)에서 지금 칸 누르기 → 모돈 번호(6-0 은 미리, 숫자만) → 부국사료 모돈현황판 모양 표에 바로 입력 → 저장.
+   카드는 초기 등록과 같은 저장 공간(state.setup.cards, suCard 83)에 넣고 suApplyAll 로 교배·재발·임신확인·분만·양자·이유 기록 + 모돈을 만든다.
+   카드에 없는 칸(미라·두 번째 재발·정액)도 표에 있음. 저장 안 하고 나가면 저장할지 묻는다. 사 온 후보돈 = 산차 칸을 비우고 구입일·구입처만. */
+const SA_ROWS = [
+  ["m1", "교배일", "md"],
+  ["s1", "정액·웅돈", "txt"],
+  ["r1", "재발일", "md"],
+  ["m2", "재발 후 교배일", "md"],
+  ["s2", "정액(재교배)", "txt"],
+  ["r2", "재발일 2", "md"],
+  ["f", "분만일", "md"],
+  ["tot", "총산자수", "n"],
+  ["still", "사산", "n"],
+  ["mum", "미라", "n"],
+  ["nurse", "포유개시두수", "n"],
+  ["w", "이유일", "md"],
+  ["wn", "이유두수", "n"],
+  ["note", "특이사항", "txt"]
+];
+const SA_TOP = [
+  ["birth", "생년월일"],
+  ["intro", "구입일"],
+  ["firstMate", "초교배예정일"]
+];
+const saLocs = () => [...BM_BARNS(), ...SOW_LOCS.filter(l => !BM_BARNS().includes(l))];
+const saNo = v => (v ? `${FARM.sowPrefix || "6-"}${String(+v).padStart(3, "0")}` : "");
+// 지금 칸에 있는 모돈(초기 등록 카드 또는 앱 모돈)
+function saAt(b, st) {
+  const c = Object.values(suS().cards).find(x => x.barn === b && x.stall === st);
+  if (c) return c.id;
+  const s = activeSows().find(x => x.loc === b && x.stall === st);
+  return s ? s.id : "";
+}
+// 카드 표: 열 = 산차, 줄 = SA_ROWS. 날짜는 카드처럼 ‘1023’ 네 자리(연도는 산차 순서로 자동, suDates)
+function saGrid() {
+  const W = ui.sa,
+    c = W.d,
+    pg = W.pg || 1,
+    ps = [1, 2, 3, 4, 5, 6, 7, 8].map(k => (pg - 1) * 8 + k),
+    D = suDates(c),
+    gc = p => (((p - 1) >> 2) % 2 ? " vi" : "");
+  const cell = (p, k, typ) => {
+    const v = (c.cols[p] || {})[k] ?? "",
+      yr = typ === "md" && D[p + "|" + k] ? D[p + "|" + k].slice(2, 4) : "";
+    return `<td class="${gc(p).trim()}"><input class="sa-in" data-sac="${p}|${k}" value="${esc(v)}" ${typ === "txt" ? 'type="text"' : 'type="text" inputmode="numeric" pattern="[0-9]*"'} ${typ === "md" ? 'maxlength="4" placeholder="월일"' : ""} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
+  };
+  return `<div class="sa-wrap"><table class="sc-tb sa-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(p => `<th class="${gc(p).trim()}">${p}${t("산")}</th>`).join("")}</tr></thead><tbody>${SA_ROWS.map(([k, l, typ]) => `<tr><th class="sc-l">${t(l)}</th>${ps.map(p => cell(p, k, typ)).join("")}</tr>`).join("")}</tbody></table></div><div class="sc-nav">${[
+    1, 2
+  ]
+    .map(
+      n =>
+        `<button type="button" class="chip ${n === pg ? "on" : ""}" data-a="saPg" data-v="${n}">${(n - 1) * 8 + 1}~${n * 8}${t("산")}</button>`
+    )
+    .join("")}</div>`;
+}
+function vSowAdd() {
+  const W = ui.sa,
+    hd = (back, ti) =>
+      `<div class="pagehd"><button class="back" type="button" data-a="saBack" data-v="${back}">‹ ${t(back === "x" ? "모돈" : "이전")}</button><h2>${ti}</h2></div>`;
+  if (W.step === "barn")
+    return (
+      hd("x", t("모돈 추가")) +
+      `<div class="su-q">${t("어느 돈사에 있나요?")}</div><div class="sa-barns">${saLocs()
+        .map(b => `<button type="button" class="act" data-a="saBarn" data-v="${esc(b)}">${esc(t(b))}</button>`)
+        .join("")}</div>`
+    );
+  if (W.step === "stall") {
+    const z = ui.saZ || 60;
+    return (
+      hd("barn", esc(t(W.b))) +
+      `<div class="su-q">${t("이 모돈의 칸을 누르세요")}</div><div class="bm-head"><span>${t("모돈이 있는 칸은 번호가 보입니다 · 누르면 그 카드를 고칩니다")}</span><span class="bm-z"><button type="button" class="sbtn" data-a="saZoom" data-v="-15" style="min-width:48px;min-height:40px;font-size:20px" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="saZoom" data-v="15" style="min-width:48px;min-height:40px;font-size:20px" aria-label="${t("확대")}">＋</button></span></div><div class="bm-wrap">${vBarnSvg(W.b, z, 0, "iniStall")}</div>`
+    );
+  }
+  if (W.step === "no")
+    return (
+      hd(BM_BARNS().includes(W.b) ? "stall" : "barn", `${esc(t(W.b))}${W.st ? " " + esc(W.st) : ""}`) +
+      `<div class="su-q">${t("모돈 번호는?")}</div><div class="sa-no"><span>${esc(FARM.sowPrefix || "6-")}0</span><input id="saNo" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" value="${esc(W.no || "")}" placeholder="01" autofocus aria-label="${t("모돈 번호")}"></div><div class="note">${t("숫자만 · 예: 85 → 6-085")}</div><button class="act pri" type="button" data-a="saNoOk" style="width:100%;padding:14px">${t("다음")} ›</button>`
+    );
+  // 카드
+  const c = W.d,
+    bad = suBad(c);
+  let h = hd("no", `${esc(c.id)} · ${esc(t(W.b))}${W.st ? " " + esc(W.st) : ""}`);
+  h += `<div class="sowcard"><div class="sc-hd"><div class="sc-t">${t("모돈현황판")}</div><div class="sc-info"><div><small>${t("모돈번호")}</small><b>${esc(c.id)}</b></div><div><small>${t("품종")}</small><select data-sat="breed">${["LY", "LYD", "YL", "기타"].map(x => `<option ${c.breed === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>${SA_TOP.map(([k, l]) => `<div><small>${t(l)}</small><input type="date" data-sat="${k}" value="${esc(c[k] || "")}"></div>`).join("")}<div><small>${t("구입처")}</small><input type="text" data-sat="src" value="${esc(c.src || "")}"></div></div></div>${saGrid()}<div class="sc-foot">${t("날짜는 월일 네 자리(예: 1023) · 연도는 산차 순서로 자동 · 사 온 후보돈은 산차 칸을 비워 두세요")}</div></div>`;
+  if (bad.length) h += `<div class="warnbox" style="display:block">${bad.map(esc).join("<br>")}</div>`;
+  h += `<div class="acts sa-save"><button class="act pri" type="button" data-a="saSave" style="flex:1;padding:14px">${t("저장")}</button></div>`;
+  return h;
+}
+// 저장: 카드 → state.setup.cards → 기록·모돈 만들기
+function saCommit() {
+  const W = ui.sa,
+    c = suCard(W.d.id);
+  Object.assign(c, JSON.parse(JSON.stringify(W.d)), { barn: W.b, stall: W.st || undefined });
+  Object.keys(c.cols).forEach(p => {
+    Object.keys(c.cols[p]).forEach(k => c.cols[p][k] === "" && delete c.cols[p][k]);
+    if (!Object.keys(c.cols[p]).length) delete c.cols[p];
+  });
+  c.done = true;
+  suApplyAll();
+  save();
+  W.dirty = false;
+  toast(`${c.id} ${t("저장했습니다")}`);
+}
+// 나가기 전에: 저장 안 한 것이 있으면 묻기
+function saLeave(go) {
+  const W = ui.sa;
+  if (W && W.dirty) {
+    if (confirm(t("저장하지 않은 내용이 있습니다. 저장할까요?"))) saCommit();
+    else W.dirty = false;
+  }
+  go();
+  render();
+  window.scrollTo(0, 0);
+}
+// 모돈 탭을 떠나면(아래 메뉴 등) 저장 안 한 것 묻고 닫기
+BEFORE_RENDER.push(() => {
+  if (ui.sa && tab !== "sows") {
+    if (ui.sa.dirty && confirm(t("저장하지 않은 내용이 있습니다. 저장할까요?"))) saCommit();
+    ui.sa = null;
+  }
+});
+document.addEventListener("input", e => {
+  const x = e.target;
+  if (!ui.sa || !x.dataset) return;
+  if (x.dataset.sac) {
+    const [p, k] = x.dataset.sac.split("|"),
+      typ = (SA_ROWS.find(r => r[0] === k) || [])[2];
+    if (typ !== "txt") x.value = x.value.replace(/\D/g, "");
+    const C = ui.sa.d.cols;
+    (C[p] = C[p] || {})[k] = x.value;
+    ui.sa.dirty = true;
+  } else if (x.dataset.sat) {
+    ui.sa.d[x.dataset.sat] = x.value;
+    ui.sa.dirty = true;
+  } else if (x.id === "saNo") x.value = x.value.replace(/\D/g, "");
+});
+document.addEventListener("change", e => {
+  const x = e.target;
+  if (ui.sa && x.dataset && x.dataset.sat) {
+    ui.sa.d[x.dataset.sat] = x.value;
+    ui.sa.dirty = true;
+  }
+});
+Object.assign(A, {
+  sowAdd: () => {
+    ui.sa = { step: "barn" };
+    render();
+    window.scrollTo(0, 0);
+  },
+  saBack: v =>
+    saLeave(() => {
+      if (v === "x") ui.sa = null;
+      else ui.sa.step = v;
+    }),
+  saBarn: v => {
+    ui.sa.b = v;
+    ui.sa.st = "";
+    ui.sa.step = BM_BARNS().includes(v) ? "stall" : "no";
+    render();
+    window.scrollTo(0, 0);
+  },
+  saZoom: v => {
+    ui.saZ = Math.max(20, Math.min(120, (ui.saZ || 60) + +v));
+    render();
+  },
+  iniStall: v => {
+    const [b, st] = v.split("|"),
+      id = saAt(b, st);
+    ui.sa.st = st;
+    ui.sa.no = id ? String(+id.replace(/\D/g, "").slice(-3)) : "";
+    ui.sa.step = "no";
+    render();
+    window.scrollTo(0, 0);
+  },
+  saNoOk: () => {
+    const v = ($("#saNo") || {}).value || "";
+    if (!v) return toast(t("모돈 번호를 넣어 주세요"));
+    const id = saNo(v),
+      s = state.sows.find(x => x.id === id);
+    if (s && state.records.some(r => r.data && r.data.sow === id && !r.data.setup))
+      return toast(t("이미 앱에 기록이 있는 모돈입니다. 모돈 상세에서 고쳐 주세요."));
+    ui.sa.no = v;
+    ui.sa.d = JSON.parse(JSON.stringify(suS().cards[id] || { id, breed: FARM.breed || "LY", cols: {} }));
+    ui.sa.pg = 1;
+    ui.sa.dirty = false;
+    ui.sa.step = "card";
+    render();
+    window.scrollTo(0, 0);
+  },
+  saPg: v => {
+    ui.sa.pg = +v;
+    render();
+  },
+  saSave: () => {
+    saCommit();
+    // 다음 칸으로: 같은 돈사 배치도로 돌아감
+    ui.sa.step = BM_BARNS().includes(ui.sa.b) ? "stall" : "barn";
+    render();
+    window.scrollTo(0, 0);
   }
 });
 /* ================= v0.3 · 입력 페이지 (번역 · 폐사 기준) ================= */
@@ -12365,7 +12584,7 @@ function vSettings() {
   if (P === "guide") return back + vGuide();
   if (P === "hus") return back + vHusbandry();
   if (P !== "main" && !can("admin")) return back;
-  if (P === "init") return back + vInit();
+  if (P === "init") return vInit(); // 자기 뒤로 버튼(저장 안 한 것 묻기)
   if (P === "accounts") return back + vAccounts();
   if (P === "lists") return back + vLists();
   if (P === "labels") return back + vLabels();
@@ -12605,8 +12824,7 @@ function initStock() {
 }
 function initBody(k) {
   if (k === "acc") return vAccounts();
-  if (k === "sow")
-    return `<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="setup" style="flex:1;padding:14px">📋 ${t("초기 등록")} (${t("현장 카드")})</button></div><div class="sec-t">${t("또는 번호 목록 붙여 넣기")}</div>${vBulk()}`;
+  if (k === "sow") return "";
   if (k === "batch") return vBatchInit();
   if (k === "feed")
     return `<div class="acts"><button class="act pri" type="button" data-a="tab" data-v="feedchk" style="flex:1;padding:14px">${t("사료 잔량 입력")} ›</button></div>`;
@@ -12622,22 +12840,40 @@ function initBody(k) {
     : `<div class="empty">${t("확인할 것이 없습니다.")}</div>`;
 }
 function vInit() {
+  // 처음엔 고르는 메뉴(대표 요청: 모돈 정보 입력, 돈군 정보 입력 … 중 고름) → 고른 화면 하나
+  if (ui.initStep == null || ui.initStep < 0)
+    return `<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button><h2>${t("초기 입력")}</h2></div><div class="note">${t("넣을 것을 고르세요. 넣은 것은 ✓ 표시됩니다.")}</div><div class="more">${INIT_STEPS.map(
+      ([k, l, d], i) =>
+        `<button class="mitem" type="button" data-a="${k === "sow" ? "initSow" : "initGo"}" data-v="${i}"><span class="su-n ${initDone(k) ? "ok" : ""}">${initDone(k) ? "✓" : i + 1}</span><span><b>${t(l)}</b><small>${t(d)}</small></span><span>›</span></button>`
+    ).join("")}</div>`;
   const n = Math.min(Math.max(ui.initStep || 0, 0), INIT_STEPS.length - 1),
-    [k, ti, d] = INIT_STEPS[n],
-    done = INIT_STEPS.filter(([x]) => initDone(x)).length;
-  let h = `<div class="pagehd"><h2>${t("초기 입력")}</h2></div>`;
-  h += `<div class="panel"><div class="sow-top"><b>${done} / ${INIT_STEPS.length} ${t("완료")}</b></div><div class="prog-bar"><i style="width:${(done / INIT_STEPS.length) * 100}%"></i></div><div class="chipwrap" style="margin-top:8px">${INIT_STEPS.map(([x, l], i) => `<button type="button" class="chip wrap ${i === n ? "on" : ""}" data-a="initGo" data-v="${i}">${initDone(x) ? "✓ " : ""}${i + 1}. ${t(l)}</button>`).join("")}</div></div>`;
+    [k, ti, d] = INIT_STEPS[n];
+  let h = `<div class="pagehd"><button class="back" type="button" data-a="initGo" data-v="-1">‹ ${t("초기 입력")}</button><h2>${t(ti)}</h2></div>`;
   h += `<div class="sec-t">${n + 1}. ${t(ti)} ${initDone(k) ? `<span style="color:var(--accent)">✓</span>` : ""}</div><div class="note">${t(d)}</div>`;
   h += initBody(k);
-  h += `<div class="acts" style="margin-top:14px"><button class="act" type="button" data-a="initGo" data-v="${n - 1}" ${n === 0 ? "disabled" : ""}>‹ ${t("이전")}</button>${n < INIT_STEPS.length - 1 ? `<button class="act pri" type="button" data-a="initGo" data-v="${n + 1}" style="flex:1">${t("다음")}: ${t(INIT_STEPS[n + 1][1])} ›</button>` : `<button class="act pri" type="button" data-a="setPage" data-v="main" style="flex:1">${t("끝")}</button>`}</div>`;
+  if (!["stock", "past"].includes(k))
+    h += `<div class="note">${t("이 화면은 바꾸는 즉시 저장됩니다.")}</div><button class="act pri" type="button" data-a="initGo" data-v="-1" style="width:100%;padding:14px">${t("저장하고 돌아가기")}</button>`;
   return h;
 }
+// 재고·지난 성적 칸에 쓰고 저장 안 한 채 나가면 묻기
+document.addEventListener("input", e => {
+  if (e.target.dataset && (e.target.dataset.ist || e.target.dataset.py)) ui.initDirty = true;
+});
 Object.assign(A, {
   initGo: v => {
+    if (ui.initDirty && confirm(t("저장하지 않은 내용이 있습니다. 저장할까요?"))) {
+      if (document.querySelector("[data-ist]")) A.initStock();
+      else if (document.querySelector("[data-py]")) A.pySave();
+    }
+    ui.initDirty = false;
     ui.initStep = +v;
     ui.pyf = null;
     render();
     window.scrollTo(0, 0);
+  },
+  initSow: () => {
+    tab = "sows";
+    A.sowAdd();
   },
   initStock: () => {
     let n = 0;
@@ -12647,6 +12883,7 @@ Object.assign(A, {
       n++;
     });
     if (!n) return toast(t("넣은 수량이 없습니다"));
+    ui.initDirty = false;
     save();
     render();
     toast(`${n}${t("개 품목 수량을 저장했습니다")}`);
@@ -16110,10 +16347,11 @@ function suBuild(dry) {
       if (g("f")) {
         const tot = +(o.tot || 0),
           st = Math.min(tot, +(o.still || 0)),
-          live = tot - st,
+          mum = Math.min(tot - st, +(o.mum || 0)),
+          live = tot - st - mum,
           nn = o.nurse != null && o.nurse !== "" ? +o.nurse : live,
           notes = (o.note || "").split(",").filter(Boolean);
-        mk("분만", g("f"), { sow, live, still: st, mum: 0, ...(notes.includes("난산") ? { ease: "난산" } : {}) });
+        mk("분만", g("f"), { sow, live, still: st, mum, ...(notes.includes("난산") ? { ease: "난산" } : {}) });
         if (nn !== live)
           mk("양자", g("f"), {
             sow: nn > live ? null : sow,
@@ -16130,6 +16368,7 @@ function suBuild(dry) {
       breed: c.breed || FARM.breed,
       baseParity: Math.max(0, first - 1),
       intro: c.intro || "",
+      firstMate: c.firstMate || undefined,
       birth: c.birth || undefined,
       src: c.src || undefined,
       loc: c.barn || "교배사",
@@ -16141,6 +16380,19 @@ function suBuild(dry) {
       sows[sows.length - 1].cullPlan = { date: TODAY, reason: t("현장 카드 특이사항") };
   });
   return { recs, sows, warn, cards: C.length };
+}
+// 카드 전부 → 기록·모돈 (초기 등록 '기록 만들기' · 모돈 탭 '모돈 추가' 저장(61a)이 함께 씀). 다시 해도 겹치지 않음
+function suApplyAll() {
+  const B = suBuild();
+  state.records = state.records.filter(r => !(r.data && r.data.setup)).concat(B.recs);
+  B.sows.forEach(n => {
+    const s = state.sows.find(x => x.id === n.id),
+      v = Object.fromEntries(Object.entries(n).filter(([, x]) => x !== undefined));
+    if (s) Object.assign(s, v);
+    else state.sows.push(v);
+  });
+  if (!state.startDate || state.startDate > TODAY) state.startDate = TODAY;
+  return B;
 }
 function fnvS(s) {
   let h = 0x811c9dc5;
@@ -16186,14 +16438,7 @@ Object.assign(A, {
     go("suwalk");
   },
   suApply: () => {
-    const B = suBuild();
-    state.records = state.records.filter(r => !(r.data && r.data.setup)).concat(B.recs);
-    B.sows.forEach(n => {
-      const s = state.sows.find(x => x.id === n.id);
-      if (s) Object.assign(s, Object.fromEntries(Object.entries(n).filter(([, v]) => v !== undefined)));
-      else state.sows.push(Object.fromEntries(Object.entries(n).filter(([, v]) => v !== undefined)));
-    });
-    if (!state.startDate || state.startDate > TODAY) state.startDate = TODAY;
+    const B = suApplyAll();
     save();
     render();
     toast(`${t("기록")} ${B.recs.length}${t("건 · 모돈")} ${B.sows.length}${t("두를 만들었습니다")}`);

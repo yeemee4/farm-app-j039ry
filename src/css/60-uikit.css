@@ -294,3 +294,18 @@ body:has(.dock) .tagbtn{bottom:auto;top:calc(110px + env(safe-area-inset-top,0px
 body.env-demo::before{content:"☀ 시연용 가상 농장 · 실제 기록 아님";position:fixed;left:0;right:0;top:0;z-index:9999;background:#2E6A4E;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center;letter-spacing:.05em;pointer-events:none}
 body.env-demo .app{padding-top:20px}
 .demo-logo{font:800 34px/1.2 system-ui,sans-serif;color:var(--accent);text-align:center;padding:18px 0 6px}.demo-logo small{display:block;font:600 13px system-ui,sans-serif;color:var(--muted);margin-top:6px}
+
+/* 모돈 탭 › + 모돈 추가 (61a): 돈사 버튼 · 번호 · 현황판 표에 바로 입력 */
+.sa-barns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+.sa-barns .act{padding:18px 8px;font-size:17px;font-weight:700}
+.sa-no{display:flex;align-items:center;justify-content:center;gap:4px;font-size:40px;font-weight:800;margin:14px 0 6px}
+.sa-no input{width:120px;font-size:40px;font-weight:800;text-align:left;border:0;border-bottom:3px solid var(--accent);background:none;color:var(--ink);padding:0}
+.sa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sa-tb{min-width:660px}
+.sa-tb .sc-l{width:84px;font-size:11.5px;letter-spacing:0}
+.sa-tb td{padding:0;position:relative}
+.sa-in{width:100%;height:34px;border:0;background:transparent;text-align:center;font-size:15px;font-weight:700;color:var(--ink);padding:0 1px}
+.sa-in:focus{outline:2px solid var(--accent);background:var(--accent-soft)}
+.sa-tb td small{position:absolute;right:1px;bottom:0;font-size:8px;color:var(--muted)}
+.sowcard .sc-info select,.sowcard .sc-info input{width:100%;font-size:13px;font-weight:700;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink)}
+.sa-save{margin-top:12px}

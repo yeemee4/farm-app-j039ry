@@ -501,10 +501,11 @@ function suBuild(dry) {
       if (g("f")) {
         const tot = +(o.tot || 0),
           st = Math.min(tot, +(o.still || 0)),
-          live = tot - st,
+          mum = Math.min(tot - st, +(o.mum || 0)),
+          live = tot - st - mum,
           nn = o.nurse != null && o.nurse !== "" ? +o.nurse : live,
           notes = (o.note || "").split(",").filter(Boolean);
-        mk("분만", g("f"), { sow, live, still: st, mum: 0, ...(notes.includes("난산") ? { ease: "난산" } : {}) });
+        mk("분만", g("f"), { sow, live, still: st, mum, ...(notes.includes("난산") ? { ease: "난산" } : {}) });
         if (nn !== live)
           mk("양자", g("f"), {
             sow: nn > live ? null : sow,
@@ -521,6 +522,7 @@ function suBuild(dry) {
       breed: c.breed || FARM.breed,
       baseParity: Math.max(0, first - 1),
       intro: c.intro || "",
+      firstMate: c.firstMate || undefined,
       birth: c.birth || undefined,
       src: c.src || undefined,
       loc: c.barn || "교배사",
@@ -532,6 +534,19 @@ function suBuild(dry) {
       sows[sows.length - 1].cullPlan = { date: TODAY, reason: t("현장 카드 특이사항") };
   });
   return { recs, sows, warn, cards: C.length };
+}
+// 카드 전부 → 기록·모돈 (초기 등록 '기록 만들기' · 모돈 탭 '모돈 추가' 저장(61a)이 함께 씀). 다시 해도 겹치지 않음
+function suApplyAll() {
+  const B = suBuild();
+  state.records = state.records.filter(r => !(r.data && r.data.setup)).concat(B.recs);
+  B.sows.forEach(n => {
+    const s = state.sows.find(x => x.id === n.id),
+      v = Object.fromEntries(Object.entries(n).filter(([, x]) => x !== undefined));
+    if (s) Object.assign(s, v);
+    else state.sows.push(v);
+  });
+  if (!state.startDate || state.startDate > TODAY) state.startDate = TODAY;
+  return B;
 }
 function fnvS(s) {
   let h = 0x811c9dc5;
@@ -577,14 +592,7 @@ Object.assign(A, {
     go("suwalk");
   },
   suApply: () => {
-    const B = suBuild();
-    state.records = state.records.filter(r => !(r.data && r.data.setup)).concat(B.recs);
-    B.sows.forEach(n => {
-      const s = state.sows.find(x => x.id === n.id);
-      if (s) Object.assign(s, Object.fromEntries(Object.entries(n).filter(([, v]) => v !== undefined)));
-      else state.sows.push(Object.fromEntries(Object.entries(n).filter(([, v]) => v !== undefined)));
-    });
-    if (!state.startDate || state.startDate > TODAY) state.startDate = TODAY;
+    const B = suApplyAll();
     save();
     render();
     toast(`${t("기록")} ${B.recs.length}${t("건 · 모돈")} ${B.sows.length}${t("두를 만들었습니다")}`);
