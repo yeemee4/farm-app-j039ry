@@ -309,3 +309,6 @@ body.env-demo .app{padding-top:20px}
 .sa-tb td small{position:absolute;right:1px;bottom:0;font-size:8px;color:var(--muted)}
 .sowcard .sc-info select,.sowcard .sc-info input{width:100%;font-size:13px;font-weight:700;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink)}
 .sa-save{margin-top:12px}
+/* 돈군 돈사 방 (42c) */
+.pen rect{fill:#EEF3FB;stroke:#3A6EA5;stroke-width:2}.pen.on rect{fill:#DCEBDD;stroke:var(--accent)}.pen{cursor:pointer}.pen:hover rect{stroke-width:3}
+.pen-no{font-size:16px;font-weight:800;fill:#24466e;text-anchor:middle}.pen-in{font-size:12px;font-weight:700;fill:var(--accent);text-anchor:middle}

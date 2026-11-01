@@ -218,6 +218,27 @@ function nextIn(b, k = 3) {
   }
   return out;
 }
+// 입구 화살표 (모돈 배치도 · 돈군 돈사 배치도 42c 함께 씀)
+function bmDoors(L, M, z, mini) {
+  let g = "";
+  (L.doors || []).forEach(d => {
+    if (mini) {
+      const k = d.dir === "up" ? [0, 1] : d.dir === "down" ? [0, -1] : d.dir === "right" ? [-1, 0] : [1, 0];
+      g += `<path d="M${M(d.x + k[0] * 1.4)} ${M(d.y + k[1] * 1.4)} L${M(d.x)} ${M(d.y)}" stroke="#12A150" stroke-width="${z * 0.35}" stroke-linecap="round" marker-end="url(#mArr)"/>`;
+      return;
+    }
+    if (d.dir === "left" || d.dir === "right") {
+      const s3 = d.dir === "right" ? -1 : 1,
+        x0 = d.x + s3 * 1.1;
+      g += `<path d="M${M(x0)} ${M(d.y)} L${M(d.x - s3 * 0.2)} ${M(d.y)} M${M(d.x) + s3 * 8} ${M(d.y) - 8} L${M(d.x - s3 * 0.2)} ${M(d.y)} L${M(d.x) + s3 * 8} ${M(d.y) + 8}" class="bm-door"/><text x="${M(d.x - s3 * 0.6)}" y="${M(d.y) - 14}" class="bm-dl">${t("입구")}</text>`;
+      return;
+    }
+    const s2 = d.dir === "up" ? 1 : -1,
+      y0 = d.y + s2 * 1.1;
+    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + 12}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:start">${t("입구")}</text>`;
+  });
+  return g;
+}
 function vBarnSvg(b, z, mini, act) {
   // act: 칸을 눌렀을 때 동작(기본 stall = 칸 정보 · iniStall = 모돈 추가 위치 고르기 61a)
   const L = barnLayout(b);
@@ -243,22 +264,7 @@ function vBarnSvg(b, z, mini, act) {
     const a = L.annex;
     g += `<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="bm-wall"/>${mini ? "" : `<text x="${M(a.x + a.w / 2)}" y="${M(a.y + a.h / 2)}" class="bm-al">${esc(t(a.l))}</text>`}`;
   }
-  (L.doors || []).forEach(d => {
-    if (mini) {
-      const k = d.dir === "up" ? [0, 1] : d.dir === "down" ? [0, -1] : d.dir === "right" ? [-1, 0] : [1, 0];
-      g += `<path d="M${M(d.x + k[0] * 1.4)} ${M(d.y + k[1] * 1.4)} L${M(d.x)} ${M(d.y)}" stroke="#12A150" stroke-width="${z * 0.35}" stroke-linecap="round" marker-end="url(#mArr)"/>`;
-      return;
-    }
-    if (d.dir === "left" || d.dir === "right") {
-      const s3 = d.dir === "right" ? -1 : 1,
-        x0 = d.x + s3 * 1.1;
-      g += `<path d="M${M(x0)} ${M(d.y)} L${M(d.x - s3 * 0.2)} ${M(d.y)} M${M(d.x) + s3 * 8} ${M(d.y) - 8} L${M(d.x - s3 * 0.2)} ${M(d.y)} L${M(d.x) + s3 * 8} ${M(d.y) + 8}" class="bm-door"/><text x="${M(d.x - s3 * 0.6)}" y="${M(d.y) - 14}" class="bm-dl">${t("입구")}</text>`;
-      return;
-    }
-    const s2 = d.dir === "up" ? 1 : -1,
-      y0 = d.y + s2 * 1.1;
-    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + 12}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:start">${t("입구")}</text>`;
-  });
+  g += bmDoors(L, M, z, mini);
   if (L.door && !mini)
     g += `<path d="M${M(L.door.x + 1.1)} ${M(L.door.y)} L${M(L.door.x - 0.2)} ${M(L.door.y)} M${M(L.door.x)} ${M(L.door.y) - 8} L${M(L.door.x - 0.2)} ${M(L.door.y)} L${M(L.door.x)} ${M(L.door.y) + 8}" class="bm-door"/><text x="${M(L.door.x + 0.6)}" y="${M(L.door.y) - 8}" class="bm-dl">${t("입구")}</text>`;
   S.forEach(x => {
@@ -500,7 +506,7 @@ function bcsSheet(b, sid) {
   <div class="bcs-pick">${["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"].map(v => `<button type="button" class="bcs-b b${v.replace(".", "_")}" data-a="bcsSave" data-v="${esc(b)}|${sid}|${v}">${v}</button>`).join("")}</div><div class="note">${t("2 이하 마름 · 3 적정 · 4 이상 살찜")}</div></div></div></div>`;
 }
 function vBarnMap() {
-  const B = BM_BARNS(),
+  const B = [...BM_BARNS(), ...PEN_BARNS()], // 돈군 돈사(42c)도 같은 칩으로
     b = ui.bm && B.includes(ui.bm) ? ui.bm : B[0],
     z = ui.bmZ || 60,
     L = barnLayout(b),
@@ -510,8 +516,9 @@ function vBarnMap() {
   let h = `<div class="pagehd"><button class="back" type="button" data-a="tab" data-v="sows">‹ ${t("모돈")}</button><h2>${t("돈사 배치도")}</h2><button class="act" type="button" data-a="tab" data-v="board" style="margin-left:auto">${t("현황판에서 보기")} ›</button></div>`;
   h += `<div class="chips">${B.map(x => {
     const c = barnOcc(x);
-    return `<button type="button" class="chip ${x === b ? "on" : ""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))} ${Object.keys(c.occ).length}/${c.S.length}</button>`;
+    return `<button type="button" class="chip ${x === b ? "on" : ""}" data-a="bmBarn" data-v="${esc(x)}">${esc(t(x))} ${FARM.pens[x] ? pensOf(x).length + t("방") : Object.keys(c.occ).length + "/" + c.S.length}</button>`;
   }).join("")}</div>`;
+  if (FARM.pens[b]) return h + vPenMap(b);
   if (ui.moving)
     h += `<div class="banner warn-b"><b>${t("옮기기")} ${esc(ui.moving)}</b><span>${t("옮길 칸을 누르세요 (다른 돈사는 위 칩으로 바꾼 뒤)")} · <button type="button" class="sbtn" data-a="bmCancel">${t("취소")}</button></span></div>`;
   h += `<div class="bm-head"><span>${n}${t("두")} / ${S.length}${t("칸")} · ${t("빈 칸")} ${S.length - n}${over ? ` · <b class="dv-bad">${t("칸 부족")} ${over}${t("두")}</b>` : ""}${!L.sure ? ` · <b class="dv-warn">${t("가배치 (돈사 그림 받기 전)")}</b>` : ""}${auto ? ` · <span class="sow-meta">${t("흐린 칸 = 칸 번호 미지정(자동 배치)")}</span>` : ""}</span>${(ui.bmReal ?? innerWidth >= 1024) ? `<span class="bm-z">` : `<span class="bm-z" hidden>`}<button type="button" class="sbtn" data-a="bmZoom" data-v="-15" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="bmZoom" data-v="15" aria-label="${t("확대")}">＋</button></span></div>`;
