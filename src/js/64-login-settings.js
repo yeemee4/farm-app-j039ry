@@ -53,7 +53,7 @@ function vSettings() {
   h += `<div class="panel"><div class="sow-top"><b style="font-size:16px">${esc(m.name)}</b><span class="stage c-preg">${t(ROLE[m.role])}</span></div>
     ${vMyDesign()}
     <div class="f"><span class="lb">${t("언어")}</span><div class="chipwrap">${LANGS.map(([c, n]) => `<button type="button" class="chip wrap ${m.lang === c ? "on" : ""}" data-a="myLang" data-v="${c}">${n}</button>`).join("")}</div></div>
-    ${ui.myPin ? `<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>` : `<div class="acts"><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
+    ${ui.myPin ? `<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>` : `<div class="acts"><button class="act" type="button" data-a="myName">${t("이름 바꾸기")}</button><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
   const menu = (k, ti, d) =>
       `<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`,
     tmenu = (k, ti, d) => menu(k, t(ti), t(d));
@@ -85,7 +85,7 @@ function vAccounts() {
   h += state.accounts
     .map(
       a => `<div class="setrow" style="flex-wrap:wrap;${a.active ? "" : "opacity:.55"}"><span><b>${esc(a.name)}</b> <span class="sow-meta">${ROLE[a.role]} · ${(LANGS.find(l => l[0] === a.lang) || ["", ""])[1]} · PIN ${"•".repeat(a.pin.length)}</span></span>
-    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id === ME ? "" : `<button class="sbtn ${a.active ? "bad" : ""}" type="button" data-a="accActive" data-v="${a.id}">${a.active ? "정지" : "다시 사용"}</button>${a.id !== ME ? `<button class="sbtn" type="button" data-a="accDel" data-v="${a.id}" style="color:var(--red)">삭제</button>` : ""}`}</span></div>`
+    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id === ME ? "" : `<button class="sbtn" type="button" data-a="accName" data-v="${a.id}">이름</button><button class="sbtn ${a.active ? "bad" : ""}" type="button" data-a="accActive" data-v="${a.id}">${a.active ? "정지" : "다시 사용"}</button>${a.id !== ME ? `<button class="sbtn" type="button" data-a="accDel" data-v="${a.id}" style="color:var(--red)">삭제</button>` : ""}`}</span></div>`
     )
     .join("");
   h += N

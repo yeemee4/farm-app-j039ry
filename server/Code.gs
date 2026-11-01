@@ -121,6 +121,7 @@ var API = {
       if (S.role !== "admin" && a.id !== S.acc) return;
       var o = byId[a.id] || { id: a.id, ph: "", pinLen: 4 };
       if (S.role === "admin") { o.name = a.name; o.role = a.role; o.farm = a.farm || o.farm || q.farm; o.lang = a.lang; o.active = a.active !== false; }
+      else if (a.name) o.name = String(a.name).slice(0, 20);   // 본인은 자기 이름만 바꿀 수 있음
       if (a.ph) { o.ph = a.ph; o.pinLen = a.pinLen || o.pinLen; }
       byId[a.id] = o;
     });

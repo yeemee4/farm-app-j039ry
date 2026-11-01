@@ -1163,7 +1163,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 12:41";
+const BUILD_AT="11-01 12:44";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -12361,7 +12361,7 @@ function vSettings() {
   h += `<div class="panel"><div class="sow-top"><b style="font-size:16px">${esc(m.name)}</b><span class="stage c-preg">${t(ROLE[m.role])}</span></div>
     ${vMyDesign()}
     <div class="f"><span class="lb">${t("언어")}</span><div class="chipwrap">${LANGS.map(([c, n]) => `<button type="button" class="chip wrap ${m.lang === c ? "on" : ""}" data-a="myLang" data-v="${c}">${n}</button>`).join("")}</div></div>
-    ${ui.myPin ? `<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>` : `<div class="acts"><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
+    ${ui.myPin ? `<div class="row2"><input type="password" id="myPin" inputmode="numeric" placeholder="${t("새 PIN (4~6자리)")}" aria-label="${t("새 PIN (4~6자리)")}"><button class="act pri" type="button" data-a="myPinSave">${t("저장")}</button></div>` : `<div class="acts"><button class="act" type="button" data-a="myName">${t("이름 바꾸기")}</button><button class="act" type="button" data-a="myPin">${t("PIN 변경")}</button><button class="act bad" type="button" data-a="logout">${t("로그아웃")}</button></div>`}</div>`;
   const menu = (k, ti, d) =>
       `<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`,
     tmenu = (k, ti, d) => menu(k, t(ti), t(d));
@@ -12393,7 +12393,7 @@ function vAccounts() {
   h += state.accounts
     .map(
       a => `<div class="setrow" style="flex-wrap:wrap;${a.active ? "" : "opacity:.55"}"><span><b>${esc(a.name)}</b> <span class="sow-meta">${ROLE[a.role]} · ${(LANGS.find(l => l[0] === a.lang) || ["", ""])[1]} · PIN ${"•".repeat(a.pin.length)}</span></span>
-    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id === ME ? "" : `<button class="sbtn ${a.active ? "bad" : ""}" type="button" data-a="accActive" data-v="${a.id}">${a.active ? "정지" : "다시 사용"}</button>${a.id !== ME ? `<button class="sbtn" type="button" data-a="accDel" data-v="${a.id}" style="color:var(--red)">삭제</button>` : ""}`}</span></div>`
+    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id === ME ? "" : `<button class="sbtn" type="button" data-a="accName" data-v="${a.id}">이름</button><button class="sbtn ${a.active ? "bad" : ""}" type="button" data-a="accActive" data-v="${a.id}">${a.active ? "정지" : "다시 사용"}</button>${a.id !== ME ? `<button class="sbtn" type="button" data-a="accDel" data-v="${a.id}" style="color:var(--red)">삭제</button>` : ""}`}</span></div>`
     )
     .join("");
   h += N
@@ -14301,6 +14301,9 @@ Object.assign(A, {
     save();
     render();
   },
+  // 이름 바꾸기: 대표는 모든 계정(accName), 본인은 자기 계정(myName) — 퇴사자 계정을 새 작업자가 이어받을 때. 지난 기록은 예전 이름 그대로
+  accName: v => renameAcc(v),
+  myName: () => renameAcc(ME),
   myPin: () => {
     ui.myPin = true;
     render();
@@ -14805,6 +14808,20 @@ Object.assign(A, {
     toast("기본 정보를 저장했습니다");
   }
 });
+function renameAcc(id) {
+  const a = state.accounts.find(x => x.id === id);
+  if (!a || (id !== ME && !can("admin"))) return;
+  const v = prompt(`${a.name} — ${t("새 이름")}`, a.name);
+  if (v === null) return;
+  const n = v.trim().slice(0, 20);
+  if (!n || n === a.name) return;
+  if (state.accounts.some(x => x.id !== id && x.name === n)) return toast(t("같은 이름의 계정이 있습니다"));
+  a.name = n;
+  syncLists();
+  save();
+  render();
+  toast(t("이름을 바꿨습니다"));
+}
 /* ================= v0.5 · 현장 카드(모돈현황판 종이 양식) =================
    카드 한 장 = 8산(1~4산 파랑, 5~8산 보라 칸). 줄: 교배일자·웅돈번호·재발(점선으로 2칸) · 분만예정일 · 분만일 · 총산자수 · 포유개시두수 · 이유일자 · 이유두수 · 특이사항 */
 const md = d => {

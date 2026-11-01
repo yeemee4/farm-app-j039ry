@@ -25,5 +25,11 @@ let fail = 0; const ok = (n, g, w) => { const a = JSON.stringify(g), b = JSON.st
   ok("② 지운 계정(이미 로그인)은 서버 못 씀", post({ a: "pull", token: tw2, farm: "bidam", since: 0 }).err, "auth");
   ok("② 정지한 계정(이미 로그인)은 서버 못 씀", post({ a: "push", token: tw1, rows: [] }).err, "auth");
   ok("② 정지한 계정은 새로 로그인도 못 함", post({ a: "login", acc: "w1", ph: H[1], farm: "bidam" }).err, "no account");
+  // ⑤ 이름 바꾸기: 대표가 바꾼 이름·작업자 본인이 바꾼 이름 모두 서버에 남음 · 지난 기록 이름은 그대로
+  await p.evaluate(async () => { window.prompt = () => "Tran"; A.accName("w1"); const w = state.accounts.find(a => a.id === "w1"); w.active = true; save(); syDiff(); await syFlush() });
+  const tl = post({ a: "login", acc: "w1", ph: H[1], farm: "bidam" }).token;
+  post({ a: "saveAccounts", token: tl, farm: "bidam", accounts: [{ id: "w1", name: "Tran Van B" }, { id: "a1", name: "해킹" }] });
+  const names = Object.fromEntries(g.sheets.accounts.d.slice(1).filter(r => r[0]).map(r => [r[0], r[1]]));
+  ok("⑤ 이름: 대표 변경·본인 변경 반영, 남의 이름은 못 바꿈, 지난 기록 이름 그대로", [names.w1, names.a1, await p.evaluate(() => (state.records.find(r => r.id === "rw2") || {}).user)], ["Tran Van B", "대표", "Ram"]);
   await b.close(); srv.close(); console.log(fail ? `${fail}개 실패` : "모두 통과"); process.exit(fail ? 1 : 0);
 })();

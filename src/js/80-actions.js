@@ -108,6 +108,9 @@ Object.assign(A, {
     save();
     render();
   },
+  // 이름 바꾸기: 대표는 모든 계정(accName), 본인은 자기 계정(myName) — 퇴사자 계정을 새 작업자가 이어받을 때. 지난 기록은 예전 이름 그대로
+  accName: v => renameAcc(v),
+  myName: () => renameAcc(ME),
   myPin: () => {
     ui.myPin = true;
     render();
@@ -612,3 +615,17 @@ Object.assign(A, {
     toast("기본 정보를 저장했습니다");
   }
 });
+function renameAcc(id) {
+  const a = state.accounts.find(x => x.id === id);
+  if (!a || (id !== ME && !can("admin"))) return;
+  const v = prompt(`${a.name} — ${t("새 이름")}`, a.name);
+  if (v === null) return;
+  const n = v.trim().slice(0, 20);
+  if (!n || n === a.name) return;
+  if (state.accounts.some(x => x.id !== id && x.name === n)) return toast(t("같은 이름의 계정이 있습니다"));
+  a.name = n;
+  syncLists();
+  save();
+  render();
+  toast(t("이름을 바꿨습니다"));
+}
