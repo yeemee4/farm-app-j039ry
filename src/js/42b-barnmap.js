@@ -290,21 +290,18 @@ function vBarnSvg(b, z, mini, act) {
         iy = x.head === "down" ? x.y + x.h - 0.16 - 2.0 : x.y + 0.16;
       g += `<rect x="${M(ix)}" y="${M(iy)}" width="${M(0.6)}" height="${M(2.0)}" class="bm-crate"/><rect x="${M(x.x + 0.08)}" y="${M(x.head === "down" ? x.y + 0.08 : x.y + x.h - 0.58)}" width="${M(0.5)}" height="${M(0.5)}" rx="3" class="bm-creep"/>`;
     }
-    if (!mini && x.v) {
-      const my = M(x.y + x.h / 2) + 4,
-        lx = x.head === "right" ? M(x.x) + 4 : M(x.x + 0.2) + 4;
-      g +=
-        `<text x="${lx}" y="${my}" class="bm-id" style="text-anchor:start">${x.id}</text>` +
-        (o
-          ? `<text x="${lx + 30}" y="${my}" class="bm-no" style="text-anchor:start">${esc(o.s.id.replace(/^\d+-/, ""))}</text><text x="${lx + 60}" y="${my}" class="bm-st1" style="text-anchor:start">${esc(lk.l1)} ${esc(lk.l2)}</text>${lk.live || lk.kg ? `<text x="${(x.head === "right" ? M(x.x + x.w - 0.16) : M(x.x + x.w)) - 5}" y="${my}" class="bm-kg" style="text-anchor:end;font-weight:700">${lk.live ? t("새끼") + " " + lk.live : lk.kg.toFixed(1) + (lk.ov ? "*" : "")}</text>` : ""}`
-          : `<text x="${cx}" y="${my}" class="bm-em">${t("빈 칸")}</text>`);
-    } else if (!mini) {
-      const ty = x.head === "down" ? M(x.y) + 14 : M(x.y + 0.16) + 14,
-        big = x.w >= 1;
-      g += `<text x="${cx}" y="${ty}" class="bm-id">${x.id}</text>`;
-      if (o) {
-        g += `<text x="${cx}" y="${ty + 17}" class="bm-no">${esc(o.s.id.replace(/^\d+-/, ""))}</text><text x="${cx}" y="${ty + 33}" class="bm-st1">${esc(lk.l1)}</text>${lk.l2 ? `<text x="${cx}" y="${ty + 46}" class="bm-st1">${esc(lk.l2)}</text>` : ""}${lk.live ? `<text x="${cx}" y="${ty + 62}" class="bm-kg">${t("새끼")} ${lk.live}</text>` : lk.kg ? `<text x="${cx}" y="${ty + 64}" class="bm-kg">${lk.kg.toFixed(1)}${lk.ov ? "*" : ""}</text>` : ""}`;
-      } else g += `<text x="${cx}" y="${ty + 30}" class="bm-em">${t("빈 칸")}</text>`;
+    // 칸 글자(대표 요청 2026-11-01: 돈군 방처럼 깔끔하게): 큰 칸 번호 + 모돈 번호만, 상태는 칸 색 · 자세한 건 칸을 누르거나 ‘칸 목록’
+    if (!mini) {
+      const sm = M(Math.min(x.w, x.h)),
+        f = Math.max(9, Math.round(sm * 0.5)),
+        no = o ? esc(o.s.id.replace(/^\d+-/, "")) : "";
+      if (x.v) {
+        const my = M(x.y + x.h / 2) + f * 0.36;
+        g += `<text x="${M(x.x + x.w * 0.27)}" y="${my}" class="bm-id2" style="font-size:${f}px">${x.id}</text>${o ? `<text x="${M(x.x + x.w * 0.66)}" y="${my}" class="bm-no2" style="font-size:${f}px">${no}</text>` : ""}`;
+      } else {
+        const cy = M(x.y + x.h / 2);
+        g += `<text x="${cx}" y="${cy - f * 0.35}" class="bm-id2" style="font-size:${f}px">${x.id}</text>${o ? `<text x="${cx}" y="${cy + f * 1.05}" class="bm-no2" style="font-size:${f}px">${no}</text>` : ""}`;
+      }
     }
     g += `</g>`;
   });

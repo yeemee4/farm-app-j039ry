@@ -312,3 +312,5 @@ body.env-demo .app{padding-top:20px}
 /* 돈군 돈사 방 (42c) */
 .pen rect{fill:#EEF3FB;stroke:#3A6EA5;stroke-width:2}.pen.on rect{fill:#DCEBDD;stroke:var(--accent)}.pen{cursor:pointer}.pen:hover rect{stroke-width:3}
 .pen-no{font-size:16px;font-weight:800;fill:#24466e;text-anchor:middle}.pen-in{font-size:12px;font-weight:700;fill:var(--accent);text-anchor:middle}
+/* 모돈 칸 글자(42b): 큰 칸 번호 + 모돈 번호 */
+.bm-id2{font-weight:800;fill:#24466e;text-anchor:middle}.bm-no2{font-weight:800;fill:var(--ink);text-anchor:middle}
