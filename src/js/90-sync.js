@@ -281,9 +281,12 @@ async function syFlush1() {
         }
         return o;
       });
-      const r = await syCall({ a: "saveAccounts", token: SY.token, farm: syFarm(), accounts: A });
-      if (r.ok) SY.accDirty = false;
-      else if (r.err === "auth") return syAuthLost();
+      const del = (SY.accDel || []).slice(),
+        r = await syCall({ a: "saveAccounts", token: SY.token, farm: syFarm(), accounts: A, del });
+      if (r.ok) {
+        SY.accDirty = false;
+        SY.accDel = (SY.accDel || []).filter(x => !del.includes(x));
+      } else if (r.err === "auth") return syAuthLost();
     }
     const keys = Object.keys(SY.out);
     for (let i = 0; i < keys.length; i += 400) {

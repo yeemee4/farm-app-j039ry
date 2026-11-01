@@ -62,12 +62,16 @@ function doPost(e) {
 }
 
 // ---------- 계정 · 세션 ----------
-function accList() { return rows("accounts").map(function (r) { return { id: String(r[0]), name: r[1], role: r[2], farm: r[3], lang: r[4], active: r[5] === true || r[5] === "TRUE" || r[5] === 1, ph: String(r[6] || ""), pinLen: Number(r[7] || 4) }; }); }
+function accList() { return rows("accounts").filter(function (r) { return String(r[0]) !== ""; }).map(function (r) { return { id: String(r[0]), name: r[1], role: r[2], farm: r[3], lang: r[4], active: r[5] === true || r[5] === "TRUE" || r[5] === 1, ph: String(r[6] || ""), pinLen: Number(r[7] || 4) }; }); }
 function pubAcc(a) { return { id: a.id, name: a.name, role: a.role, farm: a.farm, lang: a.lang, active: a.active, pinLen: a.pinLen }; }
 function session(token) {
   if (!token) return null;
   var R = rows("sessions");
-  for (var i = 0; i < R.length; i++) if (R[i][0] === token) return { acc: String(R[i][1]), farm: R[i][2], role: R[i][3] };
+  for (var i = 0; i < R.length; i++) if (R[i][0] === token) {
+    // 정지·삭제된 계정은 이미 로그인한 휴대폰도 바로 못 씀
+    var acc = String(R[i][1]), a = accList().filter(function (x) { return x.id === acc; })[0];
+    return a && a.active ? { acc: acc, farm: R[i][2], role: R[i][3] } : null;
+  }
   return null;
 }
 function newToken() { return Utilities.getUuid().replace(/-/g, "") + Utilities.getUuid().replace(/-/g, ""); }
@@ -120,6 +124,8 @@ var API = {
       if (a.ph) { o.ph = a.ph; o.pinLen = a.pinLen || o.pinLen; }
       byId[a.id] = o;
     });
+    // 대표만: 지운 계정(q.del) 빼기 · 자기 계정은 못 지움
+    if (S.role === "admin") (q.del || []).forEach(function (id) { if (String(id) !== S.acc) delete byId[String(id)]; });
     var L = Object.keys(byId).map(function (k) { return byId[k]; }), s = sh("accounts");
     if (s.getLastRow() > 1) s.getRange(2, 1, s.getLastRow() - 1, 8).clearContent();
     s.getRange(2, 1, L.length, 8).setValues(L.map(function (a) { return [a.id, a.name, a.role, a.farm, a.lang, a.active, a.ph, a.pinLen]; }));

@@ -43,7 +43,8 @@ Object.assign(A, {
     toast(t("처음 상태로 되돌렸습니다"));
   },
   loginPick: v => {
-    if (IS_DEMO) {   // 시연: PIN 없이 바로
+    if (IS_DEMO) {
+      // 시연: PIN 없이 바로
       ME = v;
       try {
         localStorage.setItem(SKEY, ME);
@@ -156,6 +157,23 @@ Object.assign(A, {
     a.active = !a.active;
     save();
     render();
+  },
+  // 계정 삭제: 내 계정·마지막 대표는 못 지움 · 그 사람이 입력한 기록은 그대로 · 서버에도 지움(90 SY.accDel)
+  accDel: v => {
+    const a = state.accounts.find(x => x.id === v);
+    if (!a || a.id === ME) return;
+    if (a.role === "admin" && state.accounts.filter(x => x.role === "admin").length < 2)
+      return toast(t("마지막 대표 계정은 지울 수 없습니다"));
+    if (!confirm(`${a.name} — ${t("계정을 지울까요? 이 사람이 입력한 기록은 그대로 남습니다.")}`)) return;
+    state.accounts = state.accounts.filter(x => x.id !== v);
+    if (typeof SY !== "undefined" && SY.url) {
+      SY.accDel = [...(SY.accDel || []), v];
+      SY.accDirty = true;
+      sySave();
+    }
+    save();
+    render();
+    toast(t("계정을 지웠습니다"));
   },
   naOpen: () => {
     ui.newAcc = { role: "worker", lang: "vi" };

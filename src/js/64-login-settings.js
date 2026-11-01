@@ -57,7 +57,8 @@ function vSettings() {
   const menu = (k, ti, d) =>
       `<button class="mitem" type="button" data-a="setPage" data-v="${k}"><span></span><span><b>${ti}</b><small>${d}</small></span><span>›</span></button>`,
     tmenu = (k, ti, d) => menu(k, t(ti), t(d));
-  if (IS_DEMO) h += `<div class="panel"><b>☀ ${t("시연용 가상 농장")} · ${esc(FARM.name)}</b><div class="sow-meta">${t("마음껏 눌러 보세요. 입력한 것은 이 기기에만 남고, 아래 버튼으로 처음 상태로 돌아갑니다.")}</div><button class="act pri" type="button" data-a="demoReset">${t("시연 처음으로")}</button></div>`;
+  if (IS_DEMO)
+    h += `<div class="panel"><b>☀ ${t("시연용 가상 농장")} · ${esc(FARM.name)}</b><div class="sow-meta">${t("마음껏 눌러 보세요. 입력한 것은 이 기기에만 남고, 아래 버튼으로 처음 상태로 돌아갑니다.")}</div><button class="act pri" type="button" data-a="demoReset">${t("시연 처음으로")}</button></div>`;
   h += `<div class="more">${menu("guide", t("앱 가이드"), "상황별 사용 방법")}${menu("hus", t("사양관리 가이드"), "임신기간, 포유, 온도, 급수 등 기본 기준")}</div>`;
   if (can("admin") && FARM.confirm.length)
     h += `<div class="sec-t">확인 필요 <span>${FARM.confirm.length}</span></div><div class="panel"><div class="note">아래 값은 임시로 넣어 두었습니다. 알려 주시면 바로 고칩니다.</div>${FARM.confirm.map(x => `<div class="setrow"><span>${esc(x)}</span></div>`).join("")}</div>`;
@@ -84,7 +85,7 @@ function vAccounts() {
   h += state.accounts
     .map(
       a => `<div class="setrow" style="flex-wrap:wrap;${a.active ? "" : "opacity:.55"}"><span><b>${esc(a.name)}</b> <span class="sow-meta">${ROLE[a.role]} · ${(LANGS.find(l => l[0] === a.lang) || ["", ""])[1]} · PIN ${"•".repeat(a.pin.length)}</span></span>
-    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id === ME ? "" : `<button class="sbtn ${a.active ? "bad" : ""}" type="button" data-a="accActive" data-v="${a.id}">${a.active ? "정지" : "다시 사용"}</button>`}</span></div>`
+    <span class="acts"><button class="sbtn" type="button" data-a="accRole" data-v="${a.id}">권한 바꾸기</button><button class="sbtn" type="button" data-a="accLang" data-v="${a.id}">언어</button><button class="sbtn" type="button" data-a="accPin" data-v="${a.id}">PIN 바꾸기</button>${a.id === ME ? "" : `<button class="sbtn ${a.active ? "bad" : ""}" type="button" data-a="accActive" data-v="${a.id}">${a.active ? "정지" : "다시 사용"}</button>${a.id !== ME ? `<button class="sbtn" type="button" data-a="accDel" data-v="${a.id}" style="color:var(--red)">삭제</button>` : ""}`}</span></div>`
     )
     .join("");
   h += N
