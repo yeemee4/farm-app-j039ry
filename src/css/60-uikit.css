@@ -320,5 +320,3 @@ body.env-demo .app{padding-top:20px}
 .rt-pick{display:flex;padding:10px 4px;border-bottom:1px solid var(--line)}
 .rt-pick b{font-size:16px}
 .rt-pick.done{opacity:.5}
-.rt-barn.late{box-shadow:inset 0 0 0 2px var(--red)}
-.rt-barn.late .rt-bh em{font-style:normal;color:var(--red);font-size:14px}
