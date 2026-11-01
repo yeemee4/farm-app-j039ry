@@ -137,7 +137,10 @@ function supplyCard(todos) {
 function vTodoRankSet() {
   const r = todoRank(),
     nm = Object.fromEntries(TODO_KINDS);
-  return `<div class="pagehd"><h2>${t("할 일 순서")}</h2></div><div class="note">${t("위에 있을수록 할 일 목록에서 먼저 나옵니다. 작업자는 할 일 화면에서 ‘급한 순’ 등으로 바꿔 볼 수도 있습니다.")}</div><div class="note">${t("‘꼭’ = 오늘 퀘스트(달성률)에 들어가는 작업 · ‘확인만’ = 할 일 아래 칸에 따로 보이고 달성률에서 뺌. 눌러서 바꿉니다.")}</div><div class="panel">${r.map((k, i) => `<div class="setrow"><span><b>${i + 1}.</b> ${t(nm[k] || k)}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn ${todoIsCheck(k) ? "" : "on"}" type="button" data-a="tdMust" data-v="${k}">${todoIsCheck(k) ? t("확인만") : t("꼭")}</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="1" ${i === r.length - 1 ? "disabled" : ""} aria-label="아래로">▼</button></span></div>`).join("")}</div>`;
+  return (
+    `<div class="pagehd"><h2>${t("할 일 순서")}</h2></div><div class="note">${t("위에 있을수록 할 일 목록에서 먼저 나옵니다. 작업자는 할 일 화면에서 ‘급한 순’ 등으로 바꿔 볼 수도 있습니다.")}</div><div class="note">${t("‘꼭’ = 오늘 퀘스트(달성률)에 들어가는 작업 · ‘확인만’ = 할 일 아래 칸에 따로 보이고 달성률에서 뺌. 눌러서 바꿉니다.")}</div><div class="panel">${r.map((k, i) => `<div class="setrow"><span><b>${i + 1}.</b> ${t(nm[k] || k)}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn ${todoIsCheck(k) ? "" : "on"}" type="button" data-a="tdMust" data-v="${k}">${todoIsCheck(k) ? t("확인만") : t("꼭")}</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="tdRank" data-v="${k}" data-k="1" ${i === r.length - 1 ? "disabled" : ""} aria-label="아래로">▼</button></span></div>`).join("")}</div>` +
+    routeOrderSet()
+  );
 }
 Object.assign(A, {
   tdMust: v => {

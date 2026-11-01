@@ -1,5 +1,7 @@
-/* ===== 할 일 '걷는 순서' 보기 (2026-11-01 대표 선택: A안 · 묶어서 한 번에 체크) =====
-   할 일을 돈사를 걷는 순서(FARM.barns → 그 밖 위치 → 사료 빈 → 사무실)로 묶는다. 한 줄 = 그 돈사의 같은 종류 일.
+/* ===== 할 일 '걷는 순서' 보기 (2026-11-01 대표 선택: A안 · 묶어서 한 번에 체크 · 시간대 → 우선순위 → 돈사) =====
+   1) 마감 시각이 있는 일(rtDue: 아침 점검·사료 잔량·사료 주문·정액 주문·레규)은 시각별 칸, 나머지는 '오늘 안에'
+   2) 칸 안은 할 일 우선순위(todoRank, 설정 › 할 일 순서) 3) 같은 일은 돈사 동선 순서(routeOrder, 같은 설정 화면 ▲▼)
+   한 줄 = 한 돈사의 같은 종류 일.
    줄을 누르면 그 돈사 것만 걸러 기존 할 일 창(openTodo(k, barn)), 오른쪽 동그라미 = 완료 체크(여러 두면 고르는 창, 기본 전부).
    보기 선택은 휴대폰마다(localStorage farm-todoview), 처음엔 작업자 = 걷는 순서, 대표·팀장 = 종류별 */
 const RT_FEED = "사료 빈",
@@ -57,23 +59,59 @@ function routeBarn(it, k) {
   if (!it.pending && it.r && it.r.data && it.r.data.barn) return it.r.data.barn;
   return RT_ETC;
 }
+// 돈사 동선 순서: 대표 설정(state.routeOrder) · 처음엔 아침 점검 순서 → 그 밖 돈사 → 사료 빈 → 사무실
+function routeOrder(extra = []) {
+  const base = [...FARM.morning.route.map(r => r.barn), ...FARM.barns, RT_FEED, RT_ETC],
+    o = [...(state.routeOrder || [])];
+  [...base, ...extra].forEach(b => {
+    if (!o.includes(b)) {
+      const i = o.indexOf(RT_FEED);
+      extra.includes(b) && i >= 0 ? o.splice(i, 0, b) : o.push(b);
+    }
+  });
+  return o;
+}
+// 마감 시각 (없으면 null = 오늘 안에)
+function rtDue(it, k) {
+  if (k === "am") return FARM.morning.due;
+  if (k === "feedchk") return FARM.feed.checkBy;
+  if (k === "feedord") return FARM.feed.orderCut;
+  if (k === "order") return FARM.semen.deadline;
+  if (it.at) return it.at; // 레규 급여·정시 교배(84)
+  return null;
+}
+// [{due, rows:[{x, b, items}]}] — 시각 순, 칸 안은 우선순위 → 동선
 function routeGroups(todos) {
-  const B = {};
+  const R = {};
   todos.forEach(x =>
     x.items.forEach(it => {
-      const g = (B[routeBarn(it, x.k)] = B[routeBarn(it, x.k)] || {});
-      (g[x.k] = g[x.k] || { x, items: [] }).items.push(it);
+      const d = rtDue(it, x.k) || "99:99",
+        b = routeBarn(it, x.k),
+        key = d + "|" + x.k + "|" + b;
+      (R[key] = R[key] || { d, x, b, items: [] }).items.push(it);
     })
   );
-  const other = Object.keys(B)
-    .filter(b => !FARM.barns.includes(b) && b !== RT_FEED && b !== RT_ETC)
-    .sort();
-  return [...FARM.barns, ...other, RT_FEED, RT_ETC].filter(b => B[b]).map(b => ({ b, rows: Object.values(B[b]) }));
+  const rows = Object.values(R),
+    ord = routeOrder([...new Set(rows.map(r => r.b))]),
+    rk = todoRank(),
+    ri = k => (rk.indexOf(k) < 0 ? 99 : rk.indexOf(k));
+  const ck = k => (todoIsCheck(k) ? 1 : 0); // 칸 안: 꼭 할 일 → 확인만, 그다음 우선순위 → 동선
+  rows.sort(
+    (p, q) =>
+      p.d.localeCompare(q.d) || ck(p.x.k) - ck(q.x.k) || ri(p.x.k) - ri(q.x.k) || ord.indexOf(p.b) - ord.indexOf(q.b)
+  );
+  const G = [];
+  rows.forEach(r => {
+    const g = G[G.length - 1];
+    g && g.d === r.d ? g.rows.push(r) : G.push({ d: r.d, rows: [r] });
+  });
+  return G;
 }
 const rtLeft = r =>
   RT_NOCK.includes(r.x.k) ? r.items.length : r.items.filter(it => !tdLog(tdKey(r.x.k, itemTarget(it)))).length;
 const rtPlain = s => String(s || "").replace(/<[^>]+>/g, "");
-function rtRow(r, b) {
+function rtRow(r) {
+  const b = r.b;
   const k = r.x.k,
     [ic, nm] = RT_KIND[k] || ["조치", r.x.t],
     n = r.items.length,
@@ -81,20 +119,27 @@ function rtRow(r, b) {
     done = !left && !RT_NOCK.includes(k),
     ids = r.items.map(itemShort),
     shown = ids.slice(0, 6).join(" · ") + (n > 6 ? ` … (${n})` : ""),
-    sub = n === 1 ? rtPlain(r.items[0].label) : left < n ? `${n - left}/${n} ${t("완료")}` : `${n}${t("건")}`,
+    sub =
+      n === 1
+        ? rtPlain(r.items[0].label).replace(t(b) + " · ", "")
+        : left < n
+          ? `${n - left}/${n} ${t("완료")}`
+          : `${n}${t("건")}`,
     v = esc(k + "|" + b);
-  return `<div class="rt-row${done ? " done" : ""}"><button type="button" class="rt-main" data-a="rtOpen" data-v="${v}">${icon(ic)}<span class="rt-tx"><b>${esc(shown)}</b><span>${esc(t(nm))}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</span></button><button type="button" class="rt-ck${done ? " on" : ""}" data-a="rtCk" data-v="${v}" aria-label="${t("완료")}">${done ? "✓" : ""}</button></div>`;
+  return `<div class="rt-row${done ? " done" : ""}"><button type="button" class="rt-main" data-a="rtOpen" data-v="${v}">${icon(ic)}<span class="rt-tx"><b>${esc(shown)}</b><span>${esc(t(nm))}</span><small>📍 ${esc(t(b))}${sub ? " · " + esc(sub) : ""}</small></span></button><button type="button" class="rt-ck${done ? " on" : ""}" data-a="rtCk" data-v="${v}" aria-label="${t("완료")}">${done ? "✓" : ""}</button></div>`;
 }
 function vTodoRoute(todos) {
   const G = routeGroups(todos),
     rows = G.flatMap(g => g.rows),
     tot = rows.reduce((s, r) => s + r.items.length, 0),
-    left = rows.reduce((s, r) => s + rtLeft(r), 0);
-  let h = `<div class="rt-hd"><span><b>${tot - left}/${tot}</b> ${t("완료")} · ${t("돈사")} ${G.length}${t("곳")}</span><div class="rt-bar"><i style="width:${tot ? ((tot - left) / tot) * 100 : 0}%"></i></div></div>`;
+    left = rows.reduce((s, r) => s + rtLeft(r), 0),
+    now = nowHM();
+  let h = `<div class="rt-hd"><span><b>${tot - left}/${tot}</b> ${t("완료")} · ${t("돈사")} ${new Set(rows.map(r => r.b)).size}${t("곳")}</span><div class="rt-bar"><i style="width:${tot ? ((tot - left) / tot) * 100 : 0}%"></i></div></div>`;
   if (!G.length) return h + `<div class="empty">${t("오늘 할 일이 없습니다.")}</div>`;
-  G.forEach((g, i) => {
-    const gl = g.rows.reduce((s, r) => s + rtLeft(r), 0);
-    h += `<div class="rt-barn"><div class="rt-bh"><span class="rt-no">${i + 1}</span><b>${esc(t(g.b))}</b><span class="rt-cnt${gl ? "" : " ok"}">${gl || "✓"}</span></div>${g.rows.map(r => rtRow(r, g.b)).join("")}</div>`;
+  G.forEach(g => {
+    const gl = g.rows.reduce((s, r) => s + rtLeft(r), 0),
+      late = g.d !== "99:99" && gl && now >= g.d;
+    h += `<div class="rt-barn${late ? " late" : ""}"><div class="rt-bh"><span class="rt-no">${g.d === "99:99" ? "☀" : "⏰"}</span><b>${g.d === "99:99" ? t("오늘 안에") : g.d + t("까지")}${late ? ` <em>${t("늦음")}</em>` : ""}</b><span class="rt-cnt${gl ? "" : " ok"}">${gl || "✓"}</span></div>${g.rows.map(rtRow).join("")}</div>`;
   });
   return h;
 }
@@ -118,7 +163,22 @@ function rtSheet(k, b) {
   $("#sheetRoot").innerHTML =
     `<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(t(nm))}"><div class="sh-hd"><h2>${esc(t(nm))} · ${esc(t(b))}</h2><button class="x" type="button" data-a="closeSheet">${t("닫기")}</button></div><div class="sh-bd"><div class="note">${t("끝낸 것만 체크된 채로 두고 완료를 누르세요.")}</div>${rows}<div class="acts"><button class="act pri" type="button" data-a="rtDone" data-v="${esc(k + "|" + b)}" style="flex:1;padding:14px">✓ ${t("완료")}</button><button class="act" type="button" data-a="rtOpen" data-v="${esc(k + "|" + b)}">${t("자세히 · 기록 입력")} ›</button></div></div></div></div>`;
 }
+// 설정 › 할 일 순서 아래: 돈사 동선 (대표)
+function routeOrderSet() {
+  const o = routeOrder();
+  return `<div class="sec-t">${t("걷는 순서 (동선)")} <span>${t("할 일 ‘🚶 걷는 순서’ 보기에서 같은 일은 이 순서로")}</span></div><div class="panel">${o.map((b, i) => `<div class="setrow"><span><b>${i + 1}.</b> ${esc(t(b))}</span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="rtOrd" data-v="${esc(b)}" data-k="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="rtOrd" data-v="${esc(b)}" data-k="1" ${i === o.length - 1 ? "disabled" : ""} aria-label="아래로">▼</button></span></div>`).join("")}</div>`;
+}
 Object.assign(A, {
+  rtOrd: (v, el) => {
+    const o = routeOrder(),
+      i = o.indexOf(v),
+      j = i + +el.dataset.k;
+    if (i < 0 || j < 0 || j >= o.length) return;
+    [o[i], o[j]] = [o[j], o[i]];
+    state.routeOrder = o;
+    save();
+    render();
+  },
   tdView: v => {
     ui.todoView = v;
     try {

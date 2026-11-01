@@ -171,6 +171,7 @@ function reguTodos() {
       .filter(b => b.on && !b.todayFed)
       .map(b => ({
         rg: b.r.id,
+        at: b.d.at,
         label: `${b.day}/${b.d.days}${t("일째")} · ${b.d.sows.length}${t("두")} · ${t("1두")} ${b.d.ml}mL · ${b.d.at}${b.miss.length ? ` · ${t("빠진 날")} ${b.miss.length}${t("일")}` : ""}`,
         sev: b.miss.length || nowHM() > addMin(b.d.at, reguCfg().late) ? "bad" : "warn"
       }));
@@ -382,6 +383,7 @@ function reguMateTodos() {
   try {
     it = reguMateDue().map(({ g, m }) => ({
       rgm: g.id + "|" + m.n,
+      at: m.time,
       label: `${t("동기화 그룹 교배")} (${t("레규")}) ${m.n}/4${t("회")} · ${g.data.sows.length}${t("두")} · ${m.time}`,
       sev: nowHM() >= m.time ? "bad" : "warn"
     }));
