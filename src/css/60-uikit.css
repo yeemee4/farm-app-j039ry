@@ -302,10 +302,10 @@ body.env-demo .app{padding-top:20px}
 .sa-no input{width:220px;font-size:44px;font-weight:800;text-align:center;letter-spacing:.04em;border:0;border-bottom:3px solid var(--accent);background:none;color:var(--ink);padding:0}
 .sa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .sa-tb{min-width:0;width:100%;table-layout:fixed}
-.sa-tb .sc-l{width:58px;font-size:10px;letter-spacing:0;line-height:1.15;padding:2px 1px}
+.sa-tb .sc-l{width:70px;font-size:11px;letter-spacing:0;line-height:1.15;padding:2px 1px}
 .sa-tb th{font-size:11px;padding:3px 0}
 .sa-tb td{padding:0;position:relative}
-.sa-tb input.sa-in{width:100%;min-width:0;box-sizing:border-box;height:32px;border:0;background:transparent;text-align:center;font-size:13px;font-weight:700;color:var(--ink);padding:0;letter-spacing:-.03em}
+.sa-tb input.sa-in{width:100%;min-width:0;box-sizing:border-box;height:32px;border:0;background:transparent;text-align:center;font-size:15px;font-weight:700;color:var(--ink);padding:0;letter-spacing:-.03em}
 .sa-tb input.sa-in::placeholder{font-size:10px;font-weight:400}
 .sa-tb input.sa-in:focus{outline:2px solid var(--accent);background:var(--accent-soft)}
 .sa-tb td small{position:absolute;right:1px;bottom:0;font-size:8px;color:var(--muted)}
@@ -316,3 +316,11 @@ body.env-demo .app{padding-top:20px}
 .pen-no{font-size:16px;font-weight:800;fill:#24466e;text-anchor:middle}.pen-in{font-size:12px;font-weight:700;fill:var(--accent);text-anchor:middle}
 /* 모돈 칸 글자(42b): 큰 칸 번호 + 모돈 번호 */
 .bm-id2{font-weight:800;fill:#24466e;text-anchor:middle}.bm-no2{font-weight:800;fill:var(--ink);text-anchor:middle}
+/* 모돈 추가 날짜 칸: 평소 ‘1월/2일’ 두 줄, 누르면 1/2 로 고침 */
+.sa-tb td.sa-dt{height:36px}
+.sa-tb td.sa-dt input.sa-in{position:absolute;inset:0;height:100%}
+.sa-tb td.sa-dt .sa-md{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;line-height:1.1;text-align:center;pointer-events:none;color:var(--ink)}
+.sa-tb td.sa-dt .sa-md:empty{display:none}
+.sa-tb td.sa-dt:focus-within .sa-md{display:none}
+.sa-tb td.sa-dt:not(:focus-within) .sa-md:not(:empty) + input.sa-in{color:transparent}
+.sa-tb td.sa-dt.bad{outline:2px solid var(--red);outline-offset:-2px}

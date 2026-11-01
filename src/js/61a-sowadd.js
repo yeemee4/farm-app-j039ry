@@ -18,11 +18,23 @@ const SA_ROWS = [
   ["wn", "이유두수", "n"],
   ["note", "특이사항", "txt"]
 ];
+const ps0 = n => [1, 2, 3, 4].map(k => (n - 1) * 4 + k);
 const SA_TOP = [
   ["birth", "생년월일"],
   ["intro", "구입일"],
   ["firstMate", "초교배예정일"]
 ];
+// ‘1/2’·‘1.2’·‘1-2’·‘0102’·‘102’ → "0102"(MMDD) · 알아볼 수 없으면 ""
+function saMD(v) {
+  const s2 = String(v || "").trim();
+  let m, d;
+  const a = /^(\d{1,2})[/.\- ]+(\d{1,2})$/.exec(s2);
+  if (a) [m, d] = [+a[1], +a[2]];
+  else if (/^\d{4}$/.test(s2)) [m, d] = [+s2.slice(0, 2), +s2.slice(2)];
+  else if (/^\d{3}$/.test(s2)) [m, d] = [+s2[0], +s2.slice(1)];
+  else return "";
+  return m >= 1 && m <= 12 && d >= 1 && d <= 31 ? String(m).padStart(2, "0") + String(d).padStart(2, "0") : "";
+}
 const saLocs = () => [...BM_BARNS(), ...SOW_LOCS.filter(l => !BM_BARNS().includes(l))];
 // 모돈 번호 = 연도 끝자리-001~999 (2026년 6-001~6-999, 2027년 7-001~7-999). 칸에는 ‘6-0’이 미리 들어 있고 지울 수 있음
 const saYr = () => TODAY.slice(3, 4);
@@ -49,20 +61,26 @@ function saGrid() {
   const W = ui.sa,
     c = W.d,
     pg = W.pg || 1,
-    ps = [1, 2, 3, 4, 5, 6, 7, 8].map(k => (pg - 1) * 8 + k),
+    ps = [1, 2, 3, 4].map(k => (pg - 1) * 4 + k), // 한 장에 4산(대표 요청): 1~4산 · 5~8산 · 9산~
     D = suDates(c),
     gc = p => (((p - 1) >> 2) % 2 ? " vi" : "");
+  // 날짜 칸: ‘1/2’·‘1.2’·‘0102’ 로 넣으면 1월 2일(저장은 MMDD), 칸에는 ‘1월 2일’ 두 줄로 보임(누르면 1/2 로 고침)
   const cell = (p, k, typ) => {
     const v = (c.cols[p] || {})[k] ?? "",
-      yr = typ === "md" && D[p + "|" + k] ? D[p + "|" + k].slice(2, 4) : "";
-    return `<td class="${gc(p).trim()}"><input class="sa-in" size="1" data-sac="${p}|${k}" value="${esc(v)}" ${typ === "txt" ? 'type="text"' : 'type="text" inputmode="numeric" pattern="[0-9]*"'} ${typ === "md" ? 'maxlength="4" placeholder="월일"' : ""} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
+      md = typ === "md" && /^\d{4}$/.test(v) ? [+v.slice(0, 2), +v.slice(2)] : null,
+      yr = md && D[p + "|" + k] ? D[p + "|" + k].slice(2, 4) : "";
+    if (typ === "md")
+      return `<td class="${gc(p).trim()} sa-dt"><span class="sa-md">${md ? `${md[0]}${t("월")} ${md[1]}${t("일")}` : ""}</span><input class="sa-in" size="1" data-sac="${p}|${k}" value="${md ? md.join("/") : esc(v)}" type="text" inputmode="decimal" maxlength="5" placeholder="${t("월/일")}" aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
+    return `<td class="${gc(p).trim()}"><input class="sa-in" size="1" data-sac="${p}|${k}" value="${esc(v)}" ${typ === "txt" ? 'type="text"' : 'type="text" inputmode="numeric" pattern="[0-9]*"'} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}"></td>`;
   };
   return `<div class="sa-wrap"><table class="sc-tb sa-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(p => `<th class="${gc(p).trim()}">${p}${t("산")}</th>`).join("")}</tr></thead><tbody>${SA_ROWS.map(([k, l, typ]) => `<tr><th class="sc-l">${t(l)}</th>${ps.map(p => cell(p, k, typ)).join("")}</tr>`).join("")}</tbody></table></div><div class="sc-nav">${[
-    1, 2
+    [1, "1~4"],
+    [2, "5~8"],
+    [3, "9~12"]
   ]
     .map(
-      n =>
-        `<button type="button" class="chip ${n === pg ? "on" : ""}" data-a="saPg" data-v="${n}">${(n - 1) * 8 + 1}~${n * 8}${t("산")}</button>`
+      ([n, l]) =>
+        `<button type="button" class="chip ${n === pg ? "on" : ""} ${ps0(n).some(p => c.cols[p] && Object.keys(c.cols[p]).length) ? "has" : ""}" data-a="saPg" data-v="${n}">${l}${t("산")}</button>`
     )
     .join("")}</div>`;
 }
@@ -93,7 +111,7 @@ function vSowAdd() {
   const c = W.d,
     bad = suBad(c);
   let h = hd("no", `${esc(c.id)} · ${esc(t(W.b))}${W.st ? " " + esc(W.st) : ""}`);
-  h += `<div class="sowcard"><div class="sc-hd"><div class="sc-t">${t("모돈현황판")}</div><div class="sc-info"><div><small>${t("모돈번호")}</small><b>${esc(c.id)}</b></div><div><small>${t("품종")}</small><select data-sat="breed">${["LY", "LYD", "YL", "기타"].map(x => `<option ${c.breed === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>${SA_TOP.map(([k, l]) => `<div><small>${t(l)}</small><input type="date" data-sat="${k}" value="${esc(c[k] || "")}"></div>`).join("")}<div><small>${t("구입처")}</small><input type="text" data-sat="src" value="${esc(c.src || "")}"></div></div></div>${saGrid()}<div class="sc-foot">${t("날짜는 월일 네 자리(예: 1023) · 연도는 산차 순서로 자동 · 사 온 후보돈은 산차 칸을 비워 두세요")}</div></div>`;
+  h += `<div class="sowcard"><div class="sc-hd"><div class="sc-t">${t("모돈현황판")}</div><div class="sc-info"><div><small>${t("모돈번호")}</small><b>${esc(c.id)}</b></div><div><small>${t("품종")}</small><select data-sat="breed">${["LY", "LYD", "YL", "기타"].map(x => `<option ${c.breed === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>${SA_TOP.map(([k, l]) => `<div><small>${t(l)}</small><input type="date" data-sat="${k}" value="${esc(c[k] || "")}"></div>`).join("")}<div><small>${t("구입처")}</small><input type="text" data-sat="src" value="${esc(c.src || "")}"></div></div></div>${saGrid()}<div class="sc-foot">${t("날짜는 1/2 처럼(= 1월 2일) · 연도는 산차 순서로 자동 · 사 온 후보돈은 산차 칸을 비워 두세요")}</div></div>`;
   if (bad.length) h += `<div class="warnbox" style="display:block">${bad.map(esc).join("<br>")}</div>`;
   h += `<div class="acts sa-save"><button class="act pri" type="button" data-a="saSave" style="flex:1;padding:14px">${t("저장")}</button></div>`;
   return h;
@@ -142,9 +160,10 @@ document.addEventListener("input", e => {
   if (x.dataset.sac) {
     const [p, k] = x.dataset.sac.split("|"),
       typ = (SA_ROWS.find(r => r[0] === k) || [])[2];
-    if (typ !== "txt") x.value = x.value.replace(/\D/g, "");
+    if (typ === "n") x.value = x.value.replace(/\D/g, "");
+    if (typ === "md") x.value = x.value.replace(/[^0-9/.\- ]/g, "");
     const C = ui.sa.d.cols;
-    (C[p] = C[p] || {})[k] = x.value;
+    (C[p] = C[p] || {})[k] = typ === "md" ? saMD(x.value) || x.value : x.value;
     ui.sa.dirty = true;
   } else if (x.dataset.sat) {
     ui.sa.d[x.dataset.sat] = x.value;
@@ -153,6 +172,14 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   const x = e.target;
+  // 날짜 칸을 다 쓰고 나가면 ‘1월 2일’로 보이기
+  if (ui.sa && x.dataset && x.dataset.sac && x.parentNode.classList.contains("sa-dt")) {
+    const v = saMD(x.value),
+      sp = x.parentNode.querySelector(".sa-md");
+    if (v) x.value = +v.slice(0, 2) + "/" + +v.slice(2);
+    if (sp) sp.innerHTML = v ? `${+v.slice(0, 2)}${t("월")} ${+v.slice(2)}${t("일")}` : "";
+    x.parentNode.classList.toggle("bad", !!x.value && !v);
+  }
   if (ui.sa && x.dataset && x.dataset.sat) {
     ui.sa.d[x.dataset.sat] = x.value;
     ui.sa.dirty = true;
