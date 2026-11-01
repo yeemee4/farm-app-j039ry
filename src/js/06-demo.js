@@ -39,11 +39,22 @@ if (IS_DEMO) {
       { id: "a5", name: "Sokha", role: "worker", pin: "0000", lang: "km", active: true }
     ]
   });
+  // 사료 빈(대표 지정 2026-11-01): 교배사 3t · 임신사 1동·2동 5t 하나씩 · 분만사·자돈사·육성사 10t 하나씩 · 비육사 10t 두 개
+  // 같은 사료를 쓰는 빈은 사료 이름을 나눠 남은 양을 따로 셈: 교배 27일까지·이유 후 교배사 빈, 28~64일 1동 빈, 65일부터 2동 빈, 비육 125~159일 1번 빈·160일~ 2번 빈
   FARM.feed.bins = [
-    { name: "임신사 빈", feed: "임신모돈", spec: 12 },
-    { name: "분만사 빈", feed: "포유모돈", spec: 10 },
-    { name: "자돈사 빈", feed: "젖먹이", spec: 10 },
-    { name: "비육사 빈", feed: "육성", spec: 20 }
+    { name: "교배사 빈", short: "교배", feed: "임신모돈(교배사)", spec: 3 },
+    { name: "임신사 1동 빈", short: "임신1", feed: "임신모돈(1동)", spec: 5 },
+    { name: "임신사 2동 빈", short: "임신2", feed: "임신모돈(2동)", spec: 5 },
+    { name: "분만사 빈", short: "분만", feed: "포유모돈", spec: 10 },
+    { name: "자돈사 빈", short: "자돈", feed: "젖먹이", spec: 10 },
+    { name: "육성사 빈", short: "육성", feed: "육성", spec: 10 },
+    { name: "비육사 1 빈", short: "비육1", feed: "비육(1)", spec: 10 },
+    { name: "비육사 2 빈", short: "비육2", feed: "비육(2)", spec: 10 }
   ];
+  FARM.feed.gestSplit = [{ to: 28, feed: "임신모돈(교배사)" }, { to: 65, feed: "임신모돈(1동)" }, { to: 999, feed: "임신모돈(2동)" }];   // 이유 후·후보·교배 28일까지 = 교배사
+  FARM.feed.piglet = [...FARM.feed.piglet.filter(p => p.feed !== "육성"),
+    { from: 76, to: 126, feed: "육성", note: "육성사 · 76~125일" },
+    { from: 126, to: 160, feed: "비육(1)", note: "비육사 1 빈 · 126~159일" },
+    { from: 160, to: 999, feed: "비육(2)", note: "비육사 2 빈 · 160일~출하" }];
   document.body.classList.add("env-demo");
 }

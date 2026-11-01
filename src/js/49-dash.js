@@ -246,7 +246,7 @@ const DASH_P = {
           c = x.days == null ? "#6b7684" : x.days <= 2 ? DST.crit : x.days <= o ? DST.warn : DST.good,
           [lL, lR] = binLevels(b, Math.min(x.kg || 0, b.cap)),
           P = binPx(b);
-        return `<button type="button" class="d-bin" data-a="dashBin" data-v="${i}"><svg viewBox="0 ${P.B - 238} 120 242" aria-hidden="true">${binSvg(b, "d" + i, lL, lR, c, 0, "var(--fg)", "var(--tr)")}</svg><b>${esc(b.name.replace(" 빈", ""))}</b><span>${x.kg == null ? "—" : (Math.min(x.kg, b.cap) / 1000).toFixed(1) + "t"}</span><em style="color:${c}">${x.days == null ? t("기록 필요") : x.days + t("일")}${x.days != null && x.days <= o ? " ⚠" : ""}</em></button>`;
+        return `<button type="button" class="d-bin" data-a="dashBin" data-v="${i}"><svg viewBox="0 ${P.B - 238} 120 242" aria-hidden="true">${binSvg(b, "d" + i, lL, lR, c, 0, "var(--fg)", "var(--tr)")}</svg><b>${esc(b.short || b.name.replace(" 빈", ""))}</b><span>${x.kg == null ? "—" : (Math.min(x.kg, b.cap) / 1000).toFixed(1) + "t"}</span><em style="color:${c}">${x.days == null ? t("기록 필요") : x.days + t("일")}${x.days != null && x.days <= o ? " ⚠" : ""}</em></button>`;
       })
       .join("")}</div>`;
     return [

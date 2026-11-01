@@ -1013,7 +1013,7 @@ body.tv .dk-parity .d-col{font-size:1.3vh}body.tv .dk-parity .d-col b{font-size:
 body.tv .d-hero b{font-size:5vh}body.tv .d-hero span{font-size:1.7vh}
 .dk-npd .d-bar>span:first-child{white-space:nowrap}
 /* 현황판 사료 빈 (마지막 기록 기울기) */
-.d-bins{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:end;margin-bottom:8px}
+.d-bins{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px;align-items:end;margin-bottom:8px}
 .d-bin{display:grid;justify-items:center;gap:0;color:var(--fg);text-align:center;min-width:0}.d-bin svg{width:100%;max-width:64px;height:auto}
 .d-bin b{font-size:12px;margin-top:3px;white-space:nowrap}.d-bin span{font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}.d-bin em{font-style:normal;font-size:12.5px;font-weight:800}
 body.tv .d-bin svg{max-width:7vh}body.tv .d-bin b,body.tv .d-bin span{font-size:1.4vh}body.tv .d-bin em{font-size:1.6vh}
@@ -1163,7 +1163,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-01 02:41";
+const BUILD_AT="11-01 12:10";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -1534,12 +1534,23 @@ if (IS_DEMO) {
       { id: "a5", name: "Sokha", role: "worker", pin: "0000", lang: "km", active: true }
     ]
   });
+  // 사료 빈(대표 지정 2026-11-01): 교배사 3t · 임신사 1동·2동 5t 하나씩 · 분만사·자돈사·육성사 10t 하나씩 · 비육사 10t 두 개
+  // 같은 사료를 쓰는 빈은 사료 이름을 나눠 남은 양을 따로 셈: 교배 27일까지·이유 후 교배사 빈, 28~64일 1동 빈, 65일부터 2동 빈, 비육 125~159일 1번 빈·160일~ 2번 빈
   FARM.feed.bins = [
-    { name: "임신사 빈", feed: "임신모돈", spec: 12 },
-    { name: "분만사 빈", feed: "포유모돈", spec: 10 },
-    { name: "자돈사 빈", feed: "젖먹이", spec: 10 },
-    { name: "비육사 빈", feed: "육성", spec: 20 }
+    { name: "교배사 빈", short: "교배", feed: "임신모돈(교배사)", spec: 3 },
+    { name: "임신사 1동 빈", short: "임신1", feed: "임신모돈(1동)", spec: 5 },
+    { name: "임신사 2동 빈", short: "임신2", feed: "임신모돈(2동)", spec: 5 },
+    { name: "분만사 빈", short: "분만", feed: "포유모돈", spec: 10 },
+    { name: "자돈사 빈", short: "자돈", feed: "젖먹이", spec: 10 },
+    { name: "육성사 빈", short: "육성", feed: "육성", spec: 10 },
+    { name: "비육사 1 빈", short: "비육1", feed: "비육(1)", spec: 10 },
+    { name: "비육사 2 빈", short: "비육2", feed: "비육(2)", spec: 10 }
   ];
+  FARM.feed.gestSplit = [{ to: 28, feed: "임신모돈(교배사)" }, { to: 65, feed: "임신모돈(1동)" }, { to: 999, feed: "임신모돈(2동)" }];   // 이유 후·후보·교배 28일까지 = 교배사
+  FARM.feed.piglet = [...FARM.feed.piglet.filter(p => p.feed !== "육성"),
+    { from: 76, to: 126, feed: "육성", note: "육성사 · 76~125일" },
+    { from: 126, to: 160, feed: "비육(1)", note: "비육사 1 빈 · 126~159일" },
+    { from: 160, to: 999, feed: "비육(2)", note: "비육사 2 빈 · 160일~출하" }];
   document.body.classList.add("env-demo");
 }
 /* ================= 기본 설정 ================= */
@@ -6871,6 +6882,8 @@ function sowAnchor(s) {
   if ((st.stage === "임신" || st.stage === "교배") && st.mate) return { pos0: 0, at: st.mate };
   return { gilt: st.stage === "후보", open: true };
 }
+// 임신 사료 빈이 둘 이상이면(FARM.feed.gestSplit) 임신 일수로 어느 빈에서 먹는지 나눔 · 없으면 "임신모돈" 하나
+const gestBinFeed = p => ((FARM.feed.gestSplit || []).find(x => p < x.to) || { feed: "임신모돈" }).feed;
 // 임신·공태·후보는 임신돈 급여 기준(47g gCfg)을 따름
 function sowNeed(a, day, I) {
   const C = gCfg();
@@ -6878,10 +6891,10 @@ function sowNeed(a, day, I) {
   const p = (((a.pos0 + diff(a.at, day)) % FP_CYC) + FP_CYC) % FP_CYC;
   if (p < 115) {
     const ph = C.phases.find(x => p <= x.to) || C.phases[C.phases.length - 1];
-    return [ph.kg, "임신모돈"];
+    return [ph.kg, gestBinFeed(p)];
   }
   if (p < 143) return [I.lact[Math.min(3, Math.floor((p - 115) / 7))], "포유모돈"];
-  return [C.flush, "임신모돈"];
+  return [C.flush, gestBinFeed(0)];
 }
 function avgLive() {
   const m = rangeMetrics(addDays(TODAY, -180), TODAY);
@@ -6934,7 +6947,7 @@ function feedPlanDays0(H, S0) {
     sows.forEach(([s, a]) => {
       const r = sowNeed(a, d, I);
       if (Array.isArray(r)) add(r[1], r[0]);
-      else add("임신모돈", r);
+      else add(gestBinFeed(0), r);
     });
     bs.forEach(({ k, b, extra }) => {
       const age = diff(k, d);
@@ -9166,7 +9179,7 @@ const DASH_P = {
           c = x.days == null ? "#6b7684" : x.days <= 2 ? DST.crit : x.days <= o ? DST.warn : DST.good,
           [lL, lR] = binLevels(b, Math.min(x.kg || 0, b.cap)),
           P = binPx(b);
-        return `<button type="button" class="d-bin" data-a="dashBin" data-v="${i}"><svg viewBox="0 ${P.B - 238} 120 242" aria-hidden="true">${binSvg(b, "d" + i, lL, lR, c, 0, "var(--fg)", "var(--tr)")}</svg><b>${esc(b.name.replace(" 빈", ""))}</b><span>${x.kg == null ? "—" : (Math.min(x.kg, b.cap) / 1000).toFixed(1) + "t"}</span><em style="color:${c}">${x.days == null ? t("기록 필요") : x.days + t("일")}${x.days != null && x.days <= o ? " ⚠" : ""}</em></button>`;
+        return `<button type="button" class="d-bin" data-a="dashBin" data-v="${i}"><svg viewBox="0 ${P.B - 238} 120 242" aria-hidden="true">${binSvg(b, "d" + i, lL, lR, c, 0, "var(--fg)", "var(--tr)")}</svg><b>${esc(b.short || b.name.replace(" 빈", ""))}</b><span>${x.kg == null ? "—" : (Math.min(x.kg, b.cap) / 1000).toFixed(1) + "t"}</span><em style="color:${c}">${x.days == null ? t("기록 필요") : x.days + t("일")}${x.days != null && x.days <= o ? " ⚠" : ""}</em></button>`;
       })
       .join("")}</div>`;
     return [

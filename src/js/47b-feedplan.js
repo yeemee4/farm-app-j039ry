@@ -44,6 +44,8 @@ function sowAnchor(s) {
   if ((st.stage === "임신" || st.stage === "교배") && st.mate) return { pos0: 0, at: st.mate };
   return { gilt: st.stage === "후보", open: true };
 }
+// 임신 사료 빈이 둘 이상이면(FARM.feed.gestSplit) 임신 일수로 어느 빈에서 먹는지 나눔 · 없으면 "임신모돈" 하나
+const gestBinFeed = p => ((FARM.feed.gestSplit || []).find(x => p < x.to) || { feed: "임신모돈" }).feed;
 // 임신·공태·후보는 임신돈 급여 기준(47g gCfg)을 따름
 function sowNeed(a, day, I) {
   const C = gCfg();
@@ -51,10 +53,10 @@ function sowNeed(a, day, I) {
   const p = (((a.pos0 + diff(a.at, day)) % FP_CYC) + FP_CYC) % FP_CYC;
   if (p < 115) {
     const ph = C.phases.find(x => p <= x.to) || C.phases[C.phases.length - 1];
-    return [ph.kg, "임신모돈"];
+    return [ph.kg, gestBinFeed(p)];
   }
   if (p < 143) return [I.lact[Math.min(3, Math.floor((p - 115) / 7))], "포유모돈"];
-  return [C.flush, "임신모돈"];
+  return [C.flush, gestBinFeed(0)];
 }
 function avgLive() {
   const m = rangeMetrics(addDays(TODAY, -180), TODAY);
@@ -107,7 +109,7 @@ function feedPlanDays0(H, S0) {
     sows.forEach(([s, a]) => {
       const r = sowNeed(a, d, I);
       if (Array.isArray(r)) add(r[1], r[0]);
-      else add("임신모돈", r);
+      else add(gestBinFeed(0), r);
     });
     bs.forEach(({ k, b, extra }) => {
       const age = diff(k, d);
