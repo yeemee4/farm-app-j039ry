@@ -415,18 +415,10 @@ function vDash() {
   return h;
 }
 
-// ---- 대표 설정: 칸 켜기/끄기 · 순서 · 주간 목표 ----
-function vDashSet() {
-  const d = dashCfg(),
-    nm = Object.fromEntries(DASH_LIST.map(x => [x[0], x[1]]));
-  let h = `<div class="pagehd"><h2>${t("현황판 항목")}</h2></div><div class="note">${t("켜진 칸만 현황판에 나옵니다. TV에서는 켜진 칸 개수에 맞춰 한 화면에 자동 배치됩니다. ‘오늘 할 일·회의 메모’는 오른쪽 열, ‘지난달 성적’은 맨 아래 띠에 놓입니다.")}</div><div class="panel">`;
-  h += d.order
-    .map(
-      (k, i) =>
-        `<div class="setrow"><span><b>${t(nm[k] || k)}</b></span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="1" ${i === d.order.length - 1 ? "disabled" : ""} aria-label="아래로">▼</button><button class="act ${d.on[k] ? "pri" : ""}" type="button" data-a="dashTog" data-v="${k}">${d.on[k] ? t("켜짐") : t("꺼짐")}</button></span></div>`
-    )
-    .join("");
-  h += `</div><div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
+// 주간 번식 목표 + 성적 목표 (현황판 항목 설정 · 설정 › 초기 입력 '목표' 단계에서 함께 씀)
+function dashGoalSet() {
+  const d = dashCfg();
+  let h = `<div class="sec-t">${t("이번 주 번식 목표")} <span>${t("주 4복 기준 기본값")}</span></div><div class="panel">`;
   h += Object.keys(DASH_GOAL0)
     .map(
       k =>
@@ -446,9 +438,22 @@ function vDashSet() {
         `<div class="setrow"><span>${l}</span><div class="stepper"><button type="button" data-a="sgoal" data-v="${k}" data-k="${k === "npd" ? -1 : k.startsWith("fcr") ? -0.05 : -0.5}" aria-label="줄이기">−</button><input type="number" value="${SG[k]}" readonly aria-label="${l}"><button type="button" data-a="sgoal" data-v="${k}" data-k="${k === "npd" ? 1 : k.startsWith("fcr") ? 0.05 : 0.5}" aria-label="늘리기">+</button></div></div>`
     )
     .join("")}`;
+  return h + `</div>`;
+}
+// ---- 대표 설정: 칸 켜기/끄기 · 순서 · 주간 목표 ----
+function vDashSet() {
+  const d = dashCfg(),
+    nm = Object.fromEntries(DASH_LIST.map(x => [x[0], x[1]]));
+  let h = `<div class="pagehd"><h2>${t("현황판 항목")}</h2></div><div class="note">${t("켜진 칸만 현황판에 나옵니다. TV에서는 켜진 칸 개수에 맞춰 한 화면에 자동 배치됩니다. ‘오늘 할 일·회의 메모’는 오른쪽 열, ‘지난달 성적’은 맨 아래 띠에 놓입니다.")}</div><div class="panel">`;
+  h += d.order
+    .map(
+      (k, i) =>
+        `<div class="setrow"><span><b>${t(nm[k] || k)}</b></span><span class="row2" style="gap:6px;flex:none"><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="-1" ${i === 0 ? "disabled" : ""} aria-label="위로">▲</button><button class="sbtn" type="button" data-a="dashMove" data-v="${k}" data-k="1" ${i === d.order.length - 1 ? "disabled" : ""} aria-label="아래로">▼</button><button class="act ${d.on[k] ? "pri" : ""}" type="button" data-a="dashTog" data-v="${k}">${d.on[k] ? t("켜짐") : t("꺼짐")}</button></span></div>`
+    )
+    .join("");
+  h += `</div>` + dashGoalSet();
   return (
     h +
-    `</div>` +
     parGoalSet() +
     cullRuleSet() +
     closeBySet() +
