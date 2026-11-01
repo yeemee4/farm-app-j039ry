@@ -1,0 +1,64 @@
+# 서버 자동 배포: server/Code.gs 를 구글 Apps Script 에 올리고 '새 버전'으로 배포 (웹 앱 주소는 그대로)
+# - main 에 server/Code.gs 가 바뀌어 올라가면 → 테스트 시트 서버
+# - 본서버는 손으로만: Actions › server-deploy › Run workflow › target = prod  (또는 gh workflow run server-deploy.yml -f target=prod)
+# 비밀값(Settings › Secrets and variables › Actions):
+#   CLASPRC            — 대표 컴퓨터에서 `clasp login` 후 생긴 ~/.clasprc.json 내용 전체
+#   GAS_SCRIPT_TEST    — 테스트 시트 Apps Script › 프로젝트 설정 › 스크립트 ID
+#   GAS_DEPLOY_TEST    — 테스트 시트 배포 관리 › 지금 웹 앱 배포의 배포 ID
+#   GAS_SCRIPT_PROD · GAS_DEPLOY_PROD — 본 시트 같은 값
+name: server-deploy
+on:
+  push:
+    branches: [main]
+    paths: [server/Code.gs]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "test 또는 prod"
+        required: true
+        default: test
+        type: choice
+        options: [test, prod]
+concurrency: { group: server-deploy, cancel-in-progress: false }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TARGET: ${{ github.event.inputs.target || 'test' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i -g @google/clasp@2.4.2
+      - name: 로그인 정보
+        env: { CLASPRC: "${{ secrets.CLASPRC }}" }
+        run: |
+          test -n "$CLASPRC" || { echo "::error::CLASPRC 비밀값이 없습니다"; exit 1; }
+          printf '%s' "$CLASPRC" > ~/.clasprc.json
+      - name: 올리기·배포
+        env:
+          SID: ${{ env.TARGET == 'prod' && secrets.GAS_SCRIPT_PROD || secrets.GAS_SCRIPT_TEST }}
+          DID: ${{ env.TARGET == 'prod' && secrets.GAS_DEPLOY_PROD || secrets.GAS_DEPLOY_TEST }}
+        run: |
+          test -n "$SID" -a -n "$DID" || { echo "::error::$TARGET 스크립트 ID·배포 ID 비밀값이 없습니다"; exit 1; }
+          mkdir /tmp/gas && cd /tmp/gas
+          echo "{\"scriptId\":\"$SID\"}" > .clasp.json
+          clasp pull                      # 지금 프로젝트(appsscript.json·다른 파일) 그대로 두고
+          ls
+          JS=$(ls *.js *.gs 2>/dev/null || true)
+          [ "$(echo "$JS" | wc -w)" = 1 ] || { echo "::error::스크립트 파일이 하나가 아닙니다: $JS"; exit 1; }
+          cp "$GITHUB_WORKSPACE/server/Code.gs" "$JS"     # 코드 파일만 저장소 것으로 바꿈
+          clasp push -f
+          MSG="$(git -C "$GITHUB_WORKSPACE" log -1 --format='%h %s' | cut -c1-90)"
+          clasp deploy -i "$DID" -d "$MSG"
+      - name: 확인(웹 앱 응답)
+        env:
+          DID: ${{ env.TARGET == 'prod' && secrets.GAS_DEPLOY_PROD || secrets.GAS_DEPLOY_TEST }}
+        run: |
+          WANT=$(grep -m1 -oP '^var VER = \K[0-9]+' server/Code.gs)
+          R=$(curl -sL "https://script.google.com/macros/s/$DID/exec")
+          echo "$R" | grep -q '"ok":true' && echo "$R" | grep -q "\"ver\":$WANT" || { echo "::error::응답이 이상합니다: ${R:0:200}"; exit 1; }
+          echo "$TARGET 서버 배포 완료 (ver $WANT)"
+      - if: always()
+        run: rm -f ~/.clasprc.json

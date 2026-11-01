@@ -51,7 +51,7 @@
 3. 사용자가 "본서버에 올려" → `python3 tools/build.py --prod` (= 루트 **index.html** + **setup/index.html** 초기 등록 앱) → 커밋·푸시 → 실제 주소 https://yeemee4.github.io/farm-app-j039ry/
    - 본서버 index.html 은 "본서버에 올려" 때만 바꾼다(그 전 작업 커밋에서는 건드리지 않음).
 4. Pages 배포 확인: `gh api repos/yeemee4/farm-app-j039ry/actions/runs --jq '.workflow_runs[0]|.status+" "+(.conclusion//"-")'`
-5. 서버(Apps Script)도 둘: ‘비담농장 서버 (테스트)’ 시트 ↔ 시험용 앱, ‘비담농장 서버’ 시트 ↔ 본서버 앱. Code.gs 가 바뀌면 테스트 시트에 먼저 붙여 확인 → 본 시트에 붙임(배포 관리 › 새 버전, URL 유지).
+5. 서버(Apps Script)도 둘: ‘비담농장 서버 (테스트)’ 시트 ↔ 시험용 앱, ‘비담농장 서버’ 시트 ↔ 본서버 앱. Code.gs 배포는 자동(`.github/workflows/server-deploy.yml`, clasp · 설정 `server/자동배포안내.md`): main 에 Code.gs 가 바뀌어 올라가면 테스트 시트 서버에 새 버전 배포 · "본서버에 올려" 때 `gh workflow run server-deploy.yml -f target=prod`(안 되면 대표에게 Actions › Run workflow › prod 안내). 비밀값 CLASPRC·GAS_SCRIPT_/GAS_DEPLOY_(TEST·PROD) 는 대표만 넣음. 밤 점검 세션은 배포 금지.
 6. **시험(tools/test-*.js)은 작동이 의심스러운 큰 코드 수정이 있을 때 대표에게 물어보고 돌린다**(대표 요청 2026-10-31). 질문은 객관식(AskUserQuestion)으로, 한꺼번에 물을 수 있으면 동시에.
 7. **보고할 때마다 올리지 않은 커밋을 "1. ~ 2. ~" 번호 목록으로 한 줄씩 요약해 붙인다**(대표 요청 2026-10-31). 바로 뒤 stop hook 알림에는 목록을 되풀이하지 말고 한 줄로만 답한다. 목록 바로 아래에 링크 3줄을 늘 붙인다(대표 요청 2026-10-31): 시험용 앱 https://yeemee4.github.io/farm-app-j039ry/test/ · 본서버 앱 https://yeemee4.github.io/farm-app-j039ry/ · 서버 코드 https://github.com/yeemee4/farm-app-j039ry/blob/main/server/Code.gs
 8. 화면 캡처는 배치가 크게 바뀔 때만. tools/probe.js·smoke.js 는 기본 test/index.html (본서버는 PAGE=index.html).
