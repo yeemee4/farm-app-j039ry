@@ -70,8 +70,8 @@ function saGrid() {
       md = typ === "md" && /^\d{4}$/.test(v) ? [+v.slice(0, 2), +v.slice(2)] : null,
       yr = md && D[p + "|" + k] ? D[p + "|" + k].slice(2, 4) : "";
     if (typ === "md")
-      return `<td class="${gc(p).trim()} sa-dt"><span class="sa-md">${md ? `${md[0]}${t("월")} ${md[1]}${t("일")}` : ""}</span><input class="sa-in" size="1" data-sac="${p}|${k}" value="${md ? md.join("/") : esc(v)}" type="text" inputmode="decimal" maxlength="5" placeholder="${t("월/일")}" aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
-    return `<td class="${gc(p).trim()}"><input class="sa-in" size="1" data-sac="${p}|${k}" value="${esc(v)}" ${typ === "txt" ? 'type="text"' : 'type="text" inputmode="numeric" pattern="[0-9]*"'} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}"></td>`;
+      return `<td class="${gc(p).trim()} sa-dt"><span class="sa-md">${md ? `${md[0]}${t("월")} ${md[1]}${t("일")}` : ""}</span><input class="sa-in" size="1" data-sac="${p}|${k}" value="${md ? md.join("/") : esc(v)}" type="text" inputmode="none" data-numpad="1" maxlength="5" placeholder="${t("월/일")}" aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
+    return `<td class="${gc(p).trim()}"><input class="sa-in" size="1" data-sac="${p}|${k}" value="${esc(v)}" ${k === "note" ? 'type="text"' : 'type="text" inputmode="none" data-numpad="1"'} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}"></td>`;
   };
   return `<div class="sa-wrap"><table class="sc-tb sa-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(p => `<th class="${gc(p).trim()}">${p}${t("산")}</th>`).join("")}</tr></thead><tbody>${SA_ROWS.map(([k, l, typ]) => `<tr><th class="sc-l">${t(l)}</th>${ps.map(p => cell(p, k, typ)).join("")}</tr>`).join("")}</tbody></table></div><div class="sc-nav">${[
     [1, "1~4"],
@@ -114,6 +114,30 @@ function vSowAdd() {
   h += `<div class="sowcard"><div class="sc-hd"><div class="sc-t">${t("모돈현황판")}</div><div class="sc-info"><div><small>${t("모돈번호")}</small><b>${esc(c.id)}</b></div><div><small>${t("품종")}</small><select data-sat="breed">${["LY", "LYD", "YL", "기타"].map(x => `<option ${c.breed === x ? "selected" : ""}>${x}</option>`).join("")}</select></div>${SA_TOP.map(([k, l]) => `<div><small>${t(l)}</small><input type="date" data-sat="${k}" value="${esc(c[k] || "")}"></div>`).join("")}<div><small>${t("구입처")}</small><input type="text" data-sat="src" value="${esc(c.src || "")}"></div></div></div>${saGrid()}<div class="sc-foot">${t("날짜는 1/2 처럼(= 1월 2일) · 연도는 산차 순서로 자동 · 사 온 후보돈은 산차 칸을 비워 두세요")}</div></div>`;
   if (bad.length) h += `<div class="warnbox" style="display:block">${bad.map(esc).join("<br>")}</div>`;
   h += `<div class="acts sa-save"><button class="act pri" type="button" data-a="saSave" style="flex:1;padding:14px">${t("저장")}</button></div>`;
+  // 앱 숫자판(대표 요청): 특이사항 말고는 휴대폰 키보드 대신 0~9 · - / + 만
+  h += `<div class="sa-pad" id="saPad" hidden>${[
+    "1",
+    "2",
+    "3",
+    "/",
+    "4",
+    "5",
+    "6",
+    "-",
+    "7",
+    "8",
+    "9",
+    "+",
+    "⌫",
+    "0",
+    "다음",
+    "완료"
+  ]
+    .map(
+      k =>
+        `<button type="button" data-kp="${k}" class="${k === "완료" ? "go" : k === "다음" ? "nx" : ""}">${k === "다음" || k === "완료" ? t(k) : k}</button>`
+    )
+    .join("")}</div>`;
   return h;
 }
 // 저장: 카드 → state.setup.cards → 기록·모돈 만들기
@@ -148,6 +172,44 @@ BEFORE_RENDER.push(() => {
     if (ui.sa.dirty && confirm(t("저장하지 않은 내용이 있습니다. 저장할까요?"))) saCommit();
     ui.sa = null;
   }
+});
+// ---- 앱 숫자판: 칸을 누르면 아래에 뜸, 누른 글자를 칸 끝에 붙임 · 다음 = 같은 산차 아래 칸 · 완료 = 닫기 ----
+function saPadShow(on) {
+  const P = $("#saPad");
+  if (!P) return;
+  P.hidden = !on;
+  document.body.classList.toggle("sa-padon", on);
+}
+document.addEventListener("focusin", e => {
+  if (e.target.dataset && e.target.dataset.numpad) {
+    saPadShow(true);
+    setTimeout(() => e.target.scrollIntoView({ block: "center", behavior: "smooth" }), 50);
+  }
+});
+document.addEventListener("focusout", () =>
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (!(a && a.dataset && a.dataset.numpad)) saPadShow(false);
+  }, 0)
+);
+document.addEventListener("pointerdown", e => {
+  const b = e.target.closest && e.target.closest("#saPad button");
+  if (!b) return;
+  e.preventDefault(); // 칸에서 초점이 빠지지 않게
+  const x = document.activeElement;
+  if (!(x && x.dataset && x.dataset.numpad)) return;
+  const k = b.dataset.kp;
+  if (k === "완료") return x.blur();
+  if (k === "다음") {
+    x.dispatchEvent(new Event("change", { bubbles: true }));
+    const [p] = x.dataset.sac.split("|"),
+      L = [...document.querySelectorAll("[data-numpad]")],
+      same = L.filter(y => y.dataset.sac.split("|")[0] === p),
+      nx = same[same.indexOf(x) + 1] || L[L.indexOf(x) + 1];
+    return nx ? nx.focus() : x.blur();
+  }
+  x.value = k === "⌫" ? x.value.slice(0, -1) : x.value + k;
+  x.dispatchEvent(new Event("input", { bubbles: true }));
 });
 // 번호 칸을 누르면 글자 끝에 커서(‘6-0’ 뒤에 바로 이어서 입력)
 document.addEventListener("focusin", e => {
