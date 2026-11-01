@@ -82,7 +82,7 @@ function statusCounts() {
 }
 let ctx = null;
 const reopen = () => {
-  if (ctx && ctx.k === "todo") openTodo(ctx.v, ctx.b);
+  if (ctx && ctx.k === "todo") openTodo(ctx.v);
   else if (ctx && ctx.k === "sow") openSowDetail(ctx.v);
 };
 function closeSheet() {
@@ -99,37 +99,38 @@ function keepScroll(fn) {
   if (n) n.scrollTop = y;
   window.scrollTo(0, wy);
 }
-// 할 일 완료 체크 기록: '조치' 기록 + todoLog (할 일 창 체크 칸 · 걷는 순서 보기 41r 가 함께 씀)
-function tdMark(key, task, target, sow, memo = "") {
-  state.todoLog = state.todoLog || {};
-  const id = newId(),
-    now = new Date().toISOString();
-  state.records.push({
-    id,
-    type: "조치",
-    workDate: TODAY,
-    createdAt: now,
-    user: state.user,
-    data: { task, target, memo, ...(sow ? { sow } : {}) }
-  });
-  state.todoLog[key] = { memo, user: state.user, at: now, rec: id };
-  delete ui.memo[key];
-}
-function tdUnmark(key) {
-  const log = (state.todoLog || {})[key];
-  if (!log) return;
-  state.records = state.records.filter(r => r.id !== log.rec);
-  ui.memo[key] = log.memo;
-  delete state.todoLog[key];
-}
 function toggleTodo(t) {
   const key = t.dataset.tdk;
+  state.todoLog = state.todoLog || {};
   const m = [...document.querySelectorAll("[data-tdm]")].find(e => e.dataset.tdm === key);
   const memo = (m ? m.value : "").trim();
   if (t.checked) {
-    tdMark(key, t.dataset.tdt, t.dataset.tdtarget, t.dataset.tdsow, memo);
+    const id = newId(),
+      now = new Date().toISOString();
+    state.records.push({
+      id,
+      type: "조치",
+      workDate: TODAY,
+      createdAt: now,
+      user: state.user,
+      data: {
+        task: t.dataset.tdt,
+        target: t.dataset.tdtarget,
+        memo,
+        ...(t.dataset.tdsow ? { sow: t.dataset.tdsow } : {})
+      }
+    });
+    state.todoLog[key] = { memo, user: state.user, at: now, rec: id };
+    delete ui.memo[key];
     toast("조치 완료로 기록했습니다");
-  } else tdUnmark(key);
+  } else {
+    const log = state.todoLog[key];
+    if (log) {
+      state.records = state.records.filter(r => r.id !== log.rec);
+      ui.memo[key] = log.memo;
+    }
+    delete state.todoLog[key];
+  }
   save();
   keepScroll(() => {
     render();
