@@ -301,11 +301,13 @@ body.env-demo .app{padding-top:20px}
 .sa-no{display:flex;align-items:center;justify-content:center;gap:4px;font-size:40px;font-weight:800;margin:14px 0 6px}
 .sa-no input{width:220px;font-size:44px;font-weight:800;text-align:center;letter-spacing:.04em;border:0;border-bottom:3px solid var(--accent);background:none;color:var(--ink);padding:0}
 .sa-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.sa-tb{min-width:660px}
-.sa-tb .sc-l{width:84px;font-size:11.5px;letter-spacing:0}
+.sa-tb{min-width:0;width:100%;table-layout:fixed}
+.sa-tb .sc-l{width:58px;font-size:10px;letter-spacing:0;line-height:1.15;padding:2px 1px}
+.sa-tb th{font-size:11px;padding:3px 0}
 .sa-tb td{padding:0;position:relative}
-.sa-in{width:100%;height:34px;border:0;background:transparent;text-align:center;font-size:15px;font-weight:700;color:var(--ink);padding:0 1px}
-.sa-in:focus{outline:2px solid var(--accent);background:var(--accent-soft)}
+.sa-tb input.sa-in{width:100%;min-width:0;box-sizing:border-box;height:32px;border:0;background:transparent;text-align:center;font-size:13px;font-weight:700;color:var(--ink);padding:0;letter-spacing:-.03em}
+.sa-tb input.sa-in::placeholder{font-size:10px;font-weight:400}
+.sa-tb input.sa-in:focus{outline:2px solid var(--accent);background:var(--accent-soft)}
 .sa-tb td small{position:absolute;right:1px;bottom:0;font-size:8px;color:var(--muted)}
 .sowcard .sc-info select,.sowcard .sc-info input{width:100%;font-size:13px;font-weight:700;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink)}
 .sa-save{margin-top:12px}

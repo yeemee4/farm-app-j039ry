@@ -55,7 +55,7 @@ function saGrid() {
   const cell = (p, k, typ) => {
     const v = (c.cols[p] || {})[k] ?? "",
       yr = typ === "md" && D[p + "|" + k] ? D[p + "|" + k].slice(2, 4) : "";
-    return `<td class="${gc(p).trim()}"><input class="sa-in" data-sac="${p}|${k}" value="${esc(v)}" ${typ === "txt" ? 'type="text"' : 'type="text" inputmode="numeric" pattern="[0-9]*"'} ${typ === "md" ? 'maxlength="4" placeholder="월일"' : ""} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
+    return `<td class="${gc(p).trim()}"><input class="sa-in" size="1" data-sac="${p}|${k}" value="${esc(v)}" ${typ === "txt" ? 'type="text"' : 'type="text" inputmode="numeric" pattern="[0-9]*"'} ${typ === "md" ? 'maxlength="4" placeholder="월일"' : ""} aria-label="${p}${t("산")} ${t(SA_ROWS.find(x => x[0] === k)[1])}">${yr ? `<small>'${yr}</small>` : ""}</td>`;
   };
   return `<div class="sa-wrap"><table class="sc-tb sa-tb"><thead><tr><th class="sc-l">${t("항목")} ╱ ${t("산차")}</th>${ps.map(p => `<th class="${gc(p).trim()}">${p}${t("산")}</th>`).join("")}</tr></thead><tbody>${SA_ROWS.map(([k, l, typ]) => `<tr><th class="sc-l">${t(l)}</th>${ps.map(p => cell(p, k, typ)).join("")}</tr>`).join("")}</tbody></table></div><div class="sc-nav">${[
     1, 2
