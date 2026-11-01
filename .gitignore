@@ -1,2 +1,4 @@
 .taste-skill/
 .scratch/*.png
+.scratch/**/*.png
+.scratch/*.png
