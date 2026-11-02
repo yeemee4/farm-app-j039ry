@@ -1,7 +1,8 @@
 /* ================= v0.2 · 돈군 탭 ================= */
 function vBatch() {
+  if (ui.ba) return vBatchAdd(); // + 돈군 추가 진행 중(61b)
   const L = liveBatches();
-  let h = `<div class="pagehd" style="justify-content:space-between"><h2>돈군</h2><span class="row2" style="gap:6px;flex:none"><button class="act" type="button" data-a="tab" data-v="count">${t("두수 실사")}</button><button class="act pri" type="button" data-a="input" data-v="돈군백신">+ 백신 기록</button></span></div>
+  let h = `<div class="pagehd" style="justify-content:space-between"><h2>돈군</h2><span class="row2" style="gap:6px;flex:none"><button class="act" type="button" data-a="tab" data-v="count">${t("두수 실사")}</button><button class="act pri" type="button" data-a="batchAdd">+ ${t("돈군 추가")}</button><button class="act pri" type="button" data-a="input" data-v="돈군백신">+ 백신 기록</button></span></div>
     <div class="note">분만 주차별로 자돈 돈군을 자동으로 묶습니다. 위치는 설정의 돈사별 주 수로 계산한 계획 위치입니다. 백신은 ‘어디까지 놓았는지’를 단계별로 보여 줍니다.</div>`;
   h += `<div class="statusrow">${state.cfg.stage
     .map(([n]) => {

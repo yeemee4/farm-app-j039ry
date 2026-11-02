@@ -331,3 +331,14 @@ body.env-demo .app{padding-top:20px}
 .sa-pad button.nx{font-size:16px;background:var(--accent-soft);color:var(--accent)}
 .sa-pad button.go{font-size:16px;background:var(--accent);color:#fff;border-color:var(--accent)}
 body.sa-padon{padding-bottom:250px}
+/* 돈군 추가 카드 (61b) */
+.ba-tb .sc-l{width:96px}
+.ba-tb td{text-align:left;padding:4px 6px!important}
+.ba-tb td small{position:static!important;font-size:12px;margin-left:2px}
+.ba-tb input.sa-in{width:70%;font-size:17px;text-align:left}
+.ba-info{font-size:12.5px;line-height:1.4}
+.ba-vax{display:grid;gap:4px}.ba-vax .ckbox{font-size:13px}
+.ba-tb th,.ba-tb td{height:auto!important}
+.ba-row{display:flex;align-items:center;gap:4px}
+.ba-tb .ba-row input.sa-in{flex:1;width:auto}
+.ba-vax .ckbox{display:flex;align-items:center;gap:6px}

@@ -115,7 +115,12 @@ function vSowAdd() {
   if (bad.length) h += `<div class="warnbox" style="display:block">${bad.map(esc).join("<br>")}</div>`;
   h += `<div class="acts sa-save"><button class="act pri" type="button" data-a="saSave" style="flex:1;padding:14px">${t("저장")}</button></div>`;
   // 앱 숫자판(대표 요청): 특이사항 말고는 휴대폰 키보드 대신 0~9 · - / + 만
-  h += `<div class="sa-pad" id="saPad" hidden>${[
+  h += saPadHtml();
+  return h;
+}
+// 앱 숫자판 html (모돈 추가 61a · 돈군 추가 61b 함께 씀)
+function saPadHtml() {
+  return `<div class="sa-pad" id="saPad" hidden>${[
     "1",
     "2",
     "3",
@@ -138,7 +143,6 @@ function vSowAdd() {
         `<button type="button" data-kp="${k}" class="${k === "완료" ? "go" : k === "다음" ? "nx" : ""}">${k === "다음" || k === "완료" ? t(k) : k}</button>`
     )
     .join("")}</div>`;
-  return h;
 }
 // 저장: 카드 → state.setup.cards → 기록·모돈 만들기
 function saCommit() {
@@ -202,9 +206,9 @@ document.addEventListener("pointerdown", e => {
   if (k === "완료") return x.blur();
   if (k === "다음") {
     x.dispatchEvent(new Event("change", { bubbles: true }));
-    const [p] = x.dataset.sac.split("|"),
-      L = [...document.querySelectorAll("[data-numpad]")],
-      same = L.filter(y => y.dataset.sac.split("|")[0] === p),
+    const L = [...document.querySelectorAll("[data-numpad]")],
+      col = y => (y.dataset.sac || "").split("|")[0], // 모돈 카드: 같은 산차 아래 칸 먼저
+      same = x.dataset.sac ? L.filter(y => col(y) === col(x)) : L,
       nx = same[same.indexOf(x) + 1] || L[L.indexOf(x) + 1];
     return nx ? nx.focus() : x.blur();
   }

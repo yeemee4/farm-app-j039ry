@@ -56,7 +56,7 @@ function vInit() {
   if (ui.initStep == null || ui.initStep < 0)
     return `<div class="pagehd"><button class="back" type="button" data-a="setPage" data-v="main">‹ ${t("설정")}</button><h2>${t("초기 입력")}</h2></div><div class="note">${t("넣을 것을 고르세요. 넣은 것은 ✓ 표시됩니다.")}</div><div class="more">${INIT_STEPS.map(
       ([k, l, d], i) =>
-        `<button class="mitem" type="button" data-a="${k === "sow" ? "initSow" : "initGo"}" data-v="${i}"><span class="su-n ${initDone(k) ? "ok" : ""}">${initDone(k) ? "✓" : i + 1}</span><span><b>${t(l)}</b><small>${t(d)}</small></span><span>›</span></button>`
+        `<button class="mitem" type="button" data-a="${k === "sow" ? "initSow" : k === "batch" ? "initBatch" : "initGo"}" data-v="${i}"><span class="su-n ${initDone(k) ? "ok" : ""}">${initDone(k) ? "✓" : i + 1}</span><span><b>${t(l)}</b><small>${t(d)}</small></span><span>›</span></button>`
     ).join("")}</div>`;
   const n = Math.min(Math.max(ui.initStep || 0, 0), INIT_STEPS.length - 1),
     [k, ti, d] = INIT_STEPS[n];
@@ -86,6 +86,10 @@ Object.assign(A, {
   initSow: () => {
     tab = "sows";
     A.sowAdd();
+  },
+  initBatch: () => {
+    tab = "batch";
+    A.batchAdd();
   },
   initStock: () => {
     let n = 0;
