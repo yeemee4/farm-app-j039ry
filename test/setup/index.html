@@ -1211,7 +1211,7 @@ const ICON_POLY={"BCS": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0
 const BUILD_TAGS=true;
 const MODE="setup";
 const ENV="test";
-const BUILD_AT="11-03 01:22";
+const BUILD_AT="11-03 01:25";
 /* ================= 농장 설정 (비담농장) =================
    농장마다 다른 값은 모두 여기. 피드백으로 바뀌는 값은 이 파일만 고친다. */
 const APP_VER = "v0.6";
@@ -1517,7 +1517,7 @@ FARM.layout = {
       { id: "B", x: 4, y: 1.3, n: 10, cw: 0.6, cd: 2.2, v: 1, from: "top", n1: 11, head: "left" }
     ],
     areas: [
-      { x: 0.9, y: 0, w: 5.3, h: 1.3, l: "군사방 (확인 필요)", stage: "군사방" },
+      { x: 0.9, y: 0, w: 5.3, h: 1.3, l: "군사방 (돈군은 군사방 배치도에서)" },
       { x: 3.1, y: 1.3, w: 0.9, h: 6.9, l: "통로", aisle: 1 }
     ],
     doors: [{ x: 3.55, y: 8.2, dir: "up" }]
@@ -1525,7 +1525,7 @@ FARM.layout = {
   // 분만사: 모돈틀(0.6×2.2)만 · 세로 2줄 × 15칸(=30칸)(휴대폰 한 화면에 담기게 가로 그림을 세로로 돌림), 가운데 통로 위·아래 입구
   // 번호: 오른쪽 줄 위 1 → 15, 왼쪽 줄 아래 16 → 30 (대표 그림의 위 줄 왼쪽 1 → 아래 줄 오른쪽 16 을 시계 방향으로 돌린 것)
   분만사: {
-    sure: false,
+    sure: true, // 대표 그림(2026-11-01) 받음
     w: 6.1,
     h: 10.8,
     rows: [
@@ -4367,8 +4367,8 @@ const fitZ = L =>
     6,
     Math.floor(
       Math.min(
-        (Math.min(innerWidth, 900) - 60) / (L.w + (L.annex ? L.annex.w : 0) + 1.2),
-        (innerHeight * 0.62) / (L.h + 1.2)
+        (Math.min(innerWidth, 900) - 60) / (L.w + (L.annex ? L.annex.w : 0) + 2.4),
+        (innerHeight * 0.62) / (L.h + 2.4)
       )
     )
   );
@@ -4576,8 +4576,9 @@ function bmDoors(L, M, z, mini) {
       return;
     }
     const s2 = d.dir === "up" ? 1 : -1,
-      y0 = d.y + s2 * 1.1;
-    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + 12}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:start">${t("입구")}</text>`;
+      y0 = d.y + s2 * 1.1,
+      rt = d.x > L.w / 2; // 오른쪽 입구는 글자를 화살표 왼쪽에(오른쪽 끝에서 잘리지 않게)
+    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + (rt ? -12 : 12)}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:${rt ? "end" : "start"}">${t("입구")}</text>`;
   });
   return g;
 }
@@ -4589,9 +4590,10 @@ function vBarnSvg(b, z, mini, act) {
     { S, occ } = barnOcc(b),
     M = v => v * z,
     ext = L.annex ? L.annex.w : 0,
-    W = L.w + ext + (mini ? 0.2 : 1.2),
-    H = L.h + (mini ? 0.2 : 1.2);
-  let g = `<svg viewBox="${mini ? -1.6 * z : -0.6 * z} ${mini ? -1.6 * z : -0.6 * z} ${M(W + (mini ? 3 : 0))} ${M(H + (mini ? 3 : 0))}" width="${mini ? "100%" : M(W)}" class="bm-svg" role="img" aria-label="${esc(b)}"><defs><marker id="mArr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#12A150"/></marker></defs>`;
+    mg = mini ? 0.1 : Math.max(1, 44 / z), // 둘레 여백(m): 입구 화살표·글자가 잘리지 않게
+    W = L.w + ext + 2 * mg,
+    H = L.h + 2 * mg;
+  let g = `<svg viewBox="${mini ? -1.6 * z : -mg * z} ${mini ? -1.6 * z : -mg * z} ${M(W + (mini ? 3 : 0))} ${M(H + (mini ? 3 : 0))}" width="${mini ? "100%" : M(W)}" class="bm-svg" role="img" aria-label="${esc(b)}"><defs><marker id="mArr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#12A150"/></marker></defs>`;
   g += `<rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
   (L.areas || []).forEach(a => {
     if (a.stage) {
@@ -5073,7 +5075,8 @@ const penBatch = (b, id) => (state.penOf || {})[b + "|" + id] || "";
 function vPenSvg(b, z, act) {
   const L = FARM.pens[b],
     M = v => v * z;
-  let g = `<svg viewBox="${-0.6 * z} ${-0.6 * z} ${M(L.w + 1.2)} ${M(L.h + 1.2)}" width="${M(L.w + 1.2)}" class="bm-svg" role="img" aria-label="${esc(t(b))}"><rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
+  const mg = Math.max(1, 44 / z); // 둘레 여백(m): 입구 글자가 잘리지 않게
+  let g = `<svg viewBox="${-mg * z} ${-mg * z} ${M(L.w + 2 * mg)} ${M(L.h + 2 * mg)}" width="${M(L.w + 2 * mg)}" class="bm-svg" role="img" aria-label="${esc(t(b))}"><rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
   (L.areas || []).forEach(
     a =>
       (g += `<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="bm-aisle"/>${a.l ? `<text x="${M(a.x + a.w / 2)}" y="${M(a.y + a.h / 2) + 4}" class="bm-al">${esc(t(a.l))}</text>` : ""}`)
@@ -5093,7 +5096,7 @@ function vPenMap(b) {
     Bs = liveBatches().filter(x => stagePlan(bAge(x)) === b),
     hd = Bs.reduce((n, x) => n + bHeads(x, bAge(x)), 0),
     P = pensOf(b);
-  return `<div class="bm-head"><span>${P.length}${t("방")} · ${t("방당")} ${FARM.pens[b].head}${t("두")} ${t("기준")} · ${t("지금")} ${hd}${t("두")} (${Bs.map(x => esc(bName(x.k).replace(" 돈군", ""))).join(", ") || t("비어 있음")})</span><span class="bm-z"><button type="button" class="sbtn" data-a="penZoom" data-v="-0.8" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="penZoom" data-v="0.8" aria-label="${t("확대")}">＋</button></span></div><div class="bm-wrap">${vPenSvg(b, z)}</div><div class="note">${t("방 크기·번호 순서는 그림을 보고 짐작한 것입니다(확인 필요).")}</div>`;
+  return `<div class="bm-head"><span>${P.length}${t("방")} · ${t("방당")} ${FARM.pens[b].head}${t("두")} ${t("기준")} · ${t("지금")} ${hd}${t("두")} (${Bs.map(x => esc(bName(x.k).replace(" 돈군", ""))).join(", ") || t("비어 있음")})</span><span class="bm-z"><button type="button" class="sbtn" data-a="penZoom" data-v="-0.8" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="penZoom" data-v="0.8" aria-label="${t("확대")}">＋</button></span></div><div class="bm-wrap">${vPenSvg(b, z)}</div><div class="note">${t("방 번호는 대표님 그림 순서 · 방 크기(m)는 두수로 짐작한 값입니다.")}</div>`;
 }
 Object.assign(A, {
   penZoom: v => {

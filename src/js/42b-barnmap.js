@@ -38,8 +38,8 @@ const fitZ = L =>
     6,
     Math.floor(
       Math.min(
-        (Math.min(innerWidth, 900) - 60) / (L.w + (L.annex ? L.annex.w : 0) + 1.2),
-        (innerHeight * 0.62) / (L.h + 1.2)
+        (Math.min(innerWidth, 900) - 60) / (L.w + (L.annex ? L.annex.w : 0) + 2.4),
+        (innerHeight * 0.62) / (L.h + 2.4)
       )
     )
   );
@@ -247,8 +247,9 @@ function bmDoors(L, M, z, mini) {
       return;
     }
     const s2 = d.dir === "up" ? 1 : -1,
-      y0 = d.y + s2 * 1.1;
-    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + 12}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:start">${t("입구")}</text>`;
+      y0 = d.y + s2 * 1.1,
+      rt = d.x > L.w / 2; // 오른쪽 입구는 글자를 화살표 왼쪽에(오른쪽 끝에서 잘리지 않게)
+    g += `<path d="M${M(d.x)} ${M(y0)} L${M(d.x)} ${M(d.y - s2 * 0.2)} M${M(d.x) - 8} ${M(d.y) + s2 * 8} L${M(d.x)} ${M(d.y - s2 * 0.2)} L${M(d.x) + 8} ${M(d.y) + s2 * 8}" class="bm-door"/><text x="${M(d.x) + (rt ? -12 : 12)}" y="${M(d.y - s2 * 0.5)}" class="bm-dl" style="text-anchor:${rt ? "end" : "start"}">${t("입구")}</text>`;
   });
   return g;
 }
@@ -260,9 +261,10 @@ function vBarnSvg(b, z, mini, act) {
     { S, occ } = barnOcc(b),
     M = v => v * z,
     ext = L.annex ? L.annex.w : 0,
-    W = L.w + ext + (mini ? 0.2 : 1.2),
-    H = L.h + (mini ? 0.2 : 1.2);
-  let g = `<svg viewBox="${mini ? -1.6 * z : -0.6 * z} ${mini ? -1.6 * z : -0.6 * z} ${M(W + (mini ? 3 : 0))} ${M(H + (mini ? 3 : 0))}" width="${mini ? "100%" : M(W)}" class="bm-svg" role="img" aria-label="${esc(b)}"><defs><marker id="mArr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#12A150"/></marker></defs>`;
+    mg = mini ? 0.1 : Math.max(1, 44 / z), // 둘레 여백(m): 입구 화살표·글자가 잘리지 않게
+    W = L.w + ext + 2 * mg,
+    H = L.h + 2 * mg;
+  let g = `<svg viewBox="${mini ? -1.6 * z : -mg * z} ${mini ? -1.6 * z : -mg * z} ${M(W + (mini ? 3 : 0))} ${M(H + (mini ? 3 : 0))}" width="${mini ? "100%" : M(W)}" class="bm-svg" role="img" aria-label="${esc(b)}"><defs><marker id="mArr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0L10 5L0 10z" fill="#12A150"/></marker></defs>`;
   g += `<rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
   (L.areas || []).forEach(a => {
     if (a.stage) {

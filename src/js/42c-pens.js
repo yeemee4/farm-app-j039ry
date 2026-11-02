@@ -24,7 +24,8 @@ const penBatch = (b, id) => (state.penOf || {})[b + "|" + id] || "";
 function vPenSvg(b, z, act) {
   const L = FARM.pens[b],
     M = v => v * z;
-  let g = `<svg viewBox="${-0.6 * z} ${-0.6 * z} ${M(L.w + 1.2)} ${M(L.h + 1.2)}" width="${M(L.w + 1.2)}" class="bm-svg" role="img" aria-label="${esc(t(b))}"><rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
+  const mg = Math.max(1, 44 / z); // 둘레 여백(m): 입구 글자가 잘리지 않게
+  let g = `<svg viewBox="${-mg * z} ${-mg * z} ${M(L.w + 2 * mg)} ${M(L.h + 2 * mg)}" width="${M(L.w + 2 * mg)}" class="bm-svg" role="img" aria-label="${esc(t(b))}"><rect x="0" y="0" width="${M(L.w)}" height="${M(L.h)}" class="bm-wall"/>`;
   (L.areas || []).forEach(
     a =>
       (g += `<rect x="${M(a.x)}" y="${M(a.y)}" width="${M(a.w)}" height="${M(a.h)}" class="bm-aisle"/>${a.l ? `<text x="${M(a.x + a.w / 2)}" y="${M(a.y + a.h / 2) + 4}" class="bm-al">${esc(t(a.l))}</text>` : ""}`)
@@ -44,7 +45,7 @@ function vPenMap(b) {
     Bs = liveBatches().filter(x => stagePlan(bAge(x)) === b),
     hd = Bs.reduce((n, x) => n + bHeads(x, bAge(x)), 0),
     P = pensOf(b);
-  return `<div class="bm-head"><span>${P.length}${t("방")} · ${t("방당")} ${FARM.pens[b].head}${t("두")} ${t("기준")} · ${t("지금")} ${hd}${t("두")} (${Bs.map(x => esc(bName(x.k).replace(" 돈군", ""))).join(", ") || t("비어 있음")})</span><span class="bm-z"><button type="button" class="sbtn" data-a="penZoom" data-v="-0.8" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="penZoom" data-v="0.8" aria-label="${t("확대")}">＋</button></span></div><div class="bm-wrap">${vPenSvg(b, z)}</div><div class="note">${t("방 크기·번호 순서는 그림을 보고 짐작한 것입니다(확인 필요).")}</div>`;
+  return `<div class="bm-head"><span>${P.length}${t("방")} · ${t("방당")} ${FARM.pens[b].head}${t("두")} ${t("기준")} · ${t("지금")} ${hd}${t("두")} (${Bs.map(x => esc(bName(x.k).replace(" 돈군", ""))).join(", ") || t("비어 있음")})</span><span class="bm-z"><button type="button" class="sbtn" data-a="penZoom" data-v="-0.8" aria-label="${t("축소")}">－</button><button type="button" class="sbtn" data-a="penZoom" data-v="0.8" aria-label="${t("확대")}">＋</button></span></div><div class="bm-wrap">${vPenSvg(b, z)}</div><div class="note">${t("방 번호는 대표님 그림 순서 · 방 크기(m)는 두수로 짐작한 값입니다.")}</div>`;
 }
 Object.assign(A, {
   penZoom: v => {
