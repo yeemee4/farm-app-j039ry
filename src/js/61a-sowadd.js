@@ -154,7 +154,14 @@ function saCommit() {
     if (!Object.keys(c.cols[p]).length) delete c.cols[p];
   });
   c.done = true;
+  const ev = W.evict && W.evict !== c.id ? W.evict : null;
+  if (ev && suS().cards[ev]) delete suS().cards[ev].stall;
   suApplyAll();
+  if (ev) {
+    const s2 = state.sows.find(x => x.id === ev);
+    if (s2) delete s2.stall;
+    W.evict = null;
+  }
   save();
   W.dirty = false;
   toast(`${c.id} ${t("저장했습니다")}`);
@@ -289,6 +296,18 @@ Object.assign(A, {
     const s = state.sows.find(x => x.id === id);
     if (s && state.records.some(r => r.data && r.data.sow === id && !r.data.setup))
       return toast(t("이미 앱에 기록이 있는 모돈입니다. 모돈 상세에서 고쳐 주세요."));
+    // 한 칸에 모돈 한 마리(밤 점검 2026-11-07): 다른 모돈이 있으면 묻고, 그 모돈은 칸에서 뺌(돈사는 그대로)
+    const cur = ui.sa.st ? saAt(ui.sa.b, ui.sa.st) : "";
+    ui.sa.evict = null;
+    if (cur && cur !== id) {
+      if (
+        !confirm(
+          `${t(ui.sa.b)} ${ui.sa.st}${t("번 칸에는")} ${cur} ${t("이(가) 있습니다.")} ${cur} ${t("을(를) 칸에서 빼고")} ${id} ${t("을(를) 넣을까요?")}`
+        )
+      )
+        return;
+      ui.sa.evict = cur;
+    }
     ui.sa.no = v;
     ui.sa.d = JSON.parse(JSON.stringify(suS().cards[id] || { id, breed: FARM.breed || "LY", cols: {} }));
     ui.sa.pg = 1;
