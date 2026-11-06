@@ -43,6 +43,22 @@ const fitZ = L =>
       )
     )
   );
+// 확대·축소 뒤: 배치도 상자 안에서 칸·방(누를 수 있는 것)들이 모인 가운데가 화면 가운데에 오게(대표 요청 2026-11-07)
+function bmCenter() {
+  requestAnimationFrame(() => {
+    const w = document.querySelector(".bm-wrap");
+    if (!w) return;
+    const E = [...w.querySelectorAll("[data-a]")].map(e => e.getBoundingClientRect()).filter(r => r.width);
+    if (!E.length) return;
+    const R = w.getBoundingClientRect(),
+      cx = (Math.min(...E.map(r => r.left)) + Math.max(...E.map(r => r.right))) / 2,
+      cy = (Math.min(...E.map(r => r.top)) + Math.max(...E.map(r => r.bottom))) / 2;
+    w.scrollLeft += cx - (R.left + R.width / 2);
+    w.scrollTop += cy - (R.top + R.height / 2);
+    // 상자가 화면 밖이면 화면도 상자 쪽으로
+    if (R.top < 0 || R.bottom > innerHeight) w.scrollIntoView({ block: "center" });
+  });
+}
 function stallsOf(b) {
   const L = barnLayout(b);
   if (!L) return [];
@@ -654,6 +670,7 @@ Object.assign(A, {
   bmZoom: v => {
     ui.bmK = Math.max(1, Math.min(4, (ui.bmK || 1) + (Number(v) > 0 ? 0.5 : -0.5)));
     render();
+    bmCenter();
   },
   bmMove: v => {
     ui.moving = v;

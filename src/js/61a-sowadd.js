@@ -279,6 +279,7 @@ Object.assign(A, {
   saZoom: v => {
     ui.saK = Math.max(1, Math.min(4, (ui.saK || 1) + (+v > 0 ? 0.5 : -0.5)));
     render();
+    bmCenter();
   },
   iniStall: v => {
     const [b, st] = v.split("|"),

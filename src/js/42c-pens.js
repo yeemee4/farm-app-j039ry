@@ -51,6 +51,7 @@ Object.assign(A, {
   penZoom: v => {
     ui.penZ = Math.max(1, Math.min(4, (ui.penZ || 1) + (+v > 0 ? 0.5 : -0.5)));
     render();
+    bmCenter();
   },
   penTap: v => {
     const [b, id] = v.split("|"),
